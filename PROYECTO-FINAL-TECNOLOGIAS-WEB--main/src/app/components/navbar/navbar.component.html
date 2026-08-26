@@ -1,0 +1,116 @@
+<div class="linea-naranja"></div>
+<br>
+
+<!-- Header -->
+<header class="py-3">
+  <div class="container d-flex justify-content-between align-items-center">
+
+    <!-- Logo -->
+    <div class="logo d-flex align-items-center">
+      <a routerLink="/" routerLinkActive="active" class="text-white text-decoration-none d-flex align-items-center">
+        <img src="img/Responsables/logo.jpg" alt="Logo" style="height: 50px; max-width: 100%;">
+      </a>
+    </div>
+
+    <!-- Navegación -->
+    <nav class="navbar d-flex align-items-center w-100 justify-content-between">
+      <ul class="nav flex-wrap" id="mainMenu">
+        <li><a class="nav-link" [routerLink]="['/home']">{{ 'inicio' | capitalizar }}</a></li>
+        <li><a class="nav-link" [routerLink]="['/nosotros']">{{ '¿quiénes somos?' | capitalizar }}</a></li>
+        <li><a class="nav-link" [routerLink]="['/servicio']">{{ 'nuestros servicios' | capitalizar }}</a></li>
+        <li><a class="nav-link" [routerLink]="['/ubicacion']">{{ 'sucursales' | capitalizar }}</a></li>
+        <li><a class="nav-link" [routerLink]="['/redes/0']">{{ 'redes sociales' | capitalizar}}</a></li>
+        <li><a class="nav-link" [routerLink]="['/responsables']">{{ 'responsables' | capitalizar }} </a></li>
+
+        @if(userName){
+
+        <li class="d-flex align-items-center">
+          <div class="d-flex align-items-center gap-1">
+
+            <a class="nav-link d-flex align-items-center p-0" [routerLink]="['/micuenta']" style="color: white;">
+              <i class='bx bx-user fs-5 me-1'></i> {{ userName }}
+            </a>
+            <br>
+            <a href="#" class="nav-link d-flex align-items-center p-2 logout-icon"
+              (click)="logOut(); $event.preventDefault()">
+              <i class='bx bx-log-out'></i>
+            </a>
+          </div>
+        </li>
+
+
+        }@else{
+        <li><a class="nav-link" [routerLink]="['/auth/sign-up']">
+            <i class='bx bx-log-in'></i> Ingresar
+          </a></li>
+        }
+        <!-- Formulario de búsqueda -->
+        <form class="form-busqueda" (submit)="buscar()">
+          <input [(ngModel)]="termino" name="termino" placeholder="Buscar curso" class="input-busqueda" />
+          <button type="submit" class="btn-buscar">
+            <i class='bx bx-search'></i>
+          </button>
+        </form>
+
+
+      </ul>
+    </nav>
+  </div>
+</header>
+
+
+<div #overlay class="overlay" (click)="closeMenu()"></div>
+
+
+<!-- Botón de menú lateral -->
+<div #menuToggle class="menu-toggle" (click)="toggleMenu()">
+  <i class="bx bx-menu"></i>
+</div>
+
+<!-- Menú lateral (si lo usas en versión móvil) -->
+<div #sideMenu class="navigation" id="sideMenu">
+  <div class="close-btn" (click)="toggleMenu()">&#10005;</div>
+  <ul>
+    <br>
+    @if(userName){
+    <br>
+    <a class="nav-link" [routerLink]="['/micuenta']">
+      <i class='bx bx-user'></i> {{ userName }}
+    </a>
+
+    <br>
+    }
+    <li><a class="nav-link" [routerLink]="['/home']">{{ 'inicio' | capitalizar }}</a></li>
+    <li><a class="nav-link" [routerLink]="['/nosotros']">{{ '¿quiénes somos?' | capitalizar }}</a></li>
+    <li><a class="nav-link" [routerLink]="['/servicio']">{{ 'nuestros servicios' | capitalizar }}</a></li>
+    <li><a class="nav-link" [routerLink]="['/ubicacion']">{{ 'sucursales' | capitalizar }}</a></li>
+    <li><a class="nav-link" [routerLink]="['/redes/0']">{{ 'redes sociales' | capitalizar}}</a></li>
+    <li><a class="nav-link" [routerLink]="['/responsables']">{{ 'responsables' | capitalizar }} </a></li>
+
+    @if(userName){
+    @if(userRole==='user'){
+    <li><a class="nav-link" [routerLink]="['/f2']">Agenda entrenamiento</a></li>
+    <li><a class="nav-link" [routerLink]="['/f3']">Registra asistencia</a></li>
+    <li><a class="nav-link" [routerLink]="['/productos']">Productos</a></li>
+
+    }@else{
+    <li><a class="nav-link" [routerLink]="['/f2']">Agenda entrenamiento</a></li>
+    <li><a class="nav-link" [routerLink]="['/f3']">Registra asistencia</a></li>
+    <li><a class="nav-link" [routerLink]="['/graficos']">Grafica de Sesiones</a></li>
+    <li><a class="nav-link" [routerLink]="['/editar1']">Informacion de Agendas</a></li>
+    <li><a class="nav-link" [routerLink]="['/editar2']">Informacion de Asistencias</a></li>
+    <li><a class="nav-link" [routerLink]="['/productos']">Productos</a></li>
+    }
+    <a href="#" class="nav-link" (click)="logOut(); $event.preventDefault()">
+      <i class='bx bx-log-out'></i> Cerrar sesión
+    </a>
+    }@else{
+    <a class="nav-link" [routerLink]="['/auth/sign-up']">
+      <i class='bx bx-log-in'></i> Ingresar
+    </a>
+    }
+  </ul>
+</div>
+
+<!-- Barra de separación -->
+<div class="linea-naranja"></div>

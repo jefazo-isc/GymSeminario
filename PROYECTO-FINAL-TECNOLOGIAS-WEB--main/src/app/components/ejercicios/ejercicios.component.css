@@ -1,0 +1,222 @@
+table {
+  width: 100%;
+}
+
+th.mat-header-cell {
+  font-weight: bold;
+}
+
+mat-card {
+  padding: 16px;
+}
+
+.tabla-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 10px 0;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.tabla-responsive table {
+  min-width: 600px;
+  border-collapse: collapse;
+}
+
+/* 768px - 1024px */
+@media (max-width: 1024px) {
+  mat-card {
+    margin: 10px;
+    padding: 12px;
+  }
+
+  .tabla-responsive table {
+    min-width: 550px;
+  }
+
+  th.mat-header-cell,
+  td.mat-cell {
+    padding: 8px 12px !important;
+    font-size: 14px;
+  }
+}
+
+/* 481px - 767px */
+@media (max-width: 767px) {
+  mat-card {
+    margin: 5px;
+    padding: 10px;
+  }
+
+  h2 {
+    font-size: 1.3em !important;
+  }
+
+  h3 {
+    font-size: 1.1em !important;
+  }
+
+  .tabla-responsive {
+    margin: 5px 0;
+  }
+
+  .tabla-responsive table {
+    min-width: 480px;
+  }
+
+  th.mat-header-cell,
+  td.mat-cell {
+    padding: 6px 8px !important;
+    font-size: 13px;
+  }
+
+  /* Ocultar columna menos importante en pantallas medianas */
+  .hide-on-mobile {
+    display: none !important;
+  }
+}
+
+/* hasta 480px */
+@media (max-width: 480px) {
+  mat-card {
+    margin: 0;
+    padding: 8px;
+  }
+
+  h2 {
+    font-size: 1.2em !important;
+    margin-bottom: 10px !important;
+  }
+
+  h3 {
+    font-size: 1em !important;
+    margin: 15px 0 10px 0 !important;
+  }
+
+  .tabla-responsive table {
+    min-width: 600px;
+    font-size: 12px;
+  }
+
+
+  th.mat-header-cell,
+  td.mat-cell {
+    padding: 4px 6px !important;
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 80px;
+  }
+
+  .col-ejercicio {
+    max-width: 120px !important;
+    min-width: 100px;
+  }
+
+  .col-series,
+  .col-repeticiones {
+    max-width: 60px !important;
+    min-width: 50px;
+    text-align: center;
+  }
+
+  .col-equipo {
+    max-width: 80px !important;
+    min-width: 70px;
+  }
+}
+
+@media (max-width: 360px) {
+  .tabla-responsive table {
+    display: none;
+  }
+
+  .mobile-card-layout {
+    display: block !important;
+  }
+
+  .exercise-card {
+    background: white;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .exercise-card .exercise-name {
+    font-weight: bold;
+    color: #ff7f00;
+    font-size: 14px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 4px;
+  }
+
+  .exercise-card .exercise-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    font-size: 12px;
+    color: #666;
+  }
+
+  .exercise-card .detail-item {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .exercise-card .detail-label {
+    font-weight: 500;
+    color: #333;
+  }
+}
+
+.mobile-card-layout {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  h3[onclick] {
+    padding: 10px 0;
+    touch-action: manipulation;
+  }
+
+  .tabla-responsive::after {
+    content: "→ Desliza para ver más";
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 127, 0, 0.8);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    pointer-events: none;
+    opacity: 0.7;
+  }
+
+  .tabla-responsive:hover::after {
+    opacity: 0;
+  }
+}
+
+
+.tabla-responsive {
+  overflow-x: auto;
+  overflow-y: hidden;
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  display: block;
+}
+
+.tabla-responsive::-webkit-scrollbar {
+  height: 6px;
+}
+
+.tabla-responsive::-webkit-scrollbar-thumb {
+  background-color: #ff7f00;
+  border-radius: 6px;
+}

@@ -1,0 +1,73 @@
+<body>
+  <div class="registro-container">
+    <h2>Cambiar clave</h2>
+
+    <div class="social-networks">
+      <i class='bx bxl-google'></i>
+      <i class='bx bxl-twitter icon'></i>
+      <i class='bx bxl-instagram icon'></i>
+      <i class='bx bxl-tiktok icon'></i>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+
+      <!-- Correo -->
+      <div class="container-input">
+        <i class='bx bx-envelope'></i>
+        <input id="email" type="email" placeholder="Correo electrónico" formControlName="email"
+          [class.invalid]="form.get('email')?.invalid && form.get('email')?.touched" required />
+      </div>
+      <div class="error" *ngIf="form.get('email')?.invalid && form.get('email')?.touched">
+        <small *ngIf="form.get('email')?.errors?.['required']">El correo es obligatorio.</small>
+        <small *ngIf="form.get('email')?.errors?.['email']">El correo no es válido.</small>
+      </div>
+
+      <!-- Contraseña actual -->
+      <div class="container-input">
+        <i class='bx bx-lock'></i>
+        <input id="password" type="password" placeholder="Contraseña actual" formControlName="password" minlength="6"
+          required [class.invalid]="form.get('password')?.invalid && form.get('password')?.touched" />
+      </div>
+      <div class="error" *ngIf="form.get('password')?.invalid && form.get('password')?.touched">
+        <small *ngIf="form.get('password')?.errors?.['required']">La contraseña es obligatoria.</small>
+        <small *ngIf="form.get('password')?.errors?.['minlength']">Mínimo 6 caracteres.</small>
+      </div>
+
+      <!-- Nueva contraseña -->
+      <div class="container-input">
+        <i class='bx bx-lock'></i>
+        <input id="newPassword" type="password" placeholder="Nueva contraseña" [formControl]="newPasswordControl"
+          minlength="6" required [class.invalid]="newPasswordControl.invalid && newPasswordControl.touched" />
+      </div>
+      <div class="error" *ngIf="newPasswordControl.invalid && newPasswordControl.touched">
+        <small *ngIf="newPasswordControl.errors?.['required']">La nueva contraseña es obligatoria.</small>
+        <small *ngIf="newPasswordControl.errors?.['minlength']">Mínimo 6 caracteres.</small>
+      </div>
+
+      <!-- Confirmar nueva contraseña -->
+      <div class="container-input">
+        <i class='bx bx-lock'></i>
+        <input id="confirmPassword" type="password" placeholder="Confirmar nueva contraseña"
+          [formControl]="confirmPasswordControl" required [class.invalid]="
+            confirmPasswordControl.touched && confirmPasswordControl.value !== newPasswordControl.value
+          " />
+      </div>
+      <div class="error"
+        *ngIf="confirmPasswordControl.touched && confirmPasswordControl.value !== newPasswordControl.value">
+        <small>Las contraseñas no coinciden.</small>
+      </div>
+
+      <button type="submit" [disabled]="
+          form.invalid || newPasswordControl.invalid || confirmPasswordControl.value !== newPasswordControl.value
+        " class="button">
+        Cambiar contraseña
+      </button>
+
+      <div class="links" style="margin-top: 10px;">
+        <a [routerLink]="['/auth/sign-in']">¿Ya tienes cuenta? Inicia sesión</a>
+        <a [routerLink]="['/change']">Cambiar contraseña</a>
+      </div>
+
+    </form>
+  </div>
+</body>

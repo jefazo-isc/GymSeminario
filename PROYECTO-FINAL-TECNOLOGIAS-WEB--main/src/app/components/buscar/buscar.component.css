@@ -1,0 +1,234 @@
+h1, h2, h3, h4 {
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+h1 {
+  font-size: 2.5rem;
+  border-bottom: 3px solid var(--primary-color);
+  display: inline-block;
+  padding-bottom: 0.3rem;
+  margin-bottom: 2rem;
+}
+
+.titulo-container {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+h1.text-center {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 700;
+  font-size: 3rem;
+  color: #ffffff;          
+  letter-spacing: 2px;     
+  text-transform: uppercase;
+  position: relative;
+  margin-bottom: 0.5rem;   
+}
+
+h1.text-center::after {
+  content: '';
+  display: block;
+  width: 120px;
+  height: 4px;
+  background-color: #ff6f00;  
+  margin: 0.75rem auto 0;
+  border-radius: 2px;
+}
+
+.subtitulo {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 400;
+  font-size: 1.25rem;
+  color: #ffffff;           
+  margin-top: 0.25rem;
+}
+
+/* Tarjetas de resultados */
+.resultado-card {
+  display: block;
+  background-color: #fff;
+  padding: 20px 25px;
+  margin: 20px auto;
+  max-width: 700px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  border-left: 6px solid #ff6f00;
+  text-decoration: none;
+  color: #333;
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.resultado-card:hover {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Texto dentro de las tarjetas */
+.resultado-card p {
+  margin: 8px 0;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.resultado-card strong {
+  color: #34495e;
+}
+
+/* Texto cuando no hay resultados */
+#txt {
+  text-align: center;
+  font-size: 18px;
+  color: #eee;
+  margin-top: 40px;
+}
+
+/* Nombre del curso: más grande, negrita y color naranja */
+.curso-nombre {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ff6f00;
+  margin-bottom: 8px;
+}
+
+/* Descripción: color gris oscuro, tamaño medio */
+.curso-descripcion {
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+/* Duración: un poco más pequeña, color gris claro */
+.curso-duracion {
+  font-size: 14px;
+  color: #888;
+  font-style: italic;
+  font-weight: 400;
+}
+
+.mensaje-no-resultados {
+  max-width: 400px;
+  margin: 50px auto;
+  padding: 25px 20px;
+  background-color: #fff3cd; 
+  border: 1.5px solid #ffecb5; 
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  color: #856404; 
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.icono-info {
+  font-size: 28px;
+}
+
+.info-click {
+  font-size: 13px;
+  color: #999;
+  font-style: italic;
+  text-align: right;
+  user-select: none;
+  transition: color 0.3s ease;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px; 
+}
+
+.info-click i {
+  font-size: 16px;
+  transition: color 0.3s ease;
+}
+
+.resultado-card:hover .info-click {
+  color: #ff7f00;
+}
+
+.resultado-card:hover .info-click i {
+  color: #ff7f00;
+}
+
+@media (max-width: 768px) {
+  h1.text-center {
+    font-size: 2.2rem;
+    letter-spacing: 1px;
+  }
+
+  .subtitulo {
+    font-size: 1.1rem;
+    padding: 0 1rem;
+  }
+
+  .resultado-card {
+    padding: 18px 20px;
+    margin: 15px 10px;
+  }
+
+  .curso-nombre {
+    font-size: 18px;
+  }
+
+  .curso-descripcion {
+    font-size: 15px;
+  }
+
+  .curso-duracion {
+    font-size: 13px;
+  }
+
+  .info-click {
+    font-size: 12px;
+    flex-direction: row;
+    justify-content: center;
+    text-align: center;
+    margin-top: 10px;
+  }
+
+  .mensaje-no-resultados {
+    margin: 40px 15px;
+    padding: 20px;
+    font-size: 16px;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .icono-info {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  h1.text-center {
+    font-size: 1.8rem;
+  }
+
+  .subtitulo {
+    font-size: 1rem;
+  }
+
+  .curso-nombre {
+    font-size: 17px;
+  }
+
+  .curso-descripcion {
+    font-size: 14px;
+  }
+
+  .curso-duracion {
+    font-size: 12px;
+  }
+
+  .info-click {
+    font-size: 11px;
+    flex-direction: column;
+    align-items: center;
+  }
+}

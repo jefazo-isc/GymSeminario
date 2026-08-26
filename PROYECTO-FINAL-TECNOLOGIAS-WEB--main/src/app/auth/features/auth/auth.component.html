@@ -1,0 +1,80 @@
+<div class="container" [class.toggle]="!isSignIn">
+
+  <!-- Formulario Iniciar Sesión -->
+  <div class="container-form sign-in">
+    <form [formGroup]="signInForm" (ngSubmit)="onSignInSubmit()">
+      <h2>Iniciar Sesión</h2>
+      <div class="social-networks">
+        <i class="fab fa-twitch"></i>
+        <i class="fab fa-twitter"></i>
+        <i class="fab fa-instagram"></i>
+        <i class="fab fa-tiktok"></i> <!-- FontAwesome tiene TikTok desde la versión 6 -->
+      </div>
+      <span>Use su correo y contraseña</span>
+
+      <div class="container-input">
+        <i class="fas fa-envelope"></i>
+        <input type="email" formControlName="email" placeholder="Email" />
+      </div>
+
+      <div class="container-input">
+        <i class="fas fa-lock"></i>
+        <input type="password" formControlName="password" placeholder="Password" />
+      </div>
+
+      <a href="#">¿Olvidaste tu contraseña?</a>
+      <button type="submit" class="button" [disabled]="signInForm.invalid">INICIAR SESIÓN</button>
+      <button type="button" class="button" (click)="conGoogle()">Iniciar con Google</button>
+    </form>
+  </div>
+
+  <!-- Formulario Registrarse -->
+  <div class="container-form sign-up">
+    <form [formGroup]="signUpForm" (ngSubmit)="onSignUpSubmit()">
+      <h2>Registrarse</h2>
+      <div class="social-networks">
+        <i class="fab fa-twitch"></i>
+        <i class="fab fa-twitter"></i>
+        <i class="fab fa-instagram"></i>
+        <i class="fab fa-tiktok"></i>
+      </div>
+      <span>Use su correo electrónico para registrarse</span>
+
+      <div class="container-input">
+        <i class="fas fa-user"></i>
+        <input type="text" formControlName="nombre" placeholder="Nombre" />
+      </div>
+
+      <div class="container-input">
+        <i class="fas fa-envelope"></i>
+        <input type="email" formControlName="email" placeholder="Email" />
+      </div>
+
+      <div class="container-input">
+        <i class="fas fa-lock"></i>
+        <input type="password" formControlName="password" placeholder="Password" />
+      </div>
+
+      <button type="submit" class="button" [disabled]="signUpForm.invalid">REGISTRARSE</button>
+      <button type="button" class="button" (click)="conGoogle()">Registrarse con Google</button>
+    </form>
+  </div>
+
+  <!-- Panel lateral con botones para toggle -->
+  <div class="container-welcome">
+    <div class="welcome-sign-up welcome">
+      <h3>¡Bienvenido!</h3>
+      <p>Ingrese sus datos personales para usar todas las funciones del sitio</p>
+      <button class="button" (click)="toggleForm()">Registrarse</button>
+    </div>
+    <div class="welcome-sign-in welcome">
+      <h3>¡Hola!</h3>
+      <p>Regístrese con sus datos personales para usar todas las funciones del sitio</p>
+      <button class="button" (click)="toggleForm()">Iniciar Sesión</button>
+    </div>
+  </div>
+
+  <!-- Recaptcha -->
+  <div id="recaptcha-container" style="position:absolute; bottom: 10px; left: 10px;"></div>
+  
+</div>

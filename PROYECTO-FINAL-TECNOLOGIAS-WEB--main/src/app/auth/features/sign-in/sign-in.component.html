@@ -1,0 +1,51 @@
+<body>
+  <div class="registro-container">
+    <h2>Iniciar Sesión</h2>
+
+    <div class="social-networks">
+      <button (click)="conGoogle()" class="google-btn">
+        <i class='bx bxl-google'></i>
+      </button>
+      <button class="google-btn" [routerLink]="['/phone']">
+        <i class='bx bx-phone'></i>
+      </button>
+      <i class='bx bxl-twitch icon'></i>
+      <i class='bx bxl-twitter icon'></i>
+      <i class='bx bxl-instagram icon'></i>
+      <i class='bx bxl-tiktok icon'></i>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="login-form" novalidate>
+      <span>Use su correo y contraseña</span>
+
+      <div class="container-input">
+        <i class='bx bx-envelope'></i>
+        <input type="email" placeholder="Correo electrónico" formControlName="email"
+          [class.invalid]="form.get('email')?.invalid && form.get('email')?.touched" />
+      </div>
+      <div class="error" *ngIf="form.get('email')?.invalid && form.get('email')?.touched">
+        <div *ngIf="form.get('email')?.errors?.['required']">El correo es obligatorio.</div>
+        <div *ngIf="form.get('email')?.errors?.['email']">Debe ser un correo válido.</div>
+      </div>
+
+      <div class="container-input">
+        <i class='bx bx-lock'></i>
+        <input type="password" placeholder="Contraseña" formControlName="password"
+          [class.invalid]="form.get('password')?.invalid && form.get('password')?.touched" />
+      </div>
+      <div class="error" *ngIf="form.get('password')?.invalid && form.get('password')?.touched">
+        <div *ngIf="form.get('password')?.errors?.['required']">La contraseña es obligatoria.</div>
+      </div>
+
+      <div class="links">
+        <a [routerLink]="['/auth/sign-up']">No tienes cuenta, crea una</a>
+        <a [routerLink]="['/change']" class="change-link">¿Cambiar tu clave?</a>
+      </div>
+
+      <div id="recaptcha-container"></div>
+
+      <button type="submit" [disabled]="form.invalid" class="button">Iniciar sesión</button>
+    </form>
+
+  </div>
+</body>

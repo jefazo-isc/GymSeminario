@@ -1,0 +1,50 @@
+<div *ngIf="registros.length === 0" class="mensaje-vacio">
+  <p id="mensaje">No hay asistencias registradas aún.</p>
+</div>
+<div *ngFor="let item of registros">
+  <div class="registro-preview" *ngIf="!item.editando">
+    <p><strong>Entrenamiento:</strong> {{ item.entrenamiento }}</p>
+    <p><strong>Fecha:</strong> {{ item.fecha }}</p>
+    <p><strong>Turno:</strong> {{ item.turno }}</p>
+    <p><strong>Usuario:</strong> {{ item.nombre }}</p>
+    <button (click)="item.editando = true">Editar</button>
+    <button (click)="borrar(item)">Eliminar</button>
+  </div>
+
+  <form *ngIf="item.editando" (ngSubmit)="actualizar(item)" #form="ngForm" id="todo">
+    <h1>Editar entrenamiento</h1>
+
+    <div>
+      <label for="entrenamiento">Entrenamiento</label>
+      <select [(ngModel)]="item.entrenamiento" name="entrenamiento-{{item.id}}" required>
+        <option value="">Selecciona entrenamiento</option>
+        <option *ngFor="let e of entrenamientos" [value]="e">{{ e }}</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="fecha">Fecha</label>
+      <input type="date" [(ngModel)]="item.fecha" name="fecha-{{item.id}}" required />
+    </div>
+
+    <div>
+      <label for="turno">Turno</label>
+      <select [(ngModel)]="item.turno" name="turno-{{item.id}}" required>
+        <option value="">Selecciona turno</option>
+        <option value="Mañana">Mañana</option>
+        <option value="Tarde">Tarde</option>
+        <option value="Noche">Noche</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="usuario">Usuario</label>
+      <input type="text" [(ngModel)]="item.nombre" name="usuario-{{item.nombre}}" required disabled />
+    </div>
+
+    <button type="submit">Guardar</button>
+    <button type="button" (click)="item.editando = false">Cancelar</button>
+  </form>
+
+  <hr />
+</div>

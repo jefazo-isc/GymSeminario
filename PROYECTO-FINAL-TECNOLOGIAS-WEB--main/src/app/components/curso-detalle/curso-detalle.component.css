@@ -1,0 +1,247 @@
+h1, h2, h3, h4 {
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+h1 {
+  font-size: 2.5rem;
+  border-bottom: 3px solid var(--primary-color);
+  display: inline-block;
+  padding-bottom: 0.3rem;
+  margin-bottom: 2rem;
+}
+
+.titulo-container {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+h1.text-center {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 700;
+  font-size: 3rem;
+  color: #ffffff;          
+  letter-spacing: 2px;     
+  text-transform: uppercase;
+  position: relative;
+  margin-bottom: 0.5rem;   
+}
+
+h1.text-center::after {
+  content: '';
+  display: block;
+  width: 120px;
+  height: 4px;
+  background-color: #ff6f00;  
+  margin: 0.75rem auto 0;
+  border-radius: 2px;
+}
+
+.subtitulo {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 400;
+  font-size: 1.25rem;
+  color: #ffffff;           
+  margin-top: 0.25rem;
+}
+
+
+
+.curso-preview {
+  position: relative;
+  background-color: #fff;
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  padding: 30px 35px;
+  margin: 50px auto;
+  border-left: 6px solid #ff6f00;
+  max-width: 750px;
+  color: #333;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.curso-preview h2.text-center {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #ff6f00;
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.curso-preview h2.text-center::after {
+  content: '';
+  display: block;
+  width: 100px;
+  height: 4px;
+  background-color: #ff6f00;
+  margin: 10px auto 0;
+  border-radius: 2px;
+}
+
+.divider-orange {
+  border: none;
+  height: 2px;
+  background-color: #ff6f00;
+  margin: 1rem auto 2rem auto;
+  max-width: 200px;
+  border-radius: 4px;
+}
+
+.curso-info {
+  text-align: left;
+}
+
+.curso-nombre {
+  font-size: 22px;
+  font-weight: 700;
+  color: #ff6f00;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.curso-img {
+  display: block;
+  margin: 30px auto 20px auto;
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease;
+}
+
+.curso-img:hover {
+  transform: scale(1.015);
+}
+
+.curso-descripcion,
+.curso-duracion {
+  font-size: 17px;
+  color: #444;
+  margin-bottom: 14px;
+  font-weight: 500;
+}
+
+
+.btn-volver {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+  color: #999;
+  font-style: italic;
+  font-size: 15px;
+  text-decoration: none;
+  margin-top: 15px;
+  transition: color 0.3s ease;
+}
+
+.btn-volver i {
+  font-size: 17px;
+  transition: color 0.3s ease;
+}
+
+.btn-volver:hover {
+  color: #ff7f00;
+}
+
+.btn-volver:hover i {
+  color: #ff7f00;
+}
+
+
+
+/* Estilo del mensaje de error */
+.mensaje-no-resultados {
+  max-width: 400px;
+  margin: 50px auto;
+  padding: 25px 20px;
+  background-color: #fff3cd;
+  border: 1.5px solid #ffecb5;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  color: #856404;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.icono-info {
+  font-size: 28px;
+}
+
+@media (max-width: 768px) {
+  h1.text-center {
+    font-size: 2.2rem;
+    letter-spacing: 1px;
+  }
+
+  .subtitulo {
+    font-size: 1.1rem;
+    padding: 0 1rem;
+  }
+
+  .curso-preview {
+    padding: 20px;
+    margin: 30px 15px;
+  }
+
+  .curso-preview h2.text-center {
+    font-size: 1.8rem;
+  }
+
+  .curso-descripcion,
+  .curso-duracion {
+    font-size: 16px;
+  }
+
+  .curso-img {
+    margin: 20px auto;
+    width: 100%;
+    height: auto;
+  }
+
+  .btn-volver {
+    font-size: 14px;
+    justify-content: center;
+    margin-top: 20px;
+  }
+
+  .mensaje-no-resultados {
+    margin: 40px 15px;
+    padding: 20px;
+    font-size: 16px;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .icono-info {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  h1.text-center {
+    font-size: 1.9rem;
+  }
+
+  .curso-preview h2.text-center {
+    font-size: 1.5rem;
+  }
+
+  .curso-descripcion,
+  .curso-duracion {
+    font-size: 15px;
+  }
+
+  .subtitulo {
+    font-size: 1rem;
+  }
+
+  .btn-volver {
+    font-size: 13px;
+  }
+}

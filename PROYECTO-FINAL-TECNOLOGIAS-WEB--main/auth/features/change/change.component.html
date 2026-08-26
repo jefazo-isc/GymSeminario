@@ -1,0 +1,39 @@
+<h1>Cambiar clave</h1>
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+
+  <!-- Email -->
+  <label for="email">Correo electrónico:</label>
+  <input id="email" type="email" formControlName="email" required />
+  <div *ngIf="form.get('email')?.invalid && form.get('email')?.touched">
+    <small *ngIf="form.get('email')?.errors?.['required']">El correo es obligatorio.</small>
+    <small *ngIf="form.get('email')?.errors?.['email']">El correo no es válido.</small>
+  </div>
+
+  <!-- Contraseña actual -->
+  <label for="password">Contraseña actual:</label>
+  <input id="password" type="password" formControlName="password" required minlength="6" />
+  <div *ngIf="form.get('password')?.invalid && form.get('password')?.touched">
+    <small *ngIf="form.get('password')?.errors?.['required']">La contraseña es obligatoria.</small>
+    <small *ngIf="form.get('password')?.errors?.['minlength']">Mínimo 6 caracteres.</small>
+  </div>
+
+  <!-- Nueva contraseña -->
+  <label for="newPassword">Nueva contraseña:</label>
+  <input id="newPassword" type="password" [formControl]="newPasswordControl" required minlength="6" />
+  <div *ngIf="newPasswordControl.invalid && newPasswordControl.touched">
+    <small *ngIf="newPasswordControl.errors?.['required']">La nueva contraseña es obligatoria.</small>
+    <small *ngIf="newPasswordControl.errors?.['minlength']">Mínimo 6 caracteres.</small>
+  </div>
+
+  <!-- Confirmar nueva contraseña -->
+  <label for="confirmPassword">Confirmar nueva contraseña:</label>
+  <input id="confirmPassword" type="password" [formControl]="confirmPasswordControl" required />
+  <div *ngIf="confirmPasswordControl.touched && confirmPasswordControl.value !== newPasswordControl.value">
+    <small>Las contraseñas no coinciden.</small>
+  </div>
+
+  <button type="submit" [disabled]="form.invalid || newPasswordControl.invalid || confirmPasswordControl.value !== newPasswordControl.value">
+    Cambiar contraseña
+  </button>
+
+</form>

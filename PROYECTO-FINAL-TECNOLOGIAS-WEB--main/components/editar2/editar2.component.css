@@ -1,0 +1,145 @@
+/* Fondo general oscuro */
+body {
+  background-color: #121212;
+  margin: 0;
+  padding: 0;
+  font-family: "Segoe UI", sans-serif;
+  color: #eee;
+}
+
+/* Centrado general de los formularios */
+form#todo {
+  max-width: 500px;
+  margin: 30px auto;
+  padding: 25px;
+  background-color: #1e1e1e;
+  border-radius: 15px;
+  box-shadow: 0 4px 12px rgba(255, 165, 0, 0.1); /* sombra naranja */
+}
+
+form#todo div {
+  margin-bottom: 20px;
+}
+
+form#todo label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #fca311; /* naranja */
+}
+
+form#todo input,
+form#todo select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #555;
+  border-radius: 8px;
+  font-size: 16px;
+  background-color: #2a2a2a;
+  color: #fff;
+  transition: border-color 0.3s ease;
+}
+
+form#todo input:focus,
+form#todo select:focus {
+  border-color: #fca311;
+  outline: none;
+}
+
+form#todo button {
+  background-color: #fca311;
+  color: #121212;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  width: 100%;
+  transition: background-color 0.3s ease;
+}
+
+form#todo button:hover {
+  background-color: #e69500;
+}
+
+/* Botón cancelar */
+form#todo button[type="button"] {
+  background-color: #555;
+  color: #fff;
+}
+
+form#todo button[type="button"]:hover {
+  background-color: #777;
+}
+
+/* Mensaje cuando no hay registros */
+.mensaje-vacio {
+  text-align: center;
+  margin-top: 30px;
+  font-size: 18px;
+  color: #bbb;
+}
+
+#mensaje {
+  color: #fca311;
+  font-weight: bold;
+}
+
+/* Estilo de cada registro mostrado */
+.registro-preview {
+  background-color: #1e1e1e;
+  border-left: 6px solid #fca311;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px auto;
+  max-width: 600px;
+  box-shadow: 0 2px 8px rgba(255, 165, 0, 0.1);
+}
+
+.registro-preview p {
+  margin: 8px 0;
+  font-size: 16px;
+  color: #ddd;
+}
+
+.registro-preview button {
+  margin-right: 10px;
+  padding: 8px 14px;
+  background-color: #fca311;
+  color: #121212;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.registro-preview button:hover {
+  background-color: #e69500;
+}
+
+/* Línea divisoria entre registros */
+hr {
+  border: none;
+  border-top: 1px solid #333;
+  margin: 20px 0;
+}
+
+h1{
+  color: #e69500;
+}
+
+button{
+  margin-top: 10px;
+}
+
+#eliminar{
+  background-color: #e74c3c;
+  color: white;
+}
+
+#eliminar:hover{
+  background-color: #c0392b;
+  color: white;
+}
+

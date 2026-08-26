@@ -1,0 +1,45 @@
+<div *ngIf="registros.length === 0" class="mensaje-vacio">
+  <p id="mensaje">No hay asistencias registradas aún.</p>
+</div>
+<div *ngFor="let item of registros">
+  <div class="registro-preview" *ngIf="!item.editando">
+    <p><strong>Clase:</strong> {{ item.clase }}</p>
+    <p><strong>Fecha:</strong> {{ item.fecha }}</p>
+    <p><strong>Hora:</strong> {{ item.hora }}</p>
+    <p><strong>Alumno:</strong> {{ item.alumno }}</p>
+    <button (click)="item.editando = true">Editar</button>
+    <button  id='eliminar' (click)="borrar(item)">Eliminar</button>
+  </div>
+
+  <form *ngIf="item.editando" (ngSubmit)="actualizar(item)" #form="ngForm" id="todo">
+    <h1>Editar asistencia</h1>
+
+    <div>
+      <label for="clase">Clase grupal</label>
+      <select [(ngModel)]="item.clase" name="clase-{{item.id}}" required>
+        <option value="">Selecciona clase</option>
+        <option *ngFor="let c of clases" [value]="c">{{ c }}</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="fecha">Fecha</label>
+      <input type="date" [(ngModel)]="item.fecha" name="fecha-{{item.id}}" required />
+    </div>
+
+    <div>
+      <label for="hora">Hora</label>
+      <input type="time" [(ngModel)]="item.hora" name="hora-{{item.id}}" required />
+    </div>
+
+    <div>
+      <label for="alumno">Nombre del alumno</label>
+      <input type="text" [(ngModel)]="item.alumno" name="alumno-{{item.id}}" required disabled />
+    </div>
+
+    <button type="submit">Guardar</button>
+    <button type="button" (click)="item.editando = false">Cancelar</button>
+  </form>
+
+  <hr />
+</div>

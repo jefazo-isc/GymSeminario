@@ -1,0 +1,8 @@
+<div *ngIf="nombre && role">
+  <p>Hola, {{ nombre }}.</p>
+  <p>Tu rol es: {{ role }}</p>
+</div>
+
+<div *ngIf="!nombre || !role">
+  <p>Cargando datos...</p>
+</div>

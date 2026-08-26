@@ -1,0 +1,88 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Montserrat', sans-serif;
+}
+
+body {
+  background-color: #000;
+  display: flex;
+  justify-content: center;
+  align-items: start;
+  padding-top: 60px;
+  height: 100vh;
+}
+
+.registro-container {
+  background-color: white;
+  padding: 40px 30px;
+  width: 400px;
+  border-radius: 15px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.registro-container h2 {
+  text-align: center;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.container-input {
+  display: flex;
+  align-items: center;
+  background-color: #eeeeee;
+  padding: 10px 15px;
+  border-radius: 6px;
+  margin-bottom: 5px;
+}
+
+.container-input i {
+  font-size: 18px;
+  margin-right: 8px;
+  color: #666;
+}
+
+.container-input input,
+.container-input select {
+  border: none;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  font-size: 14px;
+  padding: 5px 0;
+  color: #333;
+}
+
+.button {
+  width: 100%;
+  padding: 10px;
+  background-color: #ff6f00;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.button:hover {
+  background-color: #e65c00;
+}
+
+.error {
+  color: red;
+  font-size: 12px;
+  margin-top: -5px;
+  margin-bottom: 5px;
+  padding-left: 4px;
+}
+
+.invalid {
+  border-bottom: 2px solid red;
+}

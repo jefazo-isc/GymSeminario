@@ -1,0 +1,65 @@
+body {
+  background-color: rgb(0, 0, 0);
+  color: black;
+  margin: 0;
+  padding: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  overflow-x: hidden;
+}
+
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
+html, body {
+  height: 100%;
+}
+
+body.modo-accesible {
+  background-color: #111 !important;
+  color: #EAEAEA !important;
+  filter: none;
+  font-size: 1.2em; /* Aumentado de 1.1em a 1.2em */
+}
+
+body.modo-accesible h1,
+body.modo-accesible h2,
+body.modo-accesible h3,
+body.modo-accesible h4,
+body.modo-accesible h5,
+body.modo-accesible p,
+body.modo-accesible a,
+body.modo-accesible li,
+body.modo-accesible .title,
+body.modo-accesible .description {
+  color: #EAEAEA !important;
+  background-color: transparent !important;
+  text-shadow: 1px 1px 2px #000;
+}
+
+body.modo-accesible .container,
+body.modo-accesible .credit-box,
+body.modo-accesible .service-card,
+body.modo-accesible section,
+body.modo-accesible .card,
+body.modo-accesible .mat-card {
+  background-color: #222 !important;
+  border: 2px solid #888 !important;
+  color: #EAEAEA !important;
+  opacity: 1 !important;
+  box-shadow: none !important;
+  filter: none !important;
+
+  /* Alinear a la derecha */
+  margin-left: auto !important;
+  margin-right: 0 !important;
+  text-align: right !important;
+}
+
+body.modo-accesible .credit-box,
+body.modo-accesible .container {
+  max-width: 100% !important;
+  padding-right: 20px !important;
+  padding-left: 10px !important;
+}

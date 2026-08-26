@@ -1,0 +1,263 @@
+/* Fondo general gris muy claro */
+body {
+  background-color: #000000;
+  margin: 0;
+  padding: 40px 0;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+  display: flex;
+  justify-content: center;
+}
+
+.main-container {
+  width: 100%;
+  max-width: 700px;
+  padding: 0 15px;
+}
+
+/* Línea naranja separadora entre registros (reemplaza hr) */
+.separator-naranja {
+  border: none;
+  height: 2px;
+  background-color: #ff6f00; 
+  margin: 30px 0;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Tarjeta para registro con barra naranja a la izquierda */
+.registro-preview {
+  position: relative;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.05);
+  padding: 20px 25px 20px 20px; 
+  margin-bottom: 25px;
+  transition: box-shadow 0.3s ease;
+  border-left: 6px solid #ff6f00; 
+}
+
+.registro-preview:hover {
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.1);
+}
+
+.registro-preview p {
+  margin: 6px 0;
+  font-size: 16px;
+  color: #444;
+  font-weight: 500;
+}
+
+/* Botones */
+.registro-preview button {
+  margin-right: 10px;
+  padding: 8px 16px;
+  background-color: #ff6f00;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.registro-preview button:hover {
+  background-color: #e65c00;
+}
+
+#eliminar {
+  background-color: #ff1900;
+}
+
+#eliminar:hover {
+  background-color: #c0392b;
+}
+
+/* El formulario queda igual */
+form#todo {
+  max-width: 700px;
+  margin: 20px auto 40px auto;
+  padding: 30px 35px;
+  background-color: #fff;
+  border-radius: 15px;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.1);
+  font-weight: 500;
+}
+
+
+/* Título formulario */
+form#todo h1 {
+  color: #ff6f00;
+  margin-bottom: 25px;
+  font-weight: 700;
+  text-align: center;
+  font-size: 28px;
+}
+
+/* Campos del formulario */
+form#todo div {
+  margin-bottom: 20px;
+}
+
+form#todo label {
+  display: block;
+  margin-bottom: 8px;
+  color: #555;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+form#todo input,
+form#todo select {
+  width: 100%;
+  padding: 12px 15px;
+  font-size: 16px;
+  color: #333;
+  border: 1.8px solid #ddd;
+  border-radius: 10px;
+  transition: border-color 0.3s ease;
+  font-weight: 400;
+  background-color: #fafafa;
+}
+
+form#todo input:focus,
+form#todo select:focus {
+  outline: none;
+  border-color: #ff6f00;
+  background-color: #fff;
+}
+
+/* Input disabled para alumno */
+form#todo input[disabled] {
+  background-color: #eee;
+  color: #999;
+  cursor: not-allowed;
+}
+
+/* Botones guardar y cancelar */
+form#todo button {
+  width: 48%;
+  padding: 14px 0;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-top: 10px;
+}
+
+/* Botón guardar */
+form#todo button[type="submit"] {
+  background-color: #ff6f00;
+  color: white;
+  float: left;
+}
+
+.btn-rojo {
+  background-color: #e74c3c;  
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn-rojo:hover {
+  background-color: #c0392b; 
+}
+
+form#todo button[type="submit"]:hover {
+  background-color: #e65c00;
+}
+
+/* Botón cancelar */
+form#todo button[type="button"] {
+  background-color: #bbb;
+  color: #444;
+  float: right;
+}
+
+form#todo button[type="button"]:hover {
+  background-color: #999;
+}
+
+/* Línea divisoria */
+hr {
+  border: none;
+  border-top: 1px solid #ddd;
+  margin: 35px 0;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.registro-container {
+  background-color: white;
+  padding: 40px 30px;
+  width: 400px;
+  border-radius: 15px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.registro-container h2 {
+  text-align: center;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+h1, h2, h3, h4 {
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.divider-orange {
+  border: none;
+  border-top: 2px solid #ff6f00; 
+  margin: 2rem 0;
+  width: 60%; 
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.titulo-container {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+h1.text-center {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 700;
+  font-size: 3rem;
+  color: #ffffff;          
+  letter-spacing: 2px;     
+  text-transform: uppercase;
+  position: relative;
+  margin-bottom: 0.5rem;   
+}
+
+h1.text-center::after {
+  content: '';
+  display: block;
+  width: 120px;
+  height: 4px;
+  background-color: #ff6f00;  
+  margin: 0.75rem auto 0;
+  border-radius: 2px;
+}
+
+.subtitulo {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 400;
+  font-size: 1.25rem;
+  color: #ffffff;           
+  margin-top: 0.25rem;
+}

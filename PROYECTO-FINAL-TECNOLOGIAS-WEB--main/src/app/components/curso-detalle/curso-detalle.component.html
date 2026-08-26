@@ -1,0 +1,27 @@
+<br>
+<div class="titulo-container">
+  <h1 class="text-center">Detalle del curso</h1>
+  <p class="subtitulo">Descubre los detalles del curso y todo lo que tenemos para ti</p>
+</div>
+
+<div class="curso-preview">
+  @if (curso) {
+  <div class="curso-info">
+    <h2 class="text-center">{{ curso.nombre }}</h2>
+
+    <p class="curso-descripcion"><strong>Descripción:</strong> {{ curso.descripcion }}</p>
+    <p class="curso-duracion"><strong>Duración:</strong> {{ curso.duracion }}</p>
+
+    <img [src]="curso.img" alt="Imagen del curso" class="curso-img" />
+
+    <a [routerLink]="['/home']" class="btn-volver">
+      Regresar al inicio <i class='bx bx-right-arrow-alt'></i>
+    </a>
+  </div>
+  } @else {
+  <div class="mensaje-no-resultados">
+    <i class="bx bx-error-circle icono-info"></i>
+    <p>Curso no encontrado.</p>
+  </div>
+  }
+</div>

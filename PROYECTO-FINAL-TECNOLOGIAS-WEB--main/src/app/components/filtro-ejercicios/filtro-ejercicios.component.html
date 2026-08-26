@@ -1,0 +1,8 @@
+<div class="search-container">
+  <mat-form-field appearance="outline" class="search-field">
+    <mat-label>Buscar ejercicio o parte del cuerpo...</mat-label>
+    <input matInput [(ngModel)]="searchTerm" (input)="onSearchChange()"
+      placeholder="Busca por ejercicio o parte del cuerpo" class="search-input">
+    <mat-icon matSuffix>search</mat-icon>
+  </mat-form-field>
+</div>

@@ -1,0 +1,307 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&display=swap');
+
+/* Carrusel de Productos */
+#carrusel-productos {
+    background-color: #000;
+    padding: 3rem 0;
+    color: white;
+    text-align: center;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    animation: fadeIn 1s ease-out;
+}
+
+/* Carrusel Imágenes */
+#carrusel-productos .carousel-inner {
+    border-radius: 20px;
+    overflow: hidden;
+    max-width: 90%;
+    margin: auto;
+}
+
+.carrusel-img {
+    width: 100%;
+    max-height: 450px;
+    object-fit: contain;
+    border-radius: 10px;
+    transition: transform 0.5s ease;
+}
+
+.carrusel-img:hover {
+    transform: scale(1.05);
+}
+
+/* Título y Subtítulo */
+#carrusel-productos h3,
+.titulo-seccion {
+    font-family: 'Poppins', sans-serif;
+    font-weight: bold;
+    color: #fafafa;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    animation: fadeInDown 1s ease-out;
+}
+
+.titulo-seccion {
+    font-size: 3rem;
+    margin-bottom: 1.2rem;
+}
+
+.titulo-seccion::after {
+    content: "";
+    display: block;
+    width: 550px;
+    height: 4px;
+    background-color: #ff7f00;
+    margin: 12px auto 0;
+    border-radius: 2px;
+}
+
+#carrusel-productos p {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 1.2rem;
+    color: #ddd;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+/* Animaciones */
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsividad para diferentes tamaños de pantalla */
+@media (max-width: 1024px) {
+    .titulo-seccion {
+        font-size: 2.5rem; 
+    }
+}
+
+@media (max-width: 768px) {
+    .titulo-seccion {
+        font-size: 2rem;
+    }
+
+    .titulo-seccion::after {
+        width: 80%; 
+    }
+}
+
+@media (max-width: 480px) {
+    .titulo-seccion {
+        font-size: 1.6rem; 
+    }
+
+    .titulo-seccion::after {
+        width: 70%; 
+    }
+}
+
+
+/* Botones de control del Carrusel */
+.carousel-btn {
+    background-color: rgba(0, 0, 0, 0.5);
+    border: none;
+    color: white;
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.carousel-btn:hover {
+    background-color: rgba(255, 127, 0, 0.8);
+    transform: scale(1.1);
+}
+
+.carousel-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 127, 0, 0.7);
+}
+
+/* Posicionamiento de botones */
+.left-btn {
+    left: 10px;
+}
+
+.right-btn {
+    right: 10px;
+}
+
+/* Indicadores del carrusel */
+.carousel-indicators {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-120%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    z-index: 9;
+}
+
+.carousel-indicators button {
+    background-color: rgba(255, 255, 255, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    width: 12px;
+    height: 12px;
+    padding: 0;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+}
+
+.carousel-indicators .active,
+.carousel-indicators button:hover {
+    background-color: #ff7f00;
+    border-color: #ff7f00;
+    width: 16px;
+    height: 16px;
+    transform: scale(1.2);
+}
+
+.carousel-indicators button:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 127, 0, 0.5);
+}
+
+.gym-logo {
+    max-width: 450px;
+    height: auto;
+    display: block;
+    margin: 0 auto 20px auto;
+}
+
+.gym-slogan {
+    font-family: 'Oswald', sans-serif;
+    font-size: 32px;
+    color: #ff3c00;
+    text-align: center;
+    margin-top: 0;
+    letter-spacing: 2px;
+    font-weight: 700;
+    text-transform: uppercase;
+    text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.6);
+    opacity: 0;
+    transform: scale(0.8);
+    animation: sloganAppear 1.2s ease-out forwards;
+    animation-delay: 0.5s;
+}
+
+@keyframes sloganAppear {
+    0% {
+        opacity: 0;
+        transform: scale(0.8) translateY(20px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.logo {
+    max-width: 450px;
+    width: 100%;
+    height: auto;
+}
+
+@media (max-width: 768px) {
+    .logo {
+        max-width: 350px;
+    }
+}
+
+@media (max-width: 480px) {
+    .logo {
+        max-width: 250px;
+    }
+}
+
+@media (max-width: 1024px) {
+    .titulo-seccion {
+      font-size: 1.8rem; 
+    }
+}
+
+@media (max-width: 768px) {
+    .titulo-seccion {
+      font-size: 1.6rem; 
+    }
+}
+
+@media (max-width: 480px) {
+    .titulo-seccion {
+      font-size: 1.4rem; 
+    }
+}
+
+/* Ajustes para pantallas más pequeñas */
+@media (max-width: 768px) {
+  .carousel-indicators button {
+    width: 8px;  
+    height: 8px; 
+    margin: 0 4px; 
+  }
+}
+
+@media (max-width: 480px) {
+  .carousel-indicators button {
+    width: 6px;  
+    height: 6px; 
+    margin: 0 3px; 
+  }
+}
+
+@media (max-width: 768px) {
+  .carousel-indicators {
+    bottom: 5px; 
+    gap: 6px;  
+  }
+
+  .carousel-indicators button {
+    width: 8px;  
+    height: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .carousel-indicators {
+    bottom: 5px;
+    gap: 4px;
+  }
+
+  .carousel-indicators button {
+    width: 6px;  
+    height: 6px;
+  }
+}

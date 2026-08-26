@@ -1,0 +1,61 @@
+<div class="dashboard">
+    <div class="header">
+        <h1>Estadísticas de Sesiones</h1>
+        <p>Visualización en tiempo real de las actividades más populares</p>
+    </div>
+
+    <div class="chart-container">
+        <div class="chart-header">
+            <h2 class="chart-title">Distribución de Sesiones por Actividad</h2>
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="label">Total Sesiones</div>
+                    <div class="value">{{ totalSessions | number }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Actividad Top</div>
+                    <div class="value">{{ topActivity }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Actualizado</div>
+                    <div class="value">{{ lastUpdate | date:'HH:mm' }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-wrapper">
+            @if (loading) {
+            <div class="spinner-overlay">
+                <div class="spinner-container">
+                    <div class="spinner">
+                        <div class="spinner-sector spinner-sector-orange"></div>
+                        <div class="spinner-sector spinner-sector-light"></div>
+                        <div class="spinner-circle"></div>
+                    </div>
+                    <div class="spinner-text">Cargando datos...</div>
+                </div>
+            </div>
+            }
+            @else if (error) {
+            <div class="error-overlay">
+                <div class="error-container">
+                    <div class="error-icon">⚠️</div>
+                    <div class="error-text">Error al cargar los datos<br>Por favor intenta nuevamente</div>
+                    <button class="retry-button" (click)="load()">↻ Reintentar</button>
+                </div>
+            </div>
+            }
+            @else {
+            <div style="display: block; height: 100%; width: 100%;">
+                <canvas baseChart [data]="barChartData" [options]="barChartOptions" [type]="'bar'">
+                </canvas>
+            </div>
+            }
+        </div>
+
+        <div class="update-info">
+            <div class="update-indicator"></div>
+            <span>Actualizando datos cada 5 segundos</span>
+        </div>
+    </div>
+</div>

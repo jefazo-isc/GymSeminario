@@ -1,0 +1,142 @@
+/* Fondo general y tipografía */
+#social {
+    background-color: #1b1b1b;
+    color: #fff;
+    font-family: 'Roboto', sans-serif;
+}
+
+/* Títulos principales */
+#social h3 {
+    font-size: 2rem;
+    color: #ff6f00; 
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 2px black;
+}
+
+/* Subtítulo */
+#social p {
+    font-size: 1.1rem;
+    color: #ddd;
+    margin-bottom: 2rem;
+}
+
+/* Divider */
+mat-divider {
+    background-color: #ff6f00 !important;
+    height: 2px;
+    margin-bottom: 2rem;
+}
+
+/* Estilo de las cards generales */
+.social-card {
+    background-color: #2a2a2a !important;
+    border: 1px solid #ff6f00;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(255, 111, 0, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.social-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 30px rgba(255, 111, 0, 0.4);
+}
+
+/* Encabezado de las cards */
+mat-card-header {
+    display: flex;
+    align-items: center;
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #ff9800;
+    border-bottom: 1px solid #444;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Íconos */
+mat-icon {
+    color: #ff9800;
+    margin-right: 0.5rem;
+    font-size: 24px;
+}
+
+/* Contenido del mat-card */
+mat-card-content {
+    padding: 1rem;
+}
+
+/* Estilo para los títulos con los íconos */
+mat-card-header span {
+    font-family: 'Poppins', sans-serif; 
+    font-size: 2.2rem; 
+    font-weight: 800; 
+    color: #ff6600; 
+    text-transform: uppercase; 
+    letter-spacing: 2px; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease; 
+}
+
+/* Efecto hover */
+mat-card-header span:hover {
+    color: #ff9e00; 
+    transform: scale(1.1); 
+    text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5); 
+}
+
+/* Iconos de FontAwesome */
+mat-card-header i {
+    font-size: 2.5rem; 
+    margin-right: 10px; 
+    color: #ff6600; 
+    transition: transform 0.3s ease; 
+}
+
+/* Efecto hover en los iconos */
+mat-card-header i:hover {
+    transform: scale(1.1); 
+}
+
+/* Responsividad para las redes sociales */
+@media (max-width: 767px) {
+    .col-12 {
+        padding: 0 10px;
+    }
+    .social-card iframe {
+        width: 100% !important;
+    }
+}
+
+
+/* Estilos generales para el contenedor de la página de Facebook */
+.fb-page {
+  width: 100%; 
+  height: auto; 
+  aspect-ratio: 1 / 1; 
+  min-width: 320px;  
+  max-width: 500px;  
+}
+
+/* Asegura que el contenedor sea responsivo */
+.fb-page blockquote {
+  width: 100%;
+  display: block;
+  margin: 0;
+}
+
+/* Responsividad: Ajuste para pantallas medianas (tablets) */
+@media (max-width: 1024px) {
+  .fb-page {
+    max-width: 90%;  
+  }
+}
+
+/* Responsividad: Ajuste para pantallas pequeñas (móviles) */
+@media (max-width: 768px) {
+  .fb-page {
+    max-width: 100%;
+  }
+}

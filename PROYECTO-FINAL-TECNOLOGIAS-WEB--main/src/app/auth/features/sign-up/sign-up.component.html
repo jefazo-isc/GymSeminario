@@ -1,0 +1,95 @@
+<body>
+  <div class="registro-container">
+    <h2>Registrarse</h2>
+
+    <div class="social-networks">
+      <button (click)="conGoogle()" class="google-btn">
+        <i class='bx bxl-google'></i> 
+      </button>
+      <i class='bx bxl-twitter icon'></i>
+      <i class='bx bxl-instagram icon'></i>
+      <i class='bx bxl-tiktok icon'></i>
+    </div>
+
+    <span>Use su correo electrónico para registrarse</span>
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <!-- Nombre -->
+      <div class="container-input">
+        <i class='bx bx-user'></i>
+        <input
+          type="text"
+          placeholder="Nombre"
+          formControlName="nombre"
+          [class.invalid]="form.get('nombre')?.invalid && form.get('nombre')?.touched"
+        />
+      </div>
+      <div class="error" *ngIf="form.get('nombre')?.invalid && form.get('nombre')?.touched">
+        <small *ngIf="form.get('nombre')?.errors?.['required']">El nombre es obligatorio.</small>
+      </div>
+
+      <!-- Correo -->
+      <div class="container-input">
+        <i class='bx bx-envelope'></i>
+        <input
+          type="email"
+          placeholder="Correo electrónico"
+          formControlName="email"
+          [class.invalid]="form.get('email')?.invalid && form.get('email')?.touched"
+        />
+      </div>
+      <div class="error" *ngIf="form.get('email')?.invalid && form.get('email')?.touched">
+        <small *ngIf="form.get('email')?.errors?.['required']">El correo es obligatorio.</small>
+        <small *ngIf="form.get('email')?.errors?.['email']">Debe ser un correo válido.</small>
+      </div>
+
+      <!-- Contraseña -->
+      <div class="container-input">
+        <i class='bx bx-lock'></i>
+        <input
+          type="password"
+          placeholder="Contraseña"
+          formControlName="password"
+          [class.invalid]="form.get('password')?.invalid && form.get('password')?.touched"
+        />
+      </div>
+      <div class="error" *ngIf="form.get('password')?.invalid && form.get('password')?.touched">
+        <small *ngIf="form.get('password')?.errors?.['required']">La contraseña es obligatoria.</small>
+        <small *ngIf="form.get('password')?.errors?.['missingUppercase']">Debe tener al menos una mayúscula.</small>
+        <small *ngIf="form.get('password')?.errors?.['missingNumber']">Debe tener al menos un número.</small>
+        <small *ngIf="form.get('password')?.errors?.['invalidLength']">Debe tener entre 6 y 16 caracteres.</small>
+      </div>
+
+      <!-- Confirmar contraseña -->
+<div class="container-input">
+  <i class='bx bx-lock-alt'></i>
+  <input
+    type="password"
+    placeholder="Confirmar contraseña"
+    formControlName="confirmPassword"
+    [class.invalid]="form.get('confirmPassword')?.invalid && form.get('confirmPassword')?.touched"
+  />
+</div>
+<div class="error" *ngIf="form.get('confirmPassword')?.touched && form.get('confirmPassword')?.invalid">
+  <small *ngIf="form.get('confirmPassword')?.errors?.['required']">Confirma tu contraseña.</small>
+  <small *ngIf="form.get('confirmPassword')?.errors?.['mismatch']">Las contraseñas no coinciden.</small>
+</div>
+
+      <!-- reCAPTCHA -->
+      <div id="recaptcha-container" style="margin-bottom: 16px;"></div>
+
+      <!-- Botón de registro -->
+      <button class="button" type="submit" [disabled]="form.invalid || !captchaResuelto">
+        REGISTRARSE
+      </button>
+
+      <!-- Enlaces -->
+      <div class="links">
+        <a [routerLink]="['/auth/sign-in']">¿Ya tienes cuenta? Inicia sesión</a>
+        <a [routerLink]="['/change']">Cambiar contraseña</a>
+      </div>
+    </form>
+  </div>
+</body>
+<br>
+<br>

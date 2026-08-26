@@ -1,0 +1,120 @@
+/* Fondo general */
+body {
+  background-color: #121212;
+  color: #eee;
+  font-family: "Segoe UI", sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+#mensaje {
+  color: #fca311;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* Estilo del formulario */
+form#todo {
+  max-width: 500px;
+  margin: 20px auto;
+  padding: 25px;
+  background-color: #1e1e1e;
+  border-radius: 15px;
+  box-shadow: 0 6px 20px rgba(252, 163, 17, 0.15); /* sombra naranja suave */
+}
+
+form#todo h1 {
+  font-size: 20px;
+  margin-bottom: 20px;
+  color: #fca311;
+  text-align: center;
+}
+
+form#todo div {
+  margin-bottom: 15px;
+}
+
+form#todo label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #fca311;
+}
+
+form#todo input,
+form#todo select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #444;
+  border-radius: 8px;
+  font-size: 15px;
+  background-color: #2a2a2a;
+  color: #fff;
+  transition: border-color 0.3s ease;
+}
+
+form#todo input:focus,
+form#todo select:focus {
+  border-color: #fca311;
+  outline: none;
+}
+
+form#todo button {
+  background-color: #fca311;
+  color: #121212;
+  padding: 12px 18px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  cursor: pointer;
+  margin-right: 10px;
+  transition: background-color 0.3s ease;
+}
+
+form#todo button:hover {
+  background-color: #e69500;
+}
+
+/* Estilo para la vista previa */
+.registro-preview {
+  background-color: #1e1e1e;
+  padding: 15px 20px;
+  margin: 20px auto;
+  max-width: 500px;
+  border-left: 6px solid #fca311;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(252, 163, 17, 0.1);
+}
+
+.registro-preview p {
+  margin: 6px 0;
+  font-size: 14px;
+  color: #ddd;
+}
+
+/* Botones dentro del preview */
+.registro-preview button {
+  background-color: #fca311;
+  color: #121212;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  margin-right: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.registro-preview button:hover {
+  background-color: #e69500;
+}
+
+/* Botón de eliminar (último) */
+.registro-preview button:last-child {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.registro-preview button:last-child:hover {
+  background-color: #c0392b;
+}

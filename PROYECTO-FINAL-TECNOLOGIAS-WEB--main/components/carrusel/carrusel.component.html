@@ -1,0 +1,52 @@
+<br><br>
+<div id="carrusel-productos" class="carousel-container container p-4 rounded-3"
+  style="max-width: 1200px; background-color: black; position: relative;">
+
+<div class="logo-container" style="text-align: center; margin-bottom: 20px;">
+  <img src="img/Responsables/logo.jpg" alt="Logo del gimnasio" class="logo" style="max-width: 100%; height: auto;">
+  <br>
+  <br>
+  <p class="gym-slogan">
+    Donde la disciplina vence al talento
+  </p>
+</div>
+
+  <br><br>
+
+
+  <h3 id="productos" class="titulo-seccion">Nuestras Instalaciones</h3>
+  <p id="texto" class="descripcion-seccion">
+    Descubre nuestras modernas instalaciones diseñadas para tu entrenamiento y bienestar.
+    ¡Todo lo que necesitas para alcanzar tus metas está aquí!
+  </p>
+
+
+  <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
+    <!-- Indicadores -->
+    <div class="carousel-indicators">
+      @for (image of images; track $index) {
+      <button type="button" [ngClass]="{ 'active': currentIndex === $index }" (click)="setActiveImage($index)">
+      </button>
+      }
+    </div>
+
+    <!-- Contenedor de imágenes -->
+    <div class="carousel-inner">
+      @for (image of images; track $index) {
+      <div class="carousel-item" [ngClass]="{ 'active': currentIndex === $index }">
+        <img [src]="image.src" class="d-block mx-auto rounded-3 carrusel-img">
+      </div>
+      }
+    </div>
+
+    <!-- Botón Anterior -->
+    <button class="carousel-btn left-btn" (click)="prevImage()">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+
+    <!-- Botón Siguiente -->
+    <button class="carousel-btn right-btn" (click)="nextImage()">
+      <mat-icon>arrow_forward</mat-icon>
+    </button>
+
+    <br><br>

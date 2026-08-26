@@ -1,0 +1,34 @@
+<body>
+  <div class="registro-container">
+    <h2>Inicio por Teléfono</h2>
+
+    <!-- Número de teléfono -->
+    <div class="container-input">
+      <i class='bx bx-phone'></i>
+      <input type="tel" [(ngModel)]="phoneNumber" placeholder="Número de teléfono"
+        [class.invalid]="!esNumeroValido() && phoneNumber" />
+    </div>
+    <div class="error" *ngIf="!esNumeroValido() && phoneNumber">
+      <small>Número inválido. Verifica el formato.</small>
+    </div>
+
+    <!-- Código OTP -->
+    <div class="container-input">
+      <i class='bx bx-key'></i>
+      <input type="text" [(ngModel)]="otp" placeholder="Código OTP" />
+    </div>
+
+    <!-- reCAPTCHA -->
+    <div id="recaptcha-container" style="margin-bottom: 16px;"></div>
+
+    <!-- Botón enviar código -->
+    <button class="button" (click)="enviarCodigo()" [disabled]="!captchaResuelto || !esNumeroValido()">
+      Enviar código
+    </button>
+
+    <!-- Botón verificar código -->
+    <button class="button" (click)="verificarCodigo()" [disabled]="!btnVerificar">
+      Verificar código
+    </button>
+  </div>
+</body>

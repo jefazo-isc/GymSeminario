@@ -1,0 +1,413 @@
+/* Encabezado */
+header {
+  background-color: #000000;
+  padding: 15px 0;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+#usuario{
+  color:white;
+}
+
+header, nav {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+}
+
+.linea-naranja {
+  height: 4px;
+  background-color: #ff7f00;
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 0;
+  z-index: 999;
+}
+
+
+/* Navegación */
+nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+}
+
+.nav {
+  display: flex;
+  list-style: none;
+  gap: 5px; 
+  margin-left: auto; 
+}
+
+.nav-item {
+  position: relative;
+}
+
+.nav-link {
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.9rem; 
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 6px 6px; 
+  border-radius: 5px;
+  transition: all 0.3s ease-in-out;
+}
+
+.nav-link:hover {
+  color: #ff7f00;
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: scale(1.05); 
+}
+
+/* Subrayado animado en hover */
+.nav-link::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -3px;
+  width: 0;
+  height: 2px;
+  background-color: #ff7f00;
+  transition: all 0.3s ease-in-out;
+  transform: translateX(-50%);
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+/* Estilos en pantallas pequeñas */
+@media (max-width: 768px) {
+  nav {
+      flex-direction: column;
+      align-items: center;
+  }
+
+  .nav {
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+  }
+
+  .nav-link {
+      display: block;
+      width: 100%;
+      text-align: center;
+      padding: 10px;
+      border-radius: 5px;
+  }
+
+  .nav-link:hover {
+      transform: none;
+  }
+}
+
+.logo {
+  overflow: hidden;
+}
+
+.logo {
+  width: 100px;
+  height: auto;
+}
+
+.container {
+  position: relative;
+}
+
+/* Menú lateral (escondido a la derecha) */
+.navigation {
+  position: fixed;
+  top: 0;
+  right: -250px;
+  width: 250px;
+  height: 100%;
+  background: #333;
+  transition: right 0.4s ease;
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  overflow-y: auto; 
+
+}
+
+.navigation.active {
+  right: 0;
+}
+
+.navigation ul {
+  list-style: none;
+  padding: 20px;
+}
+
+.navigation ul li {
+  margin: 15px 0;
+}
+
+.navigation ul li a {
+  display: flex;
+  align-items: center;
+  color: #fff;
+  font-weight: 500;
+  text-decoration: none;
+  padding: 10px;
+  border-radius: 8px;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.navigation ul li a:hover {
+  background-color: #555;
+  color: #fff;
+}
+
+.navigation ul li a .icon {
+  font-size: 24px;
+  margin-right: 10px;
+  color: #fff;
+}
+
+.navigation ul li a .title {
+  font-size: 1em;
+  color: #fff;
+}
+
+/* Botón para cerrar menú */
+.close-btn {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  font-size: 24px;
+  color: #fff;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.close-btn:hover {
+  color: #ff7f00;
+}
+
+/* Botón para abrir menú */
+.menu-toggle {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 9999; 
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  color: #000000;
+  font-weight: bold;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+  transition: background 0.3s, color 0.3s, box-shadow 0.3s;
+}
+
+.menu-toggle i {
+  font-size: 20px;
+  color: #000;
+}
+
+.menu-toggle:hover {
+  background: #e0e0e0;
+  color: #333;
+  box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.5);
+}
+
+/*  RESPONSIVE DESIGN */
+@media screen and (max-width: 768px) {
+  .navigation {
+      width: 200px;
+  }
+
+  .menu-toggle {
+      padding: 10px 20px;
+      font-size: 14px;
+  }
+
+  .navigation ul li a .icon {
+      font-size: 20px;
+      margin-right: 8px;
+  }
+
+  .navigation ul li a .title {
+      font-size: 0.9em;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .navigation {
+      width: 180px;
+  }
+
+  .menu-toggle {
+      top: 10px;
+      right: 10px;
+      padding: 8px 16px;
+      font-size: 12px;
+  }
+}
+
+
+/* Estilo para el cuadro de usuario */
+.user-menu {
+  position: absolute;
+  top: 60px;
+  right: 20px;
+  background-color: white;
+  border: 1px solid #ddd;
+  padding: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 200px;
+}
+
+.user-menu-content {
+  text-align: center;
+}
+
+.user-menu button {
+  margin-top: 10px;
+  padding: 5px 10px;
+  background-color: #ff7f00;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.user-menu button:hover {
+  background-color: #ff7f00;
+}
+
+/* Estilo para el ícono y nombre del usuario en blanco */
+.user-icon {
+  color: white;  
+}
+
+.user-icon i {
+  color: white; 
+}
+
+
+/* Estilos para el menú desplegable */
+.user-icon {
+  cursor: pointer;
+  position: relative; 
+}
+
+.dropdown-menu {
+  position: absolute;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  top: 100%; 
+  right: 0;
+  width: 150px; 
+  display: none; 
+}
+
+.dropdown-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.dropdown-menu ul li {
+  padding: 8px 10px;
+}
+
+.dropdown-menu ul li a {
+  text-decoration: none;
+  color: #333;
+}
+
+.dropdown-menu ul li a:hover {
+  background-color: #f1f1f1;
+}
+
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  background-color: rgba(0, 0, 0, 0.3); 
+  display: none;
+  z-index: 999; 
+}
+
+
+.form-busqueda {
+  display: flex;
+  align-items: center;
+  max-width: 220px;
+  gap: 8px;
+}
+
+.input-busqueda {
+  flex: 1;
+  padding: 5px 10px;
+  font-size: 13px;
+  border: 1.5px solid #ff6f00;
+  border-radius: 8px;
+  outline: none;
+  background-color: #fff;
+  color: #333;
+  transition: border-color 0.3s ease;
+}
+
+.input-busqueda:focus {
+  border-color: #e65c00;
+}
+
+.btn-buscar {
+  background-color: #ff6f00;
+  border: none;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-buscar:hover {
+  background-color: #e65c00;
+}
+
+.btn-buscar i {
+  font-size: 18px;
+}
+
+.logout-icon {
+  background-color: #ff7f00; 
+  border-radius: 50%; 
+  width: 22px;
+  height: 22px;
+  display: flex; 
+  justify-content: center;
+  align-items: center;
+  color: white; 
+  transition: background-color 0.3s ease;
+  overflow: hidden; 
+}
+
+.logout-icon i {
+  font-size: 1rem; 
+  line-height: 1; 
+}
+
+.logout-icon:hover {
+  background-color: #e66f00; 
+  cursor: pointer;
+}
+

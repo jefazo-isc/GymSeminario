@@ -1,0 +1,353 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap');
+
+#services {
+    background-color: #fff;
+    padding: 50px 20px;
+    text-align: center;
+    color: #333;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.5s ease;
+    font-family: 'Poppins', sans-serif;
+}
+
+#services:hover {
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+    transform: translateY(-10px);
+}
+
+#services .title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #ff7f00;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    position: relative;
+}
+
+#services .title::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50%;
+    height: 2px;
+    background-color: #ff7f00;
+    animation: underlineAnimation 1s ease-out forwards;
+}
+
+@keyframes underlineAnimation {
+    0% { width: 0; }
+    100% { width: 50%; }
+}
+
+#services .description {
+    font-size: 1.15rem;
+    color: #555;
+    line-height: 1.8;
+    text-align: justify;
+    margin-bottom: 30px;
+    opacity: 0;
+    animation: fadeIn 1s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+#services::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 5px solid #ff7f00;
+    border-radius: 20px;
+    opacity: 0;
+    animation: borderAnimation 2s ease-out forwards;
+}
+
+@keyframes borderAnimation {
+    0% {
+        opacity: 0;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(1.05);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+#services .service-card {
+    background: linear-gradient(135deg, #ffffff, #f7f7f7);
+    border-radius: 15px;
+    padding: 25px;
+    margin: 15px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.5s ease;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInCard 0.8s forwards;
+}
+
+#services .service-card h4 {
+    font-family: 'Oswald', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #ff7f00;
+    margin-bottom: 15px;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+#services .service-card p {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.1rem;
+    color: #444;
+    line-height: 1.6;
+}
+
+#services .service-card:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.25);
+    background: linear-gradient(135deg, #ffffff, #f0f0f0);
+}
+
+@keyframes fadeInCard {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media screen and (max-width: 768px) {
+    #services .service-card {
+        padding: 20px;
+    }
+    
+    #services .service-card h4 {
+        font-size: 1.5rem;
+    }
+
+    #services .service-card p {
+        font-size: 1rem;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    #services {
+        padding: 40px 15px;
+    }
+
+    #services .title {
+        font-size: 2rem;
+    }
+
+    #services .description {
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+
+    #services .service-card {
+        padding: 25px;
+    }
+
+    #services .service-card h4 {
+        font-size: 1.4rem;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    #services {
+        padding: 30px 10px;
+        border-radius: 15px;
+    }
+
+    #services .title {
+        font-size: 1.8rem;
+        letter-spacing: 1px;
+    }
+
+    #services .description {
+        font-size: 0.95rem;
+    }
+
+    #services .service-card {
+        padding: 20px;
+    }
+
+    #services .service-card h4 {
+        font-size: 1.3rem;
+    }
+}
+
+@media screen and (max-width: 360px) {
+    #services .title {
+        font-size: 1.5rem;
+    }
+
+    #services .description {
+        font-size: 0.9rem;
+    }
+
+    #services .service-card {
+        padding: 15px;
+    }
+
+    #services .service-card h4 {
+        font-size: 1.2rem;
+    }
+}
+
+.description {
+  text-align: justify;
+  text-align-last: center;
+  color: #ff6f00; 
+  margin: 20px auto;
+  max-width: 800px;
+  line-height: 1.5;
+  font-size: 25px;
+  position: relative;
+  opacity: 0;
+  animation: fadeInUp 1s ease forwards;
+}
+
+.description::after {
+  content: '';
+  display: block;
+  width: 0;
+  height: 3px;
+  background: #ff6f00;
+  margin: 10px auto 0;
+  animation: underlineExpand 1s ease forwards;
+  animation-delay: 0.8s; 
+}
+
+@keyframes underlineExpand {
+  from { width: 0; }
+  to { width: 60%; }
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+ul {
+    list-style: none; 
+    padding-left: 0;  
+    margin: 20px auto;
+    max-width: 800px;
+}
+
+ul li {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.2rem;
+    color: #444;
+    line-height: 1.6;
+    margin-bottom: 15px;
+    position: relative;
+    padding-left: 30px; 
+}
+
+ul li::before {
+    content: "✔️";
+    position: absolute;
+    left: 0;
+    top: 2px;
+    font-size: 1rem;
+    color: #e60023;
+}
+
+.servicios-controles {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  z-index: 10;
+}
+
+.botones-voz,
+.controles-texto {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.botones-voz button,
+.controles-texto button,
+.controles-texto select {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: none;
+  background: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  transition: transform 0.2s ease;
+}
+
+.botones-voz button:hover,
+.controles-texto button:hover,
+.controles-texto select:hover {
+  transform: scale(1.05);
+}
+
+.botones-voz img {
+  width: 80%;
+  height: 80%;
+  object-fit: contain;
+  display: block;
+  margin: auto;
+}
+
+/* Responsive */
+@media screen and (max-width: 768px) {
+  .servicios-controles {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+    top: 5px;
+    padding: 10px;
+  }
+
+  .botones-voz,
+  .controles-texto {
+    justify-content: flex-start;
+  }
+
+  .controles-texto select {
+    width: auto;
+    height: 36px;
+    font-size: 14px;
+  }
+}
+ 

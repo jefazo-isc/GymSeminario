@@ -1,0 +1,37 @@
+<form [formGroup]="formulario" (ngSubmit)="enviarFormulario()" id="todo">
+  <h1>Agenda tu entrenamiento</h1>
+
+  <div class="form-group">
+    <label for="entrenamiento">Entrenamiento</label>
+    <select id="entrenamiento" formControlName="entrenamiento">
+      <option value="">Selecciona entrenamiento</option>
+      <option *ngFor="let e of entrenamientos" [value]="e">{{ e }}</option>
+    </select>
+    <div *ngIf="formulario.get('entrenamiento')?.touched && formulario.get('entrenamiento')?.invalid">
+      <small class="error">Campo obligatorio</small>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="fecha">Fecha</label>
+    <input id="fecha" type="date" formControlName="fecha" [min]="minFecha" />
+    <div *ngIf="formulario.get('fecha')?.touched && formulario.get('fecha')?.invalid">
+      <small class="error">Campo obligatorio</small>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="turno">Turno</label>
+    <select id="turno" formControlName="turno">
+      <option value="">Selecciona turno</option>
+      <option value="Mañana">Mañana</option>
+      <option value="Tarde">Tarde</option>
+      <option value="Noche">Noche</option>
+    </select>
+    <div *ngIf="formulario.get('turno')?.touched && formulario.get('turno')?.invalid">
+      <small class="error">Campo obligatorio</small>
+    </div>
+  </div>
+
+  <button type="submit">Enviar</button>
+</form>

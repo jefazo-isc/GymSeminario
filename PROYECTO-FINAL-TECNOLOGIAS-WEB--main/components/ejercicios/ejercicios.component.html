@@ -1,0 +1,102 @@
+<mat-card style="margin: 20px; background-color: #222; padding: 20px; border-left: 8px solid #ff7f00;">
+  <h2 style="text-align: center; color: #ff7f00;">Ejercicios por Parte del Cuerpo</h2>
+  <p style="text-align: center; font-size: 16px; margin-bottom: 30px; color: #ffffff;">
+    <br>
+    Estos son algunos ejercicios recomendados para comenzar a entrenar de forma efectiva, 
+    organizados por grupo muscular.
+  </p>
+
+  <app-filtro-ejercicios (searchChange)="onFiltrarEjercicios($event)"></app-filtro-ejercicios>
+
+  <!-- Mensaje cuando no hay resultados -->
+  <div *ngIf="datosFiltrados.length === 0 && filtroActual !== ''" 
+       style="text-align: center; color: #ffffff; font-size: 18px; margin: 30px 0;">
+    No se encontraron ejercicios que coincidan con "{{ filtroActual }}"
+  </div>
+
+<div *ngFor="let grupo of datosFiltrados; let i = index" style="margin-bottom: 30px;">
+  <h3 (click)="seleccionarParte(grupo.parte)" 
+      style="cursor: pointer; text-transform: uppercase; color: #ff7f00; border-bottom: 2px solid #ff7f00; padding-bottom: 5px;">
+    <span [innerHTML]="resaltarParte(grupo.parte, filtroActual)"></span>
+    <span style="font-size: 14px; font-weight: normal; color: #ccc;">
+      ({{ grupo.ejercicios.length }} ejercicio{{ grupo.ejercicios.length !== 1 ? 's' : '' }})
+    </span>
+  </h3>
+    
+   <!-- Tabla tradicional para pantallas normales -->
+   <div class="tabla-responsive">
+    <table mat-table [dataSource]="grupo.ejercicios" class="mat-elevation-z8" 
+           style="width: 100%; background-color: white; border-radius: 6px; overflow: hidden;">
+      
+      <ng-container matColumnDef="nombre">
+        <th mat-header-cell *matHeaderCellDef class="col-ejercicio"
+            style="background-color: #ff7f00; color: white;">
+          Ejercicio
+        </th>
+        <td mat-cell *matCellDef="let ejercicio" class="col-ejercicio" 
+            style="color: #333;" [title]="ejercicio.nombre">
+          <span [innerHTML]="resaltarTexto(ejercicio.nombre, filtroActual)"></span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="series">
+        <th mat-header-cell *matHeaderCellDef class="col-series"
+            style="background-color: #ff7f00; color: white;">
+          Series
+        </th>
+        <td mat-cell *matCellDef="let ejercicio" class="col-series" 
+            style="color: #333; text-align: center;">
+          {{ ejercicio.series }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="repeticiones">
+        <th mat-header-cell *matHeaderCellDef class="col-repeticiones"
+            style="background-color: #ff7f00; color: white;">
+          Reps
+        </th>
+        <td mat-cell *matCellDef="let ejercicio" class="col-repeticiones" 
+            style="color: #333; text-align: center;">
+          {{ ejercicio.repeticiones }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="equipo">
+        <th mat-header-cell *matHeaderCellDef class="col-equipo hide-on-mobile"
+            style="background-color: #ff7f00; color: white;">
+          Equipo
+        </th>
+        <td mat-cell *matCellDef="let ejercicio" class="col-equipo hide-on-mobile" 
+            style="color: #333;" [title]="ejercicio.equipo">
+          {{ ejercicio.equipo }}
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+      <tr mat-row *matRowDef="let row; columns: columnas;" style="background-color: #fafafa;"></tr>
+    </table>
+  </div>
+
+  <!-- Layout alternativo para móviles muy pequeños -->
+  <div class="mobile-card-layout">
+    <div *ngFor="let ejercicio of grupo.ejercicios" class="exercise-card">
+      <div class="exercise-name" [innerHTML]="resaltarTexto(ejercicio.nombre, filtroActual)"></div>
+      <div class="exercise-details">
+        <div class="detail-item">
+          <span class="detail-label">Series:</span>
+          <span>{{ ejercicio.series }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Reps:</span>
+          <span>{{ ejercicio.repeticiones }}</span>
+        </div>
+        <div class="detail-item" style="grid-column: 1 / -1;">
+          <span class="detail-label">Equipo:</span>
+          <span>{{ ejercicio.equipo }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+    </div>
+
+</mat-card>

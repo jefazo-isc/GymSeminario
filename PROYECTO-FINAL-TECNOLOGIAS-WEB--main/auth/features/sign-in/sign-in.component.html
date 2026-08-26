@@ -1,0 +1,60 @@
+<body>
+  
+
+<h1 class="title">Inicia sesión</h1>
+
+<div id="botoncitos">
+<button class="google-btn" (click)="conGoogle()">
+  <i class='bx bxl-google'></i>
+  Inicia con Google
+</button>
+
+<button class="phone-btn" [routerLink]="['/phone']">
+  <i class='bx bx-phone'></i> Teléfono
+</button>
+</div>
+
+<!-- Aquí agregamos el reCAPTCHA -->
+<div id="recaptcha-container"></div>
+
+
+<form [formGroup]="form" (ngSubmit)="submit()" class="login-form">
+
+  <div class="form-group">
+    <label for="email">Correo electrónico:</label>
+    <input
+      type="email"
+      id="email"
+      formControlName="email"
+      placeholder="tu@correo.com"
+      [class.invalid]="form.get('email')?.invalid && form.get('email')?.touched"
+    />
+    <div class="error" *ngIf="form.get('email')?.invalid && form.get('email')?.touched">
+      <div *ngIf="form.get('email')?.errors?.['required']">El correo es obligatorio.</div>
+      <div *ngIf="form.get('email')?.errors?.['email']">Debe ser un correo válido.</div>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="password">Contraseña:</label>
+    <input
+      type="password"
+      id="password"
+      formControlName="password"
+      placeholder="********"
+      [class.invalid]="form.get('password')?.invalid && form.get('password')?.touched"
+    />
+    <div class="error" *ngIf="form.get('password')?.invalid && form.get('password')?.touched">
+      <div *ngIf="form.get('password')?.errors?.['required']">La contraseña es obligatoria.</div>
+    </div>
+  </div>
+
+  <button type="submit" [disabled]="form.invalid" class="submit-btn">Iniciar sesión</button>
+
+  <div class="links">
+    <a [routerLink]="['/auth/sign-up']">No tienes cuenta, crea una</a>
+    <a [routerLink]="['/change']" class="change-link">¿Cambiar tu clave?</a>
+  </div>
+  
+</form>
+</body>

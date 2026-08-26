@@ -1,0 +1,55 @@
+<body>
+  <div class="registro-container">
+    <h2>Registrar asistencia</h2>
+
+    <form (ngSubmit)="guardar()" #form="ngForm" class="formulario-asistencia">
+
+      <!-- Clase grupal -->
+      <div class="container-input">
+        <i class='bx bx-dumbbell'></i>
+        <select [(ngModel)]="nuevo.clase" name="clase" required
+          [class.invalid]="form.submitted && !nuevo.clase">
+          <option value="">Selecciona clase</option>
+          <option *ngFor="let c of clases" [value]="c">{{ c }}</option>
+        </select>
+      </div>
+      <div class="error" *ngIf="form.submitted && !nuevo.clase">
+        <small>La clase es obligatoria.</small>
+      </div>
+
+      <!-- Fecha -->
+      <div class="container-input">
+        <i class='bx bx-calendar'></i>
+        <input type="date" [(ngModel)]="nuevo.fecha" name="fecha" required
+          [class.invalid]="form.submitted && !nuevo.fecha" />
+      </div>
+      <div class="error" *ngIf="form.submitted && !nuevo.fecha">
+        <small>La fecha es obligatoria.</small>
+      </div>
+
+      <!-- Hora -->
+      <div class="container-input">
+        <i class='bx bx-time-five'></i>
+        <input type="time" [(ngModel)]="nuevo.hora" name="hora" required
+          [class.invalid]="form.submitted && !nuevo.hora" />
+      </div>
+      <div class="error" *ngIf="form.submitted && !nuevo.hora">
+        <small>La hora es obligatoria.</small>
+      </div>
+
+      <!-- Botón -->
+      <button class="button" type="submit">Guardar asistencia</button>
+
+    </form>
+        <div *ngIf="loading()">
+  <p>⏳ Enviando formulario...</p>
+</div>
+
+    <div *ngIf="enviado">
+      <p>✅ Tomale captura es tu boleto al evento</p>
+      <app-qr-view
+      [clase]="clase"
+    [fecha]="fecha"></app-qr-view>
+    </div>
+  </div>
+</body>

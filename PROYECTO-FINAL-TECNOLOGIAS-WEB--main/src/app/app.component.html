@@ -1,0 +1,54 @@
+<button id="accesibilidad-toggle"
+  style="position: fixed; top: 70px; right: 10px; z-index: 1000; background-color: white; border: 2px solid rgb(255, 255, 255); border-radius: 8px; padding: 4px; cursor: pointer;">
+  <i id="icono-accesibilidad" class='bx bx-sun' style="font-size: 24px; color: rgb(0, 0, 0);"></i>
+</button>
+
+
+<button id="toggle-accesibilidad" class="btn-toggle-accesibilidad" title="Opciones de accesibilidad">
+  <i class='bx bx-universal-access'></i>
+</button>
+
+
+<div id="panel-accesibilidad" class="accesibilidad-panel">
+  <h4>Accesibilidad</h4>
+
+
+  <div class="botones-voz">
+    <button id="btn-lector-general" title="Reproducir">
+      <i class='bx bx-play'></i>
+    </button>
+
+    <button id="btn-pausa-general" style="display: none;" title="Pausar">
+      <i class='bx bx-pause'></i>
+    </button>
+
+    <button id="btn-detener-general" style="display: none;" title="Detener">
+      <i class='bx bx-stop'></i>
+    </button>
+  </div>
+
+
+  <div class="controles-texto">
+    <button id="btn-aumentar" title="Aumentar tamaño de texto">A+</button>
+    <button id="btn-disminuir" title="Disminuir tamaño de texto">A-</button>
+
+    <select (change)="cambiarFuente($event)">
+      <option value="Arial">Arial</option>
+      <option value="Georgia">Georgia</option>
+      <option value="Courier New">Courier New</option>
+      <option value="Times New Roman">Times New Roman</option>
+      <option value="Trebuchet MS">Trebuchet MS</option>
+    </select>
+
+    <button (click)="resetearEstilos()">Resetear</button>
+  </div>
+</div>
+
+
+<div class="container">
+  <app-navbar></app-navbar>
+  <router-outlet></router-outlet>
+</div>
+
+
+<app-footer></app-footer>

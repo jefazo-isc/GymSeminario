@@ -1,0 +1,30 @@
+<div class="video-section">
+  <h1 class="title">Videos recomendados para tu rutina</h1>
+  <p class="description">Aquí encontrarás ejercicios y consejos ideales para mejorar tu rendimiento en el gym.</p>
+
+  <button mat-raised-button class="custom-button" (click)="toggleTodosVideos()">
+    {{ mostrarTodos() ? 'Ocultar todos los videos' : 'Mostrar todos los videos' }}
+  </button>
+
+
+  <div class="video-filter">
+    <span class="label">Mostrar solo:</span>
+    <div class="button-container">
+      @for (parte of partesDelCuerpo; track $index) {
+      <button mat-raised-button color="primary" (click)="mostrarUnSoloVideo(parte)">
+        {{ parte }}
+      </button>
+      }
+    </div>
+
+    <div class="video-grid">
+      @for (videoId of videoIds; track $index) {
+      <ng-container>
+        <mat-card *ngIf="videosVisibles()[$index]" class="video-card">
+          <iframe width="100%" height="200" [src]="videoId | safeUrl" frameborder="0" allowfullscreen></iframe>
+        </mat-card>
+
+      </ng-container>
+      }
+    </div>
+  </div>

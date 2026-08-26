@@ -1,0 +1,24 @@
+<h1>Registrar asistencia</h1>
+
+<form (ngSubmit)="guardar()" #form="ngForm" class="formulario-asistencia">
+   <h1>Confirma Asistencia</h1>
+  <div>
+    <label for="clase">Clase grupal</label>
+    <select [(ngModel)]="nuevo.clase" name="clase" required>
+      <option value="">Selecciona clase</option>
+      <option *ngFor="let c of clases" [value]="c">{{ c }}</option>
+    </select>
+  </div>
+
+  <div>
+    <label for="fecha">Fecha</label>
+    <input type="date" [(ngModel)]="nuevo.fecha" name="fecha" required />
+  </div>
+
+  <div>
+    <label for="hora">Hora</label>
+    <input type="time" [(ngModel)]="nuevo.hora" name="hora" required />
+  </div>
+
+  <button type="submit">Guardar asistencia</button>
+</form>

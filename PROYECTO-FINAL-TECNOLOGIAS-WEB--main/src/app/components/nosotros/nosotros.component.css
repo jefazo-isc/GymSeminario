@@ -1,0 +1,154 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap');
+
+#about {
+    background-color: #fff;
+    padding: 50px 20px;
+    text-align: center;
+    color: #333;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.5s ease;
+    font-family: 'Poppins', sans-serif;
+}
+
+#about:hover {
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+    transform: translateY(-10px);
+}
+
+#about .title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #ff7f00;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    position: relative;
+}
+
+#about .title::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50%;
+    height: 2px;
+    background-color: #ff7f00;
+    animation: underlineAnimation 1s ease-out forwards;
+}
+
+@keyframes underlineAnimation {
+    0% { width: 0; }
+    100% { width: 50%; }
+}
+
+#about .description {
+    font-size: 1.15rem;
+    color: #555;
+    line-height: 1.8;
+    text-align: justify;
+    margin-bottom: 30px;
+    opacity: 0;
+    animation: fadeIn 1s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+#about::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 5px solid #ff7f00;
+    border-radius: 20px;
+    opacity: 0;
+    animation: borderAnimation 2s ease-out forwards;
+}
+
+@keyframes borderAnimation {
+    0% {
+        opacity: 0;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(1.05);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@media screen and (max-width: 768px) {
+    #about {
+        padding: 40px 15px;
+    }
+
+    #about .title {
+        font-size: 2rem;
+    }
+
+    #about .description {
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    #about {
+        padding: 30px 10px;
+        border-radius: 15px;
+    }
+
+    #about .title {
+        font-size: 1.8rem;
+        letter-spacing: 1px;
+    }
+
+    #about .description {
+        font-size: 0.95rem;
+        text-align: left; 
+    }
+}
+
+@media screen and (max-width: 360px) {
+    #about .title {
+        font-size: 1.5rem;
+    }
+
+    #about .description {
+        font-size: 0.9rem;
+    }
+}
+
+#btn-lector-nosotros,
+#btn-pausa-nosotros,
+#btn-detener-nosotros {
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#btn-lector-nosotros img,
+#btn-pausa-nosotros img,
+#btn-detener-nosotros img {
+    width: 80%;
+    height: 80%;
+    object-fit: contain;
+    display: block;
+}
