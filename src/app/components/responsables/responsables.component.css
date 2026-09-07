@@ -20,6 +20,12 @@
   font-size: 1.8rem;
   color: #f39c12; 
 }
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 15px;
+  margin-bottom: 30px;
+}
 
 .credit-item {
   display: flex;
