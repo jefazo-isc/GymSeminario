@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators, FormGroup } from '@angular/forms';
 import { AuthService } from '../../data-access/auth.service';
 import { RouterModule } from '@angular/router';
@@ -25,7 +25,7 @@ interface SignUpFormValue {
   templateUrl: './sign-up.component.html',
   styleUrl: './sign-up.component.css'
 })
-export default class SignUpComponent implements OnInit {
+export default class SignUpComponent implements OnInit, OnDestroy {
 
   private _formBuilder = inject(FormBuilder);
   private _authService = inject(AuthService);
@@ -52,6 +52,17 @@ export default class SignUpComponent implements OnInit {
     this.initRecaptcha();
   }
 
+  ngOnDestroy(): void {
+    if (this.recaptchaVerifier) {
+      try {
+        this.recaptchaVerifier.clear();
+      } catch (e) {
+        // safe
+      }
+      this.recaptchaVerifier = null;
+    }
+  }
+
   initRecaptcha() {
     try {
       if (this.recaptchaVerifier) {
@@ -63,7 +74,7 @@ export default class SignUpComponent implements OnInit {
       this.recaptchaVerifier = null;
     }
 
-    const container = document.getElementById('recaptcha-container');
+    const container = document.getElementById('sign-up-recaptcha');
     if (container) {
       container.innerHTML = '';
     }
@@ -71,7 +82,7 @@ export default class SignUpComponent implements OnInit {
     try {
       this.recaptchaVerifier = new RecaptchaVerifier(
         this.auth,
-        'recaptcha-container',
+        'sign-up-recaptcha',
         {
           size: 'normal',
           callback: (response: any) => {
@@ -86,7 +97,7 @@ export default class SignUpComponent implements OnInit {
       );
 
       this.recaptchaVerifier.render().then((widgetId) => {
-        console.log('reCAPTCHA renderizado con ID:', widgetId);
+        console.log('reCAPTCHA sign-up renderizado con ID:', widgetId);
       }).catch((err) => {
         console.warn('Aviso renderizado reCAPTCHA:', err);
       });

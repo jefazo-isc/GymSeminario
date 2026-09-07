@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import {
   FormBuilder,
   FormControl,
@@ -29,7 +29,7 @@ interface SignInFormValue {
   templateUrl: './sign-in.component.html',
   styleUrl: './sign-in.component.css'
 })
-export default class SignInComponent implements OnInit {
+export default class SignInComponent implements OnInit, OnDestroy {
 
   private _formBuilder = inject(FormBuilder);
   private _authService = inject(AuthService);
@@ -49,6 +49,17 @@ export default class SignInComponent implements OnInit {
     this.initRecaptcha();
   }
 
+  ngOnDestroy(): void {
+    if (this.recaptchaVerifier) {
+      try {
+        this.recaptchaVerifier.clear();
+      } catch (e) {
+        // safe
+      }
+      this.recaptchaVerifier = null;
+    }
+  }
+
   initRecaptcha() {
     try {
       if (this.recaptchaVerifier) {
@@ -60,7 +71,7 @@ export default class SignInComponent implements OnInit {
       this.recaptchaVerifier = null;
     }
 
-    const container = document.getElementById('recaptcha-container');
+    const container = document.getElementById('sign-in-recaptcha');
     if (container) {
       container.innerHTML = '';
     }
@@ -68,7 +79,7 @@ export default class SignInComponent implements OnInit {
     try {
       this.recaptchaVerifier = new RecaptchaVerifier(
         this.auth,
-        'recaptcha-container',
+        'sign-in-recaptcha',
         {
           size: 'normal',
           callback: (response: any) => {
@@ -83,7 +94,7 @@ export default class SignInComponent implements OnInit {
       );
 
       this.recaptchaVerifier.render().then((widgetId) => {
-        console.log('reCAPTCHA renderizado con ID:', widgetId);
+        console.log('reCAPTCHA sign-in renderizado con ID:', widgetId);
       }).catch((err) => {
         console.warn('Aviso renderizado reCAPTCHA:', err);
       });
