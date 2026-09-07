@@ -1,6 +1,6 @@
 {
   "configVersion": 1,
-  "timestamp": 1788763558705,
+  "timestamp": 1788765806320,
   "index": "/GymSeminario/index.html",
   "assetGroups": [
     {
@@ -17,7 +17,7 @@
         "/GymSeminario/chunk-ZSBKJLJO.js",
         "/GymSeminario/favicon.ico",
         "/GymSeminario/index.html",
-        "/GymSeminario/main-L7S652Z4.js",
+        "/GymSeminario/main-WF3IMGOS.js",
         "/GymSeminario/manifest.webmanifest",
         "/GymSeminario/polyfills-B6TNHZQ6.js",
         "/GymSeminario/styles-R7UBG434.css"
@@ -167,8 +167,8 @@
     "/GymSeminario/img/voz/detener.jpg": "0751ea6676040df331932166db9f51f29e4c3b9a",
     "/GymSeminario/img/voz/pausando.jpg": "38c27401ea27ba551773200bd4f834522c43d8c2",
     "/GymSeminario/img/voz/play.png": "781df40268c7e121402e5bab68bdd58dc60f9cff",
-    "/GymSeminario/index.html": "42a70af774a8794ee106784bc89c800afbf29889",
-    "/GymSeminario/main-L7S652Z4.js": "699e06f130cb2323849fe564dd7ca04b249ddca6",
+    "/GymSeminario/index.html": "947a4dd8c1f7ae63165f8fe83c85e35f4df05477",
+    "/GymSeminario/main-WF3IMGOS.js": "008e12fc55b19f587adebcfed5521b0ba68c759a",
     "/GymSeminario/manifest.webmanifest": "b02c2bbc38756b150721fde6754e2049c957d365",
     "/GymSeminario/polyfills-B6TNHZQ6.js": "bf76ac291d7f51c1139b7edcf86b359a30c08c64",
     "/GymSeminario/styles-R7UBG434.css": "53c7dc2a16946dde813009d3553467a120b99e4d"
