@@ -11,14 +11,12 @@ import { provideServiceWorker } from '@angular/service-worker';
 
 
 const firebaseConfig = {
-  projectId: "gina1-838c7",
-  appId: "1:860331012943:web:a6c8105c96dc5a9e4f0b3a",
-  databaseURL: "https://gina1-838c7-default-rtdb.firebaseio.com",
-  storageBucket: "gina1-838c7.appspot.com", // CORREGIDO: storageBucket estaba mal escrito
-  apiKey: "AIzaSyAXOiYtc0W0zfedwKAJaoWNO2CydqGkOo0",
-  authDomain: "gina1-838c7.firebaseapp.com",
-  messagingSenderId: "860331012943",
-  measurementId: "G-NR63G2KPVW"
+  apiKey: "AIzaSyBUIzZqDR_spIfFsRkPVqh3ClnpRqLlsOQ",
+  authDomain: "dbgroom-4eba4.firebaseapp.com",
+  projectId: "dbgroom-4eba4",
+  storageBucket: "dbgroom-4eba4.firebasestorage.app",
+  messagingSenderId: "963889664175",
+  appId: "1:963889664175:web:cd0fc54b0adea5b28a445a"
 };
 
 export const appConfig: ApplicationConfig = {
