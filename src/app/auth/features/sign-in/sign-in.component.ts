@@ -180,14 +180,20 @@ export default class SignInComponent implements OnInit, OnDestroy {
       this.router.navigate(['/home']);
     } catch (error: any) {
       console.error('Error en autenticación con Google:', error);
-      if (error?.code !== 'auth/popup-closed-by-user') {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error con Google',
-          text: 'No se pudo completar el inicio de sesión con Google.',
-          confirmButtonColor: '#ff6600'
-        });
+      if (error?.code === 'auth/popup-closed-by-user') return;
+
+      let titulo = 'Error con Google';
+      let mensaje = 'No se pudo completar el inicio de sesión con Google.';
+
+      if (error?.code === 'auth/unauthorized-domain') {
+        titulo = 'Dominio no autorizado';
+        mensaje = 'Este dominio no está autorizado para iniciar sesión con Google. El administrador de Firebase debe agregar este dominio en la consola de Firebase → Authentication → Settings → Authorized domains.';
+      } else if (error?.code === 'auth/network-request-failed') {
+        titulo = 'Error de red';
+        mensaje = 'No se pudo conectar con el servidor. Verifica tu conexión a internet.';
       }
+
+      Swal.fire({ icon: 'error', title: titulo, text: mensaje, confirmButtonColor: '#ff6600' });
     }
   }
 }
