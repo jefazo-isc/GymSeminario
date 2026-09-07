@@ -1,6 +1,6 @@
 {
   "configVersion": 1,
-  "timestamp": 1788760401332,
+  "timestamp": 1788760800497,
   "index": "/GymSeminario/index.html",
   "assetGroups": [
     {
@@ -11,13 +11,13 @@
         "ignoreVary": true
       },
       "urls": [
-        "/GymSeminario/chunk-3VK3VXUF.js",
-        "/GymSeminario/chunk-NZXC2UPH.js",
-        "/GymSeminario/chunk-RB5ETLTD.js",
+        "/GymSeminario/chunk-LHJMU4K3.js",
+        "/GymSeminario/chunk-TMO7IDLG.js",
+        "/GymSeminario/chunk-XF6X2LST.js",
         "/GymSeminario/chunk-ZSBKJLJO.js",
         "/GymSeminario/favicon.ico",
         "/GymSeminario/index.html",
-        "/GymSeminario/main-DEKLTN63.js",
+        "/GymSeminario/main-HCOT376A.js",
         "/GymSeminario/manifest.webmanifest",
         "/GymSeminario/polyfills-B6TNHZQ6.js",
         "/GymSeminario/styles-R7UBG434.css"
@@ -100,9 +100,9 @@
   ],
   "dataGroups": [],
   "hashTable": {
-    "/GymSeminario/chunk-3VK3VXUF.js": "b30284ef3c4410cc09ba6efd33f94030821fd30b",
-    "/GymSeminario/chunk-NZXC2UPH.js": "006bb1ae3bd58ba2c71554fea9d1e3e3dfd17ca1",
-    "/GymSeminario/chunk-RB5ETLTD.js": "932ed1505b6c87925ade4a87d023fb232d56e203",
+    "/GymSeminario/chunk-LHJMU4K3.js": "ad0818dc2624124c8c73690b9fa1741927fa7223",
+    "/GymSeminario/chunk-TMO7IDLG.js": "900caca2857c2408967cc59865e9dee86be6be97",
+    "/GymSeminario/chunk-XF6X2LST.js": "2304129b9a146481e1d8e05e42b024f29697fdb3",
     "/GymSeminario/chunk-ZSBKJLJO.js": "5042724a36c632bb311e2488da837233a83090bc",
     "/GymSeminario/favicon.ico": "9c39f434fe1261f68c5e3eefdf734630d99c5670",
     "/GymSeminario/icons/AAA.png": "7fb8f59c30ce2ff12c700321a0b39e14b3dc8f95",
@@ -167,8 +167,8 @@
     "/GymSeminario/img/voz/detener.jpg": "0751ea6676040df331932166db9f51f29e4c3b9a",
     "/GymSeminario/img/voz/pausando.jpg": "38c27401ea27ba551773200bd4f834522c43d8c2",
     "/GymSeminario/img/voz/play.png": "781df40268c7e121402e5bab68bdd58dc60f9cff",
-    "/GymSeminario/index.html": "e8241cf2e72b9b771a3343ebab5cc01a3b07db4c",
-    "/GymSeminario/main-DEKLTN63.js": "ed387b99574c9ec0191da33f34d5644a73d83dd9",
+    "/GymSeminario/index.html": "13ba2bdc635b0e2be790c6d16ba13a6efecb9403",
+    "/GymSeminario/main-HCOT376A.js": "8bdbc2bc6015534cfe2cbfd5a2a16f2625760ec0",
     "/GymSeminario/manifest.webmanifest": "b02c2bbc38756b150721fde6754e2049c957d365",
     "/GymSeminario/polyfills-B6TNHZQ6.js": "bf76ac291d7f51c1139b7edcf86b359a30c08c64",
     "/GymSeminario/styles-R7UBG434.css": "53c7dc2a16946dde813009d3553467a120b99e4d"
