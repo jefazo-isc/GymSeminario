@@ -22,6 +22,15 @@
   <script src="https://www.paypal.com/sdk/js?client-id=AQMkAioK3b4Xhh1FtMYMRJbaeAKv--g9yGzot54i-n9KizKios8n-arYhReRG_0tbWpzgFZkOB7VzhPM&amp;currency=MXN"></script>
 
   <noscript>Please enable JavaScript to continue using this application.</noscript>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for (let registration of registrations) {
+          registration.unregister();
+        }
+      });
+    }
+  </script>
 </body>
 
 </html>

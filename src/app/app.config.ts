@@ -28,9 +28,9 @@ export const appConfig: ApplicationConfig = {
     provideFirebaseApp(() => initializeApp(firebaseConfig)),
     provideAuth(() => getAuth()),
     provideFirestore(() => getFirestore()),
-     importProvidersFrom(HttpClientModule, FormsModule), provideServiceWorker('ngsw-worker.js', {
-            enabled: !isDevMode(),
-            registrationStrategy: 'registerWhenStable:30000'
-          })
+     importProvidersFrom(HttpClientModule, FormsModule),
+     provideServiceWorker('ngsw-worker.js', {
+       enabled: false
+     })
   ]
 };
