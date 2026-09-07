@@ -10,117 +10,45 @@ import { CommonModule } from '@angular/common';
 })
 export class ResponsablesComponent {
   
-  defaultStyleAbraham = {
-    'background-color': '#333333', 
-    'color': '#ffffff', 
-    'transform': 'scale(1)',
-    'transition': 'transform 0.3s ease, background-color 0.3s ease'
-  };
-
-  defaultStylePepe = {
+  defaultStyle = {
     'background-color': '#333333',
     'color': '#ffffff',
     'transform': 'scale(1)',
     'transition': 'transform 0.3s ease, background-color 0.3s ease'
   };
 
-  defaultStyleLuis = {
-    'background-color': '#333333',
-    'color': '#ffffff',
-    'transform': 'scale(1)',
-    'transition': 'transform 0.3s ease, background-color 0.3s ease'
-  };
-
-  hoverStyleAbraham = {
-    'background-color': '#f39c12', 
-    'color': '#333333',
-    'transform': 'scale(1.05)',
-    'transition': 'transform 0.3s ease, background-color 0.3s ease'
-  };
-
-  hoverStylePepe = {
+  hoverStyle = {
     'background-color': '#f39c12',
     'color': '#333333',
     'transform': 'scale(1.05)',
     'transition': 'transform 0.3s ease, background-color 0.3s ease'
   };
 
-  hoverStyleLuis = {
-    'background-color': '#f39c12',
-    'color': '#333333',
-    'transform': 'scale(1.05)',
-    'transition': 'transform 0.3s ease, background-color 0.3s ease'
-  };
-
-  currentStyleAbraham = this.defaultStyleAbraham;
-  currentStylePepe = this.defaultStylePepe;
-  currentStyleLuis = this.defaultStyleLuis;
-
-  onMouseEnterAbraham() {
-    this.currentStyleAbraham = this.hoverStyleAbraham;
-  }
-
-  onMouseLeaveAbraham() {
-    this.currentStyleAbraham = this.defaultStyleAbraham;
-  }
+  currentStylePepe = { ...this.defaultStyle };
+  currentStyleLuis = { ...this.defaultStyle };
+  currentStyleRicardo = { ...this.defaultStyle };
 
   onMouseEnterPepe() {
-    this.currentStylePepe = this.hoverStylePepe;
+    this.currentStylePepe = this.hoverStyle;
   }
 
   onMouseLeavePepe() {
-    this.currentStylePepe = this.defaultStylePepe;
+    this.currentStylePepe = this.defaultStyle;
   }
 
   onMouseEnterLuis() {
-    this.currentStyleLuis = this.hoverStyleLuis;
+    this.currentStyleLuis = this.hoverStyle;
   }
 
   onMouseLeaveLuis() {
-    this.currentStyleLuis = this.defaultStyleLuis;
+    this.currentStyleLuis = this.defaultStyle;
   }
 
-  defaultStyleMarco = this.defaultStyleLuis;
-defaultStyleCarlos = this.defaultStyleLuis;
-defaultStyleRicardo = this.defaultStyleLuis;
-defaultStyleAbrahamR = this.defaultStyleLuis;
+  onMouseEnterRicardo() {
+    this.currentStyleRicardo = this.hoverStyle;
+  }
 
-hoverStyleMarco = this.hoverStyleLuis;
-hoverStyleCarlos = this.hoverStyleLuis;
-hoverStyleRicardo = this.hoverStyleLuis;
-hoverStyleAbrahamR = this.hoverStyleLuis;
-
-currentStyleMarco = this.defaultStyleMarco;
-currentStyleCarlos = this.defaultStyleCarlos;
-currentStyleRicardo = this.defaultStyleRicardo;
-currentStyleAbrahamR = this.defaultStyleAbrahamR;
-
-onMouseEnterMarco() {
-  this.currentStyleMarco = this.hoverStyleMarco;
-}
-onMouseLeaveMarco() {
-  this.currentStyleMarco = this.defaultStyleMarco;
-}
-
-onMouseEnterCarlos() {
-  this.currentStyleCarlos = this.hoverStyleCarlos;
-}
-onMouseLeaveCarlos() {
-  this.currentStyleCarlos = this.defaultStyleCarlos;
-}
-
-onMouseEnterRicardo() {
-  this.currentStyleRicardo = this.hoverStyleRicardo;
-}
-onMouseLeaveRicardo() {
-  this.currentStyleRicardo = this.defaultStyleRicardo;
-}
-
-onMouseEnterAbrahamR() {
-  this.currentStyleAbrahamR = this.hoverStyleAbrahamR;
-}
-onMouseLeaveAbrahamR() {
-  this.currentStyleAbrahamR = this.defaultStyleAbrahamR;
-}
-
+  onMouseLeaveRicardo() {
+    this.currentStyleRicardo = this.defaultStyle;
+  }
 }

@@ -96,13 +96,23 @@ app.post('/enviar-asistencia', async (req, res) => {
 
 
 ///////////api celular
-const accountSid = 'TU_TWILIO_ACCOUNT_SID';
-const authToken = 'TU_TWILIO_AUTH_TOKEN';
-const client = twilio(accountSid, authToken);
+const accountSid = process.env.TWILIO_ACCOUNT_SID || 'TU_TWILIO_ACCOUNT_SID';
+const authToken = process.env.TWILIO_AUTH_TOKEN || 'TU_TWILIO_AUTH_TOKEN';
+let client = null;
+
+if (accountSid && accountSid.startsWith('AC') && authToken && authToken !== 'TU_TWILIO_AUTH_TOKEN') {
+  client = twilio(accountSid, authToken);
+} else {
+  console.warn('Advertencia: Twilio no está configurado con credenciales válidas (accountSid debe iniciar con AC).');
+}
 
 // Ruta para enviar SMS
 app.post('/enviar-sms', async (req, res) => {
   const { telefono, mensaje } = req.body;
+
+  if (!client) {
+    return res.status(503).json({ success: false, error: 'Servicio Twilio no configurado.' });
+  }
 
   try {
     const response = await client.messages.create({

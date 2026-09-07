@@ -18,6 +18,8 @@ import {
 } from 'firebase/firestore';
 import { AuthService } from '../../auth/data-access/auth.service'; // Ajusta la ruta según tu estructura
 
+import { CommonModule } from '@angular/common';
+
 declare global {
   interface Window {
     recaptchaVerifier: RecaptchaVerifier;
@@ -34,7 +36,7 @@ interface Usuario {
 @Component({
   selector: 'app-phone',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, CommonModule],
   templateUrl: './phone.component.html',
   styleUrl: './phone.component.css'
 })
