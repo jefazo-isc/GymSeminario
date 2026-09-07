@@ -50,26 +50,12 @@ export class AuthService {
         return;
       }
 
-      const uid = user.uid;
-      let name: string | null = null;
-      this.userUidSubject.next(user.uid); // 👈 importante
-
-      // Si viene de Google, usa displayName
-      if (user.providerData[0]?.providerId === 'google.com') {
-        name = user.displayName || user.email || null;
-      } else {
-        // Si es login manual, carga el nombre desde Firestore
-        const userRef = doc(this.firestore, 'usuarios', uid);
-        const userSnap = await getDoc(userRef);
-        if (userSnap.exists()) {
-          const data = userSnap.data();
-          name = data?.['nombre'] || user.email || null;
-          // También puedes cargar el rol aquí si quieres
-          this.userRoleSubject.next(data?.['role'] || 'user');
-        }
-      }
-
+      this.userUidSubject.next(user.uid);
+      const name = user.displayName || user.email || null;
       this.userNameSubject.next(name);
+
+      // Cargar rol desde Firestore para cualquier método de inicio de sesión (Google, Email, etc.)
+      await this.loadUserRole(user.uid, undefined, user.email || undefined);
     });
   }
 
@@ -79,65 +65,85 @@ export class AuthService {
   private userRoleSubject = new BehaviorSubject<string | null>(null);
   public userRole$ = this.userRoleSubject.asObservable();
 
-  public async loadUserRole(uid: string, phoneNumber?: string) {
-    const userRef = doc(this.firestore, 'usuarios', uid);
-    const userSnap = await getDoc(userRef);
-    const data = userSnap.data();
+  public async loadUserRole(uid: string, phoneNumber?: string, email?: string) {
+    try {
+      // 1. Buscar en 'usuarios' por ID del documento
+      const userRef = doc(this.firestore, 'usuarios', uid);
+      const userSnap = await getDoc(userRef);
 
-    if (data) {
-      // Usuario existe en 'usuarios'
-      this.userRoleSubject.next(data?.['role'] || 'user');
-      const nombre = data?.['nombre'];
-      this.userNameSubject.next(nombre && nombre.trim() !== '' ? nombre : 'USUARIO');
-      console.log('Usuario encontrado en usuarios:', uid, nombre);
-    } else if (phoneNumber) {
-      // Usuario no existe en 'usuarios', buscar en 'numeros' por teléfono
-      const numerosRef = doc(this.firestore, 'numeros', phoneNumber);
-      const numerosSnap = await getDoc(numerosRef);
-
-      if (numerosSnap.exists()) {
-        const numeroData = numerosSnap.data();
-        const nombre = numeroData?.['nombre'] || 'USUARIO';
-
-        this.userNameSubject.next(nombre);
-        this.userRoleSubject.next('user'); // rol por defecto
-
-        console.log('Nombre encontrado en numeros:', nombre);
-
-        // Opcional: Crear usuario en 'usuarios' con info mínima
-        await setDoc(userRef, {
-          nombre: nombre,
-          role: 'user',
-          telefono: phoneNumber,
-          creadoEn: new Date()
-        });
-
-      } else {
-        // No encontrado en numeros: crear nuevo doc con nombre "USUARIOW"
-        await setDoc(numerosRef, {
-          telefono: phoneNumber,
-          nombre: 'USUARIOW',
-          creadoEn: new Date()
-        });
-
-        this.userNameSubject.next('USUARIOW');
-        this.userRoleSubject.next('user');
-
-        // También creamos el usuario en usuarios
-        await setDoc(userRef, {
-          nombre: 'USUARIOW',
-          role: 'user',
-          telefono: phoneNumber,
-          creadoEn: new Date()
-        });
-
-        console.log('Nuevo documento creado en numeros con nombre USUARIOW');
+      if (userSnap.exists()) {
+        const data = userSnap.data();
+        const role = data?.['role'] || 'user';
+        this.userRoleSubject.next(role);
+        const nombre = data?.['nombre'];
+        if (nombre && nombre.trim() !== '') {
+          this.userNameSubject.next(nombre);
+        }
+        console.log('Rol de usuario cargado (por ID de doc):', role);
+        return;
       }
-    } else {
-      // No user data and no phone provided
-      //this.userNameSubject.next('USUARIO');
-      //this.userRoleSubject.next('user');
-      //console.log('No user data ni telefono');
+
+      // 2. Si no se encuentra por doc ID, buscar por campo 'uid'
+      const usuariosRef = collection(this.firestore, 'usuarios');
+      const qUid = query(usuariosRef, where('uid', '==', uid));
+      const snapUid = await getDocs(qUid);
+
+      if (!snapUid.empty) {
+        const data = snapUid.docs[0].data();
+        const role = data?.['role'] || 'user';
+        this.userRoleSubject.next(role);
+        const nombre = data?.['nombre'];
+        if (nombre && nombre.trim() !== '') {
+          this.userNameSubject.next(nombre);
+        }
+        console.log('Rol de usuario cargado (por campo uid):', role);
+        return;
+      }
+
+      // 3. Buscar por campo 'email' (por si el usuario admin fue registrado con ID aleatorio en Firestore)
+      if (email) {
+        const qEmail = query(usuariosRef, where('email', '==', email));
+        const snapEmail = await getDocs(qEmail);
+
+        if (!snapEmail.empty) {
+          const docSnap = snapEmail.docs[0];
+          const data = docSnap.data();
+          const role = data?.['role'] || 'user';
+          this.userRoleSubject.next(role);
+          const nombre = data?.['nombre'];
+          if (nombre && nombre.trim() !== '') {
+            this.userNameSubject.next(nombre);
+          }
+          console.log('Rol de usuario cargado (por email):', email, 'Rol:', role);
+
+          // Si el documento no tenía el uid guardado, actualizarlo para que quede vinculado
+          if (!data?.['uid']) {
+            await updateDoc(docSnap.ref, { uid: uid });
+          }
+          return;
+        }
+      }
+
+      // 4. Si viene phoneNumber, buscar en 'numeros'
+      if (phoneNumber) {
+        const numerosRef = doc(this.firestore, 'numeros', phoneNumber);
+        const numerosSnap = await getDoc(numerosRef);
+
+        if (numerosSnap.exists()) {
+          const numeroData = numerosSnap.data();
+          const nombre = numeroData?.['nombre'] || 'USUARIO';
+          this.userNameSubject.next(nombre);
+          this.userRoleSubject.next('user');
+          return;
+        }
+      }
+
+      // Si no existe ningún registro, asignar 'user' por defecto
+      this.userRoleSubject.next('user');
+      console.log('Usuario no registrado previamente, rol asignado: user');
+    } catch (err) {
+      console.error('Error al cargar rol del usuario:', err);
+      this.userRoleSubject.next('user');
     }
   }
 
@@ -271,7 +277,6 @@ export class AuthService {
     const user = result.user;
 
     this.updateUserName(user);
-    await this.loadUserRole(user.uid);
 
     const db = getFirestore();
     const usuariosRef = collection(db, "usuarios");
@@ -280,24 +285,32 @@ export class AuthService {
     const q = query(usuariosRef, where("email", "==", user.email));
     const querySnapshot = await getDocs(q);
 
-    // Si no existe, lo creamos
+    // Si no existe, lo creamos vinculando user.uid como ID del documento
     if (querySnapshot.empty) {
-      await addDoc(usuariosRef, {
+      await setDoc(doc(db, "usuarios", user.uid), {
         uid: user.uid,
         email: user.email,
-        nombre: user.displayName || "", // o lo que quieras guardar
+        nombre: user.displayName || "",
         intentos: 0,
         telefono: '',
         role: 'user'
       });
+      this.userRoleSubject.next('user');
     } else {
-      // Si ya existe, reiniciamos el campo 'intentos' a 0
-      querySnapshot.forEach(async (docSnap) => {
-        const docRef = doc(db, "usuarios", docSnap.id);
-        await updateDoc(docRef, { intentos: 0 });
+      // Si ya existe (ej: admin), recuperamos su rol real y reiniciamos intentos
+      const docSnap = querySnapshot.docs[0];
+      const data = docSnap.data();
+      const existingRole = data?.['role'] || 'user';
+      this.userRoleSubject.next(existingRole);
+      console.log('Usuario Google existente, rol cargado:', existingRole);
+
+      await updateDoc(docSnap.ref, {
+        intentos: 0,
+        uid: user.uid
       });
     }
 
+    await this.loadUserRole(user.uid, undefined, user.email || undefined);
     return result;
   }
 
