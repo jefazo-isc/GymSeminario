@@ -115,7 +115,7 @@ cerrarPagina(){
 enviarSMS(telefono: string, mensaje: string) {
    this.loading.set(true);
   // Aquí llamarías tu backend o Firebase Function que envía el SMS
-  this.http.post('https://api2-gbbk.onrender.comenviar-sms', { telefono, mensaje })
+  this.http.post('https://gymseminario.onrender.com/enviar-sms', { telefono, mensaje })
     .subscribe({
       next: () =>  {Swal.fire('Éxito', 'Se envio SMS', 'success');
       this.cerrarPagina();
@@ -147,7 +147,7 @@ enviarSMS(telefono: string, mensaje: string) {
   fecha: this.nuevo.fecha,
   hora: this.nuevo.hora
 });
-    this.http.post('https://api2-gbbk.onrender.com/enviar-asistencia', {
+    this.http.post('https://gymseminario.onrender.com/enviar-asistencia', {
       correo: correoDestino,
       nombre: nombre,
       clase: this.nuevo.clase,

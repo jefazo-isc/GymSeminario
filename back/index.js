@@ -10,6 +10,10 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', mensaje: 'API GROM Backend en línea 🚀' });
+});
+
 app.post('/enviar-correo', async (req, res) => {
   const { correo, nombre, entrenamiento, fecha, turno } = req.body;
 

@@ -8,7 +8,7 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class ApiService {
-  private baseUrl = 'https://node-proyecto-sz83.onrender.com';
+  private baseUrl = 'https://gymseminario.onrender.com';
 
   constructor(private http: HttpClient) {}
 

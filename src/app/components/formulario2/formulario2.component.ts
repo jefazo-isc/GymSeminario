@@ -149,7 +149,7 @@ Fecha: ${fecha}
 Turno: ${turno}
 ¡Nos vemos pronto!`;
 
-  this.http.post('https://api2-gbbk.onrender.com/enviar-sms', {
+  this.http.post('https://gymseminario.onrender.com/enviar-sms', {
     telefono,
     mensaje
   }).subscribe({
@@ -202,7 +202,7 @@ async enviarCorreo() {
   turno
 });
 
- this.http.post('https://api2-gbbk.onrender.com/enviar-correo', {
+ this.http.post('https://gymseminario.onrender.com/enviar-correo', {
   correo: correoDestino,
   nombre: nombre,
   entrenamiento,
