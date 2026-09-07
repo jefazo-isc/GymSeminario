@@ -151,30 +151,71 @@ export class AuthService {
 
   ///////////
 
+  /**
+   * Busca un documento en la colección 'usuarios' ignorando mayúsculas, minúsculas y espacios.
+   */
+  async buscarUsuarioDoc(email: string) {
+    if (!email) return null;
+    const emailNormalizado = email.trim();
+    const emailLower = emailNormalizado.toLowerCase();
+    const usuariosRef = collection(this.firestore, 'usuarios');
+
+    // 1. Coincidencia exacta
+    try {
+      const q = query(usuariosRef, where('email', '==', emailNormalizado));
+      const snap = await getDocs(q);
+      if (!snap.empty) return snap.docs[0];
+    } catch (e) {
+      console.warn('Error en búsqueda por email exacto:', e);
+    }
+
+    // 2. Coincidencia en minúsculas
+    if (emailNormalizado !== emailLower) {
+      try {
+        const qLower = query(usuariosRef, where('email', '==', emailLower));
+        const snapLower = await getDocs(qLower);
+        if (!snapLower.empty) return snapLower.docs[0];
+      } catch (e) {
+        console.warn('Error en búsqueda por email minúsculas:', e);
+      }
+    }
+
+    // 3. Búsqueda exhaustiva insensible a mayúsculas/minúsculas
+    try {
+      const allUsersSnap = await getDocs(usuariosRef);
+      const found = allUsersSnap.docs.find(d => {
+        const dEmail = d.data()?.['email'];
+        return typeof dEmail === 'string' && dEmail.trim().toLowerCase() === emailLower;
+      });
+      if (found) return found;
+    } catch (e) {
+      console.warn('Error en búsqueda exhaustiva de usuario:', e);
+    }
+
+    return null;
+  }
+
   /////////////intentos
   async incrementarIntentosPorEmail(email: string): Promise<void> {
-    const usuariosRef = collection(this.firestore, 'usuarios');
-    const q = query(usuariosRef, where('email', '==', email));
-    const querySnapshot = await getDocs(q);
+    try {
+      const docSnap = await this.buscarUsuarioDoc(email);
 
-    if (!querySnapshot.empty) {
-      const docSnap = querySnapshot.docs[0];
-      const uid = docSnap.id;
-      const data = docSnap.data();
-      const intentosActuales = data['intentos'] ?? 0;
-      const nuevosIntentos = intentosActuales + 1;
+      if (docSnap) {
+        const data = docSnap.data();
+        const intentosActuales = data['intentos'] ?? 0;
+        const nuevosIntentos = intentosActuales + 1;
 
-      await updateDoc(doc(this.firestore, 'usuarios', uid), {
-        intentos: nuevosIntentos,
-      });
+        await updateDoc(docSnap.ref, {
+          intentos: nuevosIntentos,
+          ultimoIntento: serverTimestamp()
+        });
 
-      console.log(`Intentos para ${email}: ${nuevosIntentos}`);
-
-      if (nuevosIntentos >= 3) {
-        alert('¡Este usuario ha superado el límite de intentos!');
+        console.log(`Intentos para ${email}: ${nuevosIntentos}`);
+      } else {
+        console.warn(`No se encontró un usuario con el email: ${email}`);
       }
-    } else {
-      console.warn(`No se encontró un usuario con el email: ${email}`);
+    } catch (err) {
+      console.warn('Error incrementando intentos:', err);
     }
   }
   //////////////////////
@@ -184,16 +225,23 @@ export class AuthService {
 
   async cambiarPassword(user: User, nuevoPassword: string): Promise<void> {
     try {
+      const email = user.email.trim();
       // 1. Autenticar al usuario con las credenciales actuales
       const credentials = await signInWithEmailAndPassword(
         this._auth,
-        user.email,
+        email,
         user.password
       );
 
       // 2. Cambiar la contraseña si el login fue exitoso
       const currentUser = credentials.user;
       await updatePassword(currentUser, nuevoPassword);
+
+      // 3. Resetear intentos en Firestore
+      const docSnap = await this.buscarUsuarioDoc(email);
+      if (docSnap) {
+        await updateDoc(docSnap.ref, { intentos: 0 });
+      }
 
       console.log('Contraseña actualizada correctamente.');
     } catch (error) {
@@ -209,64 +257,74 @@ export class AuthService {
   }
 
   async signUp(user: User) {
+    const email = user.email.trim();
     const credentials = await createUserWithEmailAndPassword(
       this._auth,
-      user.email,
+      email,
       user.password
     );
     this.updateUserName(credentials.user);
     await setDoc(doc(this.firestore, 'usuarios', credentials.user.uid), {
-      email: user.email,
-      nombre: user.nombre,
+      uid: credentials.user.uid,
+      email: email,
+      nombre: user.nombre.trim(),
       telefono: '',
       intentos: 0,
-      role: this.roles || 'user'  // Si en tu formulario incluyes el rol
+      role: this.roles || 'user'
     });
-    await this.loadUserRole(credentials.user.uid); // en signUp y signIn
+    await this.loadUserRole(credentials.user.uid, undefined, email);
     return credentials;
   }
 
   async signIn(user: LoginData) {
-    const usuariosRef = collection(this.firestore, 'usuarios');
-    const q = query(usuariosRef, where('email', '==', user.email));
-    const querySnapshot = await getDocs(q);
+    const email = user.email.trim();
+    const usuarioDoc = await this.buscarUsuarioDoc(email);
 
-    if (querySnapshot.empty) {
-      throw new Error('Usuario no encontrado');
-    }
-
-    const usuarioDoc = querySnapshot.docs[0];
-    const usuarioData = usuarioDoc.data();
-
-    if (usuarioData['intentos'] >= 3) {
-      alert("Demasiados intentos, cambia tu clave para poder ingresar");
-      throw new Error('Demasiados intentos fallidos. Intenta más tarde.');
+    if (usuarioDoc) {
+      const usuarioData = usuarioDoc.data();
+      if ((usuarioData['intentos'] ?? 0) >= 3) {
+        throw new Error('Demasiados intentos fallidos. Cambia tu clave para poder ingresar.');
+      }
     }
 
     try {
       const credentials = await signInWithEmailAndPassword(
         this._auth,
-        user.email,
+        email,
         user.password
       );
 
-      await updateDoc(usuarioDoc.ref, { intentos: 0 });
+      if (usuarioDoc) {
+        await updateDoc(usuarioDoc.ref, {
+          intentos: 0,
+          uid: credentials.user.uid
+        });
 
-      // ✅ Actualizar nombre y rol manualmente sin esperar a onAuthStateChanged
-      const nombre = usuarioData['nombre'] || credentials.user.email || null;
-      this.userNameSubject.next(nombre);
-      this.userRoleSubject.next(usuarioData['role'] || 'user');
+        const usuarioData = usuarioDoc.data();
+        const nombre = usuarioData['nombre'] || credentials.user.displayName || credentials.user.email || null;
+        this.userNameSubject.next(nombre);
+        this.userRoleSubject.next(usuarioData['role'] || 'user');
+      } else {
+        await this.loadUserRole(credentials.user.uid, undefined, email);
+      }
 
       return credentials;
 
-    } catch (error) {
-      await updateDoc(usuarioDoc.ref, {
-        intentos: increment(1),
-        ultimoIntento: serverTimestamp()
-      });
+    } catch (error: any) {
+      if (usuarioDoc) {
+        await updateDoc(usuarioDoc.ref, {
+          intentos: increment(1),
+          ultimoIntento: serverTimestamp()
+        });
+      }
 
-      alert("datos incorrectos");
-      throw new Error('Correo o contraseña incorrectos');
+      console.error('Error en signInWithEmailAndPassword:', error);
+      if (error?.code === 'auth/wrong-password' || error?.code === 'auth/invalid-credential' || error?.code === 'auth/user-not-found') {
+        throw new Error('Correo o contraseña incorrectos.');
+      } else if (error?.code === 'auth/too-many-requests') {
+        throw new Error('Demasiados intentos. Por favor espera unos momentos o cambia tu clave.');
+      }
+      throw error;
     }
   }
 

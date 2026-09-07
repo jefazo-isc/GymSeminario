@@ -14,6 +14,8 @@ import { signInWithEmailAndPassword, updatePassword } from 'firebase/auth';
 import { CommonModule } from '@angular/common';
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { getFirestore } from "firebase/firestore";
+import Swal from 'sweetalert2';
+
 interface ChangePasswordFormValue {
   email: string;
   password: string;
@@ -22,15 +24,15 @@ interface ChangePasswordFormValue {
 @Component({
   selector: 'app-change',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterModule,CommonModule],
+  imports: [ReactiveFormsModule, RouterModule, CommonModule],
   templateUrl: './change.component.html',
   styleUrl: './change.component.css'
 })
 export class ChangeComponent {
-  private  firestore = getFirestore();
+  private firestore = getFirestore();
   private _formBuilder = inject(FormBuilder);
   private _authService = inject(AuthService);
-  private _auth = inject(AuthService).auth; // asegúrate que tienes 'auth' expuesto en el servicio
+  private _auth = inject(AuthService).auth;
 
   constructor(private router: Router) {}
 
@@ -44,7 +46,12 @@ export class ChangeComponent {
 
   async submit() {
     if (this.form.invalid || this.newPasswordControl.invalid || this.confirmPasswordControl.invalid) {
-      alert('Por favor, completa todos los campos correctamente.');
+      Swal.fire({
+        icon: 'warning',
+        title: 'Campos incompletos',
+        text: 'Por favor, completa todos los campos correctamente.',
+        confirmButtonColor: '#ff6600'
+      });
       return;
     }
 
@@ -52,35 +59,63 @@ export class ChangeComponent {
     const nuevaClave = this.newPasswordControl.value;
     const confirmarClave = this.confirmPasswordControl.value;
 
-    if (!email.trim() || !password.trim() || !nuevaClave || !confirmarClave) {
-      alert("Todos los campos son obligatorios.");
+    const emailTrimmed = email?.trim() || '';
+    if (!emailTrimmed || !password?.trim() || !nuevaClave || !confirmarClave) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Campos requeridos',
+        text: 'Todos los campos son obligatorios.',
+        confirmButtonColor: '#ff6600'
+      });
       return;
     }
 
     if (nuevaClave.length < 6 || confirmarClave.length < 6) {
-      alert("La nueva contraseña debe tener al menos 6 caracteres.");
+      Swal.fire({
+        icon: 'warning',
+        title: 'Contraseña muy corta',
+        text: 'La nueva contraseña debe tener al menos 6 caracteres.',
+        confirmButtonColor: '#ff6600'
+      });
       return;
     }
 
     if (nuevaClave !== confirmarClave) {
-      alert("Las nuevas contraseñas no coinciden.");
+      Swal.fire({
+        icon: 'warning',
+        title: 'Contraseñas no coinciden',
+        text: 'Las nuevas contraseñas no coinciden.',
+        confirmButtonColor: '#ff6600'
+      });
       return;
     }
 
     try {
-      const credentials = await signInWithEmailAndPassword(this._auth, email, password);
+      const credentials = await signInWithEmailAndPassword(this._auth, emailTrimmed, password);
       await updatePassword(credentials.user, nuevaClave);
-     // Obtener la referencia al documento del usuario (ajusta la ruta según tu BD)
-      const usuarioDocRef = doc(this.firestore, "usuarios", credentials.user.uid);
-  
-  // Actualizar campo intentos a 0
-      await updateDoc(usuarioDocRef, { intentos: 0 });
-      alert('Contraseña cambiada exitosamente.');
+
+      const docSnap = await this._authService.buscarUsuarioDoc(emailTrimmed);
+      if (docSnap) {
+        await updateDoc(docSnap.ref, { intentos: 0 });
+      }
+
+      await Swal.fire({
+        icon: 'success',
+        title: '¡Contraseña actualizada!',
+        text: 'Tu contraseña ha sido cambiada exitosamente. Ya puedes iniciar sesión con tu nueva clave.',
+        confirmButtonColor: '#ff6600'
+      });
+
       this.router.navigate(['/home']);
     } catch (error) {
       console.error('Error al cambiar la contraseña:', error);
-      alert('No se pudo cambiar la contraseña. Verifica tus datos.');
-      await this._authService.incrementarIntentosPorEmail(email);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al actualizar',
+        text: 'No se pudo cambiar la contraseña. Verifica que tu correo y contraseña actual sean correctos.',
+        confirmButtonColor: '#ff6600'
+      });
+      await this._authService.incrementarIntentosPorEmail(emailTrimmed);
     }
 
     this.form.reset();
