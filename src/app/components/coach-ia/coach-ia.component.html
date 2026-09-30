@@ -1,0 +1,291 @@
+<div class="coach-container container py-4">
+
+  <!-- Header / Título -->
+  <div class="text-center mb-4">
+    <div class="badge-coach mb-2">
+      <i class='bx bx-brain'></i> Inteligencia Artificial Gym
+    </div>
+    <h1 class="titulo-principal">Coach Virtual <span class="destacado">IA</span></h1>
+    <p class="subtitulo">Generador de rutinas biomecánicas y consultorio interactivo con tus Coaches favoritos</p>
+
+    <!-- Usuario conectado -->
+    <div *ngIf="usuarioAutenticado" class="mt-2 d-flex justify-content-center align-items-center gap-2 flex-wrap">
+      <span class="badge bg-dark border border-secondary text-light px-3 py-2">
+        <i class='bx bxl-google text-danger me-1'></i> Socio: <strong>{{ usuarioNombre }}</strong>
+      </span>
+      <a routerLink="/micuenta" class="badge bg-secondary text-decoration-none text-light px-3 py-2 border border-secondary">
+        <i class='bx bx-id-card text-warning me-1'></i> {{ perfil.peso }} kg | {{ perfil.altura }} cm (Editar en Mi Cuenta)
+      </a>
+    </div>
+    
+    <!-- Pestañas de Navegación -->
+    <div *ngIf="usuarioAutenticado" class="d-inline-flex nav-pills-coach mt-3">
+      <button class="btn-pill" [class.active]="pestanaActiva === 'rutina'" (click)="pestanaActiva = 'rutina'">
+        <i class='bx bx-dumbbell me-1'></i> Generador de Rutinas
+      </button>
+      <button class="btn-pill" [class.active]="pestanaActiva === 'chat'" (click)="pestanaActiva = 'chat'">
+        <i class='bx bx-conversation me-1'></i> Chatear con los Coaches
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= BLOQUEO ANTI-BOTS ================= -->
+  <div *ngIf="!usuarioAutenticado && !cargandoAuth" class="card-glass text-center mx-auto auth-lock-box py-5">
+    <div class="shield-icon mb-3">
+      <i class='bx bx-shield-quarter text-naranja fs-1'></i>
+    </div>
+    <h3 class="text-white mb-2">Acceso Exclusivo para Socios</h3>
+    <p class="text-secondary mx-auto mb-4" style="max-width: 480px;">
+      Para proteger el servicio de IA contra bots y consultar a los Coaches con tus datos guardados, inicia sesión con tu cuenta de Google.
+    </p>
+
+    <div *ngIf="errorMensaje" class="alert alert-danger mx-auto" style="max-width: 450px;">
+      <i class='bx bx-error-circle'></i> {{ errorMensaje }}
+    </div>
+
+    <button class="btn btn-google py-3 px-4 fw-bold fs-6" (click)="loginConGoogle()">
+      <svg class="me-2" width="20" height="20" viewBox="0 0 48 48">
+        <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
+        <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
+        <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
+        <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
+      </svg>
+      Iniciar Sesión con Google
+    </button>
+  </div>
+
+  <!-- Loader Auth inicial -->
+  <div *ngIf="cargandoAuth" class="text-center py-5">
+    <div class="spinner-border text-warning" role="status"></div>
+  </div>
+
+  <!-- ================= USUARIO AUTENTICADO ================= -->
+  <div *ngIf="usuarioAutenticado">
+
+    <!-- ================= SECCIÓN 1: RUTINA ================= -->
+    <div *ngIf="pestanaActiva === 'rutina'">
+      
+      <!-- Formulario Simplificado (Solo parámetros de la sesión) -->
+      <div *ngIf="!rutina && !cargando" class="card-glass form-box mx-auto">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h3 class="m-0 text-white"><i class='bx bx-dumbbell text-naranja'></i> Diseñar Rutina</h3>
+          <a routerLink="/micuenta" class="btn btn-sm btn-outline-warning">
+            <i class='bx bx-user-circle'></i> Mis Datos ({{ perfil.peso }} kg)
+          </a>
+        </div>
+
+        <p class="text-secondary small mb-4">
+          La IA usará automáticamente tu objetivo (<strong>{{ perfil.objetivo }}</strong>) y tu peso de tu perfil de socio.
+        </p>
+        
+        <div *ngIf="errorMensaje" class="alert alert-danger">
+          <i class='bx bx-error-circle'></i> {{ errorMensaje }}
+        </div>
+
+        <form (ngSubmit)="generarRutina()">
+          <div class="row g-3">
+            
+            <!-- Días a entrenar -->
+            <div class="col-md-6">
+              <label class="form-label text-light fw-bold">¿Cuántos días entrenarás esta semana?</label>
+              <select [(ngModel)]="perfil.diasDisponibles" name="diasDisponibles" class="form-select input-gym fs-6">
+                <option *ngFor="let dia of opcionesDias" [value]="dia">{{ dia }} días por semana</option>
+              </select>
+            </div>
+
+            <!-- Objetivo (puede ajustarlo si quiere) -->
+            <div class="col-md-6">
+              <label class="form-label text-light fw-bold">Enfoque principal</label>
+              <select [(ngModel)]="perfil.objetivo" name="objetivo" class="form-select input-gym fs-6">
+                <option *ngFor="let obj of objetivos" [value]="obj">{{ obj }}</option>
+              </select>
+            </div>
+
+            <!-- Nota o molestia para hoy -->
+            <div class="col-12">
+              <label class="form-label text-light">Indicación especial o lesión (opcional)</label>
+              <input type="text" [(ngModel)]="perfil.restriccionesMedicas" name="restriccionesMedicas" class="form-control input-gym" placeholder="Ej. Me molesta el codo izquierdo, sin ejercicios de mucho impacto o 'Ninguna'">
+            </div>
+
+            <!-- Botón generar -->
+            <div class="col-12 mt-4 text-center">
+              <button type="submit" class="btn btn-naranja w-100 py-3 fw-bold fs-5">
+                <i class='bx bx-bolt-circle me-1'></i> Generar Rutina Personalizada
+              </button>
+            </div>
+
+          </div>
+        </form>
+      </div>
+
+      <!-- Loader Dinámico -->
+      <div *ngIf="cargando" class="card-glass text-center py-5 mx-auto loader-box">
+        <div class="spinner-grow text-warning mb-3" style="width: 3.5rem; height: 3.5rem;" role="status"></div>
+        <h3 class="text-white">El Coach IA está calculando tu rutina...</h3>
+        <p class="text-secondary">Adaptando volumen y series para tus {{ perfil.peso }} kg y {{ perfil.diasDisponibles }} días de entrenamiento.</p>
+      </div>
+
+      <!-- Resultados de la Rutina -->
+      <div *ngIf="rutina && !cargando" class="resultado-box">
+        <div class="card-glass mb-4 p-4 d-flex flex-wrap justify-content-between align-items-center">
+          <div>
+            <span class="badge bg-warning text-dark mb-1">
+              <i class='bx bx-check-circle'></i> {{ rutina.nivelRecomendado }}
+            </span>
+            <span *ngIf="origenRespuesta === 'cache'" class="badge bg-info text-dark ms-2 mb-1">
+              ⚡ Optimizado en Caché
+            </span>
+            <span class="badge bg-secondary text-light ms-2 mb-1">
+              ⚖️ {{ perfil.peso }} kg | 📏 {{ perfil.altura }} cm
+            </span>
+            <h2 class="text-white mb-1">{{ rutina.tituloRutina }}</h2>
+            <p class="text-secondary mb-0"><strong>Objetivo:</strong> {{ rutina.objetivo }}</p>
+          </div>
+          <div class="mt-3 mt-md-0 d-flex gap-2">
+            <button class="btn btn-outline-light" (click)="imprimirRutina()">
+              <i class='bx bx-printer'></i> Imprimir / PDF
+            </button>
+            <button class="btn btn-naranja" (click)="nuevaRutina()">
+              <i class='bx bx-refresh'></i> Nueva Rutina
+            </button>
+          </div>
+        </div>
+
+        <!-- Grilla de días -->
+        <div class="row g-4">
+          <div *ngFor="let dia of rutina.diasSemana" class="col-lg-6 col-xl-4">
+            <div class="card-dia h-100">
+              <div class="card-dia-header">
+                <h4 class="m-0 text-naranja">{{ dia.dia }}</h4>
+                <span class="badge-grupo">{{ dia.grupoMuscular }}</span>
+              </div>
+              <div class="card-dia-body">
+                <div *ngFor="let ej of dia.ejercicios; let i = index" class="ejercicio-item">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <span class="num-ej">{{ i + 1 }}</span>
+                    <div class="flex-grow-1 ms-2">
+                      <h6 class="text-white m-0">{{ ej.nombre }}</h6>
+                      <div class="d-flex gap-2 mt-1">
+                        <span class="tag-meta">{{ ej.series }} series</span>
+                        <span class="tag-meta">{{ ej.repeticiones }} reps</span>
+                        <span class="tag-descanso"><i class='bx bx-timer'></i> {{ ej.descansoSegundos }}s desc.</span>
+                      </div>
+                      <p *ngIf="ej.notasCoach" class="nota-coach mt-2 mb-0">
+                        <i class='bx bx-bulb'></i> {{ ej.notasCoach }}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recomendaciones -->
+        <div class="card-glass mt-4 p-4">
+          <h5 class="text-naranja"><i class='bx bx-shield-quarter'></i> Recomendaciones del Coach:</h5>
+          <p class="text-light mb-0">{{ rutina.recomendacionesGenerales }}</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ================= SECCIÓN 2: CHAT CON LOS COACHES ================= -->
+    <div *ngIf="pestanaActiva === 'chat'" class="row g-4">
+      
+      <!-- Selector de Coaches (Izquierda) -->
+      <div class="col-lg-4">
+        <div class="card-glass p-3 h-100">
+          <h5 class="text-white mb-3"><i class='bx bx-group text-naranja'></i> Elige a tu Coach:</h5>
+          <div class="d-flex flex-column gap-2">
+            <div *ngFor="let c of coaches" 
+                 class="coach-card-select" 
+                 [class.active-coach]="coachActivo?.id === c.id"
+                 (click)="seleccionarCoach(c)">
+              <div class="d-flex align-items-center">
+                <span class="coach-emoji me-3">{{ c.emoji }}</span>
+                <div>
+                  <h6 class="text-white m-0">{{ c.nombre }}</h6>
+                  <small class="text-naranja d-block">{{ c.titulo }}</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Enlace rápido a Mi Cuenta -->
+          <div class="mt-4 p-3 bg-black rounded border border-secondary text-center">
+            <small class="text-secondary d-block mb-2">Tus datos activos:</small>
+            <span class="badge bg-dark border border-secondary text-warning">
+              {{ perfil.peso }} kg | {{ perfil.altura }} cm
+            </span>
+            <div class="mt-2">
+              <a routerLink="/micuenta" class="small text-decoration-none text-naranja">
+                <i class='bx bx-edit'></i> Modificar en Mi Cuenta
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ventana de Chat (Derecha) -->
+      <div class="col-lg-8">
+        <div class="card-glass chat-window d-flex flex-column p-0">
+          
+          <!-- Header del chat -->
+          <div class="chat-header p-3 border-bottom border-dark d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center" *ngIf="coachActivo">
+              <span class="fs-2 me-2">{{ coachActivo.emoji }}</span>
+              <div>
+                <h5 class="text-white m-0">{{ coachActivo.nombre }}</h5>
+                <small class="text-muted">{{ coachActivo.titulo }}</small>
+              </div>
+            </div>
+            <span class="badge bg-success">En línea</span>
+          </div>
+
+          <!-- Área de mensajes -->
+          <div class="chat-body p-3 flex-grow-1 overflow-auto" #chatContainer>
+            <div *ngFor="let msg of mensajes" 
+                 class="d-flex mb-3"
+                 [ngClass]="{'justify-content-end': msg.remitente === 'usuario', 'justify-content-start': msg.remitente === 'coach'}">
+              
+              <div class="burbuja-msg" [ngClass]="msg.remitente === 'usuario' ? 'burbuja-user' : 'burbuja-coach'">
+                <div class="msg-texto">{{ msg.texto }}</div>
+                <small class="msg-hora d-block text-end mt-1">{{ msg.hora }}</small>
+              </div>
+
+            </div>
+
+            <!-- Indicador escribiendo -->
+            <div *ngIf="enviandoMensaje" class="d-flex justify-content-start mb-3">
+              <div class="burbuja-msg burbuja-coach typing-indicator">
+                <span></span><span></span><span></span>
+                <small class="text-muted ms-2">{{ coachActivo?.nombre }} está respondiendo...</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Input de mensaje -->
+          <div class="chat-footer p-3 border-top border-dark">
+            <form (ngSubmit)="enviarMensaje()" class="d-flex gap-2">
+              <input type="text" 
+                     [(ngModel)]="mensajeInput" 
+                     name="mensajeInput" 
+                     placeholder="Escribe tu pregunta a {{ coachActivo?.nombre }}..." 
+                     class="form-control input-gym"
+                     [disabled]="enviandoMensaje"
+                     required>
+              <button type="submit" class="btn btn-naranja px-4" [disabled]="enviandoMensaje || !mensajeInput.trim()">
+                <i class='bx bx-send'></i>
+              </button>
+            </form>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

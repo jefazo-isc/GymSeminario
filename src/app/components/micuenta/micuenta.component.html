@@ -1,8 +1,161 @@
-<div *ngIf="nombre && role">
-  <p>Hola, {{ nombre }}.</p>
-  <p>Tu rol es: {{ role }}</p>
-</div>
+<div class="micuenta-container container py-4">
 
-<div *ngIf="!nombre || !role">
-  <p>Cargando datos...</p>
+  <!-- Header de Perfil -->
+  <div class="card-glass mb-4 p-4 d-flex flex-wrap justify-content-between align-items-center">
+    <div class="d-flex align-items-center gap-3">
+      <div class="avatar-box">
+        <i class='bx bx-user fs-1 text-naranja'></i>
+      </div>
+      <div>
+        <h2 class="text-white mb-0">{{ nombre || 'Socio del Gym' }}</h2>
+        <small class="text-muted d-block">{{ email || 'Sesión iniciada' }}</small>
+        <span class="badge bg-naranja mt-1">
+          <i class='bx bx-badge-check'></i> {{ role === 'admin' ? 'Administrador' : 'Socio Activo' }}
+        </span>
+      </div>
+    </div>
+    <div class="mt-3 mt-md-0 d-flex gap-2">
+      <a routerLink="/coach-ia" class="btn btn-naranja">
+        <i class='bx bx-brain'></i> Ir a Coach IA
+      </a>
+      <button class="btn btn-outline-danger" (click)="cerrarSesion()">
+        <i class='bx bx-log-out'></i> Salir
+      </button>
+    </div>
+  </div>
+
+  <!-- Alerta de éxito -->
+  <div *ngIf="guardadoExitoso" class="alert alert-success d-flex align-items-center mb-4">
+    <i class='bx bx-check-circle fs-4 me-2'></i>
+    <div>¡Tus datos biométricos han sido guardados! El Coach IA usará esta información automáticamente.</div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Columna Izquierda: Tarjeta Resumen & IMC -->
+    <div class="col-lg-4">
+      <div class="card-glass p-4 text-center mb-4">
+        <h5 class="text-white mb-3"><i class='bx bx-pulse text-naranja'></i> Índice Corporal</h5>
+        
+        <div class="imc-circulo mx-auto mb-3">
+          <span class="imc-valor">{{ imc }}</span>
+          <small class="d-block text-secondary">IMC</small>
+        </div>
+
+        <span class="badge" [ngClass]="{
+          'bg-success': estadoImc === 'Peso normal',
+          'bg-warning text-dark': estadoImc === 'Sobrepeso' || estadoImc === 'Bajo peso',
+          'bg-danger': estadoImc === 'Obesidad'
+        }">
+          {{ estadoImc }}
+        </span>
+
+        <hr class="border-secondary my-3">
+
+        <div class="text-start small text-secondary">
+          <div class="mb-2"><strong>⚖️ Peso actual:</strong> <span class="text-white">{{ perfil.peso }} kg</span></div>
+          <div class="mb-2"><strong>📏 Altura:</strong> <span class="text-white">{{ perfil.altura }} cm</span></div>
+          <div class="mb-2"><strong>🎯 Objetivo:</strong> <span class="text-white">{{ perfil.objetivo }}</span></div>
+          <div><strong>🏋️ Nivel:</strong> <span class="text-white">{{ perfil.nivel }}</span></div>
+        </div>
+      </div>
+
+      <div class="card-glass p-3 border-secondary">
+        <h6 class="text-warning mb-2"><i class='bx bx-info-circle'></i> ¿Para qué sirve?</h6>
+        <p class="text-secondary small mb-0">
+          Tus datos alimentan el contexto de los Coaches Virtuales (Patricio, El Temach, Arnold, El Chavo). Así saben tu peso y complexión para darte respuestas exactas.
+        </p>
+      </div>
+    </div>
+
+    <!-- Columna Derecha: Formulario de Biometría -->
+    <div class="col-lg-8">
+      <div class="card-glass p-4">
+        <h4 class="text-white mb-1"><i class='bx bx-edit text-naranja'></i> Ficha Biometría y Entrenamiento</h4>
+        <p class="text-secondary small mb-4">Mantén actualizados tus datos para que tus rutinas y dietas se ajusten a tu progreso.</p>
+
+        <form (ngSubmit)="guardarDatos()">
+          <div class="row g-3">
+            
+            <!-- Nombre -->
+            <div class="col-md-6">
+              <label class="form-label text-light">Nombre / Apodo</label>
+              <input type="text" [(ngModel)]="perfil.nombre" name="nombre" class="form-control input-gym" required>
+            </div>
+
+            <!-- Edad -->
+            <div class="col-md-3">
+              <label class="form-label text-light">Edad</label>
+              <input type="number" [(ngModel)]="perfil.edad" name="edad" min="14" max="95" class="form-control input-gym" required>
+            </div>
+
+            <!-- Género -->
+            <div class="col-md-3">
+              <label class="form-label text-light">Género</label>
+              <select [(ngModel)]="perfil.genero" name="genero" class="form-select input-gym">
+                <option *ngFor="let g of generos" [value]="g">{{ g }}</option>
+              </select>
+            </div>
+
+            <!-- Peso -->
+            <div class="col-md-6">
+              <label class="form-label text-light">Peso Corporal (kg)</label>
+              <div class="input-group">
+                <input type="number" [(ngModel)]="perfil.peso" name="peso" min="30" max="250" class="form-control input-gym" required>
+                <span class="input-group-text bg-dark border-secondary text-secondary">kg</span>
+              </div>
+            </div>
+
+            <!-- Altura -->
+            <div class="col-md-6">
+              <label class="form-label text-light">Altura (cm)</label>
+              <div class="input-group">
+                <input type="number" [(ngModel)]="perfil.altura" name="altura" min="100" max="230" class="form-control input-gym" required>
+                <span class="input-group-text bg-dark border-secondary text-secondary">cm</span>
+              </div>
+            </div>
+
+            <!-- Objetivo -->
+            <div class="col-md-6">
+              <label class="form-label text-light">Objetivo Principal</label>
+              <select [(ngModel)]="perfil.objetivo" name="objetivo" class="form-select input-gym">
+                <option *ngFor="let obj of objetivos" [value]="obj">{{ obj }}</option>
+              </select>
+            </div>
+
+            <!-- Días habituales -->
+            <div class="col-md-3">
+              <label class="form-label text-light">Días / Semana</label>
+              <select [(ngModel)]="perfil.diasDisponibles" name="diasDisponibles" class="form-select input-gym">
+                <option *ngFor="let dia of opcionesDias" [value]="dia">{{ dia }} días</option>
+              </select>
+            </div>
+
+            <!-- Nivel -->
+            <div class="col-md-3">
+              <label class="form-label text-light">Nivel</label>
+              <select [(ngModel)]="perfil.nivel" name="nivel" class="form-select input-gym">
+                <option *ngFor="let niv of niveles" [value]="niv">{{ niv }}</option>
+              </select>
+            </div>
+
+            <!-- Lesiones -->
+            <div class="col-12">
+              <label class="form-label text-light">Lesiones o Limitaciones Médicas</label>
+              <input type="text" [(ngModel)]="perfil.restriccionesMedicas" name="restriccionesMedicas" class="form-control input-gym" placeholder="Ej. Dolor en manguito rotador, condromalacia o 'Ninguna'">
+            </div>
+
+            <!-- Botón guardar -->
+            <div class="col-12 mt-4">
+              <button type="submit" class="btn btn-naranja py-3 px-5 fw-bold fs-6 w-100">
+                <i class='bx bx-save me-1'></i> Guardar Datos Biométricos
+              </button>
+            </div>
+
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
 </div>

@@ -24,11 +24,13 @@ import { GraficosComponent } from './components/graficos/graficos.component';
 import { HomeComponent } from './components/home/home.component';
 import { BuscarComponent } from './components/buscar/buscar.component';
 import { CursoDetalleComponent } from './components/curso-detalle/curso-detalle.component';
-
+import { CoachIaComponent } from './components/coach-ia/coach-ia.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/home', pathMatch: 'full' },
-  { path: 'home', component: HomeComponent },  { path: 'ubicacion', component: UbicacionComponent },
+  { path: 'home', component: HomeComponent },
+  { path: 'coach-ia', component: CoachIaComponent },
+  { path: 'ubicacion', component: UbicacionComponent },
   { path: 'carrusel', component: CarruselComponent },
   { path: 'servicio', component: ServiciosComponent },
   { path: 'responsables', component: ResponsablesComponent },

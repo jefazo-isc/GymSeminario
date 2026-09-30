@@ -1,0 +1,336 @@
+.coach-container {
+  min-height: 85vh;
+}
+
+.badge-coach {
+  display: inline-block;
+  background: rgba(255, 102, 0, 0.15);
+  color: #ff7700;
+  border: 1px solid rgba(255, 102, 0, 0.4);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.titulo-principal {
+  color: #ffffff;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.destacado {
+  color: #ff6600;
+  text-shadow: 0 0 15px rgba(255, 102, 0, 0.5);
+}
+
+.subtitulo {
+  color: #a0a0a0;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Pills de navegación */
+.nav-pills-coach {
+  background: #1e1e1e;
+  padding: 4px;
+  border-radius: 30px;
+  border: 1px solid #333;
+}
+
+.btn-pill {
+  background: transparent;
+  color: #aaa;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.btn-pill.active {
+  background: #ff6600;
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(255, 102, 0, 0.4);
+}
+
+/* Tarjetas y Contenedores */
+.auth-lock-box {
+  max-width: 600px;
+  margin-top: 40px;
+}
+
+.shield-icon {
+  display: inline-flex;
+  padding: 18px;
+  background: rgba(255, 102, 0, 0.12);
+  border-radius: 50%;
+  border: 1px solid rgba(255, 102, 0, 0.3);
+}
+
+.btn-google {
+  background: #ffffff;
+  color: #3c4043;
+  border: 1px solid #dadce0;
+  border-radius: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.btn-google:hover {
+  background: #f8f9fa;
+  color: #202124;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.card-glass {
+  background: rgba(26, 26, 26, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  padding: 30px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.form-box {
+  max-width: 750px;
+}
+
+.text-naranja {
+  color: #ff6600 !important;
+}
+
+.input-gym {
+  background-color: #242424;
+  border: 1px solid #383838;
+  color: #ffffff;
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.input-gym:focus {
+  background-color: #2b2b2b;
+  border-color: #ff6600;
+  color: #ffffff;
+  box-shadow: 0 0 0 0.25rem rgba(255, 102, 0, 0.25);
+}
+
+.btn-naranja {
+  background: linear-gradient(135deg, #ff7700 0%, #ff5500 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(255, 85, 0, 0.4);
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-naranja:hover {
+  background: linear-gradient(135deg, #ff8811 0%, #ff6600 100%);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 85, 0, 0.6);
+}
+
+/* Tarjetas de Días de Rutina */
+.card-dia {
+  background: #1e1e1e;
+  border: 1px solid #333333;
+  border-radius: 14px;
+  overflow: hidden;
+  transition: transform 0.2s ease;
+}
+
+.card-dia:hover {
+  transform: translateY(-3px);
+  border-color: #ff6600;
+}
+
+.card-dia-header {
+  background: #252525;
+  padding: 14px 18px;
+  border-bottom: 1px solid #333333;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.badge-grupo {
+  background: rgba(255, 102, 0, 0.2);
+  color: #ff9944;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 0.78rem;
+  font-weight: bold;
+}
+
+.card-dia-body {
+  padding: 15px;
+}
+
+.ejercicio-item {
+  padding: 12px;
+  background: #242424;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  border-left: 3px solid #ff6600;
+}
+
+.num-ej {
+  background: #333;
+  color: #ff8822;
+  font-weight: bold;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+}
+
+.tag-meta {
+  background: #333;
+  color: #ccc;
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-size: 0.75rem;
+}
+
+.tag-descanso {
+  background: rgba(40, 167, 69, 0.2);
+  color: #4cd964;
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.nota-coach {
+  font-size: 0.8rem;
+  color: #b0b0b0;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 5px 8px;
+  border-radius: 5px;
+}
+
+.loader-box {
+  max-width: 500px;
+}
+
+/* ================= CHAT UI ================= */
+.coach-card-select {
+  background: #222222;
+  border: 1px solid #333333;
+  border-radius: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.coach-card-select:hover {
+  background: #282828;
+  border-color: #555555;
+}
+
+.coach-card-select.active-coach {
+  background: rgba(255, 102, 0, 0.15);
+  border-color: #ff6600;
+  box-shadow: 0 0 10px rgba(255, 102, 0, 0.2);
+}
+
+.coach-emoji {
+  font-size: 1.8rem;
+}
+
+.chat-window {
+  height: 580px;
+  overflow: hidden;
+}
+
+.chat-header {
+  background: #1e1e1e;
+}
+
+.chat-body {
+  background: #141414;
+}
+
+.chat-footer {
+  background: #1e1e1e;
+}
+
+.burbuja-msg {
+  max-width: 80%;
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.burbuja-user {
+  background: #ff6600;
+  color: #ffffff;
+  border-bottom-right-radius: 4px;
+}
+
+.burbuja-coach {
+  background: #252525;
+  color: #eaeaea;
+  border: 1px solid #3a3a3a;
+  border-bottom-left-radius: 4px;
+  white-space: pre-wrap;
+}
+
+.msg-hora {
+  font-size: 0.72rem;
+  opacity: 0.7;
+}
+
+.typing-indicator span {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background-color: #ff6600;
+  border-radius: 50%;
+  margin-right: 3px;
+  animation: typing 1s infinite alternate;
+}
+
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typing {
+  from { opacity: 0.3; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1.2); }
+}
+
+@media print {
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .coach-container {
+    padding: 0;
+  }
+  .btn, .badge-coach, .nav-pills-coach {
+    display: none !important;
+  }
+  .card-glass, .card-dia, .ejercicio-item {
+    background: #fff !important;
+    color: #000 !important;
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+  }
+  .text-white, .text-light, .text-secondary {
+    color: #000 !important;
+  }
+  .text-naranja {
+    color: #d35400 !important;
+  }
+}

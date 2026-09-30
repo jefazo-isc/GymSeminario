@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { Auth, User as FirebaseUser, onAuthStateChanged } from '@angular/fire/auth';
+import { Auth, onAuthStateChanged } from '@angular/fire/auth';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -7,14 +7,14 @@ import {
   signInWithPopup, signOut,
   updatePassword,
   getAuth,
-  sendEmailVerification
+  sendEmailVerification,
+  User as FirebaseUser
 } from 'firebase/auth';
 import { BehaviorSubject } from 'rxjs';
 import {
-  Firestore, doc, setDoc, getDocs, getDoc, updateDoc, collection, query, where, increment,
-  serverTimestamp
+  Firestore, doc, setDoc, getDocs, getDoc, updateDoc, collection, query, where, increment
 } from '@angular/fire/firestore';
-import { getFirestore, addDoc } from "firebase/firestore";
+import { getFirestore, addDoc, serverTimestamp } from "firebase/firestore";
 export interface User {
   email: string;
   password: string;
