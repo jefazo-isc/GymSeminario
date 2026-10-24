@@ -1,0 +1,141 @@
+.membresias-container {
+  min-height: 80vh;
+}
+
+.max-w-600 {
+  max-width: 650px;
+}
+
+.card-glass {
+  background: rgba(26, 26, 26, 0.85);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.border-start-naranja {
+  border-left: 6px solid #ff5722 !important;
+}
+
+.icon-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  background: rgba(255, 87, 34, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.text-naranja {
+  color: #ff5722 !important;
+}
+
+.bg-naranja {
+  background-color: #ff5722 !important;
+  color: white;
+}
+
+.btn-naranja {
+  background-color: #ff5722;
+  border: none;
+  color: white;
+  transition: all 0.25s ease;
+}
+
+.btn-naranja:hover {
+  background-color: #e64a19;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(255, 87, 34, 0.4);
+}
+
+.btn-outline-naranja {
+  border: 2px solid #ff5722;
+  color: #ff5722;
+  background: transparent;
+  transition: all 0.25s ease;
+}
+
+.btn-outline-naranja:hover {
+  background-color: #ff5722;
+  color: white;
+}
+
+.dato-box {
+  background: rgba(0, 0, 0, 0.35);
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dato-label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #888;
+  letter-spacing: 0.5px;
+}
+
+.dato-valor {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: bold;
+  color: #fff;
+  margin-top: 4px;
+}
+
+.plan-card {
+  position: relative;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.plan-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(255, 87, 34, 0.5);
+  box-shadow: 0 12px 30px rgba(255, 87, 34, 0.15);
+}
+
+.popular-card {
+  border: 2px solid #ff5722 !important;
+  background: linear-gradient(180deg, rgba(35, 25, 20, 0.95) 0%, rgba(20, 20, 20, 0.9) 100%);
+}
+
+.badge-popular {
+  position: absolute;
+  top: 15px;
+  right: -35px;
+  transform: rotate(45deg);
+  background: #ff5722;
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 4px 40px;
+  letter-spacing: 1px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.precio-box {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 2px;
+}
+
+.precio-box .moneda {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #ff5722;
+}
+
+.precio-box .monto {
+  font-size: 2.8rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.precio-box .periodo {
+  margin-left: 6px;
+  font-size: 0.85rem;
+}

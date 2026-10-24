@@ -26,9 +26,9 @@ A continuación se presenta la lista centralizada de historias de usuario y tare
 ### Sprint 2: Membresías y Pagos
 | Clave | Título / HU | Prioridad | Historia de Usuario | Estado Real |
 | :--- | :--- | :--- | :--- | :--- |
-| **SCRUM-24** | HU-10 Registrar membresía | Media | Como administrador, quiero crear membresías para habilitar servicios a clientes. | **Pendiente** |
-| **SCRUM-26** | HU-11 Renovar membresía | Media | Como administrador, quiero renovar membresías para extender su vigencia. | **Pendiente** |
-| **SCRUM-25** | HU-12 Consultar vigencia | Alta | Como cliente, quiero consultar mi membresía para saber si está activa. | **Pendiente** |
+| **SCRUM-24** | HU-10 Registrar membresía | Media | Como administrador, quiero crear membresías para habilitar servicios a clientes. | **Terminada** |
+| **SCRUM-26** | HU-11 Renovar membresía | Media | Como administrador, quiero renovar membresías para extender su vigencia. | **Terminada** |
+| **SCRUM-25** | HU-12 Consultar vigencia | Alta | Como cliente, quiero consultar mi membresía para saber si está activa. | **Terminada** |
 | **SCRUM-38** | HU-13 Consultar historial de membresías | Alta | Como administrador, quiero consultar renovaciones anteriores para llevar seguimiento. | **Pendiente** |
 | **SCRUM-27** | HU-15 Registrar pago | Alta | Como administrador, quiero registrar pagos para actualizar el estado financiero. | **Pendiente** |
 | **SCRUM-29** | HU-16 Consultar historial de pagos | Baja | Como administrador, quiero revisar pagos realizados para llevar control financiero. | **Pendiente** |

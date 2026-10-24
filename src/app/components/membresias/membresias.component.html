@@ -1,0 +1,138 @@
+<div class="membresias-container container py-5">
+
+  <!-- Encabezado de Sección -->
+  <div class="text-center mb-5">
+    <span class="badge bg-naranja px-3 py-2 text-uppercase mb-2">Membresías & Acceso</span>
+    <h1 class="text-white fw-bold display-5">Tu Membresía en <span class="text-naranja">espacioGYM</span></h1>
+    <p class="text-secondary max-w-600 mx-auto">
+      Consulta el estado y vigencia de tu plan actual, o elije uno de nuestros paquetes para desbloquear acceso ilimitado, clases grupales y asistencia con Coach IA.
+    </p>
+  </div>
+
+  <!-- TARJETA DE ESTADO ACTUAL (HU-12: Consultar Vigencia) -->
+  <div class="card-glass p-4 mb-5 border-start-naranja" *ngIf="membresiaActual">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-8">
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <div class="icon-circle">
+            <i class='bx bx-id-card fs-1 text-naranja'></i>
+          </div>
+          <div>
+            <div class="d-flex align-items-center gap-2">
+              <h3 class="text-white fw-bold mb-0">Plan {{ membresiaActual.nombrePlan }}</h3>
+              <span class="badge" [ngClass]="{
+                'bg-success': membresiaActual.estado === 'Activa',
+                'bg-warning text-dark': membresiaActual.estado === 'Por vencer',
+                'bg-danger': membresiaActual.estado === 'Vencida'
+              }">
+                <i class='bx bx-check-circle' *ngIf="membresiaActual.estado === 'Activa'"></i>
+                <i class='bx bx-time' *ngIf="membresiaActual.estado === 'Por vencer'"></i>
+                <i class='bx bx-x-circle' *ngIf="membresiaActual.estado === 'Vencida'"></i>
+                {{ membresiaActual.estado }}
+              </span>
+            </div>
+            <small class="text-secondary">Folio: <code>{{ membresiaActual.id }}</code> &bull; Modalidad: {{ membresiaActual.periodo }}</small>
+          </div>
+        </div>
+
+        <div class="row g-3 mt-1">
+          <div class="col-sm-4">
+            <div class="dato-box">
+              <span class="dato-label">Fecha de Inicio</span>
+              <span class="dato-valor">{{ membresiaActual.fechaInicio }}</span>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="dato-box">
+              <span class="dato-label">Vencimiento</span>
+              <span class="dato-valor text-warning">{{ membresiaActual.fechaFin }}</span>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="dato-box">
+              <span class="dato-label">Días Restantes</span>
+              <span class="dato-valor text-naranja fw-bold">{{ membresiaActual.diasRestantes }} días</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4 text-lg-end d-flex flex-column gap-2">
+        <button class="btn btn-naranja py-3 px-4 fw-bold" (click)="renovarActual()">
+          <i class='bx bx-refresh fs-5 me-1'></i> Renovar Membresía
+        </button>
+        <a routerLink="/f2" class="btn btn-outline-light py-2 px-4">
+          <i class='bx bx-calendar-event me-1'></i> Agendar Sesión de Gym
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- SELECTOR DE PERIODO DE FACTURACIÓN -->
+  <div class="d-flex justify-content-center mb-5">
+    <div class="btn-group p-1 bg-dark rounded-pill border border-secondary" role="group">
+      <button type="button" class="btn rounded-pill px-4" 
+              [ngClass]="filtroPeriodo === 'Mensual' ? 'btn-naranja' : 'btn-dark text-light'"
+              (click)="cambiarPeriodo('Mensual')">
+        Mensual
+      </button>
+      <button type="button" class="btn rounded-pill px-4" 
+              [ngClass]="filtroPeriodo === 'Trimestral' ? 'btn-naranja' : 'btn-dark text-light'"
+              (click)="cambiarPeriodo('Trimestral')">
+        Trimestral <small class="text-warning">-10%</small>
+      </button>
+      <button type="button" class="btn rounded-pill px-4" 
+              [ngClass]="filtroPeriodo === 'Anual' ? 'btn-naranja' : 'btn-dark text-light'"
+              (click)="cambiarPeriodo('Anual')">
+        Anual <small class="badge bg-success">Ahorra 20%</small>
+      </button>
+    </div>
+  </div>
+
+  <!-- CATÁLOGO DE PLANES DISPONIBLES (HU-10: Registrar Membresía) -->
+  <div class="row g-4 justify-content-center">
+    <div class="col-md-6 col-lg-4" *ngFor="let plan of planes">
+      <div class="card-glass plan-card h-100 p-4 d-flex flex-column" [class.popular-card]="plan.popular">
+        
+        <div class="badge-popular" *ngIf="plan.popular">
+          MÁS POPULAR
+        </div>
+
+        <div class="text-center mb-4">
+          <h4 class="text-white fw-bold mb-2">{{ plan.nombre }}</h4>
+          <p class="text-secondary small mb-3">{{ plan.descripcion }}</p>
+          <div class="precio-box">
+            <span class="moneda">$</span>
+            <span class="monto">{{ getPrecioCalculado(plan.precio) }}</span>
+            <span class="periodo text-secondary">MXN / {{ filtroPeriodo.toLowerCase() }}</span>
+          </div>
+        </div>
+
+        <hr class="border-secondary mb-4">
+
+        <ul class="list-unstyled flex-grow-1 mb-4 d-flex flex-column gap-2">
+          <li *ngFor="let ben of plan.beneficios" class="d-flex align-items-start gap-2 text-light small">
+            <i class='bx bx-check text-naranja fs-5 flex-shrink-0'></i>
+            <span>{{ ben }}</span>
+          </li>
+        </ul>
+
+        <button class="btn w-100 py-3 fw-bold" 
+                [ngClass]="plan.popular ? 'btn-naranja' : 'btn-outline-naranja'"
+                (click)="seleccionarPlan(plan)">
+          {{ membresiaActual && membresiaActual.nombrePlan === plan.nombre ? 'Plan Actual (Cambiar periodo)' : 'Elegir Plan ' + plan.nombre }}
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- INFORMACIÓN ADICIONAL Y PREGUNTAS FRECUENTES -->
+  <div class="mt-5 p-4 card-glass text-center">
+    <h5 class="text-white mb-2"><i class='bx bx-shield-quarter text-naranja'></i> Garantía y Flexibilidad espacioGYM</h5>
+    <p class="text-secondary small mb-0">
+      Todas las membresías cuentan con cancelación en cualquier momento sin penalizaciones. Tus accesos QR se generan al instante para el lector de torniquetes.
+    </p>
+  </div>
+
+</div>
