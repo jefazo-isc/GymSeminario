@@ -1,0 +1,286 @@
+<div class="actividad-container container py-5">
+
+  <!-- ENCABEZADO -->
+  <div class="text-center mb-5">
+    <span class="badge bg-naranja px-3 py-2 text-uppercase mb-2">Mi Actividad</span>
+    <h1 class="text-white fw-bold display-5">Sesiones, Horarios y <span class="text-naranja">Alertas</span></h1>
+    <p class="text-secondary mx-auto" style="max-width:580px">
+      Consulta tu historial de entrenamientos, la ocupación en tiempo real y mantén al día tus notificaciones.
+    </p>
+  </div>
+
+  <!-- RESUMEN RÁPIDO (KPI Cards) -->
+  <div class="row g-4 mb-5" *ngIf="historial.length">
+    <div class="col-6 col-md-3">
+      <div class="card-glass p-3 text-center">
+        <i class='bx bx-check-circle text-success fs-2 mb-1'></i>
+        <div class="fw-bold text-white fs-4">{{ sesionesAsistidas }}</div>
+        <small class="text-secondary">Sesiones asistidas</small>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card-glass p-3 text-center">
+        <i class='bx bx-calendar-check text-naranja fs-2 mb-1'></i>
+        <div class="fw-bold text-white fs-4">{{ proximasSesiones.length }}</div>
+        <small class="text-secondary">Sesiones reservadas</small>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card-glass p-3 text-center">
+        <i class='bx bx-trending-up text-warning fs-2 mb-1'></i>
+        <div class="fw-bold text-white fs-4">{{ porcentajeAsistencia }}%</div>
+        <small class="text-secondary">Tasa de asistencia</small>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card-glass p-3 text-center" (click)="vistaActiva='alertas'" style="cursor:pointer">
+        <i class='bx bx-bell text-naranja fs-2 mb-1'></i>
+        <div class="fw-bold fs-4" [ngClass]="alertasSinLeer > 0 ? 'text-warning' : 'text-white'">
+          {{ alertasSinLeer }}
+        </div>
+        <small class="text-secondary">Alertas sin leer</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="d-flex gap-2 mb-4 flex-wrap">
+    <button class="btn tab-btn" [ngClass]="vistaActiva==='historial' ? 'btn-naranja' : 'btn-outline-secondary'"
+            (click)="vistaActiva='historial'">
+      <i class='bx bx-history'></i> Historial
+    </button>
+    <button class="btn tab-btn" [ngClass]="vistaActiva==='ocupacion' ? 'btn-naranja' : 'btn-outline-secondary'"
+            (click)="vistaActiva='ocupacion'">
+      <i class='bx bx-time-five'></i> Ocupación por Horario
+    </button>
+    <button class="btn tab-btn position-relative"
+            [ngClass]="vistaActiva==='alertas' ? 'btn-naranja' : 'btn-outline-secondary'"
+            (click)="vistaActiva='alertas'">
+      <i class='bx bx-bell'></i> Alertas
+      <span *ngIf="alertasSinLeer > 0"
+            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:.65rem">
+        {{ alertasSinLeer }}
+      </span>
+    </button>
+  </div>
+
+  <!-- ══════════ TAB: HISTORIAL (SCRUM-33 HU-25) ══════════ -->
+  <div *ngIf="vistaActiva==='historial'">
+
+    <!-- Próximas sesiones -->
+    <div class="card-glass p-4 mb-4" *ngIf="proximasSesiones.length > 0">
+      <h6 class="text-naranja mb-3"><i class='bx bx-calendar-event'></i> Próximas Sesiones Reservadas</h6>
+      <div class="row g-3">
+        <div class="col-md-6" *ngFor="let s of proximasSesiones">
+          <div class="sesion-card proxima d-flex align-items-center gap-3 p-3">
+            <div class="clase-icon">
+              <i class='bx {{ iconoSesion(s.clase) }} fs-2 text-naranja'></i>
+            </div>
+            <div class="flex-grow-1">
+              <strong class="text-white">{{ s.clase }}</strong>
+              <div class="text-secondary small">{{ s.fecha }} &bull; Turno {{ s.turno }}</div>
+              <div class="text-secondary small" *ngIf="s.entrenador">
+                <i class='bx bx-user'></i> {{ s.entrenador }} — {{ s.sala }}
+              </div>
+            </div>
+            <button class="btn btn-sm btn-outline-danger" (click)="cancelar(s)" title="Cancelar sesión">
+              <i class='bx bx-x'></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtro y tabla de historial -->
+    <div class="d-flex gap-2 mb-3 flex-wrap align-items-center">
+      <span class="text-secondary small">Filtrar:</span>
+      <button class="btn btn-sm" [ngClass]="filtroEstado==='todos' ? 'btn-naranja' : 'btn-outline-secondary'" (click)="filtroEstado='todos'">Todas</button>
+      <button class="btn btn-sm" [ngClass]="filtroEstado==='asistida' ? 'btn-naranja' : 'btn-outline-secondary'" (click)="filtroEstado='asistida'">Asistidas</button>
+      <button class="btn btn-sm" [ngClass]="filtroEstado==='reservada' ? 'btn-naranja' : 'btn-outline-secondary'" (click)="filtroEstado='reservada'">Reservadas</button>
+      <button class="btn btn-sm" [ngClass]="filtroEstado==='cancelada' ? 'btn-naranja' : 'btn-outline-secondary'" (click)="filtroEstado='cancelada'">Canceladas</button>
+      <button class="btn btn-sm" [ngClass]="filtroEstado==='ausente' ? 'btn-naranja' : 'btn-outline-secondary'" (click)="filtroEstado='ausente'">Ausencias</button>
+    </div>
+
+    <div class="card-glass">
+      <div class="table-responsive">
+        <table class="table tabla-gym mb-0" *ngIf="historialFiltrado.length > 0; else sinSesiones">
+          <thead>
+            <tr>
+              <th>Clase</th>
+              <th>Fecha</th>
+              <th>Turno</th>
+              <th>Entrenador</th>
+              <th>Sala</th>
+              <th>Estado</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let s of historialFiltrado">
+              <td>
+                <i class='bx {{ iconoSesion(s.clase) }} me-2 text-naranja'></i>
+                <strong class="text-white">{{ s.clase }}</strong>
+              </td>
+              <td class="text-secondary">{{ s.fecha }}</td>
+              <td class="text-secondary small">{{ s.turno }}</td>
+              <td class="text-secondary small">{{ s.entrenador ?? '—' }}</td>
+              <td class="text-secondary small">{{ s.sala ?? '—' }}</td>
+              <td>
+                <span class="badge" [ngClass]="{
+                  'bg-success':             s.estado === 'Asistida',
+                  'bg-naranja':             s.estado === 'Reservada',
+                  'bg-secondary':           s.estado === 'Cancelada',
+                  'bg-warning text-dark':   s.estado === 'Ausente'
+                }">{{ s.estado }}</span>
+              </td>
+              <td>
+                <button *ngIf="s.estado === 'Reservada'"
+                        class="btn btn-sm btn-outline-danger" (click)="cancelar(s)" title="Cancelar">
+                  <i class='bx bx-x'></i>
+                </button>
+                <span *ngIf="s.estado !== 'Reservada'" class="text-secondary small">—</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <ng-template #sinSesiones>
+          <div class="text-center py-5 text-secondary">
+            <i class='bx bx-calendar-x fs-1'></i>
+            <p class="mt-2">No hay sesiones en esta categoría.</p>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ TAB: OCUPACIÓN (SCRUM-42 HU-28) ══════════ -->
+  <div *ngIf="vistaActiva==='ocupacion'">
+
+    <!-- Horarios destacados -->
+    <div class="row g-4 mb-4" *ngIf="horarioPico && horarioLibre">
+      <div class="col-md-6">
+        <div class="card-glass p-4 border-danger-soft">
+          <h6 class="text-danger mb-1"><i class='bx bx-trending-up'></i> Horario más demandado</h6>
+          <div class="fs-4 fw-bold text-white">{{ horarioPico!.hora }}</div>
+          <div class="text-secondary small">{{ horarioPico!.turno }} &bull; {{ horarioPico!.inscritos }}/{{ horarioPico!.capacidadMax }} inscritos ({{ getPct(horarioPico!) }}%)</div>
+          <div class="text-secondary small mt-1">Clases: {{ horarioPico!.clases.join(', ') }}</div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card-glass p-4 border-success-soft">
+          <h6 class="text-success mb-1"><i class='bx bx-trending-down'></i> Horario más libre</h6>
+          <div class="fs-4 fw-bold text-white">{{ horarioLibre!.hora }}</div>
+          <div class="text-secondary small">{{ horarioLibre!.turno }} &bull; {{ horarioLibre!.inscritos }}/{{ horarioLibre!.capacidadMax }} inscritos ({{ getPct(horarioLibre!) }}%)</div>
+          <div class="text-secondary small mt-1">Clases: {{ horarioLibre!.clases.join(', ') }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtro de turno -->
+    <div class="d-flex gap-2 mb-3 flex-wrap align-items-center">
+      <span class="text-secondary small">Ver turno:</span>
+      <button class="btn btn-sm" [ngClass]="filtroTurno==='todos' ? 'btn-naranja' : 'btn-outline-secondary'" (click)="filtroTurno='todos'">Todos</button>
+      <button *ngFor="let t of turnosDisponibles" class="btn btn-sm"
+              [ngClass]="filtroTurno===t ? 'btn-naranja' : 'btn-outline-secondary'" (click)="filtroTurno=t">{{ t }}</button>
+    </div>
+
+    <!-- Grid de ocupación -->
+    <div class="row g-3">
+      <div class="col-md-6 col-lg-4" *ngFor="let o of ocupacionFiltrada">
+        <div class="card-glass p-4 h-100" [ngClass]="'border-' + getNivel(o)">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+              <div class="fw-bold text-white">{{ o.hora }}</div>
+              <small class="text-secondary">Turno {{ o.turno }}</small>
+            </div>
+            <span class="badge" [ngClass]="{
+              'bg-danger':  getNivel(o) === 'lleno',
+              'bg-warning text-dark': getNivel(o) === 'moderado',
+              'bg-success': getNivel(o) === 'libre'
+            }">
+              {{ getNivel(o) === 'lleno' ? 'Lleno' : getNivel(o) === 'moderado' ? 'Moderado' : 'Disponible' }}
+            </span>
+          </div>
+
+          <!-- Barra de ocupación -->
+          <div class="progress mb-2" style="height:8px; border-radius:6px; background:rgba(255,255,255,.06)">
+            <div class="progress-bar" role="progressbar"
+                 [style.width.%]="getPct(o)"
+                 [ngClass]="{
+                   'bg-danger':  getNivel(o) === 'lleno',
+                   'bg-warning': getNivel(o) === 'moderado',
+                   'bg-success': getNivel(o) === 'libre'
+                 }">
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between small mb-2">
+            <span class="text-secondary">{{ o.inscritos }} inscritos</span>
+            <span class="text-secondary">Cap. {{ o.capacidadMax }}</span>
+          </div>
+
+          <div class="text-secondary small">
+            <i class='bx bx-dumbbell me-1'></i>{{ o.clases.join(' · ') }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ TAB: ALERTAS (SCRUM-39 HU-14) ══════════ -->
+  <div *ngIf="vistaActiva==='alertas'">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h5 class="text-white mb-0">
+        <i class='bx bx-bell text-naranja'></i> Centro de Notificaciones
+        <span *ngIf="alertasSinLeer > 0" class="badge bg-danger ms-2">{{ alertasSinLeer }} nuevas</span>
+      </h5>
+      <button class="btn btn-sm btn-outline-secondary" (click)="marcarTodasLeidas()" *ngIf="alertasSinLeer > 0">
+        <i class='bx bx-check-double'></i> Marcar todas como leídas
+      </button>
+    </div>
+
+    <div class="d-flex flex-column gap-3">
+      <div *ngFor="let alerta of alertasOrdenadas"
+           class="card-glass p-4 alerta-item"
+           [class.alerta-no-leida]="!alerta.leida"
+           (click)="marcarLeida(alerta)">
+        <div class="d-flex align-items-start gap-3">
+          <div class="alerta-icon" [ngClass]="'icon-' + alerta.tipo">
+            <i class='bx {{ iconoAlerta(alerta.tipo) }} fs-4'></i>
+          </div>
+          <div class="flex-grow-1">
+            <div class="d-flex align-items-center gap-2 mb-1">
+              <strong class="text-white">{{ alerta.titulo }}</strong>
+              <span class="badge" [ngClass]="badgeAlerta(alerta.prioridad)" style="font-size:.65rem">
+                {{ alerta.prioridad }}
+              </span>
+              <span *ngIf="!alerta.leida" class="badge bg-primary ms-auto" style="font-size:.65rem">Nueva</span>
+            </div>
+            <p class="text-secondary small mb-1">{{ alerta.mensaje }}</p>
+            <div class="d-flex align-items-center gap-3">
+              <small class="text-secondary">
+                <i class='bx bx-calendar me-1'></i>{{ alerta.fecha }}
+              </small>
+              <small *ngIf="alerta.diasRestantes > 0" class="text-warning">
+                <i class='bx bx-time me-1'></i>Faltan {{ alerta.diasRestantes }} días
+              </small>
+            </div>
+          </div>
+          <div>
+            <a *ngIf="alerta.tipo === 'membresia'" routerLink="/membresias" class="btn btn-sm btn-naranja">Ver</a>
+            <a *ngIf="alerta.tipo === 'pago'" routerLink="/estado-cuenta" class="btn btn-sm btn-naranja">Ver</a>
+            <a *ngIf="alerta.tipo === 'sesion'" routerLink="/f2" class="btn btn-sm btn-naranja">Ver</a>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="alertas.length === 0" class="text-center py-5 text-secondary">
+        <i class='bx bx-bell-off fs-1'></i>
+        <p class="mt-2">No hay alertas activas. ¡Todo está al corriente!</p>
+      </div>
+    </div>
+
+  </div>
+
+</div>

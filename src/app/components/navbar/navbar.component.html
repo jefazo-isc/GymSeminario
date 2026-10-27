@@ -94,11 +94,13 @@
     @if(userName){
     @if(userRole==='user'){
     <li><a class="nav-link" [routerLink]="['/f2']">Agenda entrenamiento</a></li>
+    <li><a class="nav-link" [routerLink]="['/actividad']"><i class='bx bx-history'></i> Mi Actividad</a></li>
     <li><a class="nav-link" [routerLink]="['/f3']">Registra asistencia</a></li>
     <li><a class="nav-link" [routerLink]="['/productos']">Productos</a></li>
 
     }@else{
     <li><a class="nav-link" [routerLink]="['/f2']">Agenda entrenamiento</a></li>
+    <li><a class="nav-link" [routerLink]="['/actividad']"><i class='bx bx-history'></i> Mi Actividad</a></li>
     <li><a class="nav-link" [routerLink]="['/f3']">Registra asistencia</a></li>
     <li><a class="nav-link" [routerLink]="['/graficos']">Grafica de Sesiones</a></li>
     <li><a class="nav-link" [routerLink]="['/editar1']">Informacion de Agendas</a></li>

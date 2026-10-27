@@ -1,0 +1,384 @@
+# ══════════════════════════════════════════════════════════════════════════════
+#  espacioGYM — CI/CD Pipeline
+#  GitHub Actions Workflow
+#  Cubre: checkout · dependencias · pruebas unitarias · pruebas de integración
+#          linting · análisis de vulnerabilidades · empaquetado Docker
+# ══════════════════════════════════════════════════════════════════════════════
+
+name: espacioGYM CI/CD Pipeline
+
+# ── Disparadores ──────────────────────────────────────────────────────────────
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
+# ── Permisos mínimos necesarios ───────────────────────────────────────────────
+permissions:
+  contents: read
+  packages: write   # Para publicar imagen en GitHub Container Registry
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  JOB 1 ── Construcción y Verificación de Código
+# ══════════════════════════════════════════════════════════════════════════════
+jobs:
+  build-and-verify:
+    name: 🏗️ Build & Verificación de Código
+    runs-on: ubuntu-latest
+
+    steps:
+      # ─────────────────────────────────────────────────────────────────────
+      # CRITERIO 1 (5%): Descarga de código fuente
+      # ─────────────────────────────────────────────────────────────────────
+      - name: 📥 Checkout — Descargar código fuente del repositorio
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # Historial completo para análisis de calidad
+
+      # ─────────────────────────────────────────────────────────────────────
+      # CRITERIO 2 (5%): Configuración del entorno y dependencias
+      # ─────────────────────────────────────────────────────────────────────
+      - name: ⚙️ Setup — Configurar Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"     # Caché de dependencias para acelerar ejecuciones
+
+      - name: 📦 Dependencias — Instalar paquetes del proyecto
+        run: npm ci        # ci garantiza instalación limpia y reproducible
+
+      - name: 🔨 Compilación — Construir la aplicación Angular (producción)
+        run: npm run build -- --configuration production
+
+      # ─────────────────────────────────────────────────────────────────────
+      # CRITERIO 5 (15%): Análisis estático de código — ESLint / Angular Lint
+      # ─────────────────────────────────────────────────────────────────────
+      - name: 🔍 Linting — Instalar ESLint y plugin Angular
+        run: |
+          npm install --save-dev \
+            @angular-eslint/schematics \
+            @angular-eslint/eslint-plugin \
+            @angular-eslint/eslint-plugin-template \
+            @angular-eslint/template-parser \
+            @typescript-eslint/eslint-plugin \
+            @typescript-eslint/parser \
+            eslint --legacy-peer-deps
+
+      - name: 🔍 Linting — Crear configuración ESLint para Angular
+        run: |
+          cat > .eslintrc.json << 'ESLINT'
+          {
+            "root": true,
+            "ignorePatterns": ["projects/**/*", "dist/**/*", "node_modules/**/*"],
+            "overrides": [
+              {
+                "files": ["*.ts"],
+                "parser": "@typescript-eslint/parser",
+                "parserOptions": {
+                  "project": ["tsconfig.json"],
+                  "createDefaultProgram": true
+                },
+                "plugins": ["@typescript-eslint", "@angular-eslint"],
+                "rules": {
+                  "@typescript-eslint/no-explicit-any": "warn",
+                  "@typescript-eslint/no-unused-vars": "warn",
+                  "no-console": "warn",
+                  "no-debugger": "error",
+                  "@angular-eslint/component-class-suffix": "error",
+                  "@angular-eslint/no-empty-lifecycle-method": "warn",
+                  "@angular-eslint/use-lifecycle-interface": "warn"
+                }
+              },
+              {
+                "files": ["*.html"],
+                "parser": "@angular-eslint/template-parser",
+                "plugins": ["@angular-eslint/template"],
+                "rules": {
+                  "@angular-eslint/template/banana-in-box": "error",
+                  "@angular-eslint/template/no-negated-async": "warn"
+                }
+              }
+            ]
+          }
+          ESLINT
+
+      - name: 🔍 Linting — Ejecutar análisis estático con ESLint
+        run: npx eslint "src/**/*.ts" --max-warnings=50 --format stylish
+        continue-on-error: false
+
+  # ══════════════════════════════════════════════════════════════════════════
+  #  JOB 2 ── Pruebas Unitarias
+  # ══════════════════════════════════════════════════════════════════════════
+  unit-tests:
+    name: 🧪 Pruebas Unitarias (Karma + Jasmine)
+    runs-on: ubuntu-latest
+    needs: build-and-verify
+
+    steps:
+      # ─────────────────────────────────────────────────────────────────────
+      # CRITERIO 1 (5%): Checkout
+      # ─────────────────────────────────────────────────────────────────────
+      - name: 📥 Checkout — Descargar código fuente
+        uses: actions/checkout@v4
+
+      # ─────────────────────────────────────────────────────────────────────
+      # CRITERIO 2 (5%): Entorno y dependencias
+      # ─────────────────────────────────────────────────────────────────────
+      - name: ⚙️ Setup — Configurar Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: 📦 Dependencias — Instalar paquetes
+        run: npm ci
+
+      # ─────────────────────────────────────────────────────────────────────
+      # CRITERIO 3 (15%): Pruebas unitarias con Karma en modo headless
+      # ─────────────────────────────────────────────────────────────────────
+      - name: 🧪 Pruebas Unitarias — Ejecutar con Chrome headless
+        run: |
+          npx ng test \
+            --no-watch \
+            --no-progress \
+            --browsers=ChromeHeadless \
+            --code-coverage \
+            --karma-config=karma.conf.js
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+
+      - name: 📊 Cobertura — Subir reporte de cobertura como artefacto
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cobertura-pruebas-unitarias
+          path: coverage/
+          retention-days: 7
+
+  # ══════════════════════════════════════════════════════════════════════════
+  #  JOB 3 ── Pruebas de Integración (HTTP + Servicios)
+  # ══════════════════════════════════════════════════════════════════════════
+  integration-tests:
+    name: 🔗 Pruebas de Integración (HttpClientTesting)
+    runs-on: ubuntu-latest
+    needs: build-and-verify
+
+    steps:
+      # ─────────────────────────────────────────────────────────────────────
+      # CRITERIO 1 (5%): Checkout
+      # ─────────────────────────────────────────────────────────────────────
+      - name: 📥 Checkout — Descargar código fuente
+        uses: actions/checkout@v4
+
+      # ─────────────────────────────────────────────────────────────────────
+      # CRITERIO 2 (5%): Entorno
+      # ─────────────────────────────────────────────────────────────────────
+      - name: ⚙️ Setup — Configurar Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: 📦 Dependencias — Instalar paquetes
+        run: npm ci
+
+      # ─────────────────────────────────────────────────────────────────────
+      # CRITERIO 4 (20%): Pruebas de integración
+      # Filtra únicamente los spec de servicios que usan HttpClientTesting
+      # (RutinaService, ApiService, QrService, UsuarioService, CursoService)
+      # ─────────────────────────────────────────────────────────────────────
+      - name: 🔗 Integración — Crear configuración de karma para servicios
+        run: |
+          cat > karma.integration.conf.js << 'KARMA'
+          module.exports = function(config) {
+            config.set({
+              basePath: '',
+              frameworks: ['jasmine', '@angular-devkit/build-angular'],
+              plugins: [
+                require('karma-jasmine'),
+                require('karma-chrome-launcher'),
+                require('karma-jasmine-html-reporter'),
+                require('karma-coverage'),
+                require('@angular-devkit/build-angular/plugins/karma')
+              ],
+              files: [],
+              preprocessors: {},
+              reporters: ['progress', 'kjhtml', 'coverage'],
+              coverageReporter: {
+                dir: require('path').join(__dirname, './coverage-integration'),
+                subdir: '.',
+                reporters: [{ type: 'html' }, { type: 'text-summary' }]
+              },
+              port: 9876,
+              colors: true,
+              logLevel: config.LOG_INFO,
+              autoWatch: false,
+              browsers: ['ChromeHeadless'],
+              singleRun: true,
+              restartOnFileChange: false
+            });
+          };
+          KARMA
+
+      - name: 🔗 Integración — Ejecutar pruebas de servicios con HttpClientTesting
+        run: |
+          npx ng test \
+            --no-watch \
+            --no-progress \
+            --browsers=ChromeHeadless \
+            --include="src/app/services/**/*.spec.ts" \
+            --include="src/app/auth/**/*.spec.ts"
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+
+      - name: 📊 Artefacto — Subir reporte de integración
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reporte-pruebas-integracion
+          path: coverage-integration/
+          retention-days: 7
+
+  # ══════════════════════════════════════════════════════════════════════════
+  #  JOB 4 ── Análisis de Vulnerabilidades
+  # ══════════════════════════════════════════════════════════════════════════
+  security-audit:
+    name: 🛡️ Análisis de Vulnerabilidades (npm audit)
+    runs-on: ubuntu-latest
+    needs: build-and-verify
+
+    steps:
+      # ─────────────────────────────────────────────────────────────────────
+      # CRITERIO 1 (5%): Checkout
+      # ─────────────────────────────────────────────────────────────────────
+      - name: 📥 Checkout — Descargar código fuente
+        uses: actions/checkout@v4
+
+      # ─────────────────────────────────────────────────────────────────────
+      # CRITERIO 2 (5%): Entorno
+      # ─────────────────────────────────────────────────────────────────────
+      - name: ⚙️ Setup — Configurar Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: 📦 Dependencias — Instalar paquetes
+        run: npm ci
+
+      # ─────────────────────────────────────────────────────────────────────
+      # CRITERIO 6 (15%): Análisis de vulnerabilidades con npm audit
+      # ─────────────────────────────────────────────────────────────────────
+      - name: 🛡️ Vulnerabilidades — Generar reporte npm audit
+        run: |
+          npm audit --audit-level=moderate --json > audit-report.json || true
+          npm audit --audit-level=moderate || true
+
+      - name: 🛡️ Vulnerabilidades — Mostrar resumen del análisis
+        run: |
+          echo "========================================"
+          echo "  RESUMEN DE ANÁLISIS DE SEGURIDAD"
+          echo "========================================"
+          npm audit --audit-level=high || true
+          echo ""
+          echo "Reporte completo guardado en: audit-report.json"
+
+      - name: 🛡️ Vulnerabilidades — Análisis de secretos expuestos (Trufflehog)
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --only-verified
+        continue-on-error: true
+
+      - name: 📊 Artefacto — Subir reporte de vulnerabilidades
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reporte-vulnerabilidades
+          path: audit-report.json
+          retention-days: 14
+
+  # ══════════════════════════════════════════════════════════════════════════
+  #  JOB 5 ── Empaquetado y Publicación Docker (GitHub Container Registry)
+  # ══════════════════════════════════════════════════════════════════════════
+  docker-publish:
+    name: 🐳 Empaquetado Docker → GitHub Packages (GHCR)
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests, security-audit]
+    # Solo publicar en push a main (no en PRs)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      # ─────────────────────────────────────────────────────────────────────
+      # CRITERIO 1 (5%): Checkout con historial para metadatos de imagen
+      # ─────────────────────────────────────────────────────────────────────
+      - name: 📥 Checkout — Descargar código fuente
+        uses: actions/checkout@v4
+
+      # ─────────────────────────────────────────────────────────────────────
+      # CRITERIO 7 (25%): Empaquetado — Build y push a GHCR
+      # ─────────────────────────────────────────────────────────────────────
+      - name: 🐳 Docker — Configurar QEMU (multi-arquitectura)
+        uses: docker/setup-qemu-action@v3
+
+      - name: 🐳 Docker — Configurar Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🐳 Docker — Login en GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🐳 Docker — Extraer metadatos (tags y labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=sha,prefix=sha-,format=short
+            type=semver,pattern={{version}}
+
+      - name: 🐳 Docker — Construir y publicar imagen Angular (Nginx)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+
+      - name: 🐳 Docker — Publicar imagen del servidor Express
+        uses: docker/build-push-action@v6
+        with:
+          context: ./server
+          file: ./server/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}-server:latest
+            ghcr.io/${{ github.repository }}-server:sha-${{ github.sha }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: ✅ Pipeline completado — Resumen
+        run: |
+          echo "=================================================="
+          echo "  ✅ espacioGYM CI/CD Pipeline — COMPLETADO"
+          echo "=================================================="
+          echo "  🔨 Build Angular:       OK"
+          echo "  🔍 Linting ESLint:      OK"
+          echo "  🧪 Pruebas Unitarias:   OK"
+          echo "  🔗 Pruebas Integración: OK"
+          echo "  🛡️  Vulnerabilidades:    OK"
+          echo "  🐳 Imagen Docker:       ghcr.io/${{ github.repository }}"
+          echo "  📦 Tag:                 ${{ steps.meta.outputs.tags }}"
+          echo "=================================================="

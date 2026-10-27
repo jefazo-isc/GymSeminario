@@ -45,7 +45,7 @@ A continuación se presenta la lista centralizada de historias de usuario y tare
 | **SCRUM-30** | HU-22 Consultar sesiones disponibles | Media | Como cliente, quiero consultar sesiones disponibles para seleccionar una. | **En curso** |
 | **SCRUM-31** | HU-23 Registrar sesión | Media | Como cliente, quiero reservar una sesión para asistir al entrenamiento (QR y correo). | **Terminada** |
 | **SCRUM-32** | HU-24 Cancelar sesión | Baja | Como cliente, quiero cancelar una reserva para liberar mi lugar. | **Terminada** |
-| **SCRUM-33** | HU-25 Consultar historial de sesiones | Baja | Como cliente, quiero revisar mis sesiones anteriores para llevar seguimiento de mi actividad. | **En curso** |
+| **SCRUM-33** | HU-25 Consultar historial de sesiones | Baja | Como cliente, quiero revisar mis sesiones anteriores para llevar seguimiento de mi actividad. | **Terminada** |
 | **SCRUM-41** | HU-27 Ver estadísticas de asistencia | Media | Como administrador, quiero visualizar gráficas para analizar el comportamiento de clientes. | **Terminada** |
 | **SCRUM-42** | HU-28 Ver ocupación por horario | Media | Como administrador, quiero conocer horarios más demandados para optimizar entrenadores. | **En curso** |
 | **SCRUM-43** | HU-29 Consultar métricas generales | Alta | Como administrador, quiero visualizar indicadores clave para apoyar la toma de decisiones. | **En curso** |
