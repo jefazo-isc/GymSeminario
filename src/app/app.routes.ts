@@ -26,11 +26,13 @@ import { BuscarComponent } from './components/buscar/buscar.component';
 import { CursoDetalleComponent } from './components/curso-detalle/curso-detalle.component';
 import { CoachIaComponent } from './components/coach-ia/coach-ia.component';
 import { MembresiasComponent } from './components/membresias/membresias.component';
+import { EstadoCuentaComponent } from './components/estado-cuenta/estado-cuenta.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/home', pathMatch: 'full' },
   { path: 'home', component: HomeComponent },
   { path: 'membresias', component: MembresiasComponent },
+  { path: 'estado-cuenta', component: EstadoCuentaComponent },
   { path: 'coach-ia', component: CoachIaComponent },
   { path: 'ubicacion', component: UbicacionComponent },
   { path: 'carrusel', component: CarruselComponent },

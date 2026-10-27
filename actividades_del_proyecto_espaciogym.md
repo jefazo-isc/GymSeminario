@@ -30,9 +30,9 @@ A continuación se presenta la lista centralizada de historias de usuario y tare
 | **SCRUM-26** | HU-11 Renovar membresía | Media | Como administrador, quiero renovar membresías para extender su vigencia. | **Terminada** |
 | **SCRUM-25** | HU-12 Consultar vigencia | Alta | Como cliente, quiero consultar mi membresía para saber si está activa. | **Terminada** |
 | **SCRUM-38** | HU-13 Consultar historial de membresías | Alta | Como administrador, quiero consultar renovaciones anteriores para llevar seguimiento. | **Pendiente** |
-| **SCRUM-27** | HU-15 Registrar pago | Alta | Como administrador, quiero registrar pagos para actualizar el estado financiero. | **Pendiente** |
-| **SCRUM-29** | HU-16 Consultar historial de pagos | Baja | Como administrador, quiero revisar pagos realizados para llevar control financiero. | **Pendiente** |
-| **SCRUM-28** | HU-17 Consultar estado de cuenta | Media | Como cliente, quiero ver mis pagos para conocer mi situación financiera. | **Pendiente** |
+| **SCRUM-27** | HU-15 Registrar pago | Alta | Como administrador, quiero registrar pagos para actualizar el estado financiero. | **Terminada** |
+| **SCRUM-29** | HU-16 Consultar historial de pagos | Baja | Como administrador, quiero revisar pagos realizados para llevar control financiero. | **Terminada** |
+| **SCRUM-28** | HU-17 Consultar estado de cuenta | Media | Como cliente, quiero ver mis pagos para conocer mi situación financiera. | **Terminada** |
 
 ---
 

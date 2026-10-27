@@ -1,0 +1,269 @@
+<div class="cuenta-container container py-5">
+
+  <!-- ENCABEZADO -->
+  <div class="text-center mb-5">
+    <span class="badge bg-naranja px-3 py-2 text-uppercase mb-2">Estado de Cuenta</span>
+    <h1 class="text-white fw-bold display-5">Tu Historial en <span class="text-naranja">espacioGYM</span></h1>
+    <p class="text-secondary mx-auto" style="max-width:580px">
+      Consulta tus pagos, registra nuevas transacciones y descarga comprobantes desde un solo lugar.
+    </p>
+  </div>
+
+  <!-- TARJETAS DE RESUMEN (HU-17: Estado de cuenta) -->
+  <div class="row g-4 mb-5" *ngIf="resumen">
+
+    <div class="col-md-4">
+      <div class="card-glass p-4 h-100 text-center">
+        <div class="stat-icon bg-success-soft mx-auto mb-3">
+          <i class='bx bx-check-shield text-success fs-2'></i>
+        </div>
+        <p class="text-secondary small mb-1">Total Pagado</p>
+        <h3 class="text-white fw-bold">${{ resumen.totalPagado | number:'1.2-2' }}</h3>
+        <small class="text-success">MXN pagados al corriente</small>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card-glass p-4 h-100 text-center">
+        <div class="stat-icon bg-warning-soft mx-auto mb-3">
+          <i class='bx bx-time-five text-warning fs-2'></i>
+        </div>
+        <p class="text-secondary small mb-1">Saldo Pendiente</p>
+        <h3 class="fw-bold" [ngClass]="resumen.totalPendiente > 0 ? 'text-warning' : 'text-success'">
+          ${{ resumen.totalPendiente | number:'1.2-2' }}
+        </h3>
+        <small class="text-secondary">por liquidar</small>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card-glass p-4 h-100 text-center">
+        <div class="stat-icon bg-naranja-soft mx-auto mb-3">
+          <i class='bx bx-receipt text-naranja fs-2'></i>
+        </div>
+        <p class="text-secondary small mb-1">Último Pago</p>
+        <h3 class="text-white fw-bold">
+          {{ resumen.ultimoPago ? ('$' + resumen.ultimoPago.monto) : '—' }}
+        </h3>
+        <small class="text-secondary">{{ resumen.ultimoPago?.fecha ?? 'Sin registros' }}</small>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BARRA DE PROGRESO DE CUMPLIMIENTO -->
+  <div class="card-glass p-4 mb-5" *ngIf="resumen">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <span class="text-light fw-semibold"><i class='bx bx-bar-chart-alt-2 text-naranja'></i> Cumplimiento de pagos</span>
+      <span class="text-naranja fw-bold">{{ porcentajePagado }}%</span>
+    </div>
+    <div class="progress bg-dark" style="height:12px; border-radius:8px;">
+      <div class="progress-bar bg-naranja" role="progressbar"
+           [style.width.%]="porcentajePagado"
+           [attr.aria-valuenow]="porcentajePagado"
+           aria-valuemin="0" aria-valuemax="100">
+      </div>
+    </div>
+    <div class="d-flex justify-content-between mt-2">
+      <small class="text-secondary">Pagado: ${{ resumen.totalPagado | number:'1.2-2' }}</small>
+      <small class="text-secondary">Pendiente: ${{ resumen.totalPendiente | number:'1.2-2' }}</small>
+    </div>
+  </div>
+
+  <!-- TABS DE NAVEGACIÓN -->
+  <div class="d-flex gap-2 mb-4 flex-wrap">
+    <button class="btn tab-btn" [ngClass]="vistaActiva==='cuenta' ? 'btn-naranja' : 'btn-outline-secondary'"
+            (click)="vistaActiva='cuenta'">
+      <i class='bx bx-credit-card-front'></i> Mi Cuenta
+    </button>
+    <button class="btn tab-btn" [ngClass]="vistaActiva==='historial' ? 'btn-naranja' : 'btn-outline-secondary'"
+            (click)="vistaActiva='historial'">
+      <i class='bx bx-list-ul'></i> Historial de Pagos
+    </button>
+    <button class="btn tab-btn" [ngClass]="vistaActiva==='registrar' ? 'btn-naranja' : 'btn-outline-secondary'"
+            (click)="vistaActiva='registrar'">
+      <i class='bx bx-plus-circle'></i> Registrar Pago
+    </button>
+  </div>
+
+  <!-- ═══════════════════════ TAB: MI CUENTA ═══════════════════════ -->
+  <div *ngIf="vistaActiva==='cuenta'" class="card-glass p-4">
+    <h5 class="text-white mb-4"><i class='bx bx-user-circle text-naranja'></i> Resumen de Cuenta</h5>
+
+    <div class="row g-3 mb-4" *ngIf="resumen?.ultimoPago">
+      <div class="col-sm-6">
+        <div class="dato-box">
+          <span class="dato-label">Folio del último pago</span>
+          <code class="dato-valor text-naranja">{{ resumen.ultimoPago!.folio }}</code>
+        </div>
+      </div>
+      <div class="col-sm-6">
+        <div class="dato-box">
+          <span class="dato-label">Concepto</span>
+          <span class="dato-valor">{{ resumen.ultimoPago!.concepto }}</span>
+        </div>
+      </div>
+      <div class="col-sm-6">
+        <div class="dato-box">
+          <span class="dato-label">Fecha</span>
+          <span class="dato-valor">{{ resumen.ultimoPago!.fecha }}</span>
+        </div>
+      </div>
+      <div class="col-sm-6">
+        <div class="dato-box">
+          <span class="dato-label">Método</span>
+          <span class="dato-valor">
+            <i class='bx {{ iconoMetodo(resumen.ultimoPago!.metodo) }}'></i>
+            {{ resumen.ultimoPago!.metodo }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="!resumen?.ultimoPago" class="text-center py-4 text-secondary">
+      <i class='bx bx-folder-open fs-1'></i>
+      <p class="mt-2">Aún no hay pagos registrados.</p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+      <button class="btn btn-naranja" (click)="vistaActiva='registrar'">
+        <i class='bx bx-plus'></i> Registrar pago
+      </button>
+      <button class="btn btn-outline-light" (click)="vistaActiva='historial'">
+        <i class='bx bx-list-ul'></i> Ver historial completo
+      </button>
+      <a routerLink="/membresias" class="btn btn-outline-warning">
+        <i class='bx bx-id-card'></i> Mi Membresía
+      </a>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ TAB: HISTORIAL ═══════════════════════ -->
+  <div *ngIf="vistaActiva==='historial'">
+
+    <!-- Filtros -->
+    <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+      <span class="text-secondary small">Filtrar:</span>
+      <button class="btn btn-sm" [ngClass]="filtroEstado==='todos' ? 'btn-naranja' : 'btn-outline-secondary'"
+              (click)="filtroEstado='todos'">Todos</button>
+      <button class="btn btn-sm" [ngClass]="filtroEstado==='pagado' ? 'btn-naranja' : 'btn-outline-secondary'"
+              (click)="filtroEstado='pagado'">Pagados</button>
+      <button class="btn btn-sm" [ngClass]="filtroEstado==='pendiente' ? 'btn-naranja' : 'btn-outline-secondary'"
+              (click)="filtroEstado='pendiente'">Pendientes</button>
+      <button class="btn btn-sm" [ngClass]="filtroEstado==='cancelado' ? 'btn-naranja' : 'btn-outline-secondary'"
+              (click)="filtroEstado='cancelado'">Cancelados</button>
+    </div>
+
+    <!-- Tabla / Lista de pagos -->
+    <div class="card-glass">
+      <div class="table-responsive">
+        <table class="table tabla-gym mb-0" *ngIf="pagosFiltrados.length > 0; else sinPagos">
+          <thead>
+            <tr>
+              <th>Folio</th>
+              <th>Concepto</th>
+              <th>Periodo</th>
+              <th>Monto</th>
+              <th>Método</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let pago of pagosFiltrados">
+              <td><code class="text-naranja">{{ pago.folio }}</code></td>
+              <td>
+                <i class='bx {{ iconoConcepto(pago.concepto) }} me-1 text-secondary'></i>
+                {{ pago.concepto }}
+              </td>
+              <td class="text-secondary small">{{ pago.periodo ?? pago.fecha }}</td>
+              <td class="fw-bold text-white">${{ pago.monto | number:'1.2-2' }}</td>
+              <td class="text-secondary small">
+                <i class='bx {{ iconoMetodo(pago.metodo) }} me-1'></i>{{ pago.metodo }}
+              </td>
+              <td>
+                <span class="badge" [ngClass]="{
+                  'bg-success': pago.estado === 'Pagado',
+                  'bg-warning text-dark': pago.estado === 'Pendiente',
+                  'bg-secondary': pago.estado === 'Cancelado'
+                }">{{ pago.estado }}</span>
+              </td>
+              <td>
+                <div class="d-flex gap-1">
+                  <button class="btn btn-sm btn-outline-light" title="Ver recibo" (click)="imprimirRecibo(pago)">
+                    <i class='bx bx-printer'></i>
+                  </button>
+                  <button *ngIf="pago.estado === 'Pendiente'"
+                          class="btn btn-sm btn-outline-success" title="Marcar pagado"
+                          (click)="marcarComoPagado(pago)">
+                    <i class='bx bx-check'></i>
+                  </button>
+                  <button *ngIf="pago.estado === 'Pendiente'"
+                          class="btn btn-sm btn-outline-danger" title="Cancelar"
+                          (click)="cancelarPago(pago)">
+                    <i class='bx bx-x'></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <ng-template #sinPagos>
+          <div class="text-center py-5 text-secondary">
+            <i class='bx bx-receipt fs-1'></i>
+            <p class="mt-2">No hay pagos en esta categoría.</p>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ TAB: REGISTRAR ═══════════════════════ -->
+  <div *ngIf="vistaActiva==='registrar'" class="card-glass p-4">
+    <h5 class="text-white mb-4"><i class='bx bx-plus-circle text-naranja'></i> Registrar Nuevo Pago</h5>
+
+    <form (ngSubmit)="registrarPago()">
+      <div class="row g-3">
+
+        <div class="col-md-6">
+          <label class="form-label text-light">Concepto de Pago</label>
+          <select [(ngModel)]="nuevoConcepto" name="concepto" class="form-select input-gym">
+            <option *ngFor="let c of conceptos" [value]="c">{{ c }}</option>
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label text-light">Método de Pago</label>
+          <select [(ngModel)]="nuevoMetodo" name="metodo" class="form-select input-gym">
+            <option *ngFor="let m of metodos" [value]="m">{{ m }}</option>
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label text-light">Monto (MXN)</label>
+          <div class="input-group">
+            <span class="input-group-text bg-dark border-secondary text-secondary">$</span>
+            <input type="number" [(ngModel)]="nuevoMonto" name="monto"
+                   min="1" class="form-control input-gym" placeholder="0.00" required>
+            <span class="input-group-text bg-dark border-secondary text-secondary">MXN</span>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label text-light">Notas / Descripción <span class="text-secondary">(opcional)</span></label>
+          <input type="text" [(ngModel)]="nuevoDescripcion" name="descripcion"
+                 class="form-control input-gym" placeholder="Ej. Proteína Whey 2lb, clase de yoga...">
+        </div>
+
+        <div class="col-12 mt-3">
+          <button type="submit" class="btn btn-naranja py-3 px-5 fw-bold w-100">
+            <i class='bx bx-save me-1'></i> Confirmar y Registrar Pago
+          </button>
+        </div>
+
+      </div>
+    </form>
+  </div>
+
+</div>

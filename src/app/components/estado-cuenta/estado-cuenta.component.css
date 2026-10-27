@@ -1,0 +1,65 @@
+.cuenta-container { min-height: 80vh; }
+
+.card-glass {
+  background: rgba(26, 26, 26, 0.85);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.text-naranja  { color: #ff5722 !important; }
+.bg-naranja    { background-color: #ff5722 !important; color: white; }
+.btn-naranja   { background-color: #ff5722; border: none; color: white; transition: all .25s; }
+.btn-naranja:hover { background-color: #e64a19; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(255,87,34,.4); }
+
+.stat-icon {
+  width: 56px; height: 56px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+}
+.bg-success-soft  { background: rgba(40, 167, 69, .15); }
+.bg-warning-soft  { background: rgba(255, 193, 7, .15); }
+.bg-naranja-soft  { background: rgba(255, 87, 34, .15); }
+
+.dato-box {
+  background: rgba(0,0,0,.35);
+  padding: 12px; border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.05);
+}
+.dato-label { display:block; font-size:.75rem; text-transform:uppercase; color:#888; letter-spacing:.5px; }
+.dato-valor { display:block; font-size:1.05rem; font-weight:bold; color:#fff; margin-top:4px; }
+
+.tab-btn { border-radius: 8px; font-size: .875rem; }
+
+/* Tabla */
+.tabla-gym { color: #ccc; }
+.tabla-gym thead th {
+  background: rgba(255, 87, 34, 0.1);
+  color: #ff5722; font-size: .8rem;
+  text-transform: uppercase; letter-spacing: .5px;
+  border-bottom: 1px solid rgba(255,87,34,.3);
+  padding: 12px 16px;
+}
+.tabla-gym tbody tr { border-bottom: 1px solid rgba(255,255,255,.05); transition: background .15s; }
+.tabla-gym tbody tr:hover { background: rgba(255,87,34,.05); }
+.tabla-gym td { padding: 12px 16px; vertical-align: middle; }
+
+/* Barra de progreso */
+.progress { background: rgba(255,255,255,.06); }
+.bg-naranja { background-color: #ff5722 !important; }
+
+/* Formulario */
+.input-gym {
+  background: rgba(0,0,0,.4);
+  border: 1px solid rgba(255,255,255,.1);
+  color: #fff !important;
+  border-radius: 8px;
+  transition: border-color .2s;
+}
+.input-gym:focus {
+  background: rgba(0,0,0,.5);
+  border-color: #ff5722;
+  box-shadow: 0 0 0 3px rgba(255,87,34,.2);
+  outline: none;
+}
+.input-gym option { background: #1a1a1a; }
