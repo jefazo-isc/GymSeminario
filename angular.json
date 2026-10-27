@@ -16,9 +16,7 @@
             "outputPath": "dist/libreria1",
             "index": "src/index.html",
             "browser": "src/main.ts",
-            "polyfills": [
-              "zone.js"
-            ],
+            "polyfills": ["zone.js"],
             "tsConfig": "tsconfig.app.json",
             "assets": [
               {
@@ -26,10 +24,7 @@
                 "input": "public"
               }
             ],
-            "styles": [
-              "@angular/material/prebuilt-themes/azure-blue.css",
-              "src/styles.css"
-            ],
+            "styles": ["src/styles/material.scss", "src/styles.css"],
             "scripts": []
           },
           "configurations": {
@@ -74,11 +69,31 @@
         },
         "test": {
           "builder": "@angular-devkit/build-angular:karma",
+          "configurations": {
+            "frontend": {
+              "tsConfig": "tsconfig.frontend.spec.json",
+              "include": [
+                "src/app/app.component.spec.ts",
+                "src/app/components/navbar/navbar.component.spec.ts",
+                "src/app/components/footer/footer.component.spec.ts",
+                "src/app/core/**/*.spec.ts",
+                "src/app/shared/**/*.spec.ts",
+                "src/app/testing/phase2/**/*.spec.ts"
+              ]
+            },
+            "design": {
+              "tsConfig": "tsconfig.design.spec.json",
+              "include": [
+                "src/app/app.component.spec.ts",
+                "src/app/components/navbar/navbar.component.spec.ts",
+                "src/app/components/footer/footer.component.spec.ts",
+                "src/app/core/**/*.spec.ts",
+                "src/app/shared/**/*.spec.ts"
+              ]
+            }
+          },
           "options": {
-            "polyfills": [
-              "zone.js",
-              "zone.js/testing"
-            ],
+            "polyfills": ["zone.js", "zone.js/testing"],
             "tsConfig": "tsconfig.spec.json",
             "assets": [
               {
@@ -86,10 +101,7 @@
                 "input": "public"
               }
             ],
-            "styles": [
-              "@angular/material/prebuilt-themes/azure-blue.css",
-              "src/styles.css"
-            ],
+            "styles": ["src/styles/material.scss", "src/styles.css"],
             "scripts": []
           }
         },

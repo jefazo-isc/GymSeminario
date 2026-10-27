@@ -1,55 +1,235 @@
-<body>
-  <div class="main-container">
-
-    <div class="titulo-container">
-      <h1 class="text-center">Información de Asistencia</h1>
-      <p class="subtitulo">Consulta todos los datos relacionados con tu asistencia y otros detalles importantes</p>
+<section class="feature-page stack">
+  <div class="notice notice--warning">
+    <app-icon name="grid" />
+    <p>
+      <strong>Registros compartidos.</strong> Las ediciones y eliminaciones
+      modifican Firestore. Los permisos efectivos dependen de las reglas del
+      proyecto, no de la visibilidad del menú.
+    </p>
+  </div>
+  <div class="filters">
+    <div class="field">
+      <label for="admin-query">Buscar socio o registro</label
+      ><input
+        id="admin-query"
+        type="search"
+        class="control"
+        [(ngModel)]="query"
+        placeholder="Nombre, actividad o fecha"
+      />
     </div>
-
-    <div *ngIf="registros.length === 0" class="mensaje-vacio">
-      <p id="mensaje">No hay asistencias registradas aún.</p>
+    <div class="field">
+      <label for="admin-filter">Actividad</label
+      ><select id="admin-filter" [(ngModel)]="selectedClass">
+        <option value="">Todas las actividades</option>
+        @for (item of clases; track item) {
+          <option [value]="item">{{ item }}</option>
+        }
+      </select>
     </div>
-    <div *ngFor="let item of registros">
-      <div class="registro-preview" *ngIf="!item.editando">
-        <p><strong>Clase:</strong> {{ item.clase }}</p>
-        <p><strong>Fecha:</strong> {{ item.fecha }}</p>
-        <p><strong>Hora:</strong> {{ item.hora }}</p>
-        <p><strong>Alumno:</strong> {{ item.alumno }}</p>
-        <button (click)="item.editando = true">Editar</button>
-        <button id="eliminar" (click)="borrar(item)">Eliminar</button>
+    <button
+      appButton="ghost"
+      type="button"
+      (click)="query = ''; selectedClass = ''"
+      [disabled]="!query && !selectedClass"
+    >
+      Restablecer
+    </button>
+  </div>
+  @if (feedback) {
+    <p class="notice" role="status">{{ feedback }}</p>
+  }
+  @if (loading) {
+    <div class="surface" role="status">
+      <p>Cargando registros de Firestore…</p>
+      <div class="loading-line"></div>
+    </div>
+  } @else if (error) {
+    <div class="empty-state" role="alert">
+      <app-icon name="grid" />
+      <h2>No pudimos consultar los registros.</h2>
+      <p>{{ error }}</p>
+      <button appButton="primary" type="button" (click)="load()">
+        Reintentar consulta
+      </button>
+    </div>
+  } @else {
+    <p class="help" aria-live="polite">
+      {{ filtered.length }} registros · Ordenados por fecha, del más reciente al
+      más antiguo.
+    </p>
+    @if (filtered.length) {
+      <div
+        class="table-scroll"
+        role="region"
+        aria-label="Registros de asistencias"
+        tabindex="0"
+      >
+        <table class="data-table">
+          <caption>
+            Datos de asistencias publicados en Firestore
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Actividad</th>
+              <th scope="col">Socio</th>
+              <th scope="col">Fecha</th>
+              <th scope="col">Hora</th>
+              <th scope="col">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of filtered; track item.id) {
+              <tr>
+                <td>
+                  <strong>{{ item.clase }}</strong>
+                </td>
+                <td>{{ item.alumno || "Sin nombre" }}</td>
+                <td>{{ item.fecha }}</td>
+                <td>{{ item.hora }}</td>
+                <td>
+                  <div class="actions">
+                    <button
+                      appButton="secondary"
+                      type="button"
+                      [disabled]="!!busyId"
+                      [attr.aria-label]="
+                        'Editar registro de ' +
+                        (item.alumno || 'socio') +
+                        ' del ' +
+                        item.fecha
+                      "
+                      (click)="openEditor(item, editRecord)"
+                    >
+                      Editar</button
+                    ><button
+                      appButton="ghost"
+                      class="delete-action"
+                      type="button"
+                      [disabled]="!!busyId"
+                      [attr.aria-label]="
+                        'Eliminar registro de ' +
+                        (item.alumno || 'socio') +
+                        ' del ' +
+                        item.fecha
+                      "
+                      (click)="borrar(item)"
+                    >
+                      {{ busyId === item.id ? "Procesando…" : "Eliminar" }}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
       </div>
-
-      <form *ngIf="item.editando" (ngSubmit)="actualizar(item)" #form="ngForm" id="todo">
-        <h1>Editar asistencia</h1>
-
+    } @else {
+      <div class="empty-state">
+        <app-icon name="calendar" />
+        <h2>
+          {{
+            registros.length
+              ? "Sin coincidencias."
+              : "Todavía no hay registros."
+          }}
+        </h2>
+        <p>
+          {{
+            registros.length
+              ? "Prueba otro nombre o actividad."
+              : "La consulta se completó y no devolvió registros."
+          }}
+        </p>
+        @if (query || selectedClass) {
+          <button
+            appButton="secondary"
+            type="button"
+            (click)="query = ''; selectedClass = ''"
+          >
+            Quitar filtros
+          </button>
+        }
+      </div>
+    }
+  }
+</section>
+<ng-template #editRecord>
+  @if (editing; as item) {
+    <form
+      class="admin-editor"
+      #editForm="ngForm"
+      (ngSubmit)="actualizar(item, editForm)"
+    >
+      <header class="toolbar">
         <div>
-          <label for="clase">Clase grupal</label>
-          <select [(ngModel)]="item.clase" name="clase-{{item.id}}" required>
-            <option value="">Selecciona clase</option>
-            <option *ngFor="let c of clases" [value]="c">{{ c }}</option>
+          <span class="eyebrow">Editar registro</span>
+          <h2 id="edit-record-title">Revisa los datos de la sesión.</h2>
+        </div>
+        <button
+          class="ui-icon-button"
+          type="button"
+          aria-label="Cerrar edición"
+          [disabled]="!!busyId"
+          (click)="closeEditor()"
+        >
+          <app-icon name="close" />
+        </button>
+      </header>
+      <p class="help">Socio: {{ item.alumno || "Sin nombre" }}</p>
+      <div class="form-grid">
+        <div class="field full-width">
+          <label for="admin-activity">Actividad</label
+          ><select
+            id="admin-activity"
+            name="activity"
+            [(ngModel)]="item.clase"
+            required
+          >
+            @for (activity of clases; track activity) {
+              <option [value]="activity">{{ activity }}</option>
+            }
           </select>
         </div>
-
-        <div>
-          <label for="fecha">Fecha</label>
-          <input type="date" [(ngModel)]="item.fecha" name="fecha-{{item.id}}" required />
+        <div class="field">
+          <label for="admin-date">Fecha</label
+          ><input
+            id="admin-date"
+            name="date"
+            type="date"
+            [(ngModel)]="item.fecha"
+            required
+          />
         </div>
-
-        <div>
-          <label for="hora">Hora</label>
-          <input type="time" [(ngModel)]="item.hora" name="hora-{{item.id}}" required />
+        <div class="field">
+          <label for="admin-time">Hora</label
+          ><input
+            id="admin-time"
+            name="time"
+            type="time"
+            [(ngModel)]="item.hora"
+            required
+          />
         </div>
-
-        <div>
-          <label for="alumno">Nombre del alumno</label>
-          <input type="text" [(ngModel)]="item.alumno" name="alumno-{{item.id}}" required disabled />
-        </div>
-
-        <button type="submit">Guardar</button>
-        <button type="button" (click)="item.editando = false">Cancelar</button>
-      </form>
-
-      <hr />
-    </div>
-  </div>
-</body>
+      </div>
+      @if (editForm.invalid && editForm.submitted) {
+        <p class="field-error" role="alert">Completa todos los campos.</p>
+      }
+      @if (feedback) {
+        <p class="field-error" role="status">{{ feedback }}</p>
+      }
+      <div class="form-actions">
+        <button appButton="primary" type="submit" [disabled]="!!busyId">
+          {{ busyId ? "Guardando…" : "Guardar en Firestore" }}</button
+        ><button
+          appButton="secondary"
+          type="button"
+          [disabled]="!!busyId"
+          (click)="closeEditor()"
+        >
+          Cancelar edición
+        </button>
+      </div>
+    </form>
+  }
+</ng-template>

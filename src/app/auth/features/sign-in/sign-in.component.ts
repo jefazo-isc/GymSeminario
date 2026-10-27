@@ -1,199 +1,84 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
-import {
-  FormBuilder,
-  FormControl,
-  ReactiveFormsModule,
-  Validators,
-  FormGroup
-} from '@angular/forms';
-import { AuthService } from '../../data-access/auth.service';
-import { RouterModule } from '@angular/router';
-import { Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import Swal from 'sweetalert2';
-
-import {
-  getAuth,
-  RecaptchaVerifier
-} from 'firebase/auth';
-
-interface SignInFormValue {
-  email: string;
-  password: string;
-}
-
+import { Component, inject, OnInit, OnDestroy } from "@angular/core";
+import { CommonModule } from "@angular/common";
+import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
+import { Router, RouterLink } from "@angular/router";
+import { getAuth } from "firebase/auth";
+import { AuthService } from "../../data-access/auth.service";
+import { CaptchaController } from "../../../core/auth/captcha-controller";
+import { authErrorMessage } from "../../../core/auth/auth-feedback";
+import { PasswordToggleDirective } from "../../../shared/ui/password-toggle.directive";
+import { ButtonDirective } from "../../../shared/ui/button.directive";
+import { IconComponent } from "../../../shared/ui/icon/icon.component";
 @Component({
-  selector: 'app-sign-in',
+  selector: "app-sign-in",
   standalone: true,
-  imports: [ReactiveFormsModule, RouterModule, CommonModule],
-  templateUrl: './sign-in.component.html',
-  styleUrl: './sign-in.component.css'
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterLink,
+    PasswordToggleDirective,
+    ButtonDirective,
+    IconComponent,
+  ],
+  templateUrl: "./sign-in.component.html",
+  styleUrl: "./sign-in.component.css",
 })
 export default class SignInComponent implements OnInit, OnDestroy {
-
-  private _formBuilder = inject(FormBuilder);
-  private _authService = inject(AuthService);
-  private auth = getAuth();
-
-  form: FormGroup = this._formBuilder.group({
-    email: this._formBuilder.control<string>('', [Validators.required, Validators.email]),
-    password: this._formBuilder.control<string>('', Validators.required)
+  private fb = inject(FormBuilder);
+  private service = inject(AuthService);
+  private router = inject(Router);
+  readonly captcha = new CaptchaController(
+    this.service.auth,
+    "sign-in-recaptcha",
+  );
+  busy: "email" | "google" | null = null;
+  message = "";
+  readonly form = this.fb.nonNullable.group({
+    email: ["", [Validators.required, Validators.email]],
+    password: ["", Validators.required],
   });
-
-  captchaResuelto: boolean = false;
-  recaptchaVerifier: RecaptchaVerifier | null = null;
-
-  constructor(private router: Router) {}
-
-  ngOnInit(): void {
-    this.initRecaptcha();
+  ngOnInit() {
+    this.captcha.init();
   }
-
-  ngOnDestroy(): void {
-    if (this.recaptchaVerifier) {
-      try {
-        this.recaptchaVerifier.clear();
-      } catch (e) {
-        // safe
-      }
-      this.recaptchaVerifier = null;
-    }
+  ngOnDestroy() {
+    this.captcha.destroy();
   }
-
-  initRecaptcha() {
-    try {
-      if (this.recaptchaVerifier) {
-        this.recaptchaVerifier.clear();
-      }
-    } catch (e) {
-      console.warn('Advertencia al limpiar reCAPTCHA previo:', e);
-    } finally {
-      this.recaptchaVerifier = null;
-    }
-
-    const container = document.getElementById('sign-in-recaptcha');
-    if (container) {
-      container.innerHTML = '';
-    }
-
-    try {
-      this.recaptchaVerifier = new RecaptchaVerifier(
-        this.auth,
-        'sign-in-recaptcha',
-        {
-          size: 'normal',
-          callback: (response: any) => {
-            console.log('reCAPTCHA resuelto:', response);
-            this.captchaResuelto = true;
-          },
-          'expired-callback': () => {
-            console.warn('reCAPTCHA expirado');
-            this.captchaResuelto = false;
-          }
-        }
-      );
-
-      this.recaptchaVerifier.render().then((widgetId) => {
-        console.log('reCAPTCHA sign-in renderizado con ID:', widgetId);
-      }).catch((err) => {
-        console.warn('Aviso renderizado reCAPTCHA:', err);
-      });
-    } catch (err) {
-      console.error('Error al inicializar reCAPTCHA:', err);
-    }
+  invalid(name: string) {
+    const c = this.form.get(name);
+    return !!(c?.invalid && c.touched);
   }
-
-  async submit() {
-    if (this.form.invalid) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Campos requeridos',
-        text: 'Por favor, ingresa un correo válido y tu contraseña.',
-        confirmButtonColor: '#ff6600'
-      });
-      return;
-    }
-
-    const { email, password } = this.form.value as SignInFormValue;
-    if (!email?.trim() || !password?.trim()) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Campos incompletos',
-        text: 'Por favor, completa todos los campos.',
-        confirmButtonColor: '#ff6600'
-      });
-      return;
-    }
-
-    if (!this.captchaResuelto) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Verificación requerida',
-        text: 'Por favor, completa el reCAPTCHA antes de continuar.',
-        confirmButtonColor: '#ff6600'
-      });
-      return;
-    }
-
-    try {
-      await this._authService.signIn({ email: email.trim(), password });
-      
-      await Swal.fire({
-        icon: 'success',
-        title: '¡Bienvenido!',
-        text: 'Inicio de sesión exitoso.',
-        timer: 1500,
-        showConfirmButton: false
-      });
-
-      this.router.navigate(['/home']);
-    } catch (error: any) {
-      console.error('Error en autenticación:', error);
-
-      const mensaje = error?.message || 'Correo o contraseña incorrectos.';
-      Swal.fire({
-        icon: 'error',
-        title: 'Error de acceso',
-        text: mensaje,
-        confirmButtonColor: '#ff6600'
-      });
-
-      // Reiniciar reCAPTCHA de forma segura
-      this.captchaResuelto = false;
-      this.initRecaptcha();
-    }
-  }
-
   async conGoogle() {
+    if (this.busy) return;
+    this.busy = "google";
+    this.message = "";
     try {
-      const result = await this._authService.signInWithGoogle();
-      console.log('Usuario autenticado con Google:', result.user);
-      
-      await Swal.fire({
-        icon: 'success',
-        title: '¡Bienvenido!',
-        text: `Hola, ${result.user.displayName || 'atleta'}`,
-        timer: 1500,
-        showConfirmButton: false
-      });
-
-      this.router.navigate(['/home']);
-    } catch (error: any) {
-      console.error('Error en autenticación con Google:', error);
-      if (error?.code === 'auth/popup-closed-by-user') return;
-
-      let titulo = 'Error con Google';
-      let mensaje = 'No se pudo completar el inicio de sesión con Google.';
-
-      if (error?.code === 'auth/unauthorized-domain') {
-        titulo = 'Dominio no autorizado';
-        mensaje = 'Este dominio no está autorizado para iniciar sesión con Google. El administrador de Firebase debe agregar este dominio en la consola de Firebase → Authentication → Settings → Authorized domains.';
-      } else if (error?.code === 'auth/network-request-failed') {
-        titulo = 'Error de red';
-        mensaje = 'No se pudo conectar con el servidor. Verifica tu conexión a internet.';
-      }
-
-      Swal.fire({ icon: 'error', title: titulo, text: mensaje, confirmButtonColor: '#ff6600' });
+      await this.service.signInWithGoogle();
+      await this.router.navigate(["/home"]);
+    } catch (error) {
+      this.message = authErrorMessage(error);
+    } finally {
+      this.busy = null;
+    }
+  }
+  async submit() {
+    if (this.busy) return;
+    this.form.markAllAsTouched();
+    if (this.form.invalid) return;
+    if (!this.captcha.resolved()) {
+      this.message = "Completa la verificación antes de continuar.";
+      return;
+    }
+    this.busy = "email";
+    this.message = "";
+    try {
+      const { email, password } = this.form.getRawValue();
+      await this.service.signIn({ email: email.trim(), password });
+      await this.router.navigate(["/home"]);
+    } catch (error) {
+      this.message = authErrorMessage(error);
+      this.captcha.init();
+    } finally {
+      this.busy = null;
     }
   }
 }

@@ -1,23 +1,22 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TestBed } from "@angular/core/testing";
+import { provideRouter } from "@angular/router";
+import { FooterComponent } from "./footer.component";
 
-import { FooterComponent } from './footer.component';
-
-describe('FooterComponent', () => {
-  let component: FooterComponent;
-  let fixture: ComponentFixture<FooterComponent>;
-
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [FooterComponent]
-    })
-    .compileComponents();
-
-    fixture = TestBed.createComponent(FooterComponent);
-    component = fixture.componentInstance;
+describe("FooterComponent", () => {
+  it("keeps useful route links and protects external windows", () => {
+    TestBed.configureTestingModule({
+      imports: [FooterComponent],
+      providers: [provideRouter([])],
+    });
+    const fixture = TestBed.createComponent(FooterComponent);
     fixture.detectChanges();
-  });
-
-  it('should create', () => {
-    expect(component).toBeTruthy();
+    const host: HTMLElement = fixture.nativeElement;
+    expect(host.querySelector('a[href="/membresias"]')).not.toBeNull();
+    expect(host.querySelector('a[href^="tel:"]')).not.toBeNull();
+    for (const link of Array.from(
+      host.querySelectorAll('a[target="_blank"]'),
+    )) {
+      expect(link.getAttribute("rel")).toContain("noopener");
+    }
   });
 });

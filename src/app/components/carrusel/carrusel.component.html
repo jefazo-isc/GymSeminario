@@ -1,52 +1,48 @@
-<br><br>
-<div id="carrusel-productos" class="carousel-container container p-4 rounded-3"
-  style="max-width: 1200px; background-color: black; position: relative;">
-
-  <div class="logo-container" style="text-align: center; margin-bottom: 20px;">
-    <img src="img/Responsables/logo.jpg" alt="Logo del gimnasio" class="logo" style="max-width: 100%; height: auto;">
-    <br>
-    <br>
-    <p class="gym-slogan">
-      Donde la disciplina vence al talento
-    </p>
-  </div>
-
-  <br><br>
-
-
-  <h3 id="productos" class="titulo-seccion">Nuestras Instalaciones</h3>
-  <p id="texto" class="descripcion-seccion">
-    Descubre nuestras modernas instalaciones diseñadas para tu entrenamiento y bienestar.
-    ¡Todo lo que necesitas para alcanzar tus metas está aquí!
-  </p>
-
-
-  <div id="gymCarousel" class="carousel-container-inner">
-    <!-- Indicadores -->
-    <div class="carousel-indicators">
-      @for (image of images; track $index) {
-      <button type="button" [ngClass]="{ 'active': currentIndex === $index }" (click)="setActiveImage($index)">
-      </button>
-      }
-    </div>
-
-    <!-- Contenedor de imágenes -->
-    <div class="carousel-inner">
-      @for (image of images; track $index) {
-      <div class="carousel-item" [ngClass]="{ 'active': currentIndex === $index }">
-        <img [src]="image.src" class="d-block mx-auto rounded-3 carrusel-img">
+<section class="feature-page stack">
+  <figure class="gallery-main">
+    <img
+      [src]="images[currentIndex].src"
+      [alt]="'Instalaciones de GROM 21, fotografía ' + (currentIndex + 1)"
+      width="1200"
+      height="700"
+    />
+    <figcaption>
+      <span aria-live="polite"
+        >Fotografía {{ currentIndex + 1 }} de {{ images.length }}</span
+      >
+      <div>
+        <button
+          type="button"
+          class="ui-icon-button"
+          aria-label="Fotografía anterior"
+          (click)="prevImage()"
+        >
+          ←</button
+        ><button
+          type="button"
+          class="ui-icon-button"
+          aria-label="Fotografía siguiente"
+          (click)="nextImage()"
+        >
+          →
+        </button>
       </div>
-      }
-    </div>
-
-    <!-- Botón Anterior -->
-    <button class="carousel-btn left-btn" (click)="prevImage()">
-      <mat-icon>arrow_back</mat-icon>
-    </button>
-
-    <!-- Botón Siguiente -->
-    <button class="carousel-btn right-btn" (click)="nextImage()">
-      <mat-icon>arrow_forward</mat-icon>
-    </button>
-
-    <br><br>
+    </figcaption>
+  </figure>
+  <div class="gallery-thumbnails" aria-label="Elegir fotografía">
+    @for (image of images; track image.src) {
+      <button
+        type="button"
+        [attr.aria-label]="'Ver fotografía ' + ($index + 1)"
+        [attr.aria-pressed]="currentIndex === $index"
+        (click)="setActiveImage($index)"
+      >
+        <img [src]="image.src" alt="" loading="lazy" width="180" height="110" />
+      </button>
+    }
+  </div>
+  <p class="help">
+    Fotografías publicadas por el proyecto. Consulta condiciones y
+    disponibilidad de las áreas directamente con el gimnasio.
+  </p>
+</section>

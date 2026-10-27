@@ -1,286 +1,305 @@
-<div class="actividad-container container py-5">
-
-  <!-- ENCABEZADO -->
-  <div class="text-center mb-5">
-    <span class="badge bg-naranja px-3 py-2 text-uppercase mb-2">Mi Actividad</span>
-    <h1 class="text-white fw-bold display-5">Sesiones, Horarios y <span class="text-naranja">Alertas</span></h1>
-    <p class="text-secondary mx-auto" style="max-width:580px">
-      Consulta tu historial de entrenamientos, la ocupación en tiempo real y mantén al día tus notificaciones.
+<section class="feature-page stack">
+  <div class="notice">
+    <app-icon name="monitor" />
+    <p>
+      <strong>Actividad de demostración.</strong> Historial, ocupación y alertas
+      son ejemplos locales. No se sincronizan con las reservas de Firestore ni
+      muestran ocupación en tiempo real.
     </p>
   </div>
-
-  <!-- RESUMEN RÁPIDO (KPI Cards) -->
-  <div class="row g-4 mb-5" *ngIf="historial.length">
-    <div class="col-6 col-md-3">
-      <div class="card-glass p-3 text-center">
-        <i class='bx bx-check-circle text-success fs-2 mb-1'></i>
-        <div class="fw-bold text-white fs-4">{{ sesionesAsistidas }}</div>
-        <small class="text-secondary">Sesiones asistidas</small>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="card-glass p-3 text-center">
-        <i class='bx bx-calendar-check text-naranja fs-2 mb-1'></i>
-        <div class="fw-bold text-white fs-4">{{ proximasSesiones.length }}</div>
-        <small class="text-secondary">Sesiones reservadas</small>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="card-glass p-3 text-center">
-        <i class='bx bx-trending-up text-warning fs-2 mb-1'></i>
-        <div class="fw-bold text-white fs-4">{{ porcentajeAsistencia }}%</div>
-        <small class="text-secondary">Tasa de asistencia</small>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="card-glass p-3 text-center" (click)="vistaActiva='alertas'" style="cursor:pointer">
-        <i class='bx bx-bell text-naranja fs-2 mb-1'></i>
-        <div class="fw-bold fs-4" [ngClass]="alertasSinLeer > 0 ? 'text-warning' : 'text-white'">
-          {{ alertasSinLeer }}
+  <div class="grid-4">
+    <article class="surface">
+      <span class="help">Sesiones asistidas</span>
+      <div class="metric">{{ sesionesAsistidas }}</div>
+      <span class="status status--success">En el ejemplo</span>
+    </article>
+    <article class="surface">
+      <span class="help">Reservadas</span>
+      <div class="metric">{{ proximasSesiones.length }}</div>
+      <span class="status status--accent">Registro local</span>
+    </article>
+    <article class="surface">
+      <span class="help">Asistencia calculada</span>
+      <div class="metric">{{ porcentajeAsistencia }}%</div>
+      <span class="help">Sobre sesiones pasadas del ejemplo</span>
+    </article>
+    <article class="surface">
+      <span class="help">Alertas sin leer</span>
+      <div class="metric">{{ alertasSinLeer }}</div>
+      <button
+        class="text-link alert-shortcut"
+        type="button"
+        (click)="vistaActiva = 'alertas'"
+      >
+        Revisar alertas →
+      </button>
+    </article>
+  </div>
+  <div class="view-switch" aria-label="Secciones de actividad">
+    <button
+      type="button"
+      [attr.aria-pressed]="vistaActiva === 'historial'"
+      (click)="vistaActiva = 'historial'"
+    >
+      Sesiones</button
+    ><button
+      type="button"
+      [attr.aria-pressed]="vistaActiva === 'ocupacion'"
+      (click)="vistaActiva = 'ocupacion'"
+    >
+      Ocupación de muestra</button
+    ><button
+      type="button"
+      [attr.aria-pressed]="vistaActiva === 'alertas'"
+      (click)="vistaActiva = 'alertas'"
+    >
+      Alertas · {{ alertasSinLeer }}
+    </button>
+  </div>
+  @if (vistaActiva === "historial") {
+    @if (proximasSesiones.length) {
+      <div class="surface">
+        <div class="section-heading">
+          <h2>Reservadas en el ejemplo</h2>
+          <a class="text-link" routerLink="/f2"
+            >Ir a la agenda conectada<app-icon name="external"
+          /></a>
         </div>
-        <small class="text-secondary">Alertas sin leer</small>
-      </div>
-    </div>
-  </div>
-
-  <!-- TABS -->
-  <div class="d-flex gap-2 mb-4 flex-wrap">
-    <button class="btn tab-btn" [ngClass]="vistaActiva==='historial' ? 'btn-naranja' : 'btn-outline-secondary'"
-            (click)="vistaActiva='historial'">
-      <i class='bx bx-history'></i> Historial
-    </button>
-    <button class="btn tab-btn" [ngClass]="vistaActiva==='ocupacion' ? 'btn-naranja' : 'btn-outline-secondary'"
-            (click)="vistaActiva='ocupacion'">
-      <i class='bx bx-time-five'></i> Ocupación por Horario
-    </button>
-    <button class="btn tab-btn position-relative"
-            [ngClass]="vistaActiva==='alertas' ? 'btn-naranja' : 'btn-outline-secondary'"
-            (click)="vistaActiva='alertas'">
-      <i class='bx bx-bell'></i> Alertas
-      <span *ngIf="alertasSinLeer > 0"
-            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:.65rem">
-        {{ alertasSinLeer }}
-      </span>
-    </button>
-  </div>
-
-  <!-- ══════════ TAB: HISTORIAL (SCRUM-33 HU-25) ══════════ -->
-  <div *ngIf="vistaActiva==='historial'">
-
-    <!-- Próximas sesiones -->
-    <div class="card-glass p-4 mb-4" *ngIf="proximasSesiones.length > 0">
-      <h6 class="text-naranja mb-3"><i class='bx bx-calendar-event'></i> Próximas Sesiones Reservadas</h6>
-      <div class="row g-3">
-        <div class="col-md-6" *ngFor="let s of proximasSesiones">
-          <div class="sesion-card proxima d-flex align-items-center gap-3 p-3">
-            <div class="clase-icon">
-              <i class='bx {{ iconoSesion(s.clase) }} fs-2 text-naranja'></i>
-            </div>
-            <div class="flex-grow-1">
-              <strong class="text-white">{{ s.clase }}</strong>
-              <div class="text-secondary small">{{ s.fecha }} &bull; Turno {{ s.turno }}</div>
-              <div class="text-secondary small" *ngIf="s.entrenador">
-                <i class='bx bx-user'></i> {{ s.entrenador }} — {{ s.sala }}
+        <div class="grid-2">
+          @for (session of proximasSesiones; track session.id) {
+            <article class="session-preview">
+              <div>
+                <span class="status status--accent">{{ session.turno }}</span>
+                <h3>{{ session.clase }}</h3>
+                <p class="help">
+                  {{ session.fecha | date: "dd/MM/yyyy" }} ·
+                  {{ session.sala || "Sala no especificada" }}
+                </p>
+                <span class="help">{{
+                  session.entrenador || "Sin entrenador asignado"
+                }}</span>
               </div>
-            </div>
-            <button class="btn btn-sm btn-outline-danger" (click)="cancelar(s)" title="Cancelar sesión">
-              <i class='bx bx-x'></i>
-            </button>
-          </div>
+              <button
+                appButton="ghost"
+                type="button"
+                [attr.aria-label]="
+                  'Cancelar ejemplo de ' +
+                  session.clase +
+                  ' del ' +
+                  session.fecha
+                "
+                (click)="cancelar(session)"
+              >
+                Cancelar ejemplo
+              </button>
+            </article>
+          }
         </div>
       </div>
+    }
+    <div class="toolbar">
+      <h2>Historial local</h2>
+      <div class="field">
+        <label for="history-state">Estado</label
+        ><select id="history-state" [(ngModel)]="filtroEstado">
+          <option value="todos">Todas las sesiones</option>
+          <option value="asistida">Asistidas</option>
+          <option value="reservada">Reservadas</option>
+          <option value="cancelada">Canceladas</option>
+          <option value="ausente">Ausencias</option>
+        </select>
+      </div>
     </div>
-
-    <!-- Filtro y tabla de historial -->
-    <div class="d-flex gap-2 mb-3 flex-wrap align-items-center">
-      <span class="text-secondary small">Filtrar:</span>
-      <button class="btn btn-sm" [ngClass]="filtroEstado==='todos' ? 'btn-naranja' : 'btn-outline-secondary'" (click)="filtroEstado='todos'">Todas</button>
-      <button class="btn btn-sm" [ngClass]="filtroEstado==='asistida' ? 'btn-naranja' : 'btn-outline-secondary'" (click)="filtroEstado='asistida'">Asistidas</button>
-      <button class="btn btn-sm" [ngClass]="filtroEstado==='reservada' ? 'btn-naranja' : 'btn-outline-secondary'" (click)="filtroEstado='reservada'">Reservadas</button>
-      <button class="btn btn-sm" [ngClass]="filtroEstado==='cancelada' ? 'btn-naranja' : 'btn-outline-secondary'" (click)="filtroEstado='cancelada'">Canceladas</button>
-      <button class="btn btn-sm" [ngClass]="filtroEstado==='ausente' ? 'btn-naranja' : 'btn-outline-secondary'" (click)="filtroEstado='ausente'">Ausencias</button>
-    </div>
-
-    <div class="card-glass">
-      <div class="table-responsive">
-        <table class="table tabla-gym mb-0" *ngIf="historialFiltrado.length > 0; else sinSesiones">
+    @if (historialFiltrado.length) {
+      <div
+        class="table-scroll"
+        role="region"
+        aria-label="Historial local de sesiones"
+        tabindex="0"
+      >
+        <table class="data-table">
+          <caption>
+            {{
+              historialFiltrado.length
+            }}
+            sesiones de demostración
+          </caption>
           <thead>
             <tr>
-              <th>Clase</th>
-              <th>Fecha</th>
-              <th>Turno</th>
-              <th>Entrenador</th>
-              <th>Sala</th>
-              <th>Estado</th>
-              <th>Acción</th>
+              <th scope="col">Clase</th>
+              <th scope="col">Fecha y turno</th>
+              <th scope="col">Entrenador / sala</th>
+              <th scope="col">Estado</th>
+              <th scope="col">Acción</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let s of historialFiltrado">
-              <td>
-                <i class='bx {{ iconoSesion(s.clase) }} me-2 text-naranja'></i>
-                <strong class="text-white">{{ s.clase }}</strong>
-              </td>
-              <td class="text-secondary">{{ s.fecha }}</td>
-              <td class="text-secondary small">{{ s.turno }}</td>
-              <td class="text-secondary small">{{ s.entrenador ?? '—' }}</td>
-              <td class="text-secondary small">{{ s.sala ?? '—' }}</td>
-              <td>
-                <span class="badge" [ngClass]="{
-                  'bg-success':             s.estado === 'Asistida',
-                  'bg-naranja':             s.estado === 'Reservada',
-                  'bg-secondary':           s.estado === 'Cancelada',
-                  'bg-warning text-dark':   s.estado === 'Ausente'
-                }">{{ s.estado }}</span>
-              </td>
-              <td>
-                <button *ngIf="s.estado === 'Reservada'"
-                        class="btn btn-sm btn-outline-danger" (click)="cancelar(s)" title="Cancelar">
-                  <i class='bx bx-x'></i>
-                </button>
-                <span *ngIf="s.estado !== 'Reservada'" class="text-secondary small">—</span>
-              </td>
-            </tr>
+            @for (session of historialFiltrado; track session.id) {
+              <tr>
+                <td>
+                  <strong>{{ session.clase }}</strong>
+                </td>
+                <td>
+                  {{ session.fecha | date: "dd/MM/yyyy"
+                  }}<small>{{ session.turno }}</small>
+                </td>
+                <td>
+                  {{ session.entrenador || "—"
+                  }}<small>{{ session.sala || "—" }}</small>
+                </td>
+                <td>
+                  <span
+                    class="status"
+                    [class.status--success]="session.estado === 'Asistida'"
+                    [class.status--accent]="session.estado === 'Reservada'"
+                    [class.status--warning]="session.estado === 'Ausente'"
+                    >{{ session.estado }}</span
+                  >
+                </td>
+                <td>
+                  @if (session.estado === "Reservada") {
+                    <button
+                      appButton="ghost"
+                      type="button"
+                      (click)="cancelar(session)"
+                    >
+                      Cancelar ejemplo
+                    </button>
+                  } @else {
+                    <span class="help">Sin acciones</span>
+                  }
+                </td>
+              </tr>
+            }
           </tbody>
         </table>
-        <ng-template #sinSesiones>
-          <div class="text-center py-5 text-secondary">
-            <i class='bx bx-calendar-x fs-1'></i>
-            <p class="mt-2">No hay sesiones en esta categoría.</p>
-          </div>
-        </ng-template>
+      </div>
+    } @else {
+      <div class="empty-state">
+        <app-icon name="calendar" />
+        <h2>No hay sesiones con ese estado.</h2>
+        <button
+          appButton="secondary"
+          type="button"
+          (click)="filtroEstado = 'todos'"
+        >
+          Ver todas
+        </button>
+      </div>
+    }
+  }
+  @if (vistaActiva === "ocupacion") {
+    <div class="toolbar">
+      <h2>Explora los horarios de muestra.</h2>
+      <div class="field">
+        <label for="occupancy-shift">Turno</label
+        ><select id="occupancy-shift" [(ngModel)]="filtroTurno">
+          <option value="todos">Todos los turnos</option>
+          @for (turn of turnosDisponibles; track turn) {
+            <option [value]="turn">{{ turn }}</option>
+          }
+        </select>
       </div>
     </div>
-  </div>
-
-  <!-- ══════════ TAB: OCUPACIÓN (SCRUM-42 HU-28) ══════════ -->
-  <div *ngIf="vistaActiva==='ocupacion'">
-
-    <!-- Horarios destacados -->
-    <div class="row g-4 mb-4" *ngIf="horarioPico && horarioLibre">
-      <div class="col-md-6">
-        <div class="card-glass p-4 border-danger-soft">
-          <h6 class="text-danger mb-1"><i class='bx bx-trending-up'></i> Horario más demandado</h6>
-          <div class="fs-4 fw-bold text-white">{{ horarioPico!.hora }}</div>
-          <div class="text-secondary small">{{ horarioPico!.turno }} &bull; {{ horarioPico!.inscritos }}/{{ horarioPico!.capacidadMax }} inscritos ({{ getPct(horarioPico!) }}%)</div>
-          <div class="text-secondary small mt-1">Clases: {{ horarioPico!.clases.join(', ') }}</div>
-        </div>
-      </div>
-      <div class="col-md-6">
-        <div class="card-glass p-4 border-success-soft">
-          <h6 class="text-success mb-1"><i class='bx bx-trending-down'></i> Horario más libre</h6>
-          <div class="fs-4 fw-bold text-white">{{ horarioLibre!.hora }}</div>
-          <div class="text-secondary small">{{ horarioLibre!.turno }} &bull; {{ horarioLibre!.inscritos }}/{{ horarioLibre!.capacidadMax }} inscritos ({{ getPct(horarioLibre!) }}%)</div>
-          <div class="text-secondary small mt-1">Clases: {{ horarioLibre!.clases.join(', ') }}</div>
-        </div>
-      </div>
+    <div class="grid-3">
+      @for (slot of ocupacionFiltrada; track slot.hora) {
+        <article class="surface">
+          <div class="toolbar">
+            <span class="eyebrow">{{ slot.turno }}</span
+            ><span
+              class="status"
+              [class.status--danger]="getNivel(slot) === 'lleno'"
+              [class.status--warning]="getNivel(slot) === 'moderado'"
+              [class.status--success]="getNivel(slot) === 'libre'"
+              >{{
+                getNivel(slot) === "lleno"
+                  ? "Lleno"
+                  : getNivel(slot) === "moderado"
+                    ? "Moderado"
+                    : "Disponible"
+              }}</span
+            >
+          </div>
+          <h3>{{ slot.hora }}</h3>
+          <p class="help">
+            {{ slot.inscritos }} de {{ slot.capacidadMax }} plazas de ejemplo ·
+            {{ getPct(slot) }}%
+          </p>
+          <meter
+            min="0"
+            max="100"
+            [value]="getPct(slot)"
+            [attr.aria-label]="'Ocupación de ejemplo en ' + slot.hora"
+          >
+            {{ getPct(slot) }}%
+          </meter>
+          <p class="help">{{ slot.clases.join(" · ") }}</p>
+        </article>
+      }
     </div>
-
-    <!-- Filtro de turno -->
-    <div class="d-flex gap-2 mb-3 flex-wrap align-items-center">
-      <span class="text-secondary small">Ver turno:</span>
-      <button class="btn btn-sm" [ngClass]="filtroTurno==='todos' ? 'btn-naranja' : 'btn-outline-secondary'" (click)="filtroTurno='todos'">Todos</button>
-      <button *ngFor="let t of turnosDisponibles" class="btn btn-sm"
-              [ngClass]="filtroTurno===t ? 'btn-naranja' : 'btn-outline-secondary'" (click)="filtroTurno=t">{{ t }}</button>
+  }
+  @if (vistaActiva === "alertas") {
+    <div class="notice notice--warning">
+      <p>
+        Estas alertas ilustran escenarios y no se calculan con tu membresía o
+        saldo actual.
+      </p>
     </div>
-
-    <!-- Grid de ocupación -->
-    <div class="row g-3">
-      <div class="col-md-6 col-lg-4" *ngFor="let o of ocupacionFiltrada">
-        <div class="card-glass p-4 h-100" [ngClass]="'border-' + getNivel(o)">
-          <div class="d-flex justify-content-between align-items-start mb-2">
-            <div>
-              <div class="fw-bold text-white">{{ o.hora }}</div>
-              <small class="text-secondary">Turno {{ o.turno }}</small>
-            </div>
-            <span class="badge" [ngClass]="{
-              'bg-danger':  getNivel(o) === 'lleno',
-              'bg-warning text-dark': getNivel(o) === 'moderado',
-              'bg-success': getNivel(o) === 'libre'
-            }">
-              {{ getNivel(o) === 'lleno' ? 'Lleno' : getNivel(o) === 'moderado' ? 'Moderado' : 'Disponible' }}
-            </span>
-          </div>
-
-          <!-- Barra de ocupación -->
-          <div class="progress mb-2" style="height:8px; border-radius:6px; background:rgba(255,255,255,.06)">
-            <div class="progress-bar" role="progressbar"
-                 [style.width.%]="getPct(o)"
-                 [ngClass]="{
-                   'bg-danger':  getNivel(o) === 'lleno',
-                   'bg-warning': getNivel(o) === 'moderado',
-                   'bg-success': getNivel(o) === 'libre'
-                 }">
-            </div>
-          </div>
-
-          <div class="d-flex justify-content-between small mb-2">
-            <span class="text-secondary">{{ o.inscritos }} inscritos</span>
-            <span class="text-secondary">Cap. {{ o.capacidadMax }}</span>
-          </div>
-
-          <div class="text-secondary small">
-            <i class='bx bx-dumbbell me-1'></i>{{ o.clases.join(' · ') }}
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══════════ TAB: ALERTAS (SCRUM-39 HU-14) ══════════ -->
-  <div *ngIf="vistaActiva==='alertas'">
-
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h5 class="text-white mb-0">
-        <i class='bx bx-bell text-naranja'></i> Centro de Notificaciones
-        <span *ngIf="alertasSinLeer > 0" class="badge bg-danger ms-2">{{ alertasSinLeer }} nuevas</span>
-      </h5>
-      <button class="btn btn-sm btn-outline-secondary" (click)="marcarTodasLeidas()" *ngIf="alertasSinLeer > 0">
-        <i class='bx bx-check-double'></i> Marcar todas como leídas
+    <div class="toolbar">
+      <h2>Centro de alertas de ejemplo</h2>
+      <button
+        appButton="secondary"
+        type="button"
+        [disabled]="alertasSinLeer === 0"
+        (click)="marcarTodasLeidas()"
+      >
+        Marcar todas como leídas
       </button>
     </div>
-
-    <div class="d-flex flex-column gap-3">
-      <div *ngFor="let alerta of alertasOrdenadas"
-           class="card-glass p-4 alerta-item"
-           [class.alerta-no-leida]="!alerta.leida"
-           (click)="marcarLeida(alerta)">
-        <div class="d-flex align-items-start gap-3">
-          <div class="alerta-icon" [ngClass]="'icon-' + alerta.tipo">
-            <i class='bx {{ iconoAlerta(alerta.tipo) }} fs-4'></i>
+    <div class="stack">
+      @for (alert of alertasOrdenadas; track alert.id) {
+        <article class="surface alert-card" [class.unread]="!alert.leida">
+          <div class="alert-heading">
+            <span
+              class="status"
+              [class]="'status ' + badgeAlerta(alert.prioridad)"
+              >Prioridad {{ alert.prioridad }}</span
+            ><span class="help">{{ alert.leida ? "Leída" : "Sin leer" }}</span>
           </div>
-          <div class="flex-grow-1">
-            <div class="d-flex align-items-center gap-2 mb-1">
-              <strong class="text-white">{{ alerta.titulo }}</strong>
-              <span class="badge" [ngClass]="badgeAlerta(alerta.prioridad)" style="font-size:.65rem">
-                {{ alerta.prioridad }}
-              </span>
-              <span *ngIf="!alerta.leida" class="badge bg-primary ms-auto" style="font-size:.65rem">Nueva</span>
+          <h3>{{ alert.titulo }}</h3>
+          <p class="muted">{{ alert.mensaje }}</p>
+          <div class="toolbar">
+            <span class="help">{{ alert.fecha | date: "dd/MM/yyyy" }}</span>
+            <div class="form-actions">
+              @if (!alert.leida) {
+                <button
+                  appButton="ghost"
+                  type="button"
+                  (click)="marcarLeida(alert)"
+                >
+                  Marcar como leída
+                </button>
+              }
+              <a
+                appButton="secondary"
+                [routerLink]="
+                  alert.tipo === 'membresia'
+                    ? '/membresias'
+                    : alert.tipo === 'pago'
+                      ? '/estado-cuenta'
+                      : '/f2'
+                "
+                >Ver sección<app-icon name="arrow"
+              /></a>
             </div>
-            <p class="text-secondary small mb-1">{{ alerta.mensaje }}</p>
-            <div class="d-flex align-items-center gap-3">
-              <small class="text-secondary">
-                <i class='bx bx-calendar me-1'></i>{{ alerta.fecha }}
-              </small>
-              <small *ngIf="alerta.diasRestantes > 0" class="text-warning">
-                <i class='bx bx-time me-1'></i>Faltan {{ alerta.diasRestantes }} días
-              </small>
-            </div>
           </div>
-          <div>
-            <a *ngIf="alerta.tipo === 'membresia'" routerLink="/membresias" class="btn btn-sm btn-naranja">Ver</a>
-            <a *ngIf="alerta.tipo === 'pago'" routerLink="/estado-cuenta" class="btn btn-sm btn-naranja">Ver</a>
-            <a *ngIf="alerta.tipo === 'sesion'" routerLink="/f2" class="btn btn-sm btn-naranja">Ver</a>
-          </div>
+        </article>
+      } @empty {
+        <div class="empty-state">
+          <app-icon name="check" />
+          <h2>No hay alertas de ejemplo.</h2>
         </div>
-      </div>
-
-      <div *ngIf="alertas.length === 0" class="text-center py-5 text-secondary">
-        <i class='bx bx-bell-off fs-1'></i>
-        <p class="mt-2">No hay alertas activas. ¡Todo está al corriente!</p>
-      </div>
+      }
     </div>
-
-  </div>
-
-</div>
+  }
+</section>

@@ -1,336 +1,314 @@
-.coach-container {
-  min-height: 85vh;
+.coach-welcome {
+  max-width: 760px;
+  margin: auto;
+  padding: 48px;
 }
-
-.badge-coach {
+.coach-welcome > app-icon {
   display: inline-block;
-  background: rgba(255, 102, 0, 0.15);
-  color: #ff7700;
-  border: 1px solid rgba(255, 102, 0, 0.4);
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 2rem;
+  color: var(--color-sage);
+  margin-bottom: 24px;
 }
-
-.titulo-principal {
-  color: #ffffff;
-  font-weight: 800;
-  letter-spacing: -0.5px;
+.coach-welcome h2 {
+  font-size: 2rem;
 }
-
-.destacado {
-  color: #ff6600;
-  text-shadow: 0 0 15px rgba(255, 102, 0, 0.5);
+.coach-welcome p {
+  max-width: 60ch;
 }
-
-.subtitulo {
-  color: #a0a0a0;
-  max-width: 600px;
-  margin: 0 auto;
+.routine-form {
+  max-width: 860px;
+  margin: auto;
+  width: 100%;
 }
-
-/* Pills de navegación */
-.nav-pills-coach {
-  background: #1e1e1e;
-  padding: 4px;
-  border-radius: 30px;
-  border: 1px solid #333;
+.routine-form > .help {
+  margin-bottom: 28px;
 }
-
-.btn-pill {
-  background: transparent;
-  color: #aaa;
-  border: none;
-  padding: 8px 18px;
-  border-radius: 25px;
-  font-weight: 600;
-  font-size: 0.9rem;
-  transition: all 0.2s ease;
+.routine-form .notice {
+  margin-top: 24px;
 }
-
-.btn-pill.active {
-  background: #ff6600;
-  color: #fff;
-  box-shadow: 0 2px 10px rgba(255, 102, 0, 0.4);
+.routine-result > header h2 {
+  margin-top: 24px;
 }
-
-/* Tarjetas y Contenedores */
-.auth-lock-box {
-  max-width: 600px;
-  margin-top: 40px;
+.routine-days {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: start;
 }
-
-.shield-icon {
-  display: inline-flex;
-  padding: 18px;
-  background: rgba(255, 102, 0, 0.12);
-  border-radius: 50%;
-  border: 1px solid rgba(255, 102, 0, 0.3);
-}
-
-.btn-google {
-  background: #ffffff;
-  color: #3c4043;
-  border: 1px solid #dadce0;
-  border-radius: 28px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-}
-
-.btn-google:hover {
-  background: #f8f9fa;
-  color: #202124;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-}
-
-.card-glass {
-  background: rgba(26, 26, 26, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  backdrop-filter: blur(10px);
-  padding: 30px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-}
-
-.form-box {
-  max-width: 750px;
-}
-
-.text-naranja {
-  color: #ff6600 !important;
-}
-
-.input-gym {
-  background-color: #242424;
-  border: 1px solid #383838;
-  color: #ffffff;
-  border-radius: 8px;
-  padding: 10px 14px;
-}
-
-.input-gym:focus {
-  background-color: #2b2b2b;
-  border-color: #ff6600;
-  color: #ffffff;
-  box-shadow: 0 0 0 0.25rem rgba(255, 102, 0, 0.25);
-}
-
-.btn-naranja {
-  background: linear-gradient(135deg, #ff7700 0%, #ff5500 100%);
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(255, 85, 0, 0.4);
-  transition: all 0.2s ease-in-out;
-}
-
-.btn-naranja:hover {
-  background: linear-gradient(135deg, #ff8811 0%, #ff6600 100%);
-  color: #ffffff;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255, 85, 0, 0.6);
-}
-
-/* Tarjetas de Días de Rutina */
-.card-dia {
-  background: #1e1e1e;
-  border: 1px solid #333333;
-  border-radius: 14px;
-  overflow: hidden;
-  transition: transform 0.2s ease;
-}
-
-.card-dia:hover {
-  transform: translateY(-3px);
-  border-color: #ff6600;
-}
-
-.card-dia-header {
-  background: #252525;
-  padding: 14px 18px;
-  border-bottom: 1px solid #333333;
+.routine-day summary {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
+  cursor: pointer;
+  list-style: none;
 }
-
-.badge-grupo {
-  background: rgba(255, 102, 0, 0.2);
-  color: #ff9944;
-  border-radius: 6px;
-  padding: 3px 8px;
-  font-size: 0.78rem;
-  font-weight: bold;
+.routine-day summary::-webkit-details-marker {
+  display: none;
 }
-
-.card-dia-body {
-  padding: 15px;
+.routine-day summary .eyebrow {
+  margin-bottom: 6px;
 }
-
-.ejercicio-item {
-  padding: 12px;
-  background: #242424;
-  border-radius: 8px;
-  margin-bottom: 10px;
-  border-left: 3px solid #ff6600;
-}
-
-.num-ej {
-  background: #333;
-  color: #ff8822;
-  font-weight: bold;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.8rem;
-}
-
-.tag-meta {
-  background: #333;
-  color: #ccc;
-  border-radius: 4px;
-  padding: 2px 7px;
-  font-size: 0.75rem;
-}
-
-.tag-descanso {
-  background: rgba(40, 167, 69, 0.2);
-  color: #4cd964;
-  border-radius: 4px;
-  padding: 2px 7px;
-  font-size: 0.75rem;
+.routine-day summary strong {
+  font-size: 1.125rem;
   font-weight: 500;
 }
-
-.nota-coach {
-  font-size: 0.8rem;
-  color: #b0b0b0;
-  background: rgba(0, 0, 0, 0.25);
-  padding: 5px 8px;
-  border-radius: 5px;
+.routine-day summary app-icon {
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
 }
-
-.loader-box {
-  max-width: 500px;
+.routine-day[open] summary app-icon {
+  transform: rotate(180deg);
 }
-
-/* ================= CHAT UI ================= */
-.coach-card-select {
-  background: #222222;
-  border: 1px solid #333333;
-  border-radius: 12px;
-  padding: 12px 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
+.routine-day ol {
+  padding: 0;
+  list-style: none;
+  margin: 24px 0 0;
+  counter-reset: exercises;
 }
-
-.coach-card-select:hover {
-  background: #282828;
-  border-color: #555555;
+.routine-day li {
+  counter-increment: exercises;
+  padding: 20px 0;
+  border-top: 1px solid var(--color-border);
 }
-
-.coach-card-select.active-coach {
-  background: rgba(255, 102, 0, 0.15);
-  border-color: #ff6600;
-  box-shadow: 0 0 10px rgba(255, 102, 0, 0.2);
+.routine-day li:last-child {
+  padding-bottom: 0;
 }
-
-.coach-emoji {
-  font-size: 1.8rem;
+.routine-day h3 {
+  font-size: 1rem;
+  line-height: 1.6;
 }
-
-.chat-window {
-  height: 580px;
+.routine-day h3::before {
+  content: counter(exercises, decimal-leading-zero);
+  font-size: 0.6875rem;
+  color: var(--color-text-secondary);
+  margin-right: 12px;
+}
+.exercise-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+.exercise-meta span {
+  padding: 4px 8px;
+  background: var(--color-surface-secondary);
+  border-radius: 4px;
+}
+.chat-layout {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 24px;
+}
+.coach-list h2 {
+  font-size: 1.5rem;
+}
+.coach-choice {
+  display: flex;
+  align-items: center;
+  text-align: left;
+  gap: 12px;
+  width: 100%;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  margin-top: 12px;
+  transition:
+    background-color var(--motion-fast),
+    border-color var(--motion-fast);
+}
+.coach-choice > span:first-child {
+  font-size: 1.5rem;
+}
+.coach-choice strong {
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+.coach-choice small {
+  display: block;
+  font-size: 0.6875rem;
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+}
+.coach-choice[aria-pressed="true"] {
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
+}
+.conversation {
+  padding: 0;
   overflow: hidden;
+  min-width: 0;
 }
-
-.chat-header {
-  background: #1e1e1e;
+.conversation > header {
+  padding: 24px;
+  border-bottom: 1px solid var(--color-border);
 }
-
-.chat-body {
-  background: #141414;
+.conversation > header h2 {
+  font-size: 1.25rem;
+  margin: 0 0 6px;
 }
-
-.chat-footer {
-  background: #1e1e1e;
+.conversation > header p {
+  margin: 0;
 }
-
-.burbuja-msg {
-  max-width: 80%;
-  padding: 12px 16px;
-  border-radius: 16px;
-  font-size: 0.95rem;
-  line-height: 1.45;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+.chat-log {
+  height: 440px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+  scroll-behavior: auto;
 }
-
-.burbuja-user {
-  background: #ff6600;
-  color: #ffffff;
-  border-bottom-right-radius: 4px;
+.chat-message {
+  max-width: 88%;
+  align-self: flex-start;
 }
-
-.burbuja-coach {
-  background: #252525;
-  color: #eaeaea;
-  border: 1px solid #3a3a3a;
-  border-bottom-left-radius: 4px;
+.chat-message > span {
+  font-size: 0.6875rem;
+  color: var(--color-text-secondary);
+}
+.chat-message p {
+  background: var(--color-surface-secondary);
+  padding: 14px 18px;
+  border-radius: var(--radius-md);
+  margin: 6px 0 0;
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.8;
+  font-size: 0.875rem;
 }
-
-.msg-hora {
-  font-size: 0.72rem;
-  opacity: 0.7;
+.chat-message.from-user {
+  align-self: flex-end;
 }
-
-.typing-indicator span {
+.chat-message.from-user p {
+  background: var(--color-accent-soft);
+}
+.chat-start {
+  text-align: center;
+  margin: auto;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  max-width: 35ch;
+}
+.chat-start app-icon {
   display: inline-block;
-  width: 6px;
-  height: 6px;
-  background-color: #ff6600;
-  border-radius: 50%;
-  margin-right: 3px;
-  animation: typing 1s infinite alternate;
+  font-size: 1.75rem;
+  margin-bottom: 20px;
+  color: var(--color-sage);
 }
-
-.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-
-@keyframes typing {
-  from { opacity: 0.3; transform: scale(0.8); }
-  to { opacity: 1; transform: scale(1.2); }
+.chat-composer {
+  padding: 24px;
+  border-top: 1px solid var(--color-border);
 }
-
+.chat-composer label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+.chat-composer textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 90px;
+  padding: 12px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.875rem;
+}
+.chat-composer .toolbar {
+  margin-top: 12px;
+}
+.conversation > .notice {
+  margin: 16px 24px;
+  flex-wrap: wrap;
+}
+@media (max-width: 1023px) {
+  .chat-layout {
+    grid-template-columns: 240px minmax(0, 1fr);
+  }
+  .chat-message {
+    max-width: 95%;
+  }
+}
+@media (max-width: 767px) {
+  .coach-welcome {
+    padding: 28px;
+  }
+  .routine-days,
+  .chat-layout {
+    grid-template-columns: 1fr;
+  }
+  .chat-log {
+    height: 360px;
+    padding: 20px;
+  }
+  .chat-composer {
+    padding: 20px;
+  }
+  .conversation > header {
+    padding: 20px;
+  }
+  .coach-choice {
+    padding: 12px;
+  }
+  .coach-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .coach-list > .eyebrow,
+  .coach-list > h2,
+  .coach-list > .field-error {
+    grid-column: 1/-1;
+  }
+  .coach-choice {
+    margin: 0;
+  }
+  .coach-choice > span:first-child {
+    font-size: 1.25rem;
+  }
+  .conversation > .notice {
+    margin: 16px 20px;
+  }
+}
 @media print {
-  body {
-    background: #fff !important;
-    color: #000 !important;
+  .routine-days {
+    display: block;
   }
-  .coach-container {
-    padding: 0;
+  .routine-day {
+    margin-bottom: 20px;
+    break-inside: avoid;
   }
-  .btn, .badge-coach, .nav-pills-coach {
-    display: none !important;
+  .routine-result {
+    color: #111;
   }
-  .card-glass, .card-dia, .ejercicio-item {
-    background: #fff !important;
-    color: #000 !important;
-    border: 1px solid #ccc !important;
-    box-shadow: none !important;
+  .routine-result h2,
+  .routine-result h3,
+  .routine-result strong {
+    color: #111;
   }
-  .text-white, .text-light, .text-secondary {
-    color: #000 !important;
+  .routine-result .surface {
+    background: #fff;
+    border-color: #ccc;
   }
-  .text-naranja {
-    color: #d35400 !important;
+  .routine-result .muted,
+  .routine-result .help,
+  .routine-result .eyebrow {
+    color: #444;
+  }
+  .routine-result .exercise-meta span {
+    background: #eee;
+    color: #222;
+  }
+  .routine-result .toolbar > .help {
+    color: #444;
+  }
+  .routine-result > .surface {
+    margin-bottom: 20px;
   }
 }

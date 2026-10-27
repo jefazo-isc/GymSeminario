@@ -1,170 +1,206 @@
-<div class="micuenta-container container py-4">
-
-  <!-- Header de Perfil -->
-  <div class="card-glass mb-4 p-4 d-flex flex-wrap justify-content-between align-items-center">
-    <div class="d-flex align-items-center gap-3">
-      <div class="avatar-box">
-        <i class='bx bx-user fs-1 text-naranja'></i>
-      </div>
-      <div>
-        <h2 class="text-white mb-0">{{ nombre || 'Socio del Gym' }}</h2>
-        <small class="text-muted d-block">{{ email || 'Sesión iniciada' }}</small>
-        <span class="badge bg-naranja mt-1">
-          <i class='bx bx-badge-check'></i> {{ role === 'admin' ? 'Administrador' : 'Socio Activo' }}
-        </span>
-      </div>
-    </div>
-    <div class="mt-3 mt-md-0 d-flex gap-2">
-      <a routerLink="/membresias" class="btn btn-outline-warning">
-        <i class='bx bx-id-card'></i> Mi Membresía
-      </a>
-      <a routerLink="/actividad" class="btn btn-outline-light">
-        <i class='bx bx-history'></i> Mi Actividad
-      </a>
-      <a routerLink="/estado-cuenta" class="btn btn-outline-info">
-        <i class='bx bx-receipt'></i> Estado de Cuenta
-      </a>
-      <a routerLink="/coach-ia" class="btn btn-naranja">
-        <i class='bx bx-brain'></i> Ir a Coach IA
-      </a>
-      <button class="btn btn-outline-danger" (click)="cerrarSesion()">
-        <i class='bx bx-log-out'></i> Salir
-      </button>
-    </div>
-  </div>
-
-  <!-- Alerta de éxito -->
-  <div *ngIf="guardadoExitoso" class="alert alert-success d-flex align-items-center mb-4">
-    <i class='bx bx-check-circle fs-4 me-2'></i>
-    <div>¡Tus datos biométricos han sido guardados! El Coach IA usará esta información automáticamente.</div>
-  </div>
-
-  <div class="row g-4">
-    <!-- Columna Izquierda: Tarjeta Resumen & IMC -->
-    <div class="col-lg-4">
-      <div class="card-glass p-4 text-center mb-4">
-        <h5 class="text-white mb-3"><i class='bx bx-pulse text-naranja'></i> Índice Corporal</h5>
-        
-        <div class="imc-circulo mx-auto mb-3">
-          <span class="imc-valor">{{ imc }}</span>
-          <small class="d-block text-secondary">IMC</small>
-        </div>
-
-        <span class="badge" [ngClass]="{
-          'bg-success': estadoImc === 'Peso normal',
-          'bg-warning text-dark': estadoImc === 'Sobrepeso' || estadoImc === 'Bajo peso',
-          'bg-danger': estadoImc === 'Obesidad'
-        }">
-          {{ estadoImc }}
-        </span>
-
-        <hr class="border-secondary my-3">
-
-        <div class="text-start small text-secondary">
-          <div class="mb-2"><strong>⚖️ Peso actual:</strong> <span class="text-white">{{ perfil.peso }} kg</span></div>
-          <div class="mb-2"><strong>📏 Altura:</strong> <span class="text-white">{{ perfil.altura }} cm</span></div>
-          <div class="mb-2"><strong>🎯 Objetivo:</strong> <span class="text-white">{{ perfil.objetivo }}</span></div>
-          <div><strong>🏋️ Nivel:</strong> <span class="text-white">{{ perfil.nivel }}</span></div>
-        </div>
-      </div>
-
-      <div class="card-glass p-3 border-secondary">
-        <h6 class="text-warning mb-2"><i class='bx bx-info-circle'></i> ¿Para qué sirve?</h6>
-        <p class="text-secondary small mb-0">
-          Tus datos alimentan el contexto de los Coaches Virtuales (Patricio, El Temach, Arnold, El Chavo). Así saben tu peso y complexión para darte respuestas exactas.
+<section class="feature-page account-layout">
+  <aside class="stack">
+    <article class="surface">
+      <span class="eyebrow">Identidad</span>
+      @if (!authReady) {
+        <p role="status">Consultando sesión…</p>
+      } @else if (nombre || email) {
+        <div class="profile-avatar"><app-icon name="user" /></div>
+        <h2>{{ nombre || "Tu cuenta" }}</h2>
+        <p class="help identity-email">
+          {{ email || "Acceso con teléfono o proveedor externo" }}
         </p>
-      </div>
+        <span class="status">{{ role || "Rol no disponible" }}</span>
+        <div class="form-actions">
+          <button appButton="ghost" type="button" (click)="cerrarSesion()">
+            Cerrar sesión
+          </button>
+        </div>
+      } @else {
+        <h2>Accede a tu cuenta.</h2>
+        <p class="muted">
+          Puedes revisar el perfil local, pero agenda e identidad utilizan tu
+          sesión de Firebase.
+        </p>
+        <a appButton="primary" routerLink="/auth/sign-in"
+          >Ingresar<app-icon name="arrow"
+        /></a>
+      }
+      @if (authError) {
+        <p class="field-error" role="alert">{{ authError }}</p>
+      }
+    </article>
+    <article class="surface">
+      <span class="eyebrow">Tu experiencia</span>
+      <h3>Apariencia y accesibilidad</h3>
+      <p class="help">Preferencia actual: {{ theme.label() }}.</p>
+      <button appButton="secondary" type="button" (click)="openPreferences()">
+        <app-icon name="monitor" />Personalizar
+      </button>
+      <hr class="divider" />
+      <a class="text-link" routerLink="/change"
+        >Cambiar contraseña<app-icon name="external"
+      /></a>
+    </article>
+    <article class="surface surface--soft">
+      <span class="eyebrow">Dato orientativo</span>
+      <div class="metric">{{ imc || "—" }}</div>
+      <p class="help">
+        Relación peso/altura calculada con tus datos. No es una evaluación
+        médica ni una recomendación de entrenamiento.
+      </p>
+    </article>
+  </aside>
+  <div class="stack">
+    <div class="notice">
+      <app-icon name="monitor" />
+      <p>
+        <strong>Perfil local de entrenamiento.</strong> Los valores iniciales
+        son ejemplos editables. Se conservan en este navegador y se comparten
+        con el coach al usarlo; no están sincronizados con tu cuenta remota.
+      </p>
     </div>
-
-    <!-- Columna Derecha: Formulario de Biometría -->
-    <div class="col-lg-8">
-      <div class="card-glass p-4">
-        <h4 class="text-white mb-1"><i class='bx bx-edit text-naranja'></i> Ficha Biometría y Entrenamiento</h4>
-        <p class="text-secondary small mb-4">Mantén actualizados tus datos para que tus rutinas y dietas se ajusten a tu progreso.</p>
-
-        <form (ngSubmit)="guardarDatos()">
-          <div class="row g-3">
-            
-            <!-- Nombre -->
-            <div class="col-md-6">
-              <label class="form-label text-light">Nombre / Apodo</label>
-              <input type="text" [(ngModel)]="perfil.nombre" name="nombre" class="form-control input-gym" required>
-            </div>
-
-            <!-- Edad -->
-            <div class="col-md-3">
-              <label class="form-label text-light">Edad</label>
-              <input type="number" [(ngModel)]="perfil.edad" name="edad" min="14" max="95" class="form-control input-gym" required>
-            </div>
-
-            <!-- Género -->
-            <div class="col-md-3">
-              <label class="form-label text-light">Género</label>
-              <select [(ngModel)]="perfil.genero" name="genero" class="form-select input-gym">
-                <option *ngFor="let g of generos" [value]="g">{{ g }}</option>
-              </select>
-            </div>
-
-            <!-- Peso -->
-            <div class="col-md-6">
-              <label class="form-label text-light">Peso Corporal (kg)</label>
-              <div class="input-group">
-                <input type="number" [(ngModel)]="perfil.peso" name="peso" min="30" max="250" class="form-control input-gym" required>
-                <span class="input-group-text bg-dark border-secondary text-secondary">kg</span>
-              </div>
-            </div>
-
-            <!-- Altura -->
-            <div class="col-md-6">
-              <label class="form-label text-light">Altura (cm)</label>
-              <div class="input-group">
-                <input type="number" [(ngModel)]="perfil.altura" name="altura" min="100" max="230" class="form-control input-gym" required>
-                <span class="input-group-text bg-dark border-secondary text-secondary">cm</span>
-              </div>
-            </div>
-
-            <!-- Objetivo -->
-            <div class="col-md-6">
-              <label class="form-label text-light">Objetivo Principal</label>
-              <select [(ngModel)]="perfil.objetivo" name="objetivo" class="form-select input-gym">
-                <option *ngFor="let obj of objetivos" [value]="obj">{{ obj }}</option>
-              </select>
-            </div>
-
-            <!-- Días habituales -->
-            <div class="col-md-3">
-              <label class="form-label text-light">Días / Semana</label>
-              <select [(ngModel)]="perfil.diasDisponibles" name="diasDisponibles" class="form-select input-gym">
-                <option *ngFor="let dia of opcionesDias" [value]="dia">{{ dia }} días</option>
-              </select>
-            </div>
-
-            <!-- Nivel -->
-            <div class="col-md-3">
-              <label class="form-label text-light">Nivel</label>
-              <select [(ngModel)]="perfil.nivel" name="nivel" class="form-select input-gym">
-                <option *ngFor="let niv of niveles" [value]="niv">{{ niv }}</option>
-              </select>
-            </div>
-
-            <!-- Lesiones -->
-            <div class="col-12">
-              <label class="form-label text-light">Lesiones o Limitaciones Médicas</label>
-              <input type="text" [(ngModel)]="perfil.restriccionesMedicas" name="restriccionesMedicas" class="form-control input-gym" placeholder="Ej. Dolor en manguito rotador, condromalacia o 'Ninguna'">
-            </div>
-
-            <!-- Botón guardar -->
-            <div class="col-12 mt-4">
-              <button type="submit" class="btn btn-naranja py-3 px-5 fw-bold fs-6 w-100">
-                <i class='bx bx-save me-1'></i> Guardar Datos Biométricos
-              </button>
-            </div>
-
-          </div>
-        </form>
-
+    <form
+      class="surface"
+      #profileForm="ngForm"
+      (ngSubmit)="guardarDatos(profileForm)"
+      novalidate
+    >
+      <span class="eyebrow">Acerca de ti</span>
+      <h2>Tu punto de partida.</h2>
+      <p class="help">Revisa estos datos antes de solicitar una rutina.</p>
+      <div class="form-grid">
+        <div class="field full-width">
+          <label for="profile-name">Nombre para entrenar</label
+          ><input
+            id="profile-name"
+            name="nombre"
+            [(ngModel)]="perfil.nombre"
+            required
+            autocomplete="name"
+            #name="ngModel"
+          />
+          @if (name.invalid && name.touched) {
+            <span class="field-error">Escribe un nombre.</span>
+          }
+        </div>
+        <div class="field">
+          <label for="profile-age">Edad</label
+          ><input
+            id="profile-age"
+            type="number"
+            name="edad"
+            [(ngModel)]="perfil.edad"
+            min="1"
+            max="120"
+            required
+          />
+        </div>
+        <div class="field">
+          <label for="profile-gender">Género</label
+          ><select
+            id="profile-gender"
+            name="genero"
+            [(ngModel)]="perfil.genero"
+          >
+            @for (gender of generos; track gender) {
+              <option [value]="gender">{{ gender }}</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label for="profile-weight">Peso (kg)</label
+          ><input
+            id="profile-weight"
+            type="number"
+            name="peso"
+            [(ngModel)]="perfil.peso"
+            min="1"
+            max="500"
+            step=".1"
+            required
+          />
+        </div>
+        <div class="field">
+          <label for="profile-height">Altura (cm)</label
+          ><input
+            id="profile-height"
+            type="number"
+            name="altura"
+            [(ngModel)]="perfil.altura"
+            min="50"
+            max="250"
+            required
+          />
+        </div>
       </div>
-    </div>
+      <hr class="divider" />
+      <span class="eyebrow">Cómo quieres entrenar</span>
+      <div class="form-grid">
+        <div class="field full-width">
+          <label for="profile-objective">Objetivo principal</label
+          ><select
+            id="profile-objective"
+            name="objetivo"
+            [(ngModel)]="perfil.objetivo"
+          >
+            @for (objective of objetivos; track objective) {
+              <option [value]="objective">{{ objective }}</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label for="profile-days">Días por semana</label
+          ><select
+            id="profile-days"
+            name="diasDisponibles"
+            [(ngModel)]="perfil.diasDisponibles"
+          >
+            @for (day of opcionesDias; track day) {
+              <option [ngValue]="day">{{ day }} días</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label for="profile-level">Experiencia</label
+          ><select id="profile-level" name="nivel" [(ngModel)]="perfil.nivel">
+            @for (level of niveles; track level) {
+              <option [value]="level">{{ level }}</option>
+            }
+          </select>
+        </div>
+        <div class="field full-width">
+          <label for="profile-restrictions"
+            >Limitaciones que quieres comunicar al coach</label
+          ><textarea
+            id="profile-restrictions"
+            name="restriccionesMedicas"
+            [(ngModel)]="perfil.restriccionesMedicas"
+            rows="3"
+          ></textarea
+          ><small class="help"
+            >Evita incluir información personal que no sea necesaria para usar
+            esta herramienta.</small
+          >
+        </div>
+      </div>
+      @if (profileForm.invalid && profileForm.submitted) {
+        <p class="field-error" role="alert">
+          Revisa los campos obligatorios y los valores numéricos.
+        </p>
+      }
+      @if (guardadoExitoso) {
+        <div class="notice notice--success save-feedback" role="status">
+          {{ saveMessage }}
+        </div>
+      }
+      <div class="form-actions">
+        <button appButton="primary" type="submit">
+          Guardar perfil local<app-icon name="check" /></button
+        ><a appButton="secondary" routerLink="/coach-ia"
+          >Ir al coach<app-icon name="arrow"
+        /></a>
+      </div>
+    </form>
   </div>
-
-</div>
+</section>

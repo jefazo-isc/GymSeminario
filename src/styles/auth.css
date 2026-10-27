@@ -1,0 +1,126 @@
+.auth-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 64px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+.auth-aside {
+  padding: 40px 0;
+}
+.auth-aside h2 {
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  letter-spacing: -0.055em;
+}
+.auth-aside p {
+  max-width: 36ch;
+  color: var(--color-text-secondary);
+  line-height: 1.8;
+}
+.auth-aside img {
+  width: 100%;
+  aspect-ratio: 4/3;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  margin-top: 24px;
+}
+.auth-card {
+  min-width: 0;
+  padding: 32px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+.auth-card form {
+  display: grid;
+  gap: 20px;
+}
+.auth-card .field {
+  gap: 6px;
+}
+.auth-card .form-actions {
+  margin-top: 4px;
+}
+.auth-card .form-actions .ui-button {
+  width: 100%;
+}
+.auth-alternatives {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.auth-alternatives a,
+.auth-alternatives button {
+  padding-inline: 10px;
+}
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  margin: 24px 0;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+.auth-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.8125rem;
+  margin-top: 24px;
+}
+.auth-links a {
+  text-decoration: none;
+}
+.captcha-holder {
+  max-width: 100%;
+  overflow: auto;
+  padding: 4px 0;
+}
+.captcha-holder:empty {
+  min-height: 28px;
+}
+.auth-card .notice {
+  padding: 12px 14px;
+  font-size: 0.8125rem;
+  margin-bottom: 20px;
+}
+@media (max-width: 1023px) {
+  .auth-layout {
+    gap: 32px;
+  }
+  .auth-card {
+    padding: 24px;
+  }
+}
+@media (max-width: 767px) {
+  .auth-layout {
+    grid-template-columns: 1fr;
+    max-width: 500px;
+  }
+  .auth-aside {
+    display: none;
+  }
+  .auth-card {
+    padding: 20px;
+  }
+  .auth-alternatives {
+    gap: 8px;
+  }
+  .auth-alternatives .ui-button {
+    font-size: 0.8125rem;
+  }
+  .captcha-holder {
+    max-width: 100%;
+  }
+}

@@ -1,65 +1,75 @@
-.cuenta-container { min-height: 80vh; }
-
-.card-glass {
-  background: rgba(26, 26, 26, 0.85);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+.metric {
+  font-size: clamp(1.5rem, 3vw, 2.3rem);
 }
-
-.text-naranja  { color: #ff5722 !important; }
-.bg-naranja    { background-color: #ff5722 !important; color: white; }
-.btn-naranja   { background-color: #ff5722; border: none; color: white; transition: all .25s; }
-.btn-naranja:hover { background-color: #e64a19; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(255,87,34,.4); }
-
-.stat-icon {
-  width: 56px; height: 56px; border-radius: 14px;
-  display: flex; align-items: center; justify-content: center;
+meter {
+  width: 100%;
+  height: 14px;
+  accent-color: var(--color-sage);
+  margin: 20px 0;
 }
-.bg-success-soft  { background: rgba(40, 167, 69, .15); }
-.bg-warning-soft  { background: rgba(255, 193, 7, .15); }
-.bg-naranja-soft  { background: rgba(255, 87, 34, .15); }
-
-.dato-box {
-  background: rgba(0,0,0,.35);
-  padding: 12px; border-radius: 10px;
-  border: 1px solid rgba(255,255,255,.05);
+.detail-list {
+  margin: 24px 0;
 }
-.dato-label { display:block; font-size:.75rem; text-transform:uppercase; color:#888; letter-spacing:.5px; }
-.dato-valor { display:block; font-size:1.05rem; font-weight:bold; color:#fff; margin-top:4px; }
-
-.tab-btn { border-radius: 8px; font-size: .875rem; }
-
-/* Tabla */
-.tabla-gym { color: #ccc; }
-.tabla-gym thead th {
-  background: rgba(255, 87, 34, 0.1);
-  color: #ff5722; font-size: .8rem;
-  text-transform: uppercase; letter-spacing: .5px;
-  border-bottom: 1px solid rgba(255,87,34,.3);
-  padding: 12px 16px;
+.detail-list > div {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 20px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-border);
 }
-.tabla-gym tbody tr { border-bottom: 1px solid rgba(255,255,255,.05); transition: background .15s; }
-.tabla-gym tbody tr:hover { background: rgba(255,87,34,.05); }
-.tabla-gym td { padding: 12px 16px; vertical-align: middle; }
-
-/* Barra de progreso */
-.progress { background: rgba(255,255,255,.06); }
-.bg-naranja { background-color: #ff5722 !important; }
-
-/* Formulario */
-.input-gym {
-  background: rgba(0,0,0,.4);
-  border: 1px solid rgba(255,255,255,.1);
-  color: #fff !important;
-  border-radius: 8px;
-  transition: border-color .2s;
+dt {
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--color-text-secondary);
 }
-.input-gym:focus {
-  background: rgba(0,0,0,.5);
-  border-color: #ff5722;
-  box-shadow: 0 0 0 3px rgba(255,87,34,.2);
-  outline: none;
+dd {
+  margin: 0;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
 }
-.input-gym option { background: #1a1a1a; }
+.data-table {
+  min-width: 780px;
+}
+.data-table small {
+  display: block;
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  margin-top: 6px;
+}
+.data-table .ui-button {
+  min-height: 36px;
+  font-size: 0.75rem;
+  padding: 8px 10px;
+}
+.payment-form {
+  max-width: 800px;
+}
+.payment-form > .help {
+  margin-bottom: 28px;
+}
+.payment-detail {
+  padding: 28px;
+}
+.payment-detail h2 {
+  font: 500 1.5rem/1.2 var(--font-sans);
+  letter-spacing: -0.04em;
+  margin: 0;
+}
+.payment-detail .toolbar {
+  align-items: start;
+}
+.payment-detail > .metric {
+  margin: 28px 0 16px;
+}
+.payment-detail > .help {
+  margin: 20px 0;
+}
+@media (max-width: 767px) {
+  .detail-list > div {
+    grid-template-columns: 100px minmax(0, 1fr);
+    gap: 12px;
+  }
+  .payment-detail {
+    padding: 20px;
+  }
+}

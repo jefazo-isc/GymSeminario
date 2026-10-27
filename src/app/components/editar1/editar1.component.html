@@ -1,59 +1,238 @@
-<body>
-  <div class="main-container">
-    <div class="titulo-container">
-      <h1 class="text-center">Información de Agendas</h1>
-      <p class="subtitulo">Consulta y administra tus citas, eventos y actividades programadas</p>
-    </div>
-    <div *ngIf="registros.length === 0" class="mensaje-vacio">
-      <p id="mensaje">No hay asistencias registradas aún.</p>
-    </div>
-
-    <div *ngFor="let item of registros">
-      <div class="registro-preview" *ngIf="!item.editando">
-        <p><strong>Entrenamiento:</strong> {{ item.entrenamiento }}</p>
-        <p><strong>Fecha:</strong> {{ item.fecha }}</p>
-        <p><strong>Turno:</strong> {{ item.turno }}</p>
-        <p><strong>Usuario:</strong> {{ item.nombre }}</p>
-        <button  (click)="item.editando = true">Editar</button>
-<button id="eliminar" (click)="borrar(item)">Eliminar</button>
-      </div>
-
-      <form *ngIf="item.editando" (ngSubmit)="actualizar(item)" #form="ngForm" id="todo">
-        <h1>Editar entrenamiento</h1>
-
-        <div>
-          <label for="entrenamiento">Entrenamiento</label>
-          <select [(ngModel)]="item.entrenamiento" name="entrenamiento-{{item.id}}" required>
-            <option value="">Selecciona entrenamiento</option>
-            <option *ngFor="let e of entrenamientos" [value]="e">{{ e }}</option>
-          </select>
-        </div>
-
-        <div>
-          <label for="fecha">Fecha</label>
-          <input type="date" [(ngModel)]="item.fecha" name="fecha-{{item.id}}" required />
-        </div>
-
-        <div>
-          <label for="turno">Turno</label>
-          <select [(ngModel)]="item.turno" name="turno-{{item.id}}" required>
-            <option value="">Selecciona turno</option>
-            <option value="Mañana">Mañana</option>
-            <option value="Tarde">Tarde</option>
-            <option value="Noche">Noche</option>
-          </select>
-        </div>
-
-        <div>
-          <label for="usuario">Usuario</label>
-          <input type="text" [(ngModel)]="item.nombre" name="usuario-{{item.nombre}}" required disabled />
-        </div>
-
-        <button type="submit">Guardar</button>
-        <button type="button" (click)="item.editando = false">Cancelar</button>
-      </form>
-
-      <hr />
-    </div>
+<section class="feature-page stack">
+  <div class="notice notice--warning">
+    <app-icon name="grid" />
+    <p>
+      <strong>Registros compartidos.</strong> Las ediciones y eliminaciones
+      modifican Firestore. Los permisos efectivos dependen de las reglas del
+      proyecto, no de la visibilidad del menú.
+    </p>
   </div>
-</body>
+  <div class="filters">
+    <div class="field">
+      <label for="admin-query">Buscar socio o registro</label
+      ><input
+        id="admin-query"
+        type="search"
+        class="control"
+        [(ngModel)]="query"
+        placeholder="Nombre, actividad o fecha"
+      />
+    </div>
+    <div class="field">
+      <label for="admin-filter">Actividad</label
+      ><select id="admin-filter" [(ngModel)]="selectedClass">
+        <option value="">Todas las actividades</option>
+        @for (item of entrenamientos; track item) {
+          <option [value]="item">{{ item }}</option>
+        }
+      </select>
+    </div>
+    <button
+      appButton="ghost"
+      type="button"
+      (click)="query = ''; selectedClass = ''"
+      [disabled]="!query && !selectedClass"
+    >
+      Restablecer
+    </button>
+  </div>
+  @if (feedback) {
+    <p class="notice" role="status">{{ feedback }}</p>
+  }
+  @if (loading) {
+    <div class="surface" role="status">
+      <p>Cargando registros de Firestore…</p>
+      <div class="loading-line"></div>
+    </div>
+  } @else if (error) {
+    <div class="empty-state" role="alert">
+      <app-icon name="grid" />
+      <h2>No pudimos consultar los registros.</h2>
+      <p>{{ error }}</p>
+      <button appButton="primary" type="button" (click)="load()">
+        Reintentar consulta
+      </button>
+    </div>
+  } @else {
+    <p class="help" aria-live="polite">
+      {{ filtered.length }} registros · Ordenados por fecha, del más reciente al
+      más antiguo.
+    </p>
+    @if (filtered.length) {
+      <div
+        class="table-scroll"
+        role="region"
+        aria-label="Registros de entrenamientos"
+        tabindex="0"
+      >
+        <table class="data-table">
+          <caption>
+            Datos de agenda publicados en Firestore
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Actividad</th>
+              <th scope="col">Socio</th>
+              <th scope="col">Fecha</th>
+              <th scope="col">Turno</th>
+              <th scope="col">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of filtered; track item.id) {
+              <tr>
+                <td>
+                  <strong>{{ item.entrenamiento }}</strong>
+                </td>
+                <td>{{ item.nombre || "Sin nombre" }}</td>
+                <td>{{ item.fecha }}</td>
+                <td>{{ item.turno }}</td>
+                <td>
+                  <div class="actions">
+                    <button
+                      appButton="secondary"
+                      type="button"
+                      [disabled]="!!busyId"
+                      [attr.aria-label]="
+                        'Editar registro de ' +
+                        (item.nombre || 'socio') +
+                        ' del ' +
+                        item.fecha
+                      "
+                      (click)="openEditor(item, editRecord)"
+                    >
+                      Editar</button
+                    ><button
+                      appButton="ghost"
+                      class="delete-action"
+                      type="button"
+                      [disabled]="!!busyId"
+                      [attr.aria-label]="
+                        'Eliminar registro de ' +
+                        (item.nombre || 'socio') +
+                        ' del ' +
+                        item.fecha
+                      "
+                      (click)="borrar(item)"
+                    >
+                      {{ busyId === item.id ? "Procesando…" : "Eliminar" }}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <div class="empty-state">
+        <app-icon name="calendar" />
+        <h2>
+          {{
+            registros.length
+              ? "Sin coincidencias."
+              : "Todavía no hay registros."
+          }}
+        </h2>
+        <p>
+          {{
+            registros.length
+              ? "Prueba otro nombre o actividad."
+              : "La consulta se completó y no devolvió registros."
+          }}
+        </p>
+        @if (query || selectedClass) {
+          <button
+            appButton="secondary"
+            type="button"
+            (click)="query = ''; selectedClass = ''"
+          >
+            Quitar filtros
+          </button>
+        }
+      </div>
+    }
+  }
+</section>
+<ng-template #editRecord>
+  @if (editing; as item) {
+    <form
+      class="admin-editor"
+      #editForm="ngForm"
+      (ngSubmit)="actualizar(item, editForm)"
+    >
+      <header class="toolbar">
+        <div>
+          <span class="eyebrow">Editar registro</span>
+          <h2 id="edit-record-title">Revisa los datos de la sesión.</h2>
+        </div>
+        <button
+          class="ui-icon-button"
+          type="button"
+          aria-label="Cerrar edición"
+          [disabled]="!!busyId"
+          (click)="closeEditor()"
+        >
+          <app-icon name="close" />
+        </button>
+      </header>
+      <p class="help">Socio: {{ item.nombre || "Sin nombre" }}</p>
+      <div class="form-grid">
+        <div class="field full-width">
+          <label for="admin-activity">Actividad</label
+          ><select
+            id="admin-activity"
+            name="activity"
+            [(ngModel)]="item.entrenamiento"
+            required
+          >
+            @for (activity of entrenamientos; track activity) {
+              <option [value]="activity">{{ activity }}</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label for="admin-date">Fecha</label
+          ><input
+            id="admin-date"
+            name="date"
+            type="date"
+            [(ngModel)]="item.fecha"
+            required
+          />
+        </div>
+        <div class="field">
+          <label for="admin-time">Turno</label
+          ><select
+            id="admin-time"
+            name="time"
+            [(ngModel)]="item.turno"
+            required
+          >
+            <option>Mañana</option>
+            <option>Tarde</option>
+            <option>Noche</option>
+          </select>
+        </div>
+      </div>
+      @if (editForm.invalid && editForm.submitted) {
+        <p class="field-error" role="alert">Completa todos los campos.</p>
+      }
+      @if (feedback) {
+        <p class="field-error" role="status">{{ feedback }}</p>
+      }
+      <div class="form-actions">
+        <button appButton="primary" type="submit" [disabled]="!!busyId">
+          {{ busyId ? "Guardando…" : "Guardar en Firestore" }}</button
+        ><button
+          appButton="secondary"
+          type="button"
+          [disabled]="!!busyId"
+          (click)="closeEditor()"
+        >
+          Cancelar edición
+        </button>
+      </div>
+    </form>
+  }
+</ng-template>

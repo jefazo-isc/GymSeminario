@@ -1,0 +1,159 @@
+<div class="preferences">
+  <header class="preferences-header">
+    <div>
+      <span class="ui-eyebrow">A tu manera</span>
+      <h2 id="appearance-title">Tu espacio, tu estilo.</h2>
+    </div>
+    <button
+      class="ui-icon-button settings-close"
+      type="button"
+      aria-label="Cerrar preferencias"
+      (click)="dialog.close()"
+    >
+      <app-icon name="close" />
+    </button>
+  </header>
+  <p class="preferences-intro">Elige cómo quieres ver y recorrer GROM.</p>
+
+  <fieldset class="theme-fieldset">
+    <legend>Apariencia</legend>
+    <div class="theme-options">
+      @for (option of themes; track option.value) {
+        <label
+          class="theme-option"
+          [class.is-selected]="theme.preference() === option.value"
+        >
+          <input
+            type="radio"
+            name="theme"
+            [value]="option.value"
+            [checked]="theme.preference() === option.value"
+            (change)="theme.setPreference(option.value)"
+          />
+          <span
+            class="theme-preview"
+            [class]="'theme-preview preview-' + option.value"
+            aria-hidden="true"
+            ><span class="preview-nav"></span
+            ><span class="preview-content"><i></i><i></i><i></i></span
+          ></span>
+          <span class="theme-label"
+            ><app-icon [name]="option.icon" />{{ option.label
+            }}<span class="selection-check" aria-hidden="true"
+              ><app-icon name="check" /></span
+          ></span>
+        </label>
+      }
+    </div>
+    <p class="field-note">
+      Sistema sigue la apariencia de tu dispositivo. Tu elección se conserva al
+      volver.
+    </p>
+  </fieldset>
+
+  <section class="accessibility-settings" aria-labelledby="accessibility-title">
+    <h3 id="accessibility-title">
+      <app-icon name="accessibility" />Lectura y comodidad
+    </h3>
+    <div class="preference-row">
+      <div>
+        <span class="preference-label">Tamaño del texto</span
+        ><small>Más espacio para leer con calma.</small>
+      </div>
+      <div class="text-size-controls">
+        <button
+          class="ui-icon-button"
+          type="button"
+          aria-label="Reducir tamaño del texto"
+          [disabled]="accessibility.scale() <= 1"
+          (click)="accessibility.changeScale(-0.125)"
+        >
+          <app-icon name="minus" />
+        </button>
+        <output aria-label="Escala de texto"
+          >{{ accessibility.scale() * 100 | number: "1.0-0" }}%</output
+        >
+        <button
+          class="ui-icon-button"
+          type="button"
+          aria-label="Aumentar tamaño del texto"
+          [disabled]="accessibility.scale() >= 1.25"
+          (click)="accessibility.changeScale(0.125)"
+        >
+          <app-icon name="plus" />
+        </button>
+      </div>
+    </div>
+    <label class="preference-row switch-row"
+      ><span
+        ><span class="preference-label">Mayor contraste</span
+        ><small>Textos y separadores más definidos.</small></span
+      ><input
+        type="checkbox"
+        role="switch"
+        [checked]="accessibility.moreContrast()"
+        (change)="accessibility.toggleContrast()" /><span
+        class="switch-visual"
+        aria-hidden="true"
+      ></span
+    ></label>
+    <label class="preference-row switch-row"
+      ><span
+        ><span class="preference-label">Reducir movimiento</span
+        ><small>Una experiencia visual más tranquila.</small></span
+      ><input
+        type="checkbox"
+        role="switch"
+        [checked]="accessibility.reducedMotion()"
+        (change)="accessibility.toggleMotion()" /><span
+        class="switch-visual"
+        aria-hidden="true"
+      ></span
+    ></label>
+    <div class="reading-controls">
+      <span class="preference-label">Escuchar información</span>
+      <p class="field-note" aria-live="polite">
+        {{ accessibility.readingMessage() }}
+      </p>
+      <div class="reading-buttons">
+        @if (accessibility.reading() !== "reading") {
+          <button
+            appButton="secondary"
+            type="button"
+            [disabled]="!accessibility.speechAvailable"
+            (click)="accessibility.read()"
+          >
+            <app-icon name="play" />{{
+              accessibility.reading() === "paused"
+                ? "Reanudar"
+                : "Leer información"
+            }}
+          </button>
+        } @else {
+          <button
+            appButton="secondary"
+            type="button"
+            (click)="accessibility.pause()"
+          >
+            <app-icon name="pause" />Pausar
+          </button>
+        }
+        <button
+          class="ui-icon-button"
+          type="button"
+          aria-label="Detener lectura"
+          [disabled]="accessibility.reading() === 'stopped'"
+          (click)="accessibility.stop()"
+        >
+          <app-icon name="stop" />
+        </button>
+      </div>
+    </div>
+  </section>
+  <footer class="preferences-footer">
+    <span>Diseñado para tu comodidad.</span
+    ><button type="button" (click)="accessibility.reset()">
+      Restablecer accesibilidad
+    </button>
+  </footer>
+</div>

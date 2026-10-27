@@ -1,73 +1,132 @@
-<body>
-  <div class="registro-container">
-    <h2>Cambiar clave</h2>
-
-    <div class="social-networks">
-      <i class='bx bxl-google'></i>
-      <i class='bx bxl-twitter icon'></i>
-      <i class='bx bxl-instagram icon'></i>
-      <i class='bx bxl-tiktok icon'></i>
-    </div>
-
-    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
-
-      <!-- Correo -->
-      <div class="container-input">
-        <i class='bx bx-envelope'></i>
-        <input id="email" type="email" placeholder="Correo electrónico" formControlName="email"
-          [class.invalid]="form.get('email')?.invalid && form.get('email')?.touched" required />
+<section class="feature-page auth-layout">
+  <aside class="auth-aside">
+    <span class="eyebrow">Tu acceso</span>
+    <h2>Una contraseña<br />que solo tú conozcas.</h2>
+    <p>
+      Este formulario verifica tu correo y contraseña actual mediante Firebase.
+      Si utilizas Google o teléfono, continúa con ese proveedor de acceso.
+    </p>
+  </aside>
+  <div class="auth-card">
+    @if (success) {
+      <div class="notice notice--success" role="status">
+        Tu contraseña se actualizó en Firebase.
       </div>
-      <div class="error" *ngIf="form.get('email')?.invalid && form.get('email')?.touched">
-        <small *ngIf="form.get('email')?.errors?.['required']">El correo es obligatorio.</small>
-        <small *ngIf="form.get('email')?.errors?.['email']">El correo no es válido.</small>
+      <a appButton="primary" routerLink="/auth/sign-in">Volver a ingresar</a>
+    } @else {
+      @if (message) {
+        <div class="notice notice--error" role="alert">{{ message }}</div>
+      }
+      <form
+        [formGroup]="form"
+        (ngSubmit)="submit()"
+        novalidate
+        [attr.aria-busy]="busy"
+      >
+        <div class="field">
+          <label for="auth-email">Correo electrónico</label
+          ><input
+            id="auth-email"
+            name="email"
+            formControlName="email"
+            type="email"
+            autocomplete="email"
+            [attr.aria-invalid]="invalid('email')"
+            aria-describedby="email-error"
+            placeholder="tu@correo.com"
+          /><span class="field-error" id="email-error">
+            @if (invalid("email")) {
+              Escribe un correo electrónico válido.
+            }
+          </span>
+        </div>
+        <div class="field">
+          <label for="auth-password">Contraseña actual</label>
+          <div class="password-control">
+            <input
+              id="auth-password"
+              appPassword
+              #password="appPassword"
+              formControlName="password"
+              autocomplete="current-password"
+              [attr.aria-invalid]="invalid('password')"
+              aria-describedby="password-hint password-error"
+            /><button
+              type="button"
+              (click)="password.toggle()"
+              [attr.aria-pressed]="password.visible()"
+              [attr.aria-label]="password.label() + ' contraseña actual'"
+            >
+              {{ password.label() }}
+            </button>
+          </div>
+          <small class="help" id="password-hint">Mínimo 6 caracteres.</small
+          ><span class="field-error" id="password-error">
+            @if (invalid("password")) {
+              Revisa los requisitos de este campo.
+            }
+          </span>
+        </div>
+        <div class="field">
+          <label for="new-password">Nueva contraseña</label>
+          <div class="password-control">
+            <input
+              id="new-password"
+              appPassword
+              #newPass="appPassword"
+              [formControl]="newPasswordControl"
+              autocomplete="new-password"
+              aria-describedby="new-hint"
+            /><button
+              type="button"
+              (click)="newPass.toggle()"
+              [attr.aria-pressed]="newPass.visible()"
+              [attr.aria-label]="newPass.label() + ' nueva contraseña'"
+            >
+              {{ newPass.label() }}
+            </button>
+          </div>
+          <small id="new-hint" class="help">Mínimo 6 caracteres.</small>
+          @if (newPasswordControl.invalid && newPasswordControl.touched) {
+            <span class="field-error">Revisa la nueva contraseña.</span>
+          }
+        </div>
+        <div class="field">
+          <label for="confirm-password">Confirmar nueva contraseña</label>
+          <div class="password-control">
+            <input
+              id="confirm-password"
+              appPassword
+              #confirmPass="appPassword"
+              [formControl]="confirmPasswordControl"
+              autocomplete="new-password"
+            /><button
+              type="button"
+              (click)="confirmPass.toggle()"
+              [attr.aria-pressed]="confirmPass.visible()"
+              [attr.aria-label]="confirmPass.label() + ' confirmación'"
+            >
+              {{ confirmPass.label() }}
+            </button>
+          </div>
+          @if (
+            confirmPasswordControl.touched &&
+            confirmPasswordControl.value !== newPasswordControl.value
+          ) {
+            <span class="field-error"
+              >Las nuevas contraseñas no coinciden.</span
+            >
+          }
+        </div>
+        <div class="form-actions">
+          <button appButton="primary" type="submit" [disabled]="busy">
+            {{ busy ? "Actualizando…" : "Actualizar contraseña" }}
+          </button>
+        </div>
+      </form>
+      <div class="auth-links">
+        <a routerLink="/auth/sign-in">Volver al acceso</a>
       </div>
-
-      <!-- Contraseña actual -->
-      <div class="container-input">
-        <i class='bx bx-lock'></i>
-        <input id="password" type="password" placeholder="Contraseña actual" formControlName="password" minlength="6"
-          required [class.invalid]="form.get('password')?.invalid && form.get('password')?.touched" />
-      </div>
-      <div class="error" *ngIf="form.get('password')?.invalid && form.get('password')?.touched">
-        <small *ngIf="form.get('password')?.errors?.['required']">La contraseña es obligatoria.</small>
-        <small *ngIf="form.get('password')?.errors?.['minlength']">Mínimo 6 caracteres.</small>
-      </div>
-
-      <!-- Nueva contraseña -->
-      <div class="container-input">
-        <i class='bx bx-lock'></i>
-        <input id="newPassword" type="password" placeholder="Nueva contraseña" [formControl]="newPasswordControl"
-          minlength="6" required [class.invalid]="newPasswordControl.invalid && newPasswordControl.touched" />
-      </div>
-      <div class="error" *ngIf="newPasswordControl.invalid && newPasswordControl.touched">
-        <small *ngIf="newPasswordControl.errors?.['required']">La nueva contraseña es obligatoria.</small>
-        <small *ngIf="newPasswordControl.errors?.['minlength']">Mínimo 6 caracteres.</small>
-      </div>
-
-      <!-- Confirmar nueva contraseña -->
-      <div class="container-input">
-        <i class='bx bx-lock'></i>
-        <input id="confirmPassword" type="password" placeholder="Confirmar nueva contraseña"
-          [formControl]="confirmPasswordControl" required [class.invalid]="
-            confirmPasswordControl.touched && confirmPasswordControl.value !== newPasswordControl.value
-          " />
-      </div>
-      <div class="error"
-        *ngIf="confirmPasswordControl.touched && confirmPasswordControl.value !== newPasswordControl.value">
-        <small>Las contraseñas no coinciden.</small>
-      </div>
-
-      <button type="submit" [disabled]="
-          form.invalid || newPasswordControl.invalid || confirmPasswordControl.value !== newPasswordControl.value
-        " class="button">
-        Cambiar contraseña
-      </button>
-
-      <div class="links" style="margin-top: 10px;">
-        <a [routerLink]="['/auth/sign-in']">¿Ya tienes cuenta? Inicia sesión</a>
-        <a [routerLink]="['/change']">Cambiar contraseña</a>
-      </div>
-
-    </form>
+    }
   </div>
-</body>
+</section>

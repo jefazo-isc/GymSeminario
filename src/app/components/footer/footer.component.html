@@ -1,57 +1,76 @@
-<div style="height: 4px; background-color: #ff7f00; width: 100%;"></div>
-<footer class="custom-footer text-white pt-5 pb-4">
-  <div class="container text-md-left">
-    <div class="row text-md-left">
-      <!-- Sección 1 -->
-      <div class="col-md-3 col-lg-3 col-xl-3 mx-auto mt-3">
-        <h5 class="text-uppercase mb-4 font-weight-bold" style="color: #ff7f00;">{{ 'grom fitness center' | capitalizar}}</h5>
-        <p>Tu centro de entrenamiento de confianza. Transformación física y bienestar. 2026.</p>
+<footer class="site-footer">
+  <div class="ui-container">
+    <section
+      class="footer-invitation"
+      aria-labelledby="footer-invitation-title"
+    >
+      <div>
+        <span class="ui-eyebrow">Cada día, un poco más cerca</span>
+        <h2 id="footer-invitation-title">
+          Tu siguiente paso<br />empieza aquí<span>.</span>
+        </h2>
       </div>
-
-      <!-- Sección 2 -->
-      <div class="col-md-2 col-lg-2 col-xl-2 mx-auto mt-3">
-        <h5 class="text-uppercase mb-4 font-weight-bold" style="color: #ff7f00;">Explora</h5>
-        <p><a href="#" class="text-white text-decoration-none" style="color: #ff7f00;">Inicio</a></p>
-        <p><a href="#" class="text-white text-decoration-none" style="color: #ff7f00;">Servicios</a></p>
-        <p><a href="#" class="text-white text-decoration-none" style="color: #ff7f00;">Planes de Membresía</a></p>
-        <p><a href="#" class="text-white text-decoration-none" style="color: #ff7f00;">Contacto</a></p>
+      <a appButton="primary" routerLink="/membresias"
+        >Encuentra tu plan<app-icon name="external"
+      /></a>
+    </section>
+    <div class="footer-grid">
+      <div class="footer-identity">
+        <app-brand />
+        <p>Encuentra tu ritmo.<br />Nosotros ponemos el espacio.</p>
+        <span class="location-note"
+          ><app-icon name="pin" />Jesús María, Aguascalientes</span
+        >
       </div>
-
-      <!-- Sección 3 -->
-      <div class="col-md-3 col-lg-2 col-xl-2 mx-auto mt-3">
-        <h5 class="text-uppercase mb-4 font-weight-bold" style="color: #ff7f00;">Ayuda</h5>
-        <p><a href="#" class="text-white text-decoration-none" style="color: #ff7f00;">Soporte</a></p>
-        <p><a href="#" class="text-white text-decoration-none" style="color: #ff7f00;">Términos</a></p>
-        <p><a href="#" class="text-white text-decoration-none" style="color: #ff7f00;">Política de Privacidad</a></p>
-      </div>
-
-      <!-- Sección 4 -->
-      <div class="col-md-4 col-lg-3 col-xl-3 mx-auto mt-3">
-        <h5 class="text-uppercase mb-4 font-weight-bold" style="color: #ff7f00;">Contacto</h5>
-        <p><i class="fas fa-home mr-3" style="color: #ff7f00;"></i> San Mateo#2, Col Alcazar, Mcpio, 20908 Jesús María, Ags., México</p>
-        <p><i class="fas fa-phone mr-3" style="color: #ff7f00;"></i> +52 449 733 9693</p>
-        <!-- Interpolacion-->
-        <p><i class="fas fa-envelope mr-3" style="color: #ff7f00;"></i> {{ email }}</p>
-      </div>
+      <nav aria-label="Conoce el gimnasio">
+        <h3>Conoce GROM</h3>
+        <a routerLink="/nosotros">Nuestra historia</a
+        ><a routerLink="/servicio">Servicios</a
+        ><a routerLink="/ubicacion">Ubicación y horarios</a
+        ><a routerLink="/responsables">Equipo del proyecto</a>
+      </nav>
+      <nav aria-label="Explora entrenamiento">
+        <h3>Encuentra tu ritmo</h3>
+        <a routerLink="/membresias">Membresías</a
+        ><a routerLink="/ejercicios">Ejercicios</a
+        ><a routerLink="/coach-ia">Coach virtual IA</a
+        ><a routerLink="/productos">Productos</a>
+      </nav>
+      <section class="footer-contact" aria-labelledby="contact-title">
+        <h3 id="contact-title">Estamos cerca</h3>
+        <p>San Mateo #2, Col. Alcázar.<br />Jesús María, Ags., México.</p>
+        <a href="tel:+524497339693">449 733 9693<app-icon name="external" /></a
+        ><a [href]="'mailto:' + email">Escríbenos<app-icon name="external" /></a
+        ><span class="hours">Lun–Vie · 06:00–23:00<br />Sáb · 06:00–14:00</span>
+      </section>
     </div>
-
-    <hr class="mb-4" style="border-color: #ff7f00;">
-
-    <!-- Redes Sociales -->
-    <div class="row align-items-center">
-      <div class="col-md-7 col-lg-8">
-        <p>© 2026 <strong>{{ 'grom fitness center' | uppercase }}</strong> | Todos los derechos reservados.</p>
-        <p><strong>{{ 'proyecto escolar uaa | isc' | uppercase }} </strong> </p>
-      </div>
-
-      <div class="col-md-5 col-lg-4">
-        <div class="text-center text-md-right">
-          <a class="btn btn-outline-light btn-floating m-1" href="https://www.facebook.com/gromfitnesscenter/?locale=es_LA" target="_blank" style="border-color: #ff7f00; color: #ff7f00;"><i class="fab fa-facebook-f"></i></a>
-          <a class="btn btn-outline-light btn-floating m-1" href="https://www.instagram.com/gromfitnesscenter/?hl=es" target="_blank" style="border-color: #ff7f00; color: #ff7f00;"><i class="fab fa-instagram"></i></a>
-          <a class="btn btn-outline-light btn-floating m-1" href="https://www.tiktok.com/@grom_fitnesscenter" target="_blank" style="border-color: #ff7f00; color: #ff7f00;"><i class="fab fa-tiktok"></i></a>
-        </div>
-      </div>
+    <div class="footer-bottom">
+      <span
+        >© {{ date }} GROM Fitness Center<span class="academic-note"
+          >Proyecto académico · Ingeniería en Sistemas</span
+        ></span
+      >
+      <nav aria-label="Redes sociales">
+        <a
+          href="https://www.instagram.com/gromfitnesscenter/"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Instagram<app-icon name="external" /></a
+        ><a
+          href="https://www.facebook.com/gromfitnesscenter/"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Facebook<app-icon name="external" /></a
+        ><a
+          href="https://www.tiktok.com/@grom_fitnesscenter"
+          target="_blank"
+          rel="noopener noreferrer"
+          >TikTok<app-icon name="external"
+        /></a>
+      </nav>
+      <button type="button" (click)="openPreferences()">
+        <app-icon name="accessibility" />Tu experiencia
+      </button>
     </div>
   </div>
 </footer>
-<div style="height: 4px; background-color: #ff7f00; width: 100%;"></div>

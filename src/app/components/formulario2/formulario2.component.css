@@ -1,88 +1,53 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700&display=swap');
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Montserrat', sans-serif;
-}
-
-body {
-  background-color: #000;
-  display: flex;
-  justify-content: center;
+.booking-layout,
+.registration-result {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 32px;
   align-items: start;
-  padding-top: 60px;
-  height: 100vh;
 }
-
-.registro-container {
-  background-color: white;
-  padding: 40px 30px;
-  width: 400px;
-  border-radius: 15px;
-  box-shadow: 0 0 12px rgba(0, 0, 0, 0.15);
+.booking-summary {
+  position: sticky;
+  top: 110px;
+}
+.booking-summary h2 {
+  font-size: 1.5rem;
+}
+.booking-summary dl {
+  margin: 24px 0;
+}
+.booking-summary dl > div {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--color-border);
 }
-
-.registro-container h2 {
-  text-align: center;
-  margin-bottom: 10px;
-  color: #333;
+dt {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--color-text-secondary);
 }
-
-.container-input {
-  display: flex;
-  align-items: center;
-  background-color: #eeeeee;
-  padding: 10px 15px;
-  border-radius: 6px;
-  margin-bottom: 5px;
+dd {
+  margin: 0;
+  text-align: right;
 }
-
-.container-input i {
-  font-size: 18px;
-  margin-right: 8px;
-  color: #666;
-}
-
-.container-input input,
-.container-input select {
-  border: none;
-  background: transparent;
-  outline: none;
+.booking-summary > .ui-button {
   width: 100%;
-  font-size: 14px;
-  padding: 5px 0;
-  color: #333;
+  margin-top: 20px;
 }
-
-.button {
-  width: 100%;
-  padding: 10px;
-  background-color: #ff6f00;
-  border: none;
-  border-radius: 5px;
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.3s;
+.registration-result .status {
+  margin-bottom: 20px;
 }
-
-.button:hover {
-  background-color: #e65c00;
+.registration-result code {
+  overflow-wrap: anywhere;
 }
-
-.error {
-  color: red;
-  font-size: 12px;
-  margin-top: -5px;
-  margin-bottom: 5px;
-  padding-left: 4px;
-}
-
-.invalid {
-  border-bottom: 2px solid red;
+@media (max-width: 767px) {
+  .booking-layout,
+  .registration-result {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .booking-summary {
+    position: static;
+  }
 }

@@ -1,108 +1,113 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
-import { AuthService } from '../../auth/data-access/auth.service';
-import { PerfilSocioService } from '../../services/perfil-socio.service';
-import { PerfilSocio } from '../../models/rutina.model';
-
+import { Component, inject, OnInit } from "@angular/core";
+import { CommonModule } from "@angular/common";
+import { FormsModule, NgForm } from "@angular/forms";
+import { RouterLink } from "@angular/router";
+import { Dialog, DialogModule } from "@angular/cdk/dialog";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { AuthService } from "../../auth/data-access/auth.service";
+import { PerfilSocioService } from "../../services/perfil-socio.service";
+import { PerfilSocio } from "../../models/rutina.model";
+import { ThemeService } from "../../core/theme/theme.service";
+import { AppearancePanelComponent } from "../../shared/ui/appearance-panel/appearance-panel.component";
+import { ButtonDirective } from "../../shared/ui/button.directive";
+import { IconComponent } from "../../shared/ui/icon/icon.component";
 @Component({
-  selector: 'app-micuenta',
+  selector: "app-micuenta",
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
-  templateUrl: './micuenta.component.html',
-  styleUrl: './micuenta.component.css'
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    DialogModule,
+    ButtonDirective,
+    IconComponent,
+  ],
+  templateUrl: "./micuenta.component.html",
+  styleUrl: "./micuenta.component.css",
 })
 export class MicuentaComponent implements OnInit {
+  private auth = inject(AuthService);
+  private profileService = inject(PerfilSocioService);
+  private dialog = inject(Dialog);
+  readonly theme = inject(ThemeService);
   nombre: string | null = null;
   email: string | null = null;
   role: string | null = null;
-
-  perfil: PerfilSocio = {
-    nombre: '',
-    edad: 24,
-    peso: 75,
-    altura: 175,
-    genero: 'Masculino',
-    objetivo: 'Ganancia muscular',
-    diasDisponibles: 4,
-    nivel: 'Intermedio',
-    restriccionesMedicas: 'Ninguna'
-  };
-
+  authReady = false;
+  authError = "";
+  perfil: PerfilSocio = { ...this.profileService.getPerfilActual() };
   guardadoExitoso = false;
-
+  saveMessage = "";
   objetivos = [
-    'Ganancia muscular',
-    'Pérdida de grasa / Definición',
-    'Fuerza máxima',
-    'Acondicionamiento físico',
-    'Tonificación general'
+    "Ganancia muscular",
+    "Pérdida de grasa / Definición",
+    "Fuerza máxima",
+    "Acondicionamiento físico",
+    "Tonificación general",
   ];
-
-  niveles = ['Principiante', 'Intermedio', 'Avanzado'];
+  niveles = ["Principiante", "Intermedio", "Avanzado"];
   opcionesDias = [2, 3, 4, 5, 6];
-  generos = ['Masculino', 'Femenino', 'Otro'];
-
-  constructor(
-    private authService: AuthService,
-    private perfilService: PerfilSocioService
-  ) {}
-
-  ngOnInit(): void {
-    // Cargar datos de autenticación
-    this.authService.userName$.subscribe((nombref) => {
-      this.nombre = nombref;
-      if (nombref && (!this.perfil.nombre || this.perfil.nombre === 'Socio')) {
-        this.perfil.nombre = nombref;
-      }
+  generos = ["Masculino", "Femenino", "Otro"];
+  constructor() {
+    this.auth.userName$.pipe(takeUntilDestroyed()).subscribe((name) => {
+      this.nombre = name;
+      if (name && (!this.perfil.nombre || this.perfil.nombre === "Socio"))
+        this.perfil.nombre = name;
     });
-
-    this.authService.userRole$.subscribe((rol) => {
-      this.role = rol;
-    });
-
-    this.authService.getCurrentUser().then((user) => {
-      if (user) {
-        this.email = user.email || null;
-        if (!this.nombre) {
-          this.nombre = user.displayName || user.email?.split('@')[0] || 'Socio';
-          this.perfil.nombre = this.nombre;
-        }
-      }
-    });
-
-    // Cargar perfil biométrico guardado
-    this.perfil = { ...this.perfilService.getPerfilActual() };
+    this.auth.userRole$
+      .pipe(takeUntilDestroyed())
+      .subscribe((role) => (this.role = role));
   }
-
-  get imc(): number {
+  ngOnInit() {
+    this.auth
+      .getCurrentUser()
+      .then((user) => {
+        this.email = user?.email || null;
+        this.nombre = user?.displayName || this.nombre;
+        this.authReady = true;
+      })
+      .catch(() => {
+        this.authReady = true;
+        this.authError = "No se pudo consultar la sesión de Firebase.";
+      });
+  }
+  get imc() {
     if (!this.perfil.peso || !this.perfil.altura) return 0;
-    const metros = this.perfil.altura / 100;
-    return parseFloat((this.perfil.peso / (metros * metros)).toFixed(1));
+    return Number(
+      (this.perfil.peso / (this.perfil.altura / 100) ** 2).toFixed(1),
+    );
   }
-
-  get estadoImc(): string {
-    const val = this.imc;
-    if (val === 0) return 'Sin calcular';
-    if (val < 18.5) return 'Bajo peso';
-    if (val < 25) return 'Peso normal';
-    if (val < 30) return 'Sobrepeso';
-    return 'Obesidad';
-  }
-
-  guardarDatos(): void {
-    if (!this.perfil.nombre.trim() && this.nombre) {
-      this.perfil.nombre = this.nombre;
+  guardarDatos(form?: NgForm) {
+    if (form?.invalid) {
+      form.form.markAllAsTouched();
+      return;
     }
-    this.perfilService.guardarPerfil(this.perfil);
+    this.profileService.guardarPerfil({ ...this.perfil });
     this.guardadoExitoso = true;
-    setTimeout(() => {
-      this.guardadoExitoso = false;
-    }, 3500);
+    try {
+      const saved = localStorage.getItem("gym_perfil_socio");
+      this.saveMessage =
+        saved &&
+        JSON.stringify(JSON.parse(saved)) === JSON.stringify(this.perfil)
+          ? "Perfil guardado en este navegador."
+          : "El perfil está disponible durante esta visita; no se pudo comprobar su persistencia.";
+    } catch {
+      this.saveMessage =
+        "Perfil actualizado durante esta visita. El almacenamiento local no está disponible.";
+    }
   }
-
-  cerrarSesion(): void {
-    this.authService.cerrarSesion();
+  cerrarSesion() {
+    void this.auth.cerrarSesion();
+  }
+  openPreferences() {
+    this.dialog.open(AppearancePanelComponent, {
+      width: "440px",
+      maxWidth: "calc(100vw - 24px)",
+      panelClass: "grom-dialog",
+      backdropClass: "grom-backdrop",
+      ariaLabelledBy: "appearance-title",
+      autoFocus: ".settings-close",
+      restoreFocus: true,
+    });
   }
 }

@@ -1,178 +1,165 @@
-import { Component } from '@angular/core';
-import { Firestore, collection, addDoc } from '@angular/fire/firestore';
-import { FormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
-import { AuthService } from '../../auth/data-access/auth.service';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
-import { getAuth } from 'firebase/auth';
-import Swal from 'sweetalert2';
-import { signal } from '@angular/core';
-import { Router } from '@angular/router';
-import { QrViewComponent } from '../qr-view/qr-view.component';
-
-
+import { Component, inject, OnInit, signal } from "@angular/core";
+import { CommonModule } from "@angular/common";
+import {
+  FormBuilder,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from "@angular/forms";
+import { Firestore, collection, addDoc } from "@angular/fire/firestore";
+import { getFirestore, query, where, getDocs } from "firebase/firestore";
+import { HttpClient } from "@angular/common/http";
+import { RouterLink } from "@angular/router";
+import { firstValueFrom } from "rxjs";
+import { AuthService } from "../../auth/data-access/auth.service";
+import { QrViewComponent } from "../qr-view/qr-view.component";
+import { ButtonDirective } from "../../shared/ui/button.directive";
+import { IconComponent } from "../../shared/ui/icon/icon.component";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 @Component({
-  selector: 'app-formulario3',
+  selector: "app-formulario3",
   standalone: true,
-  templateUrl: './formulario3.component.html',
-  styleUrls: ['./formulario3.component.css'],
-  imports: [FormsModule, CommonModule, HttpClientModule,QrViewComponent]
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    RouterLink,
+    QrViewComponent,
+    ButtonDirective,
+    IconComponent,
+  ],
+  templateUrl: "./formulario3.component.html",
+  styleUrl: "./formulario3.component.css",
 })
-export class Formulario3Component {
-  nuevo = {
-    clase: '',
-    fecha: '',
-    hora: '',
-    alumno: ''
-  }; 
-
-  clases = ['Cardio', 'Funcional', 'Spinning', 'Box', 'CrossFit'];
+export class Formulario3Component implements OnInit {
+  private firestore = inject(Firestore);
+  private auth = inject(AuthService);
+  private http = inject(HttpClient);
+  nuevo = { clase: "", fecha: "", hora: "", alumno: "" };
+  clases = ["Cardio", "Funcional", "Spinning", "Box", "CrossFit"];
   userName: string | null = null;
-  enviado:boolean; 
+  enviado = false;
   loading = signal(false);
-
-  clase:string="";
-  fecha:string="";
-
-  constructor(
-    private firestore: Firestore,
-    private authService: AuthService,
-    private http: HttpClient,
-    private router: Router
-  ) {
-    this.authService.userName$.subscribe((name) => {
-      this.userName = name;
-    });
-     this.enviado=false;
+  clase = "";
+  fecha = "";
+  recordId = "";
+  error = "";
+  notification = "";
+  notificationError = false;
+  authReady = false;
+  authenticated = false;
+  private user: any;
+  constructor() {
+    this.auth.userName$
+      .pipe(takeUntilDestroyed())
+      .subscribe((name) => (this.userName = name));
   }
-
+  ngOnInit() {
+    this.auth
+      .getCurrentUser()
+      .then((user) => {
+        this.user = user;
+        this.authenticated = !!user;
+        this.authReady = true;
+      })
+      .catch(() => {
+        this.authReady = true;
+        this.error = "No se pudo consultar la sesión de Firebase.";
+      });
+  }
   async guardar() {
-  if (!this.userName) {
-    Swal.fire('Error', 'No se pudo obtener el nombre del usuario.', 'error');
-    return;
-  }
-
-  this.nuevo.alumno = this.userName;
-
-  if (!this.nuevo.clase || !this.nuevo.fecha || !this.nuevo.hora) {
-    Swal.fire('Campos incompletos', 'Por favor llena todos los campos.', 'warning');
-    return;
-  }
-   this.loading.set(true);
-
-   this.clase=this.nuevo.clase;
-   this.fecha=this.nuevo.fecha;
-
-  try {
-    const colRef = collection(this.firestore, 'asistencias');
-    await addDoc(colRef, this.nuevo);
-
-    Swal.fire('Éxito', 'Asistencia guardada correctamente', 'success');
-
-    // Obtener usuario autenticado
-    const user = await this.authService.getCurrentUser();
-    const email = user?.email || null;
-    const telefono = user?.phoneNumber || null;
-
-    const mensaje = `Gracias por registrar tu asistencia.
-Clase: ${this.nuevo.clase}
-Fecha: ${this.nuevo.fecha}
-Hora: ${this.nuevo.hora}`;
-
-    if (email) {
-      this.enviarCorreo();
-      
-    } else if (telefono) {
-      this.enviarSMS(telefono, mensaje);
-    } else {
-      console.warn('Usuario sin email ni teléfono para notificación.');
+    if (this.loading() || this.enviado) return;
+    this.error = "";
+    if (!this.nuevo.clase || !this.nuevo.fecha || !this.nuevo.hora) {
+      this.error = "Completa clase, fecha y hora.";
+      return;
     }
-     this.loading.set(false);
-
-  } catch (error) {
-    console.error('Error al guardar:', error);
-    Swal.fire('Error', 'Error al guardar la asistencia', 'error');
-     this.loading.set(false);
-  }
-}
-
-cerrarPagina(){
-   this.loading.set(false);
-         this.enviado=true;
-         setTimeout(() => {
-           this.router.navigate(['/home']);
-          this.enviado=false;
-           this.nuevo = {
-        clase: '',
-        fecha: '',
-        hora: '',
-        alumno: ''
-      };
-
-      }, 10000);
-}
-
-enviarSMS(telefono: string, mensaje: string) {
-   this.loading.set(true);
-  // Aquí llamarías tu backend o Firebase Function que envía el SMS
-  this.http.post('https://gymseminario.onrender.com/enviar-sms', { telefono, mensaje })
-    .subscribe({
-      next: () =>  {Swal.fire('Éxito', 'Se envio SMS', 'success');
-      this.cerrarPagina();
-      },
-      error: (err) => { Swal.fire('Error', 'No se envio SMS', 'error');
-         this.loading.set(false);
-          this.nuevo = {
-        clase: '',
-        fecha: '',
-        hora: '',
-        alumno: ''
-      };
+    if (!this.userName) {
+      this.error =
+        "No se pudo obtener el nombre del socio. Revisa tu sesión antes de registrar la asistencia.";
+      return;
+    }
+    this.nuevo.alumno = this.userName;
+    this.loading.set(true);
+    try {
+      const user = await this.auth.getCurrentUser();
+      if (!user) {
+        this.error = "Inicia sesión para registrar una asistencia.";
+        return;
       }
-    });
-}
-
-  async enviarCorreo() {
-  const auth = getAuth();
-  const user = auth.currentUser;
-   this.loading.set(true);
-  if (user && user.email) {
-    const correoDestino = user.email;
-    const nombre = user.displayName || this.userName || 'Usuario';
-
-    console.log('Datos que se enviarán al backend:', {
-  correo: correoDestino,
-  nombre: nombre,
-  clase: this.nuevo.clase,
-  fecha: this.nuevo.fecha,
-  hora: this.nuevo.hora
-});
-    this.http.post('https://gymseminario.onrender.com/enviar-asistencia', {
-      correo: correoDestino,
-      nombre: nombre,
-      clase: this.nuevo.clase,
-      fecha: this.nuevo.fecha,
-      hora: this.nuevo.hora
-    }).subscribe({
-      next: () => {
-        Swal.fire('Correo enviado', 'Se ha enviado el correo correctamente.', 'success');
-         this.cerrarPagina();
-      },
-      error: () => {
-        Swal.fire('Error', 'Error al enviar el correo.', 'error');
-         this.loading.set(false);
-          this.nuevo = {
-        clase: '',
-        fecha: '',
-        hora: '',
-        alumno: ''
-      };
-      }
-    });
-  } else {
-    Swal.fire('Error', 'No hay usuario autenticado o el usuario no tiene un correo.', 'error');
+      this.user = user;
+      const result = await addDoc(
+        collection(this.firestore, "asistencias"),
+        this.nuevo,
+      );
+      this.recordId = result.id;
+      this.clase = this.nuevo.clase;
+      this.fecha = this.nuevo.fecha;
+      this.enviado = true;
+      await this.notify();
+    } catch {
+      this.error =
+        "No pudimos confirmar la asistencia en Firestore. Revisa tu conexión antes de volver a enviar.";
+    } finally {
+      this.loading.set(false);
+    }
   }
-}
-
-
+  async notify() {
+    this.notificationError = false;
+    this.notification = "Enviando aviso…";
+    try {
+      if (this.user?.email) {
+        await firstValueFrom(
+          this.http.post(
+            "https://gymseminario.onrender.com/enviar-asistencia",
+            {
+              correo: this.user.email,
+              nombre: this.user.displayName || this.userName || "Usuario",
+              clase: this.nuevo.clase,
+              fecha: this.nuevo.fecha,
+              hora: this.nuevo.hora,
+            },
+          ),
+        );
+        this.notification = "Aviso por correo confirmado por el servicio.";
+      } else if (this.user?.phoneNumber) {
+        const mensaje =
+          "Gracias por registrar tu asistencia.\nClase: " +
+          this.nuevo.clase +
+          "\nFecha: " +
+          this.nuevo.fecha +
+          "\nHora: " +
+          this.nuevo.hora;
+        await firstValueFrom(
+          this.http.post("https://gymseminario.onrender.com/enviar-sms", {
+            telefono: this.user.phoneNumber,
+            mensaje,
+          }),
+        );
+        this.notification = "Aviso SMS confirmado por el servicio.";
+      } else
+        this.notification =
+          "Asistencia guardada. No hay un correo o teléfono para enviar un aviso.";
+    } catch {
+      this.notificationError = true;
+      this.notification =
+        "La asistencia está guardada, pero no se pudo confirmar el aviso. No registres la asistencia otra vez.";
+    }
+  }
+  async retryNotification() {
+    if (this.loading()) return;
+    this.loading.set(true);
+    try {
+      await this.notify();
+    } finally {
+      this.loading.set(false);
+    }
+  }
+  reset() {
+    this.nuevo = { clase: "", fecha: "", hora: "", alumno: "" };
+    this.enviado = false;
+    this.recordId = "";
+    this.error = "";
+    this.notification = "";
+  }
 }

@@ -1,138 +1,164 @@
-<div class="membresias-container container py-5">
-
-  <!-- Encabezado de Sección -->
-  <div class="text-center mb-5">
-    <span class="badge bg-naranja px-3 py-2 text-uppercase mb-2">Membresías & Acceso</span>
-    <h1 class="text-white fw-bold display-5">Tu Membresía en <span class="text-naranja">espacioGYM</span></h1>
-    <p class="text-secondary max-w-600 mx-auto">
-      Consulta el estado y vigencia de tu plan actual, o elije uno de nuestros paquetes para desbloquear acceso ilimitado, clases grupales y asistencia con Coach IA.
+<section class="feature-page stack">
+  <div class="notice">
+    <app-icon name="monitor" />
+    <p>
+      <strong>Demostración local.</strong> La membresía y su vigencia se guardan
+      en este navegador. No representan cobros, accesos físicos ni beneficios
+      remotos activados.
     </p>
   </div>
-
-  <!-- TARJETA DE ESTADO ACTUAL (HU-12: Consultar Vigencia) -->
-  <div class="card-glass p-4 mb-5 border-start-naranja" *ngIf="membresiaActual">
-    <div class="row align-items-center g-4">
-      <div class="col-lg-8">
-        <div class="d-flex align-items-center gap-3 mb-3">
-          <div class="icon-circle">
-            <i class='bx bx-id-card fs-1 text-naranja'></i>
+  @if (membresiaActual; as mem) {
+    <article class="surface membership-current">
+      <div class="membership-title">
+        <span class="eyebrow">Tu membresía de ejemplo</span>
+        <div class="toolbar">
+          <h2>{{ mem.nombrePlan }}</h2>
+          <span
+            class="status"
+            [class.status--success]="mem.estado === 'Activa'"
+            [class.status--warning]="mem.estado === 'Por vencer'"
+            [class.status--danger]="mem.estado === 'Vencida'"
+            ><app-icon name="check" />{{ mem.estado }}</span
+          >
+        </div>
+        <p class="help">{{ mem.id }} · Ciclo {{ mem.periodo.toLowerCase() }}</p>
+        <dl class="membership-dates">
+          <div>
+            <dt>Inicio</dt>
+            <dd>{{ mem.fechaInicio | date: "dd/MM/yyyy" }}</dd>
           </div>
           <div>
-            <div class="d-flex align-items-center gap-2">
-              <h3 class="text-white fw-bold mb-0">Plan {{ membresiaActual.nombrePlan }}</h3>
-              <span class="badge" [ngClass]="{
-                'bg-success': membresiaActual.estado === 'Activa',
-                'bg-warning text-dark': membresiaActual.estado === 'Por vencer',
-                'bg-danger': membresiaActual.estado === 'Vencida'
-              }">
-                <i class='bx bx-check-circle' *ngIf="membresiaActual.estado === 'Activa'"></i>
-                <i class='bx bx-time' *ngIf="membresiaActual.estado === 'Por vencer'"></i>
-                <i class='bx bx-x-circle' *ngIf="membresiaActual.estado === 'Vencida'"></i>
-                {{ membresiaActual.estado }}
-              </span>
-            </div>
-            <small class="text-secondary">Folio: <code>{{ membresiaActual.id }}</code> &bull; Modalidad: {{ membresiaActual.periodo }}</small>
+            <dt>Vencimiento</dt>
+            <dd>{{ mem.fechaFin | date: "dd/MM/yyyy" }}</dd>
           </div>
-        </div>
-
-        <div class="row g-3 mt-1">
-          <div class="col-sm-4">
-            <div class="dato-box">
-              <span class="dato-label">Fecha de Inicio</span>
-              <span class="dato-valor">{{ membresiaActual.fechaInicio }}</span>
-            </div>
+          <div>
+            <dt>Vigencia restante</dt>
+            <dd>{{ mem.diasRestantes }} días</dd>
           </div>
-          <div class="col-sm-4">
-            <div class="dato-box">
-              <span class="dato-label">Vencimiento</span>
-              <span class="dato-valor text-warning">{{ membresiaActual.fechaFin }}</span>
-            </div>
-          </div>
-          <div class="col-sm-4">
-            <div class="dato-box">
-              <span class="dato-label">Días Restantes</span>
-              <span class="dato-valor text-naranja fw-bold">{{ membresiaActual.diasRestantes }} días</span>
-            </div>
-          </div>
-        </div>
+        </dl>
       </div>
-
-      <div class="col-lg-4 text-lg-end d-flex flex-column gap-2">
-        <button class="btn btn-naranja py-3 px-4 fw-bold" (click)="renovarActual()">
-          <i class='bx bx-refresh fs-5 me-1'></i> Renovar Membresía
+      <div class="membership-actions">
+        <button
+          appButton="primary"
+          type="button"
+          [disabled]="processing"
+          (click)="renovarActual()"
+        >
+          Renovar ejemplo<app-icon name="arrow" /></button
+        ><a appButton="secondary" routerLink="/f2"
+          ><app-icon name="calendar" />Agendar entrenamiento</a
+        >
+      </div>
+    </article>
+  }
+  <div class="section-heading">
+    <div>
+      <span class="eyebrow">Compara tus opciones</span>
+      <h2>Un plan para tu ritmo.</h2>
+    </div>
+    <div class="filter-pills" aria-label="Periodo de demostración">
+      @for (period of periods; track period) {
+        <button
+          type="button"
+          [attr.aria-pressed]="filtroPeriodo === period"
+          (click)="cambiarPeriodo(period)"
+        >
+          {{ period }}
+          @if (period === "Trimestral") {
+            <small> −10%</small>
+          }
+          @if (period === "Anual") {
+            <small> −20%</small>
+          }
         </button>
-        <a routerLink="/f2" class="btn btn-outline-light py-2 px-4">
-          <i class='bx bx-calendar-event me-1'></i> Agendar Sesión de Gym
-        </a>
-      </div>
+      }
     </div>
   </div>
-
-  <!-- SELECTOR DE PERIODO DE FACTURACIÓN -->
-  <div class="d-flex justify-content-center mb-5">
-    <div class="btn-group p-1 bg-dark rounded-pill border border-secondary" role="group">
-      <button type="button" class="btn rounded-pill px-4" 
-              [ngClass]="filtroPeriodo === 'Mensual' ? 'btn-naranja' : 'btn-dark text-light'"
-              (click)="cambiarPeriodo('Mensual')">
-        Mensual
-      </button>
-      <button type="button" class="btn rounded-pill px-4" 
-              [ngClass]="filtroPeriodo === 'Trimestral' ? 'btn-naranja' : 'btn-dark text-light'"
-              (click)="cambiarPeriodo('Trimestral')">
-        Trimestral <small class="text-warning">-10%</small>
-      </button>
-      <button type="button" class="btn rounded-pill px-4" 
-              [ngClass]="filtroPeriodo === 'Anual' ? 'btn-naranja' : 'btn-dark text-light'"
-              (click)="cambiarPeriodo('Anual')">
-        Anual <small class="badge bg-success">Ahorra 20%</small>
-      </button>
-    </div>
-  </div>
-
-  <!-- CATÁLOGO DE PLANES DISPONIBLES (HU-10: Registrar Membresía) -->
-  <div class="row g-4 justify-content-center">
-    <div class="col-md-6 col-lg-4" *ngFor="let plan of planes">
-      <div class="card-glass plan-card h-100 p-4 d-flex flex-column" [class.popular-card]="plan.popular">
-        
-        <div class="badge-popular" *ngIf="plan.popular">
-          MÁS POPULAR
+  <p class="help billing-note">
+    Importes totales por ciclo. La demostración conserva los cálculos
+    originales: base × 3 − 10% para trimestre y base × 12 − 20% para año.
+  </p>
+  <div class="plans-grid">
+    @for (plan of planes; track plan.id) {
+      <article class="surface plan-card" [class.recommended]="plan.popular">
+        <div class="plan-card-top">
+          <span class="eyebrow">{{ plan.nombre }}</span>
+          @if (plan.popular) {
+            <span class="status status--accent">Recomendado</span>
+          }
         </div>
-
-        <div class="text-center mb-4">
-          <h4 class="text-white fw-bold mb-2">{{ plan.nombre }}</h4>
-          <p class="text-secondary small mb-3">{{ plan.descripcion }}</p>
-          <div class="precio-box">
-            <span class="moneda">$</span>
-            <span class="monto">{{ getPrecioCalculado(plan.precio) }}</span>
-            <span class="periodo text-secondary">MXN / {{ filtroPeriodo.toLowerCase() }}</span>
-          </div>
+        <h3>{{ plan.descripcion }}</h3>
+        <div class="plan-price">
+          <strong>{{
+            getPrecioCalculado(plan.precio)
+              | currency: "MXN" : "symbol-narrow" : "1.0-0"
+          }}</strong
+          ><span>MXN / {{ filtroPeriodo.toLowerCase() }}</span>
         </div>
-
-        <hr class="border-secondary mb-4">
-
-        <ul class="list-unstyled flex-grow-1 mb-4 d-flex flex-column gap-2">
-          <li *ngFor="let ben of plan.beneficios" class="d-flex align-items-start gap-2 text-light small">
-            <i class='bx bx-check text-naranja fs-5 flex-shrink-0'></i>
-            <span>{{ ben }}</span>
-          </li>
+        @if (hasConflict(plan)) {
+          <p class="tariff-note">
+            <strong>Tarifa en revisión.</strong> Catálogo: $1,200/trimestre. El
+            cálculo de ejemplo usa una base mensual. Confirma condiciones con el
+            gimnasio.
+          </p>
+        } @else {
+          <p class="help">Precio total del ciclo seleccionado.</p>
+        }
+        <ul>
+          @for (benefit of plan.beneficios; track benefit) {
+            <li>
+              <app-icon name="check" /><span>{{ benefit }}</span>
+            </li>
+          }
         </ul>
-
-        <button class="btn w-100 py-3 fw-bold" 
-                [ngClass]="plan.popular ? 'btn-naranja' : 'btn-outline-naranja'"
-                (click)="seleccionarPlan(plan)">
-          {{ membresiaActual && membresiaActual.nombrePlan === plan.nombre ? 'Plan Actual (Cambiar periodo)' : 'Elegir Plan ' + plan.nombre }}
+        <button
+          appButton="secondary"
+          type="button"
+          [disabled]="processing"
+          (click)="seleccionarPlan(plan)"
+        >
+          Revisar {{ plan.nombre }}<app-icon name="arrow" />
         </button>
-
-      </div>
-    </div>
+      </article>
+    }
   </div>
-
-  <!-- INFORMACIÓN ADICIONAL Y PREGUNTAS FRECUENTES -->
-  <div class="mt-5 p-4 card-glass text-center">
-    <h5 class="text-white mb-2"><i class='bx bx-shield-quarter text-naranja'></i> Garantía y Flexibilidad espacioGYM</h5>
-    <p class="text-secondary small mb-0">
-      Todas las membresías cuentan con cancelación en cualquier momento sin penalizaciones. Tus accesos QR se generan al instante para el lector de torniquetes.
+  <details class="surface benefits-comparison">
+    <summary>Comparación detallada de beneficios</summary>
+    <div class="table-scroll">
+      <table class="data-table">
+        <caption>
+          Beneficios publicados en el catálogo. Su inclusión no acredita
+          servicios remotos activos.
+        </caption>
+        <thead>
+          <tr>
+            @for (plan of planes; track plan.id) {
+              <th scope="col">{{ plan.nombre }}</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            @for (plan of planes; track plan.id) {
+              <td>
+                <ul>
+                  @for (benefit of comparisonBenefits(plan); track benefit) {
+                    <li>{{ benefit }}</li>
+                  }
+                </ul>
+              </td>
+            }
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+  <div class="notice notice--warning">
+    <p>
+      <strong>Condiciones por confirmar.</strong> Las afirmaciones comerciales
+      del catálogo, incluidos descuentos, QR, evaluaciones y acceso sin
+      restricciones, requieren validación del gimnasio.
+      <a routerLink="/ubicacion">Consulta horarios y contacto</a>.
     </p>
   </div>
-
-</div>
+</section>

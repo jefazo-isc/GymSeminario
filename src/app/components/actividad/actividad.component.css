@@ -1,69 +1,80 @@
-.actividad-container { min-height: 80vh; }
-
-.card-glass {
-  background: rgba(26,26,26,.85);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,.08);
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0,0,0,.4);
+.surface > .section-heading {
+  margin-top: 0;
 }
-
-/* Colores base */
-.text-naranja { color: #ff5722 !important; }
-.bg-naranja   { background-color: #ff5722 !important; color: white; }
-.btn-naranja  { background-color: #ff5722; border: none; color: white; transition: all .25s; }
-.btn-naranja:hover { background-color: #e64a19; transform: translateY(-2px); }
-.tab-btn      { border-radius: 8px; font-size: .875rem; }
-
-/* KPI cards */
-.card-glass i { display: block; }
-
-/* Tabla */
-.tabla-gym { color: #ccc; }
-.tabla-gym thead th {
-  background: rgba(255,87,34,.1); color: #ff5722;
-  font-size: .78rem; text-transform: uppercase; letter-spacing: .5px;
-  border-bottom: 1px solid rgba(255,87,34,.3); padding: 12px 16px;
+.session-preview {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: start;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
 }
-.tabla-gym tbody tr { border-bottom: 1px solid rgba(255,255,255,.05); transition: background .15s; }
-.tabla-gym tbody tr:hover { background: rgba(255,87,34,.05); }
-.tabla-gym td { padding: 10px 16px; vertical-align: middle; }
-
-/* Sesiones próximas */
-.sesion-card {
-  background: rgba(255,87,34,.06);
-  border: 1px solid rgba(255,87,34,.2);
-  border-radius: 12px;
-  transition: all .2s;
+.session-preview h3 {
+  margin: 14px 0 0;
 }
-.sesion-card:hover { border-color: rgba(255,87,34,.5); }
-.clase-icon {
-  width: 48px; height: 48px; border-radius: 12px;
-  background: rgba(255,87,34,.12);
-  display: flex; align-items: center; justify-content: center;
+.session-preview p {
+  margin: 8px 0 0;
 }
-
-/* Ocupación — bordes de nivel */
-.border-lleno     { border-color: rgba(220,53,69,.4) !important; }
-.border-moderado  { border-color: rgba(255,193,7,.4) !important; }
-.border-libre     { border-color: rgba(40,167,69,.4) !important; }
-.border-danger-soft  { border-left: 4px solid rgba(220,53,69,.6) !important; }
-.border-success-soft { border-left: 4px solid rgba(40,167,69,.6) !important; }
-
-/* Alertas */
-.alerta-item {
-  cursor: pointer;
-  transition: all .2s;
-  border-left: 4px solid transparent;
+.toolbar > .field {
+  min-width: 220px;
 }
-.alerta-item:hover { transform: translateX(4px); }
-.alerta-no-leida  { border-left-color: #ff5722 !important; }
-
-.alerta-icon {
-  width: 44px; height: 44px; border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
+.data-table {
+  min-width: 760px;
 }
-.icon-membresia { background: rgba(255,87,34,.15); color: #ff5722; }
-.icon-pago      { background: rgba(255,193,7,.15);  color: #ffc107; }
-.icon-sesion    { background: rgba(13,202,240,.15); color: #0dcaf0; }
+.data-table small {
+  display: block;
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  margin-top: 5px;
+}
+.data-table .ui-button {
+  font-size: 0.75rem;
+  padding: 8px 10px;
+}
+.alert-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.alert-card.unread {
+  border-color: var(--color-accent);
+}
+.alert-card .form-actions {
+  margin: 0;
+}
+.alert-shortcut {
+  border: 0;
+  padding: 0;
+  background: none;
+  text-align: left;
+}
+meter {
+  width: 100%;
+  height: 12px;
+  accent-color: var(--color-sage);
+  margin: 10px 0 14px;
+}
+@media (max-width: 767px) {
+  .grid-4 > .surface {
+    padding: 16px;
+  }
+  .grid-4 .help {
+    font-size: 0.75rem;
+  }
+  .metric {
+    font-size: 1.75rem;
+  }
+  .toolbar > .field {
+    width: 100%;
+  }
+  .alert-card .toolbar {
+    align-items: start;
+  }
+  .alert-card .form-actions {
+    width: 100%;
+  }
+}

@@ -1,29 +1,32 @@
-import { TestBed } from '@angular/core/testing';
-import { AppComponent } from './app.component';
+import { TestBed } from "@angular/core/testing";
+import { provideRouter } from "@angular/router";
+import { provideNoopAnimations } from "@angular/platform-browser/animations";
+import { of } from "rxjs";
+import { AppComponent } from "./app.component";
+import { AuthService } from "./auth/data-access/auth.service";
 
-describe('AppComponent', () => {
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
+describe("Application shell", () => {
+  it("renders one header, a keyboard skip target and one footer around routed content", () => {
+    TestBed.configureTestingModule({
       imports: [AppComponent],
-    }).compileComponents();
-  });
-
-  it('should create the app', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
-  });
-
-  it(`should have the 'libreria1' title`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('libreria1');
-  });
-
-  it('should render title', () => {
+      providers: [
+        provideRouter([]),
+        provideNoopAnimations(),
+        {
+          provide: AuthService,
+          useValue: { userName$: of(null), userRole$: of(null) },
+        },
+      ],
+    });
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, libreria1');
+    const host: HTMLElement = fixture.nativeElement;
+    expect(host.querySelectorAll("app-navbar").length).toBe(1);
+    expect(host.querySelectorAll("app-footer").length).toBe(1);
+    expect(host.querySelector(".skip-link")?.getAttribute("href")).toBe(
+      "#main-content",
+    );
+    expect(host.querySelector("main")?.getAttribute("tabindex")).toBe("-1");
+    expect(host.querySelector("router-outlet")).not.toBeNull();
   });
 });

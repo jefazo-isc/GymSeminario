@@ -1,95 +1,157 @@
-<body>
-  <div class="registro-container">
-    <h2>Registrarse</h2>
-
-    <div class="social-networks">
-      <button (click)="conGoogle()" class="google-btn">
-        <i class='bx bxl-google'></i> 
-      </button>
-      <i class='bx bxl-twitter icon'></i>
-      <i class='bx bxl-instagram icon'></i>
-      <i class='bx bxl-tiktok icon'></i>
+<section class="feature-page auth-layout">
+  <aside class="auth-aside">
+    <span class="eyebrow">Tu espacio GROM</span>
+    <h2>Empieza algo<br />que sea tuyo.</h2>
+    <p>
+      Agenda tus entrenamientos y mantén tus datos a mano. Un paso a la vez.
+    </p>
+    <img
+      src="img/CARRUSEL/2.png"
+      alt="Área de entrenamiento de GROM"
+      width="600"
+      height="450"
+      loading="lazy"
+    />
+  </aside>
+  <div class="auth-card">
+    <div class="auth-alternatives">
+      <button
+        appButton="secondary"
+        type="button"
+        (click)="conGoogle()"
+        [disabled]="!!busy"
+      >
+        {{ busy === "google" ? "Conectando…" : "Continuar con Google" }}</button
+      ><a appButton="secondary" routerLink="/phone"
+        ><app-icon name="user" />Usar teléfono</a
+      >
     </div>
-
-    <span>Use su correo electrónico para registrarse</span>
-
-    <form [formGroup]="form" (ngSubmit)="submit()">
-      <!-- Nombre -->
-      <div class="container-input">
-        <i class='bx bx-user'></i>
-        <input
-          type="text"
-          placeholder="Nombre"
+    <div class="auth-divider">o con tu correo</div>
+    @if (message) {
+      <p class="notice notice--error" role="alert">{{ message }}</p>
+    }
+    <form
+      [formGroup]="form"
+      (ngSubmit)="submit()"
+      novalidate
+      [attr.aria-busy]="!!busy"
+    >
+      <div class="field">
+        <label for="auth-name">Nombre</label
+        ><input
+          id="auth-name"
           formControlName="nombre"
-          [class.invalid]="form.get('nombre')?.invalid && form.get('nombre')?.touched"
-        />
+          autocomplete="name"
+          [attr.aria-invalid]="invalid('nombre')"
+          aria-describedby="name-error"
+        /><span id="name-error" class="field-error">
+          @if (invalid("nombre")) {
+            Escribe tu nombre.
+          }
+        </span>
       </div>
-      <div class="error" *ngIf="form.get('nombre')?.invalid && form.get('nombre')?.touched">
-        <small *ngIf="form.get('nombre')?.errors?.['required']">El nombre es obligatorio.</small>
-      </div>
-
-      <!-- Correo -->
-      <div class="container-input">
-        <i class='bx bx-envelope'></i>
-        <input
-          type="email"
-          placeholder="Correo electrónico"
+      <div class="field">
+        <label for="auth-email">Correo electrónico</label
+        ><input
+          id="auth-email"
+          name="email"
           formControlName="email"
-          [class.invalid]="form.get('email')?.invalid && form.get('email')?.touched"
-        />
+          type="email"
+          autocomplete="email"
+          [attr.aria-invalid]="invalid('email')"
+          aria-describedby="email-error"
+          placeholder="tu@correo.com"
+        /><span class="field-error" id="email-error">
+          @if (invalid("email")) {
+            Escribe un correo electrónico válido.
+          }
+        </span>
       </div>
-      <div class="error" *ngIf="form.get('email')?.invalid && form.get('email')?.touched">
-        <small *ngIf="form.get('email')?.errors?.['required']">El correo es obligatorio.</small>
-        <small *ngIf="form.get('email')?.errors?.['email']">Debe ser un correo válido.</small>
+      <div class="field">
+        <label for="auth-password">Contraseña</label>
+        <div class="password-control">
+          <input
+            id="auth-password"
+            appPassword
+            #password="appPassword"
+            formControlName="password"
+            autocomplete="new-password"
+            [attr.aria-invalid]="invalid('password')"
+            aria-describedby="password-hint password-error"
+          /><button
+            type="button"
+            (click)="password.toggle()"
+            [attr.aria-pressed]="password.visible()"
+            [attr.aria-label]="password.label() + ' contraseña'"
+          >
+            {{ password.label() }}
+          </button>
+        </div>
+        <small class="help" id="password-hint"
+          >De 6 a 16 caracteres, al menos una mayúscula y un número.</small
+        ><span class="field-error" id="password-error">
+          @if (invalid("password")) {
+            Revisa los requisitos de este campo.
+          }
+        </span>
       </div>
-
-      <!-- Contraseña -->
-      <div class="container-input">
-        <i class='bx bx-lock'></i>
-        <input
-          type="password"
-          placeholder="Contraseña"
-          formControlName="password"
-          [class.invalid]="form.get('password')?.invalid && form.get('password')?.touched"
-        />
+      <div class="field">
+        <label for="auth-confirmPassword">Confirmar contraseña</label>
+        <div class="password-control">
+          <input
+            id="auth-confirmPassword"
+            appPassword
+            #confirmPassword="appPassword"
+            formControlName="confirmPassword"
+            autocomplete="new-password"
+            [attr.aria-invalid]="invalid('confirmPassword')"
+            aria-describedby="confirmPassword-hint confirmPassword-error"
+          /><button
+            type="button"
+            (click)="confirmPassword.toggle()"
+            [attr.aria-pressed]="confirmPassword.visible()"
+            [attr.aria-label]="
+              confirmPassword.label() + ' confirmar contraseña'
+            "
+          >
+            {{ confirmPassword.label() }}
+          </button>
+        </div>
+        <small class="help" id="confirmPassword-hint"
+          >Repite la contraseña.</small
+        ><span class="field-error" id="confirmPassword-error">
+          @if (invalid("confirmPassword")) {
+            Las contraseñas deben coincidir.
+          }
+        </span>
       </div>
-      <div class="error" *ngIf="form.get('password')?.invalid && form.get('password')?.touched">
-        <small *ngIf="form.get('password')?.errors?.['required']">La contraseña es obligatoria.</small>
-        <small *ngIf="form.get('password')?.errors?.['missingUppercase']">Debe tener al menos una mayúscula.</small>
-        <small *ngIf="form.get('password')?.errors?.['missingNumber']">Debe tener al menos un número.</small>
-        <small *ngIf="form.get('password')?.errors?.['invalidLength']">Debe tener entre 6 y 16 caracteres.</small>
+      <div class="field">
+        <span>Verificación de seguridad</span>
+        <div class="captcha-holder" id="sign-up-recaptcha"></div>
+        @if (captcha.error()) {
+          <span class="field-error">{{ captcha.error() }}</span
+          ><button appButton="ghost" type="button" (click)="captcha.init()">
+            Volver a cargar CAPTCHA
+          </button>
+        } @else {
+          <small class="help"
+            >Completa el CAPTCHA para habilitar el envío.</small
+          >
+        }
       </div>
-
-      <!-- Confirmar contraseña -->
-<div class="container-input">
-  <i class='bx bx-lock-alt'></i>
-  <input
-    type="password"
-    placeholder="Confirmar contraseña"
-    formControlName="confirmPassword"
-    [class.invalid]="form.get('confirmPassword')?.invalid && form.get('confirmPassword')?.touched"
-  />
-</div>
-<div class="error" *ngIf="form.get('confirmPassword')?.touched && form.get('confirmPassword')?.invalid">
-  <small *ngIf="form.get('confirmPassword')?.errors?.['required']">Confirma tu contraseña.</small>
-  <small *ngIf="form.get('confirmPassword')?.errors?.['mismatch']">Las contraseñas no coinciden.</small>
-</div>
-
-      <!-- reCAPTCHA -->
-      <div id="sign-up-recaptcha" style="margin-bottom: 16px;"></div>
-
-      <!-- Botón de registro -->
-      <button class="button" type="submit" [disabled]="form.invalid || !captchaResuelto">
-        REGISTRARSE
-      </button>
-
-      <!-- Enlaces -->
-      <div class="links">
-        <a [routerLink]="['/auth/sign-in']">¿Ya tienes cuenta? Inicia sesión</a>
-        <a [routerLink]="['/change']">Cambiar contraseña</a>
+      <div class="form-actions">
+        <button
+          appButton="primary"
+          type="submit"
+          [disabled]="!!busy || !captcha.resolved()"
+        >
+          {{ busy === "email" ? "Enviando…" : "Crear mi cuenta"
+          }}<app-icon name="arrow" />
+        </button>
       </div>
     </form>
+    <div class="auth-links">
+      <a routerLink="/auth/sign-in">Ya tengo una cuenta</a>
+    </div>
   </div>
-</body>
-<br>
-<br>
+</section>

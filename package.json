@@ -7,10 +7,14 @@
     "server": "node server/index.js",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "check:design": "node scripts/check-design.cjs",
+    "test:design": "ng test --configuration design --watch=false --browsers=ChromeHeadless",
+    "test:frontend": "ng test --configuration frontend --watch=false --browsers=ChromeHeadless"
   },
   "private": true,
   "dependencies": {
+    "@angular/animations": "19.2.14",
     "@angular/cdk": "^19.2.15",
     "@angular/common": "^19.2.0",
     "@angular/compiler": "^19.2.0",

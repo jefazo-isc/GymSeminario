@@ -1,139 +1,251 @@
-<div class="container my-5">
-  <div class="titulo-container">
-    <h1 class="text-center">Nuestros Productos</h1>
-    <p class="subtitulo">Explora la mejor selección de suplementos y accesorios para tu entrenamiento</p>
+<section class="feature-page stack">
+  <div class="notice notice--warning">
+    <app-icon name="grid" />
+    <p>
+      <strong>Catálogo por validar.</strong> Los precios originales se
+      conservan; Gymshark Whey Protein figura con un importe de prueba de $1
+      MXN. El sitio no tiene confirmación propia de inventario ni un sistema
+      persistente de pedidos. Revisa los importes antes de continuar a PayPal.
+    </p>
   </div>
-  <hr class="divider-orange">
-
-  <!-- Botones para navegar entre secciones -->
-  <div class="container text-center mb-4">
-    <div class="d-flex flex-wrap justify-content-center gap-3">
-      <button class="btn btn-outline-warning d-flex align-items-center gap-2" (click)="scrollTo('proteinas')">
-        <i class="bx bx-dumbbell fs-5"></i> Proteínas
-      </button>
-      <button class="btn btn-outline-warning d-flex align-items-center gap-2" (click)="scrollTo('creatinas')">
-        <i class="bx bx-capsule fs-5"></i> Creatinas
-      </button>
-      <button class="btn btn-outline-warning d-flex align-items-center gap-2" (click)="scrollTo('preentrenos')">
-        <i class="bx bx-bolt-circle fs-5"></i> Pre-entrenos
-      </button>
-      <button class="btn btn-outline-warning d-flex align-items-center gap-2" (click)="scrollTo('accesorios')">
-        <i class="bx bx-package fs-5"></i> Accesorios
-      </button>
-      <button class="btn btn-outline-warning d-flex align-items-center gap-2" (click)="scrollTo('ropa')">
-        <i class="bx bx-closet fs-5"></i> Ropa
-      </button>
+  <div class="filters">
+    <div class="field">
+      <label for="product-query">Buscar productos</label
+      ><input
+        id="product-query"
+        class="control"
+        type="search"
+        [(ngModel)]="query"
+        placeholder="Nombre o descripción"
+      />
     </div>
+    <div class="field">
+      <label for="product-category">Categoría</label
+      ><select id="product-category" [(ngModel)]="category">
+        <option value="">Todas las categorías</option>
+        @for (item of categories; track item.value) {
+          <option [value]="item.value">{{ item.label }}</option>
+        }
+      </select>
+    </div>
+    <div class="field">
+      <label for="product-sort">Ordenar</label
+      ><select id="product-sort" [(ngModel)]="sort">
+        <option value="featured">Orden del catálogo</option>
+        <option value="price-asc">Precio: menor a mayor</option>
+        <option value="price-desc">Precio: mayor a menor</option>
+        <option value="name">Nombre</option>
+      </select>
+    </div>
+    <button
+      appButton="ghost"
+      type="button"
+      (click)="query = ''; category = ''; sort = 'featured'"
+    >
+      Restablecer
+    </button>
   </div>
-
-
-  <!-- Sección Proteínas -->
-  <section id="proteinas" class="mb-5">
-    <h2 class="mb-3 pb-2">Proteínas</h2>
-    <div class="row">
-      <div class="col-md-3 mb-4" *ngFor="let producto of proteinas ">
-        <div class="card h-100 shadow-sm">
-          <img [src]="producto.imagen" class="card-img-top img-producto" alt="{{producto.nombre}}">
-          <div class="card-body d-flex flex-column">
-            <h5 class="card-title">{{producto.nombre}}</h5>
-            <p class="card-text">{{producto.descripcion}}</p>
-            <p class="card-text fw-bold">$ {{producto.precio | number:'1.2-2'}}</p>
-            <button class="btn mt-auto" (click)="agregarAlCarrito(producto)">Agregar al carrito</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Sección Creatinas -->
-  <section id="creatinas" class="mb-5">
-    <h2 class="mb-3 pb-2">Creatinas</h2>
-    <div class="row">
-      <div class="col-md-3 mb-4" *ngFor="let producto of creatinas ">
-        <div class="card h-100 shadow-sm">
-          <img [src]="producto.imagen" class="card-img-top img-producto" alt="{{producto.nombre}}">
-          <div class="card-body d-flex flex-column">
-            <h5 class="card-title">{{producto.nombre}}</h5>
-            <p class="card-text">{{producto.descripcion}}</p>
-            <p class="card-text fw-bold">$ {{producto.precio | number:'1.2-2'}}</p>
-            <button class="btn mt-auto" (click)="agregarAlCarrito(producto)">Agregar al carrito</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Sección Pre-entrenos -->
-  <section id="preentrenos" class="mb-5">
-    <h2 class="mb-3 pb-2">Pre-entrenos</h2>
-    <div class="row">
-      <div class="col-md-3 mb-4" *ngFor="let producto of preentrenos ">
-        <div class="card h-100 shadow-sm">
-          <img [src]="producto.imagen" class="card-img-top img-producto" alt="{{producto.nombre}}">
-          <div class="card-body d-flex flex-column">
-            <h5 class="card-title">{{producto.nombre}}</h5>
-            <p class="card-text">{{producto.descripcion}}</p>
-            <p class="card-text fw-bold">$ {{producto.precio | number:'1.2-2'}}</p>
-            <button class="btn mt-auto" (click)="agregarAlCarrito(producto)">Agregar al carrito</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Sección Accesorios -->
-  <section id="accesorios" class="mb-5">
-    <h2 class="mb-3 pb-2">Accesorios</h2>
-    <div class="row">
-      <div class="col-md-3 mb-4" *ngFor="let producto of accesorios ">
-        <div class="card h-100 shadow-sm">
-          <img [src]="producto.imagen" class="card-img-top img-producto" alt="{{producto.nombre}}">
-          <div class="card-body d-flex flex-column">
-            <h5 class="card-title">{{producto.nombre}}</h5>
-            <p class="card-text">{{producto.descripcion}}</p>
-            <p class="card-text fw-bold">$ {{producto.precio | number:'1.2-2'}}</p>
-            <button class="btn mt-auto" (click)="agregarAlCarrito(producto)">Agregar al carrito</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Sección Ropa -->
-  <section id="ropa" class="mb-5">
-    <h2 class="mb-3 pb-2">Ropa</h2>
-    <div class="row">
-      <div class="col-md-3 mb-4" *ngFor="let producto of ropa">
-        <div class="card h-100 shadow-sm">
-          <img [src]="producto.imagen" class="card-img-top img-producto" alt="{{producto.nombre}}">
-          <div class="card-body d-flex flex-column">
-            <h5 class="card-title">{{producto.nombre}}</h5>
-            <p class="card-text">{{producto.descripcion}}</p>
-            <p class="card-text fw-bold">$ {{producto.precio | number:'1.2-2'}}</p>
-            <button class="btn mt-auto" (click)="agregarAlCarrito(producto)">Agregar al carrito</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-  <hr>
-
-  <!-- Carrito de compras -->
-  <h3>Carrito de compras</h3>
-  <ul class="list-group mb-3" *ngIf="carrito.length > 0; else vacio">
-    <li class="list-group-item d-flex justify-content-between align-items-center"
-      *ngFor="let item of carrito; let i = index">
-      {{ item.nombre }} - ${{ item.precio | number:'1.2-2' }}
-      <button class="btn btn-sm btn-danger" (click)="eliminarDelCarrito(i)">Eliminar</button>
-    </li>
-  </ul>
-  <ng-template #vacio>
-    <p>No hay productos en el carrito.</p>
-  </ng-template>
-
-  <div *ngIf="carrito.length > 0" class="d-flex justify-content-between align-items-center">
-    <h4>Total: $ {{ total | number:'1.2-2' }}</h4>
-
-    <div id="paypal-button-container"></div>
+  <div class="toolbar">
+    <p class="help" aria-live="polite">{{ filtered.length }} productos</p>
+    @if (compact()) {
+      <button appButton="primary" type="button" (click)="openCart(cartDrawer)">
+        Carrito · {{ carrito.length }}<app-icon name="arrow" />
+      </button>
+    }
   </div>
-</div>
+  <p class="cart-feedback" role="status">{{ feedback }}</p>
+  <div class="catalog-layout">
+    <div>
+      <div class="fragment-anchors">
+        @for (item of categories; track item.value) {
+          <span [id]="item.fragment"></span>
+        }
+      </div>
+      <div class="product-grid">
+        @for (product of filtered; track product.id) {
+          <article class="product-card">
+            <div class="product-image">
+              <img
+                [src]="product.imagen"
+                [alt]="product.nombre"
+                (error)="imageError($event)"
+                loading="lazy"
+                width="400"
+                height="400"
+              />
+            </div>
+            <div class="product-copy">
+              <span class="eyebrow">{{ product.categoria }}</span>
+              <h2>{{ product.nombre }}</h2>
+              <p class="muted">{{ product.descripcion }}</p>
+              <strong class="product-price"
+                >{{
+                  product.precio | currency: "MXN" : "symbol-narrow" : "1.2-2"
+                }}
+                <small>MXN</small></strong
+              >
+              @if (product.id === 1) {
+                <span class="status status--warning">Importe de prueba</span>
+              }
+              <button
+                appButton="secondary"
+                type="button"
+                (click)="agregarAlCarrito(product)"
+                [disabled]="checkoutPending"
+                [attr.aria-label]="'Añadir ' + product.nombre + ' al carrito'"
+              >
+                Añadir al carrito<app-icon name="plus" />
+              </button>
+            </div>
+          </article>
+        } @empty {
+          <div class="empty-state">
+            <app-icon name="search" />
+            <h2>No hay productos con esos filtros.</h2>
+            <button
+              appButton="secondary"
+              type="button"
+              (click)="query = ''; category = ''"
+            >
+              Ver todos
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+    @if (!compact()) {
+      <aside class="desktop-cart surface">
+        <ng-container *ngTemplateOutlet="cartContent" />
+      </aside>
+    }
+  </div>
+</section>
+<ng-template #cartDrawer
+  ><div class="cart-drawer">
+    <header class="toolbar">
+      <h2 id="cart-title">Tu carrito</h2>
+      <button
+        class="ui-icon-button cart-close"
+        type="button"
+        aria-label="Cerrar carrito"
+        [disabled]="checkoutPending"
+        (click)="closeCart()"
+      >
+        <app-icon name="close" />
+      </button>
+    </header>
+    <ng-container *ngTemplateOutlet="cartContent" /></div
+></ng-template>
+<ng-template #cartContent
+  ><div class="cart-content">
+    @if (!compact()) {
+      <span class="eyebrow">Revisa tu selección</span>
+      <h2>Tu carrito</h2>
+    }
+    <p class="help">{{ carrito.length }} unidades · Solo durante esta visita</p>
+    @if (carrito.length) {
+      <div class="cart-lines">
+        @for (line of cartLines; track line.product.id) {
+          <article class="cart-line">
+            <div>
+              <h3>{{ line.product.nombre }}</h3>
+              <span class="help"
+                >{{
+                  line.product.precio
+                    | currency: "MXN" : "symbol-narrow" : "1.2-2"
+                }}
+                MXN / unidad</span
+              >
+            </div>
+            <div class="quantity-row">
+              <div class="quantity-control">
+                <button
+                  class="ui-icon-button"
+                  type="button"
+                  [disabled]="checkoutPending"
+                  [attr.aria-label]="
+                    'Quitar una unidad de ' + line.product.nombre
+                  "
+                  (click)="changeQuantity(line.product, -1)"
+                >
+                  <app-icon name="minus" /></button
+                ><output
+                  [attr.aria-label]="'Cantidad de ' + line.product.nombre"
+                  >{{ line.quantity }}</output
+                ><button
+                  class="ui-icon-button"
+                  type="button"
+                  [disabled]="checkoutPending"
+                  [attr.aria-label]="
+                    'Añadir una unidad de ' + line.product.nombre
+                  "
+                  (click)="changeQuantity(line.product, 1)"
+                >
+                  <app-icon name="plus" />
+                </button>
+              </div>
+              <button
+                class="remove-line"
+                type="button"
+                [disabled]="checkoutPending"
+                (click)="removeProduct(line.product.id)"
+              >
+                Eliminar
+              </button>
+            </div>
+          </article>
+        }
+      </div>
+      <div class="cart-total">
+        <span>Total MXN</span
+        ><strong>{{
+          total | currency: "MXN" : "symbol-narrow" : "1.2-2"
+        }}</strong>
+      </div>
+      <p class="help">
+        La suma conserva los importes del catálogo. No se añaden cargos desde
+        esta interfaz.
+      </p>
+      <label class="checkout-review"
+        ><input
+          type="checkbox"
+          [(ngModel)]="reviewed"
+          (ngModelChange)="reviewCheckout()"
+          [disabled]="checkoutPending || paymentState === 'pending'"
+        /><span
+          >He revisado los productos y el total antes de continuar a
+          PayPal.</span
+        ></label
+      >
+      @if (reviewed) {
+        @if (paymentState === "loading") {
+          <p class="help" role="status">Cargando PayPal…</p>
+        }
+        <div id="paypal-button-container"></div>
+        @if (paymentState === "unavailable") {
+          <button
+            appButton="secondary"
+            type="button"
+            (click)="renderPayPalButton()"
+          >
+            Reintentar PayPal
+          </button>
+        }
+      }
+      @if (checkoutPending) {
+        <p class="notice" role="status">
+          La operación está en curso en PayPal. Espera a conocer su resultado.
+        </p>
+      }
+    } @else {
+      <div class="cart-empty">
+        <app-icon name="grid" />
+        <h3>Aún no hay productos.</h3>
+        <p class="help">Añade un artículo para revisar cantidades e importe.</p>
+      </div>
+    }
+    @if (paymentMessage) {
+      <p class="notice" role="status">{{ paymentMessage }}</p>
+    }
+  </div></ng-template
+>

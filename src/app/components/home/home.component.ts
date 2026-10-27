@@ -1,31 +1,33 @@
-import { Component } from '@angular/core';
-import { CarruselComponent } from '../carrusel/carrusel.component';
-import { NosotrosComponent } from '../nosotros/nosotros.component';
-import { ServiciosComponent } from '../servicios/servicios.component';
-import { UbicacionComponent } from '../ubicacion/ubicacion.component';
-import { NavbarComponent } from "../navbar/navbar.component";
-import { RedesComponent } from "../redes/redes.component";
-import { EjerciciosComponent } from "../ejercicios/ejercicios.component";
-import { VideoCardsComponent } from "../video-cards/video-cards.component";
-import { ResponsablesComponent } from "../responsables/responsables.component";
-import { FooterComponent } from "../footer/footer.component";
-
+import { Component } from "@angular/core";
+import { RouterLink } from "@angular/router";
+import { IconComponent } from "../../shared/ui/icon/icon.component";
+import { ButtonDirective } from "../../shared/ui/button.directive";
 @Component({
-  selector: 'app-home',
+  selector: "app-home",
   standalone: true,
-  templateUrl: './home.component.html',
-  styleUrls: ['./home.component.css'],
-  imports: [
-    CarruselComponent,
-    NosotrosComponent,
-    ServiciosComponent,
-    UbicacionComponent,
-    NavbarComponent,
-    RedesComponent,
-    EjerciciosComponent,
-    VideoCardsComponent,
-    ResponsablesComponent,
-    FooterComponent
-]
+  imports: [RouterLink, IconComponent, ButtonDirective],
+  templateUrl: "./home.component.html",
+  styleUrl: "./home.component.css",
 })
-export class HomeComponent {}
+export class HomeComponent {
+  readonly services = [
+    {
+      number: "01",
+      name: "Fuerza y pesas",
+      description: "Construye tu entrenamiento, un movimiento a la vez.",
+      image: "img/CARRUSEL/2.png",
+    },
+    {
+      number: "02",
+      name: "Indoor cycling",
+      description: "Encuentra energía y ritmo sobre la bicicleta.",
+      image: "img/cursos/spinning.jpeg",
+    },
+    {
+      number: "03",
+      name: "Entrenamiento en grupo",
+      description: "Zumba y CrossFit para sumar movimiento a tu semana.",
+      image: "img/cursos/cross-training.jpeg",
+    },
+  ];
+}

@@ -1,24 +1,30 @@
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatDividerModule } from '@angular/material/divider';
-import { NgIf } from '@angular/common';
-
+import { Component } from "@angular/core";
 @Component({
-  selector: 'app-redes',
+  selector: "app-redes",
   standalone: true,
-  imports: [MatCardModule, MatIconModule, MatDividerModule],
-  templateUrl: './redes.component.html',
-  styleUrls: ['./redes.component.css']
+  templateUrl: "./redes.component.html",
+  styleUrl: "./redes.component.css",
 })
-export class RedesComponent implements OnInit {
-  
-  public socialId: string = "";
-
-
-
-  ngOnInit(): void {
-
-  }
+export class RedesComponent {
+  socialId = "";
+  readonly channels = [
+    {
+      name: "Instagram",
+      handle: "@gromfitnesscenter",
+      url: "https://www.instagram.com/gromfitnesscenter/",
+      description: "Fotografías, novedades y publicaciones del gimnasio.",
+    },
+    {
+      name: "Facebook",
+      handle: "GROM Fitness Center",
+      url: "https://www.facebook.com/gromfitnesscenter",
+      description: "Información y publicaciones de la comunidad.",
+    },
+    {
+      name: "TikTok",
+      handle: "@grom_fitnesscenter",
+      url: "https://www.tiktok.com/@grom_fitnesscenter",
+      description: "Videos y momentos de entrenamiento.",
+    },
+  ];
 }

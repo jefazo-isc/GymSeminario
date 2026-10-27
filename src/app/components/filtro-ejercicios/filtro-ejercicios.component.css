@@ -11,7 +11,7 @@
   width: 100%;
   max-width: 600px;
   transition: all 0.3s ease;
-  color: white;
+  color: var(--color-text);
 }
 
 /* Escala un poco al hacer hover */
@@ -25,44 +25,44 @@
 }
 
 .search-field ::ng-deep .mat-mdc-text-field-wrapper {
-  background: linear-gradient(145deg, #222 0%, #111 100%);
+  background: var(--color-surface);
   border-radius: 30px;
   padding: 0 20px;
-  box-shadow: inset 0 0 4px #ff6f00, 0 0 12px rgba(255, 111, 0, 0.2);
-  color: white;
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text);
 }
 
 .search-field ::ng-deep .mat-mdc-form-field-outline {
-  color: #ff7f00;
+  color: var(--color-accent);
 }
 
 .search-field ::ng-deep .mat-mdc-form-field-outline-thick {
-  border-color: #ff7f00;
+  border-color: var(--color-border-strong);
 }
 
 .search-field ::ng-deep .mat-mdc-floating-label {
-  color: #ffffff !important;
+  color: var(--color-text) !important;
   font-weight: bold;
   letter-spacing: 0.5px;
 }
 
 .search-field ::ng-deep .mat-mdc-input-element {
-  color: white !important;
+  color: var(--color-text) !important;
   font-weight: 500;
 }
 
 .search-field ::ng-deep .mat-mdc-input-element::placeholder {
-  color: #aaa;
+  color: var(--color-text-secondary);
   font-style: italic;
 }
 
 .search-field ::ng-deep .mat-icon {
-  color: #ff7f00 !important;
+  color: var(--color-accent) !important;
   transition: color 0.3s ease;
 }
 
 .search-field ::ng-deep .mat-icon:hover {
-  color: #ffffff;
+  color: var(--color-text);
 }
 
 /* Animación */

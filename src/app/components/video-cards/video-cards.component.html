@@ -1,30 +1,80 @@
-<div class="video-section">
-  <h1 class="title">Videos recomendados para tu rutina</h1>
-  <p class="description">Aquí encontrarás ejercicios y consejos ideales para mejorar tu rendimiento en el gym.</p>
-
-  <button mat-raised-button class="custom-button" (click)="toggleTodosVideos()">
-    {{ mostrarTodos() ? 'Ocultar todos los videos' : 'Mostrar todos los videos' }}
-  </button>
-
-
-  <div class="video-filter">
-    <span class="label">Mostrar solo:</span>
-    <div class="button-container">
-      @for (parte of partesDelCuerpo; track $index) {
-      <button mat-raised-button color="primary" (click)="mostrarUnSoloVideo(parte)">
-        {{ parte }}
+<section class="feature-page stack">
+  <div class="filter-pills" aria-label="Filtrar videos">
+    <button
+      type="button"
+      [attr.aria-pressed]="filter === ''"
+      (click)="selectFilter('')"
+    >
+      Todos
+    </button>
+    @for (category of categories; track category) {
+      <button
+        type="button"
+        [attr.aria-pressed]="filter === category"
+        (click)="selectFilter(category)"
+      >
+        {{ category }}
       </button>
-      }
-    </div>
-
-    <div class="video-grid">
-      @for (videoId of videoIds; track $index) {
-      <ng-container>
-        <mat-card *ngIf="videosVisibles()[$index]" class="video-card">
-          <iframe width="100%" height="200" [src]="videoId | safeUrl" frameborder="0" allowfullscreen></iframe>
-        </mat-card>
-
-      </ng-container>
-      }
-    </div>
+    }
   </div>
+  <p class="help" aria-live="polite">
+    {{ visible.length }} guías disponibles. Los videos son contenido de
+    terceros.
+  </p>
+  <div class="video-grid">
+    @for (video of visible; track video.id) {
+      <article class="video-card">
+        <div class="video-media">
+          @if (activeId === video.id) {
+            <iframe
+              [src]="video.id | safeUrl"
+              [title]="video.title"
+              loading="lazy"
+              allow="encrypted-media; picture-in-picture"
+              allowfullscreen
+            ></iframe>
+          } @else {
+            <button
+              type="button"
+              class="video-launch"
+              (click)="activeId = video.id"
+              [attr.aria-label]="'Cargar video: ' + video.title"
+            >
+              <img
+                [src]="'https://i.ytimg.com/vi/' + video.id + '/hqdefault.jpg'"
+                alt=""
+                width="480"
+                height="360"
+                loading="lazy"
+              /><span><app-icon name="play" />Cargar video</span>
+            </button>
+          }
+        </div>
+        <div class="video-copy">
+          <span class="eyebrow">{{ video.category }} · YouTube</span>
+          <h2>{{ video.title }}</h2>
+          <div class="toolbar">
+            @if (activeId === video.id) {
+              <button appButton="ghost" type="button" (click)="activeId = null">
+                Cerrar reproductor
+              </button>
+            }
+            <a
+              class="text-link"
+              [href]="'https://www.youtube.com/watch?v=' + video.id"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Ver en YouTube<app-icon name="external"
+            /></a>
+          </div>
+        </div>
+      </article>
+    }
+  </div>
+  <div class="notice">
+    <p>
+      El reproductor se conecta a YouTube solo cuando eliges cargarlo. No hay
+      reproducción automática.
+    </p>
+  </div>
+</section>

@@ -1,25 +1,23 @@
-<br>
-<section id="creditos" class="credit-section">
-  <h3 id="creadores" class="title">¡EQUIPO!</h3>
-  <p class="subtitle">Equipo de Desarrollo y Diseño</p>
-
-  <div class="credit-box">
-    <div class="team-grid">
-      @for (miembro of integrantes; track miembro.nombre) {
-        <div class="credit-item">
-          <img [src]="miembro.foto" [alt]="miembro.nombre" class="member-photo" loading="lazy">
-          <p class="member-name">🎮 {{ miembro.nombre }}</p>
-        </div>
-      }
-    </div>
-
-    <div class="meta-info">
-      <p class="creator-info">🎓 Proyecto de Tesis / Seminario</p>
-      <p class="creator-info">🏋️ GROM Fitness Center</p>
-      <p class="creator-info">💻 Ingeniería en Sistemas Computacionales</p>
-      <p class="creator-info">📅 2026</p>
-    </div>
+<section class="feature-page stack">
+  <div class="team-grid">
+    @for (miembro of integrantes; track miembro.nombre) {
+      <article class="surface team-member">
+        <img
+          [src]="miembro.foto"
+          [alt]="miembro.nombre"
+          width="120"
+          height="120"
+          loading="lazy"
+        />
+        <h2>{{ miembro.nombre }}</h2>
+        <span class="muted">Equipo de desarrollo y diseño</span>
+      </article>
+    }
+  </div>
+  <div class="notice">
+    <p>
+      Proyecto académico de Tesis / Seminario · Ingeniería en Sistemas
+      Computacionales · GROM Fitness Center · 2026.
+    </p>
   </div>
 </section>
-<br><br>
-  

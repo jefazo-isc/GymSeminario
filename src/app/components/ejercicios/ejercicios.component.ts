@@ -1,84 +1,126 @@
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { MatTableModule } from '@angular/material/table';
-import { MatCardModule } from '@angular/material/card';
-import { HttpClientModule, HttpClient } from '@angular/common/http'; 
-import { FiltroEjerciciosComponent } from '../filtro-ejercicios/filtro-ejercicios.component';
-
+import {
+  Component,
+  EventEmitter,
+  OnInit,
+  Output,
+  DestroyRef,
+  inject,
+} from "@angular/core";
+import { CommonModule } from "@angular/common";
+import { FormsModule } from "@angular/forms";
+import { HttpClient } from "@angular/common/http";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { IconComponent } from "../../shared/ui/icon/icon.component";
+import { ButtonDirective } from "../../shared/ui/button.directive";
+export interface LibraryExercise {
+  nombre: string;
+  series: number | string;
+  repeticiones: number | string;
+  equipo: string;
+}
+export interface ExerciseGroup {
+  parte: string;
+  ejercicios: LibraryExercise[];
+}
+export const normalizeSearch = (value: string) =>
+  value.normalize("NFD").replace(/[̀-ͯ]/g, "").toLocaleLowerCase("es").trim();
 @Component({
-  selector: 'app-ejercicios',
+  selector: "app-ejercicios",
   standalone: true,
-  imports: [
-    CommonModule,
-    MatTableModule,
-    MatCardModule,
-    HttpClientModule, 
-    FiltroEjerciciosComponent
-  ],
-  templateUrl: './ejercicios.component.html',
-  styleUrls: ['./ejercicios.component.css']
+  imports: [CommonModule, FormsModule, IconComponent, ButtonDirective],
+  templateUrl: "./ejercicios.component.html",
+  styleUrl: "./ejercicios.component.css",
 })
 export class EjerciciosComponent implements OnInit {
   @Output() parteSeleccionada = new EventEmitter<string>();
-
-  datosPorParte: any[] = [];
-  datosFiltrados: any[] = [];
-  columnas: string[] = ['nombre', 'series', 'repeticiones', 'equipo'];
-  filtroActual: string = '';
-
-  constructor(private http: HttpClient) {} 
-
-  ngOnInit(): void {
-    this.http.get<any>('https://arl150.github.io/ejercicios-api/ejercicios.json')
-.subscribe(
-      response => {
-        this.datosPorParte = response.datosPorParte || [];
-        this.datosFiltrados = [...this.datosPorParte];
-      },
-      error => {
-        console.error('Error al cargar ejercicios desde la API', error);
-      }
-    );
+  private http = inject(HttpClient);
+  private destroyRef = inject(DestroyRef);
+  datosPorParte: ExerciseGroup[] = [];
+  datosFiltrados: ExerciseGroup[] = [];
+  filtroActual = "";
+  grupoFiltro = "";
+  equipoFiltro = "";
+  loading = false;
+  error = "";
+  ngOnInit() {
+    this.load();
   }
-
-  seleccionarParte(parte: string): void {
+  load() {
+    if (this.loading) return;
+    this.loading = true;
+    this.error = "";
+    this.http
+      .get<{ datosPorParte: ExerciseGroup[] }>(
+        "https://arl150.github.io/ejercicios-api/ejercicios.json",
+      )
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (r) => {
+          this.datosPorParte = Array.isArray(r?.datosPorParte)
+            ? r.datosPorParte
+            : [];
+          this.loading = false;
+          this.applyFilters();
+        },
+        error: () => {
+          this.loading = false;
+          this.error =
+            "No pudimos cargar el catálogo de ejercicios. Revisa tu conexión y vuelve a intentarlo.";
+        },
+      });
+  }
+  get equipos() {
+    return [
+      ...new Set(
+        this.datosPorParte.flatMap((g) =>
+          g.ejercicios.flatMap((e) =>
+            (e.equipo || "")
+              .split(",")
+              .map((v) => v.trim())
+              .filter(Boolean),
+          ),
+        ),
+      ),
+    ].sort((a, b) => a.localeCompare(b, "es"));
+  }
+  get total() {
+    return this.datosFiltrados.reduce((sum, g) => sum + g.ejercicios.length, 0);
+  }
+  get hasFilters() {
+    return !!(this.filtroActual || this.grupoFiltro || this.equipoFiltro);
+  }
+  onFiltrarEjercicios(term: string) {
+    this.filtroActual = term;
+    this.applyFilters();
+  }
+  applyFilters() {
+    const q = normalizeSearch(this.filtroActual);
+    this.datosFiltrados = this.datosPorParte
+      .filter((g) => !this.grupoFiltro || g.parte === this.grupoFiltro)
+      .map((g) => ({
+        ...g,
+        ejercicios: g.ejercicios.filter(
+          (e) =>
+            (!q ||
+              normalizeSearch(
+                g.parte + " " + e.nombre + " " + e.equipo,
+              ).includes(q)) &&
+            (!this.equipoFiltro ||
+              (e.equipo || "")
+                .split(",")
+                .map((v) => v.trim())
+                .includes(this.equipoFiltro)),
+        ),
+      }))
+      .filter((g) => g.ejercicios.length > 0);
+  }
+  reset() {
+    this.filtroActual = "";
+    this.grupoFiltro = "";
+    this.equipoFiltro = "";
+    this.applyFilters();
+  }
+  seleccionarParte(parte: string) {
     this.parteSeleccionada.emit(parte);
-  }
-
-  onFiltrarEjercicios(termino: string): void {
-    this.filtroActual = termino.toLowerCase().trim();
-
-    if (this.filtroActual === '') {
-      this.datosFiltrados = [...this.datosPorParte];
-    } else {
-      this.datosFiltrados = this.datosPorParte.map(grupo => {
-        const parteCoincide = grupo.parte.toLowerCase().includes(this.filtroActual);
-        const ejerciciosFiltrados = grupo.ejercicios.filter((ejercicio: any) =>
-          ejercicio.nombre.toLowerCase().includes(this.filtroActual)
-        );
-
-        if (parteCoincide) {
-          return { ...grupo, ejercicios: grupo.ejercicios };
-        }
-
-        if (ejerciciosFiltrados.length > 0) {
-          return { ...grupo, ejercicios: ejerciciosFiltrados };
-        }
-
-        return null;
-      }).filter(grupo => grupo !== null);
-    }
-  }
-
-  resaltarTexto(texto: string, termino: string): string {
-    if (!termino || termino.trim() === '') return texto;
-    const regex = new RegExp(`(${termino})`, 'gi');
-    return texto.replace(regex, '<mark style="background-color: #ff7f00; color: white; padding: 2px 4px; border-radius: 3px;">$1</mark>');
-  }
-
-  resaltarParte(parte: string, termino: string): string {
-    if (!termino || termino.trim() === '') return parte;
-    const regex = new RegExp(`(${termino})`, 'gi');
-    return parte.replace(regex, '<mark style="background-color: #ff7f00; color: white; padding: 2px 4px; border-radius: 3px;">$1</mark>');
   }
 }

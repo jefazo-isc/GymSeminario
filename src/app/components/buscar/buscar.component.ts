@@ -1,32 +1,37 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
-import { CursoService } from '../../services/curso.service';
-import { RouterModule } from '@angular/router';
-
-interface Curso {
-  id: number;
-  nombre: string;
-  duracion: string;
-  descripcion: string;
-}
-
+import { Component, DestroyRef, inject } from "@angular/core";
+import { FormsModule } from "@angular/forms";
+import { Router, RouterLink, ActivatedRoute } from "@angular/router";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { CursoService } from "../../services/curso.service";
+import { IconComponent } from "../../shared/ui/icon/icon.component";
+import { ButtonDirective } from "../../shared/ui/button.directive";
 @Component({
-  selector: 'app-buscar',
+  selector: "app-buscar",
   standalone: true,
-  imports: [CommonModule, RouterModule], // 👈 Importa los módulos necesarios
-  templateUrl: './buscar.component.html',
-  styleUrl: './buscar.component.css'
+  imports: [FormsModule, RouterLink, IconComponent, ButtonDirective],
+  templateUrl: "./buscar.component.html",
+  styleUrl: "./buscar.component.css",
 })
-export class BuscarComponent implements OnInit {
-  resultados: Curso[] = [];
-
-  constructor(private route: ActivatedRoute, private cursoService: CursoService) {}
-
-  ngOnInit() {
-    this.route.queryParams.subscribe(params => {
-      const termino = params['q'] || '';
-      this.resultados = this.cursoService.buscarCursos(termino);
+export class BuscarComponent {
+  query = "";
+  resultados: ReturnType<CursoService["buscarCursos"]> = [];
+  private router = inject(Router);
+  private service = inject(CursoService);
+  constructor() {
+    inject(ActivatedRoute)
+      .queryParamMap.pipe(takeUntilDestroyed())
+      .subscribe((params) => {
+        this.query = params.get("q") || "";
+        this.resultados = this.service.buscarCursos(this.query);
+      });
+  }
+  search() {
+    void this.router.navigate(["/buscar"], {
+      queryParams: this.query.trim() ? { q: this.query.trim() } : {},
     });
+  }
+  clear() {
+    this.query = "";
+    this.search();
   }
 }

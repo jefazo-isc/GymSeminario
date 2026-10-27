@@ -1,58 +1,157 @@
-<body>
-  <div class="registro-container">
-    <h2>Agenda tu entrenamiento</h2>
-
-    <form [formGroup]="formulario" (ngSubmit)="enviarFormulario()" id="todo">
-      <!-- Entrenamiento -->
-      <div class="container-input">
-        <i class='bx bx-dumbbell'></i>
-        <select formControlName="entrenamiento"
-          [class.invalid]="formulario.get('entrenamiento')?.touched && formulario.get('entrenamiento')?.invalid">
-          <option value="">Selecciona entrenamiento</option>
-          <option *ngFor="let e of entrenamientos" [value]="e">{{ e }}</option>
-        </select>
-      </div>
-      <div class="error" *ngIf="formulario.get('entrenamiento')?.touched && formulario.get('entrenamiento')?.invalid">
-        <small>Campo obligatorio</small>
-      </div>
-
-      <!-- Fecha -->
-      <div class="container-input">
-        <i class='bx bx-calendar'></i>
-        <input type="date" formControlName="fecha" [min]="minFecha"
-          [class.invalid]="formulario.get('fecha')?.touched && formulario.get('fecha')?.invalid" />
-      </div>
-      <div class="error" *ngIf="formulario.get('fecha')?.touched && formulario.get('fecha')?.invalid">
-        <small>Campo obligatorio</small>
-      </div>
-
-      <!-- Turno -->
-      <div class="container-input">
-        <i class='bx bx-time'></i>
-        <select formControlName="turno"
-          [class.invalid]="formulario.get('turno')?.touched && formulario.get('turno')?.invalid">
-          <option value="">Selecciona turno</option>
-          <option value="Mañana">Mañana</option>
-          <option value="Tarde">Tarde</option>
-          <option value="Noche">Noche</option>
-        </select>
-      </div>
-      <div class="error" *ngIf="formulario.get('turno')?.touched && formulario.get('turno')?.invalid">
-        <small>Campo obligatorio</small>
-      </div>
-      <br>
-      <!-- Botón -->
-      <button type="submit" class="button" [disabled]="formulario.invalid">Enviar</button>
-    </form>
-    <div *ngIf="loading()">
-  <p>⏳ Enviando formulario...</p>
-</div>
-
-    <div *ngIf="enviado">
-      <p>✅ Tomale captura es tu boleto al evento</p>
-      <app-qr-view  
-    [clase]="clase"
-    [fecha]="fecha">></app-qr-view>
-    </div>
+<section class="feature-page stack">
+  <div class="notice">
+    <app-icon name="calendar" />
+    <p>
+      <strong>Registro conectado a Firestore.</strong> Esta operación es
+      independiente del historial local de Mi actividad. El aviso por correo o
+      SMS se confirma por separado.
+    </p>
   </div>
-</body>
+  @if (!authReady) {
+    <p class="help" role="status">Consultando tu sesión…</p>
+  } @else if (!authenticated) {
+    <div class="notice notice--warning">
+      <p>
+        Necesitas una sesión de Firebase para confirmar el registro.
+        <a routerLink="/auth/sign-in">Ingresar</a>.
+      </p>
+    </div>
+  }
+  @if (enviado) {
+    <div class="registration-result stack">
+      <div class="surface">
+        <span class="status status--success"
+          ><app-icon name="check" />Registro guardado en Firestore</span
+        >
+        <h2>Tu selección quedó registrada.</h2>
+        <p class="help">
+          Identificador: <code>{{ recordId }}</code>
+        </p>
+        <p>
+          {{ clase }} · {{ fecha.length > 10 ? formulario.value.fecha : fecha }}
+        </p>
+        <p
+          class="notice"
+          [class.notice--warning]="notificationError"
+          role="status"
+        >
+          {{ notification }}
+        </p>
+        @if (notificationError) {
+          <button
+            appButton="secondary"
+            type="button"
+            (click)="retryNotification()"
+            [disabled]="loading()"
+          >
+            Reintentar solo el aviso
+          </button>
+        }
+        <div class="form-actions">
+          <button
+            appButton="primary"
+            type="button"
+            [disabled]="loading()"
+            (click)="reset()"
+          >
+            Registrar otra sesión</button
+          ><a appButton="secondary" routerLink="/micuenta">Ir a mi cuenta</a>
+        </div>
+      </div>
+      <div class="surface">
+        <h3>Código del servicio externo</h3>
+        <app-qr-view [clase]="clase" [fecha]="fecha" />
+      </div>
+    </div>
+  } @else {
+    <form
+      class="booking-layout"
+      [formGroup]="formulario"
+      (ngSubmit)="enviarFormulario()"
+      novalidate
+      [attr.aria-busy]="loading()"
+    >
+      <div class="surface stack">
+        <div>
+          <span class="eyebrow">Tu sesión</span>
+          <h2>Elige cuándo entrenar.</h2>
+        </div>
+        <div class="field">
+          <label for="registration-class">Entrenamiento</label
+          ><select
+            id="registration-class"
+            formControlName="entrenamiento"
+            required
+          >
+            <option value="">Selecciona una actividad</option>
+            @for (item of entrenamientos; track item) {
+              <option [value]="item">{{ item }}</option>
+            }
+          </select>
+          @if (invalid("entrenamiento")) {
+            <span class="field-error">Selecciona un entrenamiento.</span>
+          }
+        </div>
+        <div class="field">
+          <label for="registration-date">Fecha</label
+          ><input
+            id="registration-date"
+            type="date"
+            formControlName="fecha"
+            [min]="minFecha"
+            required
+          />
+          @if (invalid("fecha")) {
+            <span class="field-error">Selecciona la fecha.</span>
+          }
+        </div>
+        <div class="field">
+          <label for="registration-time">Turno</label
+          ><select id="registration-time" formControlName="turno" required>
+            <option value="">Selecciona turno</option>
+            <option>Mañana</option>
+            <option>Tarde</option>
+            <option>Noche</option>
+          </select>
+        </div>
+      </div>
+      <aside class="surface booking-summary">
+        <span class="eyebrow">Antes de confirmar</span>
+        <h2>Revisa tu selección.</h2>
+        <dl>
+          <div>
+            <dt>Actividad</dt>
+            <dd>{{ formulario.value.entrenamiento || "Por seleccionar" }}</dd>
+          </div>
+          <div>
+            <dt>Fecha</dt>
+            <dd>{{ formulario.value.fecha || "Por seleccionar" }}</dd>
+          </div>
+          <div>
+            <dt>Turno</dt>
+            <dd>{{ formulario.value.turno || "Por seleccionar" }}</dd>
+          </div>
+        </dl>
+        <p class="help">
+            Se guardará tu selección en el sistema del gimnasio. La confirmación
+            del aviso por correo o SMS es independiente.
+        </p>
+        @if (error) {
+          <p class="field-error" role="alert">{{ error }}</p>
+        }
+        @if (loading()) {
+          <p class="help" role="status">Confirmando registro o aviso…</p>
+          <div class="loading-line"></div>
+        }
+        <button
+          appButton="primary"
+          type="submit"
+          [disabled]="loading() || !authenticated"
+        >
+          {{ loading() ? "Procesando…" : "Confirmar registro"
+          }}<app-icon name="check" />
+        </button>
+      </aside>
+    </form>
+  }
+</section>
