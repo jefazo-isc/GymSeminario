@@ -1,9 +1,9 @@
 import { TestBed } from "@angular/core/testing";
-import { provideRouter } from "@angular/router";
 import { provideNoopAnimations } from "@angular/platform-browser/animations";
+import { provideRouter } from "@angular/router";
 import { of } from "rxjs";
 import { AppComponent } from "./app.component";
-import { AuthService } from "./auth/data-access/auth.service";
+import { AuthService } from "./features/auth/data-access/auth.service";
 
 describe("Application shell", () => {
   it("renders one header, a keyboard skip target and one footer around routed content", () => {

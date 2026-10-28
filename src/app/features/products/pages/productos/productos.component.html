@@ -1,0 +1,265 @@
+<section class="feature-page stack">
+  <div class="notice notice--warning">
+    <app-icon name="grid" />
+    <p>
+      <strong>Catálogo por validar.</strong> Los precios originales se
+      conservan; Gymshark Whey Protein figura con un importe de prueba de $1
+      MXN. El sitio no tiene confirmación propia de inventario ni un sistema
+      persistente de pedidos. Revisa los importes antes de continuar a PayPal.
+    </p>
+  </div>
+  <div class="filters">
+    <div class="field">
+      <label for="product-query">Buscar productos</label
+      ><input
+        id="product-query"
+        class="control"
+        type="search"
+        [(ngModel)]="query"
+        placeholder="Nombre o descripción"
+      />
+    </div>
+    <div class="field">
+      <label for="product-category">Categoría</label
+      ><select id="product-category" [(ngModel)]="category">
+        <option value="">Todas las categorías</option>
+        @for (item of categories; track item.value) {
+          <option [value]="item.value">{{ item.label }}</option>
+        }
+      </select>
+    </div>
+    <div class="field">
+      <label for="product-sort">Ordenar</label
+      ><select id="product-sort" [(ngModel)]="sort">
+        <option value="featured">Orden del catálogo</option>
+        <option value="price-asc">Precio: menor a mayor</option>
+        <option value="price-desc">Precio: mayor a menor</option>
+        <option value="name">Nombre</option>
+      </select>
+    </div>
+    <button
+      appButton="ghost"
+      type="button"
+      (click)="query = ''; category = ''; sort = 'featured'"
+    >
+      Restablecer
+    </button>
+  </div>
+  <app-request-state
+    [state]="catalogState"
+    loadingLabel="Consultando productos…"
+    (retry)="loadProducts()"
+  />
+  <div class="toolbar">
+    <p class="help" aria-live="polite">
+      {{
+        catalogLoading
+          ? "Consultando catálogo…"
+          : filtered.length + " productos"
+      }}
+    </p>
+    @if (compact()) {
+      <button appButton="primary" type="button" (click)="openCart(cartDrawer)">
+        Carrito · {{ carrito.length }}<app-icon name="arrow" />
+      </button>
+    }
+  </div>
+  <p class="cart-feedback" role="status">{{ feedback }}</p>
+  <div class="catalog-layout">
+    <div>
+      <div class="fragment-anchors">
+        @for (item of categories; track item.value) {
+          <span [id]="item.fragment"></span>
+        }
+      </div>
+      <div class="product-grid">
+        @for (product of filtered; track product.id) {
+          <article class="product-card">
+            <div class="product-image">
+              <img
+                decoding="async"
+                [src]="product.imagen"
+                [alt]="product.nombre"
+                (error)="imageError($event)"
+                loading="lazy"
+                width="400"
+                height="400"
+              />
+            </div>
+            <div class="product-copy">
+              <span class="eyebrow">{{ product.categoria }}</span>
+              <h2>{{ product.nombre }}</h2>
+              <p class="muted">{{ product.descripcion }}</p>
+              <strong class="product-price"
+                >{{
+                  product.precio | currency: "MXN" : "symbol-narrow" : "1.2-2"
+                }}
+                <small>MXN</small></strong
+              >
+              @if (product.id === 1) {
+                <span class="status status--warning">Importe de prueba</span>
+              }
+              <button
+                appButton="secondary"
+                type="button"
+                (click)="agregarAlCarrito(product)"
+                [disabled]="checkoutPending"
+                [attr.aria-label]="'Añadir ' + product.nombre + ' al carrito'"
+              >
+                Añadir al carrito<app-icon name="plus" />
+              </button>
+            </div>
+          </article>
+        } @empty {
+          @if (!catalogLoading && !catalogError) {
+            <div class="empty-state">
+              <app-icon name="search" />
+              <h2>No hay productos con esos filtros.</h2>
+              <button
+                appButton="secondary"
+                type="button"
+                (click)="query = ''; category = ''"
+              >
+                Ver todos
+              </button>
+            </div>
+          }
+        }
+      </div>
+    </div>
+    @if (!compact()) {
+      <aside class="desktop-cart surface">
+        <ng-container *ngTemplateOutlet="cartContent" />
+      </aside>
+    }
+  </div>
+</section>
+<ng-template #cartDrawer
+  ><div class="cart-drawer">
+    <header class="toolbar">
+      <h2 id="cart-title">Tu carrito</h2>
+      <button
+        class="ui-icon-button cart-close"
+        type="button"
+        aria-label="Cerrar carrito"
+        [disabled]="checkoutPending"
+        (click)="closeCart()"
+      >
+        <app-icon name="close" />
+      </button>
+    </header>
+    <ng-container *ngTemplateOutlet="cartContent" /></div
+></ng-template>
+<ng-template #cartContent
+  ><div class="cart-content">
+    @if (!compact()) {
+      <span class="eyebrow">Revisa tu selección</span>
+      <h2>Tu carrito</h2>
+    }
+    <p class="help">{{ carrito.length }} unidades · Solo durante esta visita</p>
+    @if (carrito.length) {
+      <div class="cart-lines">
+        @for (line of cartLines; track line.product.id) {
+          <article class="cart-line">
+            <div>
+              <h3>{{ line.product.nombre }}</h3>
+              <span class="help"
+                >{{
+                  line.product.precio
+                    | currency: "MXN" : "symbol-narrow" : "1.2-2"
+                }}
+                MXN / unidad</span
+              >
+            </div>
+            <div class="quantity-row">
+              <div class="quantity-control">
+                <button
+                  class="ui-icon-button"
+                  type="button"
+                  [disabled]="checkoutPending"
+                  [attr.aria-label]="
+                    'Quitar una unidad de ' + line.product.nombre
+                  "
+                  (click)="changeQuantity(line.product, -1)"
+                >
+                  <app-icon name="minus" /></button
+                ><output
+                  [attr.aria-label]="'Cantidad de ' + line.product.nombre"
+                  >{{ line.quantity }}</output
+                ><button
+                  class="ui-icon-button"
+                  type="button"
+                  [disabled]="checkoutPending"
+                  [attr.aria-label]="
+                    'Añadir una unidad de ' + line.product.nombre
+                  "
+                  (click)="changeQuantity(line.product, 1)"
+                >
+                  <app-icon name="plus" />
+                </button>
+              </div>
+              <button
+                class="remove-line"
+                type="button"
+                [disabled]="checkoutPending"
+                (click)="removeProduct(line.product.id)"
+              >
+                Eliminar
+              </button>
+            </div>
+          </article>
+        }
+      </div>
+      <div class="cart-total">
+        <span>Total MXN</span
+        ><strong>{{
+          total | currency: "MXN" : "symbol-narrow" : "1.2-2"
+        }}</strong>
+      </div>
+      <p class="help">
+        La suma conserva los importes del catálogo. No se añaden cargos desde
+        esta interfaz.
+      </p>
+      <label class="checkout-review"
+        ><input
+          type="checkbox"
+          [(ngModel)]="reviewed"
+          (ngModelChange)="reviewCheckout()"
+          [disabled]="checkoutPending || paymentState === 'pending'"
+        /><span
+          >He revisado los productos y el total antes de continuar a
+          PayPal.</span
+        ></label
+      >
+      @if (reviewed) {
+        @if (paymentState === "loading") {
+          <p class="help" role="status">Cargando PayPal…</p>
+        }
+        <div id="paypal-button-container"></div>
+        @if (paymentState === "unavailable") {
+          <button
+            appButton="secondary"
+            type="button"
+            (click)="renderPayPalButton()"
+          >
+            Reintentar PayPal
+          </button>
+        }
+      }
+      @if (checkoutPending) {
+        <p class="notice" role="status">
+          La operación está en curso en PayPal. Espera a conocer su resultado.
+        </p>
+      }
+    } @else {
+      <div class="cart-empty">
+        <app-icon name="grid" />
+        <h3>Aún no hay productos.</h3>
+        <p class="help">Añade un artículo para revisar cantidades e importe.</p>
+      </div>
+    }
+    @if (paymentMessage) {
+      <p class="notice" role="status">{{ paymentMessage }}</p>
+    }
+  </div></ng-template
+>

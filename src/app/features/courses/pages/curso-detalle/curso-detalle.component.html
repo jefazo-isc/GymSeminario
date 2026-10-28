@@ -1,0 +1,51 @@
+<section class="feature-page">
+  <app-request-state
+    [state]="viewState"
+    loadingLabel="Consultando el curso…"
+    (retry)="loadCatalog()"
+  />
+  @if (!loading && !error) {
+    @if (curso) {
+      <article class="course-detail">
+        <img
+          decoding="async"
+          [src]="curso.img"
+          [alt]="curso.nombre"
+          width="700"
+          height="520"
+        />
+        <div class="surface">
+          <span class="eyebrow">Catálogo de actividades</span>
+          <h2>{{ curso.nombre }}</h2>
+          <p class="muted">{{ curso.descripcion }}</p>
+          <div class="duration">
+            <app-icon name="clock" /><span
+              >Duración publicada: <strong>{{ curso.duracion }}</strong></span
+            >
+          </div>
+          <p class="help">
+            Esta información no representa una reserva ni confirma
+            disponibilidad de horario.
+          </p>
+          <div class="form-actions">
+            <a appButton="primary" routerLink="/f2"
+              >Agendar entrenamiento<app-icon name="arrow" /></a
+            ><a appButton="secondary" routerLink="/buscar"
+              >Volver al catálogo</a
+            >
+          </div>
+        </div>
+      </article>
+    } @else {
+      <div class="empty-state">
+        <app-icon name="search" />
+        <h2>El curso no está en el catálogo.</h2>
+        <p>
+          El enlace puede ser antiguo. Encuentra las actividades disponibles en
+          la búsqueda.
+        </p>
+        <a appButton="primary" routerLink="/buscar">Explorar cursos</a>
+      </div>
+    }
+  }
+</section>

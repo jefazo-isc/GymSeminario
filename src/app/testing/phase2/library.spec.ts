@@ -1,14 +1,14 @@
-import { TestBed } from "@angular/core/testing";
 import { provideHttpClient } from "@angular/common/http";
 import {
-  provideHttpClientTesting,
   HttpTestingController,
+  provideHttpClientTesting,
 } from "@angular/common/http/testing";
+import { TestBed } from "@angular/core/testing";
 import {
   EjerciciosComponent,
   normalizeSearch,
-} from "../../components/ejercicios/ejercicios.component";
-import { VideoCardsComponent } from "../../components/video-cards/video-cards.component";
+} from "../../features/training/pages/ejercicios/ejercicios.component";
+import { VideoCardsComponent } from "../../features/training/pages/video-cards/video-cards.component";
 
 describe("Exercise library", () => {
   const url = "https://arl150.github.io/ejercicios-api/ejercicios.json";
@@ -63,6 +63,12 @@ describe("Exercise library", () => {
     expect(component.datosPorParte[0].ejercicios.length).toBe(2);
     component.reset();
     expect(component.total).toBe(3);
+    expect(
+      component.equipos.filter((value) => normalizeSearch(value) === "barra"),
+    ).toEqual(["Barra"]);
+    component.equipoFiltro = "BARRA";
+    component.applyFilters();
+    expect(component.total).toBe(2);
   });
   it("handles accents and treats punctuation as plain search text", () => {
     const fixture = create();

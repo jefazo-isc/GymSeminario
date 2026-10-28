@@ -1,17 +1,18 @@
+import { NgZone } from "@angular/core";
 import { TestBed } from "@angular/core/testing";
-import { NgZone } from '@angular/core';
 import { provideRouter } from "@angular/router";
+import Swal from "sweetalert2";
+import { MembresiaService } from "../../features/memberships/data-access/membresia.service";
 import {
   MembresiasComponent,
   demoPrice,
-} from "../../components/membresias/membresias.component";
-import { MembresiaService } from "../../services/membresia.service";
+} from "../../features/memberships/pages/membresias/membresias.component";
+import { PayPalSdkLoader } from "../../features/products/data-access/paypal-sdk.loader";
 import {
   ProductosComponent,
   cartTotal,
-} from "../../components/productos/productos.component";
+} from "../../features/products/pages/productos/productos.component";
 import { escapeHtml } from "../../shared/ui/escape-html";
-import Swal from "sweetalert2";
 
 describe("Membership review", () => {
   beforeEach(() =>
@@ -66,7 +67,8 @@ describe("Product cart", () => {
       providers: [provideRouter([])],
     }).overrideComponent(ProductosComponent, {
       set: {
-          template: '<div id="paypal-button-container"></div><span class="sdk-feedback">{{paymentMessage}}</span>',
+        template:
+          '<div id="paypal-button-container"></div><span class="sdk-feedback">{{paymentMessage}}</span>',
         imports: [],
       },
     });
@@ -102,21 +104,35 @@ describe("Product cart", () => {
     component.query = "no-existe";
     expect(component.filtered.length).toBe(0);
   });
-  it('renders cancellation feedback from a provider callback outside the Angular zone',async()=>{
-    let callbacks:any;
-    (window as any).paypal={Buttons:(options:any)=>{callbacks=options;return {render:()=>Promise.resolve(),close:()=>Promise.resolve()};}};
-    const fixture=TestBed.createComponent(ProductosComponent);
+  it("renders cancellation feedback from a provider callback outside the Angular zone", async () => {
+    let callbacks: any;
+    (window as any).paypal = {
+      Buttons: (options: any) => {
+        callbacks = options;
+        return {
+          render: () => Promise.resolve(),
+          close: () => Promise.resolve(),
+        };
+      },
+    };
+    const fixture = TestBed.createComponent(ProductosComponent);
     fixture.autoDetectChanges();
-    const component=fixture.componentInstance;
-    component.agregarAlCarrito(component.productos[0]);component.reviewed=true;
+    const component = fixture.componentInstance;
+    component.agregarAlCarrito(component.productos[0]);
+    component.reviewed = true;
     await component.renderPayPalButton();
-    TestBed.inject(NgZone).runOutsideAngular(()=>callbacks.onCancel());
+    TestBed.inject(NgZone).runOutsideAngular(() => callbacks.onCancel());
     await fixture.whenStable();
-    expect(fixture.nativeElement.querySelector('.sdk-feedback').textContent).toContain('se canceló');
+    expect(
+      fixture.nativeElement.querySelector(".sdk-feedback").textContent,
+    ).toContain("se canceló");
     expect(component.carrito.length).toBe(1);
   });
   it("shows unavailable instead of throwing when the payment SDK is missing", async () => {
     (window as any).paypal = undefined;
+    spyOn(TestBed.inject(PayPalSdkLoader), "load").and.rejectWith(
+      new Error("Mock unavailable"),
+    );
     const fixture = TestBed.createComponent(ProductosComponent);
     fixture.detectChanges();
     const component = fixture.componentInstance;

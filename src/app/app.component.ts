@@ -1,15 +1,17 @@
 import { Component, inject } from "@angular/core";
 import { Router, RouterOutlet } from "@angular/router";
-import { NavbarComponent } from "./components/navbar/navbar.component";
-import { FooterComponent } from "./components/footer/footer.component";
 import { ThemeService } from "./core/theme/theme.service";
+import { FooterComponent } from "./layouts/public/ui/footer/footer.component";
+import { NavbarComponent } from "./layouts/public/ui/navbar/navbar.component";
 import { RouteHeadingComponent } from "./shared/ui/route-heading/route-heading.component";
+import { StorageNoticeComponent } from "./shared/ui/storage-notice/storage-notice.component";
 
 @Component({
   selector: "app-root",
   standalone: true,
   imports: [
     RouterOutlet,
+    StorageNoticeComponent,
     NavbarComponent,
     FooterComponent,
     RouteHeadingComponent,

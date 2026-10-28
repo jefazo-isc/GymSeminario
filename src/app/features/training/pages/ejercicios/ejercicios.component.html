@@ -1,0 +1,143 @@
+<section class="feature-page stack">
+  <div class="filters">
+    <div class="field search-filter">
+      <label for="exercise-search">Buscar ejercicios</label>
+      <div class="search-input">
+        <app-icon name="search" /><input
+          id="exercise-search"
+          class="control"
+          type="search"
+          placeholder="Nombre o grupo muscular"
+          [(ngModel)]="filtroActual"
+          (ngModelChange)="applyFilters()"
+        />
+      </div>
+    </div>
+    <div class="field">
+      <label for="muscle-filter">Grupo muscular</label
+      ><select
+        id="muscle-filter"
+        [(ngModel)]="grupoFiltro"
+        (ngModelChange)="applyFilters()"
+      >
+        <option value="">Todos los grupos</option>
+        @for (group of datosPorParte; track group.parte) {
+          <option [value]="group.parte">{{ group.parte }}</option>
+        }
+      </select>
+    </div>
+    <div class="field">
+      <label for="equipment-filter">Equipo</label
+      ><select
+        id="equipment-filter"
+        [(ngModel)]="equipoFiltro"
+        (ngModelChange)="applyFilters()"
+      >
+        <option value="">Cualquier equipo</option>
+        @for (equipo of equipos; track equipo) {
+          <option [value]="equipo">{{ equipo }}</option>
+        }
+      </select>
+    </div>
+    <button
+      appButton="ghost"
+      type="button"
+      (click)="reset()"
+      [disabled]="!hasFilters"
+    >
+      Restablecer
+    </button>
+  </div>
+  <app-request-state
+    [state]="viewState"
+    loadingLabel="Cargando el catálogo de ejercicios…"
+    errorLabel="El catálogo no está disponible."
+    (retry)="load()"
+  />
+  @if (!loading && !error) {
+    <div class="toolbar">
+      <p class="help" aria-live="polite">
+        {{ total }} ejercicios · {{ datosFiltrados.length }} grupos
+      </p>
+      <span class="help">Abre un grupo para ver los movimientos.</span>
+    </div>
+    @for (group of datosFiltrados; track group.parte) {
+      <details class="exercise-group" [open]="hasFilters || $first">
+        <summary (click)="seleccionarParte(group.parte)">
+          <span
+            ><span class="group-number">{{
+              ($index + 1).toString().padStart(2, "0")
+            }}</span
+            ><strong>{{ group.parte }}</strong
+            ><span class="count"
+              >{{ group.ejercicios.length }} ejercicios</span
+            ></span
+          ><app-icon name="chevron" />
+        </summary>
+        <div class="exercise-body">
+          <table class="data-table exercise-table">
+            <caption>
+              Movimientos de
+              {{
+                group.parte
+              }}
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Ejercicio</th>
+                <th scope="col">Series</th>
+                <th scope="col">Repeticiones</th>
+                <th scope="col">Equipo</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (exercise of group.ejercicios; track $index) {
+                <tr>
+                  <td>
+                    <strong>{{ exercise.nombre }}</strong>
+                  </td>
+                  <td>{{ exercise.series }}</td>
+                  <td>{{ exercise.repeticiones }}</td>
+                  <td class="muted">
+                    {{ exercise.equipo || "No especificado" }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          <div class="exercise-cards">
+            @for (exercise of group.ejercicios; track $index) {
+              <article>
+                <h3>{{ exercise.nombre }}</h3>
+                <dl>
+                  <div>
+                    <dt>Series</dt>
+                    <dd>{{ exercise.series }}</dd>
+                  </div>
+                  <div>
+                    <dt>Repeticiones</dt>
+                    <dd>{{ exercise.repeticiones }}</dd>
+                  </div>
+                </dl>
+                <p class="help">
+                  Equipo: {{ exercise.equipo || "No especificado" }}
+                </p>
+              </article>
+            }
+          </div>
+        </div>
+      </details>
+    } @empty {
+      <div class="empty-state">
+        <app-icon name="search" />
+        <h2>No encontramos coincidencias.</h2>
+        <p>Prueba otro nombre, grupo o equipo.</p>
+        <button appButton="secondary" (click)="reset()">Quitar filtros</button>
+      </div>
+    }
+  }
+  <p class="help">
+    Catálogo informativo de la API de ejercicios. Ajusta cargas y técnica con
+    orientación de un entrenador.
+  </p>
+</section>

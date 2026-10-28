@@ -1,0 +1,78 @@
+<section class="feature-page stack">
+  <form class="filters" (ngSubmit)="search()">
+    <div class="field">
+      <label for="course-query">Buscar cursos</label
+      ><input
+        class="control"
+        id="course-query"
+        name="query"
+        type="search"
+        [(ngModel)]="query"
+        maxlength="80"
+        placeholder="Yoga, pilates, spinning…"
+      />
+    </div>
+    <button appButton="primary" type="submit">
+      <app-icon name="search" />Buscar</button
+    ><button
+      appButton="ghost"
+      type="button"
+      (click)="clear()"
+      [disabled]="!query"
+    >
+      Limpiar
+    </button>
+  </form>
+  <app-request-state
+    [state]="viewState"
+    loadingLabel="Consultando cursos…"
+    (retry)="loadCatalog()"
+  />
+  @if (!loading && !error) {
+    <div class="toolbar">
+      <p class="help" aria-live="polite">
+        {{ resultados.length }}
+        {{
+          resultados.length === 1 ? "curso disponible" : "cursos disponibles"
+        }}
+      </p>
+      <span class="status">Catálogo informativo</span>
+    </div>
+    <div class="course-grid">
+      @for (curso of resultados; track curso.id) {
+        <article class="course-card">
+          <a
+            [routerLink]="['/detalle', curso.id]"
+            [attr.aria-label]="'Conocer ' + curso.nombre"
+            ><img
+              decoding="async"
+              [src]="curso.img"
+              [alt]="curso.nombre"
+              width="500"
+              height="320"
+              loading="lazy"
+          /></a>
+          <div>
+            <span class="eyebrow">Clase · {{ curso.duracion }}</span>
+            <h2>
+              <a [routerLink]="['/detalle', curso.id]">{{ curso.nombre }}</a>
+            </h2>
+            <p>{{ curso.descripcion }}</p>
+            <a class="text-link" [routerLink]="['/detalle', curso.id]"
+              >Conocer la actividad<app-icon name="arrow"
+            /></a>
+          </div>
+        </article>
+      } @empty {
+        <div class="empty-state">
+          <app-icon name="search" />
+          <h2>No encontramos ese curso.</h2>
+          <p>Prueba con otra actividad o explora el catálogo completo.</p>
+          <button appButton="secondary" type="button" (click)="clear()">
+            Ver todos los cursos
+          </button>
+        </div>
+      }
+    </div>
+  }
+</section>

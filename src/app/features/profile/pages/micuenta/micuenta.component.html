@@ -1,0 +1,224 @@
+<section class="feature-page account-layout">
+  <app-request-state
+    [state]="profileState"
+    loadingLabel="Consultando perfil…"
+    (retry)="loadProfile()"
+  />
+  @if (!profileLoading && !profileError) {
+    <aside class="stack">
+      <article class="surface">
+        <span class="eyebrow">Identidad</span>
+        @if (!authReady) {
+          <p role="status">Consultando sesión…</p>
+        } @else if (nombre || email) {
+          <div class="profile-avatar"><app-icon name="user" /></div>
+          <h2>{{ nombre || "Tu cuenta" }}</h2>
+          <p class="help identity-email">
+            {{ email || "Acceso con teléfono o proveedor externo" }}
+          </p>
+          <span class="status">{{ role || "Rol no disponible" }}</span>
+          <div class="form-actions">
+            <button appButton="ghost" type="button" (click)="cerrarSesion()">
+              Cerrar sesión
+            </button>
+          </div>
+        } @else {
+          <h2>Accede a tu cuenta.</h2>
+          <p class="muted">
+            Puedes revisar el perfil local, pero agenda e identidad utilizan tu
+            sesión de Firebase.
+          </p>
+          <a appButton="primary" routerLink="/auth/sign-in"
+            >Ingresar<app-icon name="arrow"
+          /></a>
+        }
+        @if (authError) {
+          <p class="field-error" role="alert">{{ authError }}</p>
+        }
+      </article>
+      <article class="surface">
+        <span class="eyebrow">Tu experiencia</span>
+        <h3>Apariencia y accesibilidad</h3>
+        <p class="help">Preferencia actual: {{ theme.label() }}.</p>
+        <button appButton="secondary" type="button" (click)="openPreferences()">
+          <app-icon name="monitor" />Personalizar
+        </button>
+        <hr class="divider" />
+        <a class="text-link" routerLink="/change"
+          >Cambiar contraseña<app-icon name="external"
+        /></a>
+      </article>
+      <article class="surface surface--soft">
+        <span class="eyebrow">Dato orientativo</span>
+        <div class="metric">{{ imc || "—" }}</div>
+        <p class="help">
+          Relación peso/altura calculada con tus datos. No es una evaluación
+          médica ni una recomendación de entrenamiento.
+        </p>
+      </article>
+    </aside>
+    <div class="stack">
+      <div class="notice">
+        <app-icon name="monitor" />
+        <p>
+          <strong>Perfil local de entrenamiento.</strong> Los valores iniciales
+          son ejemplos editables. Se conservan en este navegador y se comparten
+          con el coach al usarlo; no están sincronizados con tu cuenta remota.
+        </p>
+      </div>
+      <form
+        class="surface"
+        #profileForm="ngForm"
+        (ngSubmit)="guardarDatos(profileForm)"
+        novalidate
+      >
+        <span class="eyebrow">Acerca de ti</span>
+        <h2>Tu punto de partida.</h2>
+        <p class="help">Revisa estos datos antes de solicitar una rutina.</p>
+        <div class="form-grid">
+          <div class="field full-width">
+            <label for="profile-name">Nombre para entrenar</label
+            ><input
+              id="profile-name"
+              name="nombre"
+              [(ngModel)]="perfil.nombre"
+              required
+              autocomplete="name"
+              #name="ngModel"
+            />
+            @if (name.invalid && name.touched) {
+              <span class="field-error">Escribe un nombre.</span>
+            }
+          </div>
+          <div class="field">
+            <label for="profile-age">Edad</label
+            ><input
+              id="profile-age"
+              type="number"
+              name="edad"
+              [(ngModel)]="perfil.edad"
+              min="1"
+              max="120"
+              required
+            />
+          </div>
+          <div class="field">
+            <label for="profile-gender">Género</label
+            ><select
+              id="profile-gender"
+              name="genero"
+              [(ngModel)]="perfil.genero"
+            >
+              @for (gender of generos; track gender) {
+                <option [value]="gender">{{ gender }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label for="profile-weight">Peso (kg)</label
+            ><input
+              id="profile-weight"
+              type="number"
+              name="peso"
+              [(ngModel)]="perfil.peso"
+              min="1"
+              max="500"
+              step=".1"
+              required
+            />
+          </div>
+          <div class="field">
+            <label for="profile-height">Altura (cm)</label
+            ><input
+              id="profile-height"
+              type="number"
+              name="altura"
+              [(ngModel)]="perfil.altura"
+              min="50"
+              max="250"
+              required
+            />
+          </div>
+        </div>
+        <hr class="divider" />
+        <span class="eyebrow">Cómo quieres entrenar</span>
+        <div class="form-grid">
+          <div class="field full-width">
+            <label for="profile-objective">Objetivo principal</label
+            ><select
+              id="profile-objective"
+              name="objetivo"
+              [(ngModel)]="perfil.objetivo"
+            >
+              @for (objective of objetivos; track objective) {
+                <option [value]="objective">{{ objective }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label for="profile-days">Días por semana</label
+            ><select
+              id="profile-days"
+              name="diasDisponibles"
+              [(ngModel)]="perfil.diasDisponibles"
+            >
+              @for (day of opcionesDias; track day) {
+                <option [ngValue]="day">{{ day }} días</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label for="profile-level">Experiencia</label
+            ><select id="profile-level" name="nivel" [(ngModel)]="perfil.nivel">
+              @for (level of niveles; track level) {
+                <option [value]="level">{{ level }}</option>
+              }
+            </select>
+          </div>
+          <div class="field full-width">
+            <label for="profile-restrictions"
+              >Limitaciones que quieres comunicar al coach</label
+            ><textarea
+              id="profile-restrictions"
+              name="restriccionesMedicas"
+              [(ngModel)]="perfil.restriccionesMedicas"
+              rows="3"
+            ></textarea
+            ><small class="help"
+              >Evita incluir información personal que no sea necesaria para usar
+              esta herramienta.</small
+            >
+          </div>
+        </div>
+        @if (profileForm.invalid && profileForm.submitted) {
+          <p class="field-error" role="alert">
+            Revisa los campos obligatorios y los valores numéricos.
+          </p>
+        }
+        @if (saveMessage) {
+          <div
+            class="notice save-feedback"
+            [class.notice--success]="guardadoExitoso"
+            [class.notice--warning]="!guardadoExitoso"
+            role="status"
+          >
+            {{ saveMessage }}
+          </div>
+        }
+        <div class="form-actions">
+          <button
+            appButton="primary"
+            type="submit"
+            [disabled]="saving"
+            [attr.aria-busy]="saving"
+          >
+            {{ saving ? "Guardando…" : "Guardar perfil local"
+            }}<app-icon name="check" /></button
+          ><a appButton="secondary" routerLink="/coach-ia"
+            >Ir al coach<app-icon name="arrow"
+          /></a>
+        </div>
+      </form>
+    </div>
+  }
+</section>

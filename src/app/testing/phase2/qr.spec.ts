@@ -1,13 +1,13 @@
-import { TestBed } from "@angular/core/testing";
 import { provideHttpClient } from "@angular/common/http";
 import {
   HttpTestingController,
   provideHttpClientTesting,
 } from "@angular/common/http/testing";
+import { TestBed } from "@angular/core/testing";
 import { BehaviorSubject } from "rxjs";
-import { QrService } from "../../services/qr.service";
-import { QrViewComponent } from "../../components/qr-view/qr-view.component";
-import { AuthService } from "../../auth/data-access/auth.service";
+import { AuthService } from "../../features/auth/data-access/auth.service";
+import { QrService } from "../../features/training/data-access/qr.service";
+import { QrViewComponent } from "../../features/training/ui/qr-view/qr-view.component";
 
 describe("External QR integrity", () => {
   beforeEach(() =>

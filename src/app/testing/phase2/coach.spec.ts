@@ -1,13 +1,13 @@
 import { TestBed } from "@angular/core/testing";
 import { provideRouter } from "@angular/router";
 import { of, throwError } from "rxjs";
+import { AuthService } from "../../features/auth/data-access/auth.service";
+import { RutinaService } from "../../features/coach/data-access/rutina.service";
 import {
   CoachIaComponent,
   validRoutine,
-} from "../../components/coach-ia/coach-ia.component";
-import { RutinaService } from "../../services/rutina.service";
-import { AuthService } from "../../auth/data-access/auth.service";
-import { PerfilSocioService } from "../../services/perfil-socio.service";
+} from "../../features/coach/pages/coach-ia/coach-ia.component";
+import { PerfilSocioService } from "../../features/profile/data-access/perfil-socio.service";
 
 describe("Coach responses", () => {
   const profile = {
@@ -44,19 +44,17 @@ describe("Coach responses", () => {
   let service: any;
   beforeEach(() => {
     service = {
-      obtenerCoaches: jasmine
-        .createSpy()
-        .and.returnValue(
-          of([
-            {
-              id: "unit",
-              nombre: "Unit coach",
-              emoji: "◎",
-              titulo: "Example",
-              frase: "Example greeting",
-            },
-          ]),
-        ),
+      obtenerCoaches: jasmine.createSpy().and.returnValue(
+        of([
+          {
+            id: "unit",
+            nombre: "Unit coach",
+            emoji: "◎",
+            titulo: "Example",
+            frase: "Example greeting",
+          },
+        ]),
+      ),
       generarRutina: jasmine.createSpy(),
       enviarMensajeChat: jasmine.createSpy(),
     };

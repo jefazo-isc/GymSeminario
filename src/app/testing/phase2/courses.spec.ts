@@ -6,8 +6,8 @@ import {
   Router,
 } from "@angular/router";
 import { BehaviorSubject } from "rxjs";
-import { BuscarComponent } from "../../components/buscar/buscar.component";
-import { CursoDetalleComponent } from "../../components/curso-detalle/curso-detalle.component";
+import { BuscarComponent } from "../../features/courses/pages/buscar/buscar.component";
+import { CursoDetalleComponent } from "../../features/courses/pages/curso-detalle/curso-detalle.component";
 
 describe("Course navigation", () => {
   it("keeps query changes and clears search through the existing route", () => {

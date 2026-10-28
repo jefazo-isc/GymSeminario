@@ -1,7 +1,9 @@
 <a class="skip-link" href="#main-content">Saltar al contenido</a>
 <app-navbar />
 <main id="main-content" class="page-content" tabindex="-1">
-  <div class="page-stage"><app-route-heading /><router-outlet /></div>
+  <div class="page-stage">
+    <app-route-heading /><app-storage-notice /><router-outlet />
+  </div>
 </main>
 @if (!router.url.startsWith("/footer")) {
   <app-footer />

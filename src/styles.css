@@ -198,122 +198,13 @@ main h4 {
   color: var(--color-text);
 }
 
-/* Bootstrap consumes the same palette; no second color system for native controls. */
-:root,
-[data-theme] {
-  --text-color: var(--color-text);
-  --bs-body-bg: var(--color-bg);
-  --bs-body-color: var(--color-text);
-  --bs-secondary-color: var(--color-text-secondary);
-  --bs-secondary-bg: var(--color-surface-secondary);
-  --bs-tertiary-bg: var(--color-surface-secondary);
-  --bs-border-color: var(--color-border);
-  --bs-link-color: var(--color-accent);
-  --bs-link-hover-color: var(--color-action-hover);
-  --bs-primary: var(--color-action);
-  --bs-heading-color: var(--color-text);
-}
-.form-control,
-.form-select {
-  color: var(--color-text);
-  background-color: var(--color-surface);
-  border-color: var(--color-border-strong);
-}
-.form-control:focus,
-.form-select:focus {
-  color: var(--color-text);
-  background-color: var(--color-surface);
-  border-color: var(--color-focus);
-  box-shadow: 0 0 0 3px var(--color-accent-soft);
-}
-.form-control::placeholder {
-  color: var(--color-text-secondary);
-  opacity: 1;
-}
+/* Historical input wrapper is kept for the un-routed auth experiment. */
 .container-input:focus-within {
   outline: 2px solid var(--color-focus);
   outline-offset: 3px;
 }
 .container-input input {
   min-width: 0;
-}
-.table {
-  --bs-table-color: var(--color-text);
-  --bs-table-bg: var(--color-surface);
-  --bs-table-border-color: var(--color-border);
-  --bs-table-striped-bg: var(--color-surface-secondary);
-}
-
-/* Transitional color adapters for existing pages. Layout and bindings stay local. */
-.theme-text {
-  color: var(--color-text);
-}
-.theme-muted {
-  color: var(--color-text-secondary);
-}
-.theme-surface {
-  background-color: var(--color-surface);
-}
-.theme-surface-secondary {
-  background-color: var(--color-surface-secondary);
-}
-.theme-status-success {
-  color: var(--color-success);
-  background-color: var(--color-success-soft);
-}
-.theme-status-warning {
-  color: var(--color-warning);
-  background-color: var(--color-warning-soft);
-}
-.theme-status-danger {
-  color: var(--color-danger);
-  background-color: var(--color-danger-soft);
-}
-.theme-warning {
-  color: var(--color-warning);
-}
-.theme-danger {
-  color: var(--color-danger);
-}
-.theme-success {
-  color: var(--color-success);
-}
-.theme-button-secondary,
-.theme-button-outline {
-  --bs-btn-color: var(--color-text);
-  --bs-btn-bg: var(--color-surface-secondary);
-  --bs-btn-border-color: var(--color-border-strong);
-  --bs-btn-hover-color: var(--color-text);
-  --bs-btn-hover-bg: var(--color-accent-soft);
-  --bs-btn-hover-border-color: var(--color-accent);
-}
-.theme-button-outline {
-  --bs-btn-bg: transparent;
-}
-.btn-primary {
-  --bs-btn-bg: var(--color-action);
-  --bs-btn-border-color: var(--color-action);
-  --bs-btn-color: var(--color-on-action);
-  --bs-btn-hover-bg: var(--color-action-hover);
-  --bs-btn-hover-border-color: var(--color-action-hover);
-  --bs-btn-hover-color: var(--color-on-action);
-}
-.alert {
-  --bs-alert-bg: var(--color-surface-secondary);
-  --bs-alert-color: var(--color-text);
-  --bs-alert-border-color: var(--color-border);
-}
-.alert-warning {
-  --bs-alert-bg: var(--color-warning-soft);
-  --bs-alert-color: var(--color-warning);
-}
-.alert-danger {
-  --bs-alert-bg: var(--color-danger-soft);
-  --bs-alert-color: var(--color-danger);
-}
-.alert-success {
-  --bs-alert-bg: var(--color-success-soft);
-  --bs-alert-color: var(--color-success);
 }
 .mat-mdc-tooltip .mdc-tooltip__surface {
   background: var(--color-surface-raised);

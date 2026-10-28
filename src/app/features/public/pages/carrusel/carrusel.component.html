@@ -1,0 +1,56 @@
+<section class="feature-page stack">
+  <figure class="gallery-main">
+    <img
+      decoding="async"
+      [src]="images[currentIndex].src"
+      [alt]="'Instalaciones de GROM 21, fotografía ' + (currentIndex + 1)"
+      width="1200"
+      height="700"
+    />
+    <figcaption>
+      <span aria-live="polite"
+        >Fotografía {{ currentIndex + 1 }} de {{ images.length }}</span
+      >
+      <div>
+        <button
+          type="button"
+          class="ui-icon-button"
+          aria-label="Fotografía anterior"
+          (click)="prevImage()"
+        >
+          ←</button
+        ><button
+          type="button"
+          class="ui-icon-button"
+          aria-label="Fotografía siguiente"
+          (click)="nextImage()"
+        >
+          →
+        </button>
+      </div>
+    </figcaption>
+  </figure>
+  <div class="gallery-thumbnails" aria-label="Elegir fotografía">
+    @for (image of images; track image.src) {
+      <button
+        type="button"
+        [attr.aria-label]="'Ver fotografía ' + ($index + 1)"
+        [attr.aria-pressed]="currentIndex === $index"
+        (click)="setActiveImage($index)"
+      >
+        <img
+          decoding="async"
+          [src]="image.src"
+          alt=""
+          loading="lazy"
+          width="180"
+          height="110"
+        />
+      </button>
+    }
+  </div>
+  <p class="help">
+    Fotografías publicadas por el proyecto. Consulta condiciones y
+    disponibilidad de las áreas directamente con el gimnasio.
+  </p>
+</section>

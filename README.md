@@ -2,7 +2,7 @@
 
 Plataforma web académica para un gimnasio: información pública, cursos, ejercicios, autenticación, reservas, asistencias, membresías, estado de cuenta, actividad y coach virtual con Gemini.
 
-**Documentación actualizada: 27 de octubre de 2026, zona America/Mexico_City.** Describe el checkout y las fases 1 y 2 del rediseño frontend. Las secciones 14 y 15 detallan cambios, verificaciones y límites; no acreditan operaciones reales de los proveedores externos.
+**Documentación actualizada: 27 de octubre de 2026, zona America/Mexico_City.** Describe el checkout y las tres fases del rediseño frontend. Las secciones 14–16 detallan cambios, verificaciones y límites; no acreditan operaciones reales de los proveedores externos.
 
 El nombre técnico del proyecto Angular es `libreria1`; el producto se presenta como GROM 21 y espacioGYM. Ese identificador determina los comandos de Angular y la carpeta de compilación.
 
@@ -75,7 +75,7 @@ npm --prefix back start
 
 Comprobar [http://localhost:3001](http://localhost:3001). Ambos servidores Express usan **3000 por defecto**: es necesario cambiar `PORT` en notificaciones si el coach ocupa ese puerto.
 
-**Arrancar `back/` localmente no cambia el destino del frontend.** `ApiService` y los formularios `/f2` y `/f3` envían las notificaciones a `https://gymseminario.onrender.com`. No hay proxy de desarrollo ni selector de entorno que redirija esas llamadas a `localhost:3001`. Para conectarlo localmente se requeriría una futura modificación del código/configuración, fuera de esta actualización documental.
+**Arrancar `back/` localmente no cambia el destino del frontend.** El adaptador de entrenamiento y el `ApiService` histórico conservan `https://gymseminario.onrender.com`. No hay proxy ni redirección automática a `localhost:3001`. Desde la fase 3 los destinos se configuran por entorno; cualquier cambio de servidor debe ser deliberado y comprobar CORS y el contrato existente.
 
 `back/index.js` lee `process.env`, pero no carga `dotenv/config`. Para Twilio hay que definir `TWILIO_ACCOUNT_SID` y `TWILIO_AUTH_TOKEN` en el proceso que lo inicia. El número remitente y la configuración de Gmail están escritos directamente en ese archivo. No hay soporte actual de variables `SMTP_USER`, `SMTP_PASS` o `TWILIO_PHONE_NUMBER`.
 
@@ -103,7 +103,7 @@ La API de notificaciones local es una alternativa de ejecución del código `bac
 | Capa | Tecnologías |
 | --- | --- |
 | Interfaz | Angular 19.2, TypeScript 5.7, RxJS 7.8, componentes standalone |
-| UI | Angular Material/CDK, Bootstrap, iconos, SweetAlert2 |
+| UI | Angular Material/CDK, iconos SVG compartidos y SweetAlert2 |
 | Gráficas y QR | Chart.js, ng2-charts, angularx-qrcode |
 | Identidad y datos | Firebase 11 y AngularFire 19 |
 | API IA | Node.js, Express 5, Google Gen AI SDK, dotenv, CORS y express-rate-limit |
@@ -111,7 +111,7 @@ La API de notificaciones local es una alternativa de ejecución del código `bac
 | Pruebas | Jasmine, Karma y Chrome launcher |
 | Publicación | Angular build, Firebase Hosting, Nginx/Docker, GitHub Actions y GHCR |
 
-Estas son las familias de versiones del manifiesto, no una recomendación de que todas estén actualizadas. El manifiesto raíz conserva también paquetes históricos como `angular` 1.x y `materials`; su presencia no cambia que el arranque principal sea Angular 19.
+Estas son las familias de versiones del manifiesto, no una recomendación de que todas estén actualizadas. Se retiraron `angular` 1.x y `materials` tras comprobar que no se importaban. El arranque sigue siendo Angular 19; las dependencias que utiliza el backend IA permanecen en la raíz.
 
 ## 5. Estructura del repositorio
 
@@ -119,32 +119,34 @@ Estas son las familias de versiones del manifiesto, no una recomendación de que
 GymSeminario/
 ├── .github/workflows/ci.yml       # Pipeline de build, lint, pruebas, auditoría y Docker
 ├── src/
-│   ├── main.ts                   # Arranque standalone y registro de Chart.js
-│   ├── index.html                # Documento HTML y recursos/SDK externos
+│   ├── main.ts                   # Arranque standalone; Chart.js se registra en su pantalla
+│   ├── index.html                # Documento HTML, fuente y script inicial del tema
 │   ├── styles.css                # Estilos globales
 │   ├── styles/                   # Tokens semánticos y tema Material de la fase 1
-│   ├── types.d.ts                # Declaraciones manuales de Firebase
+│   ├── types.d.ts                # Sin declaraciones que sustituyan tipos de Firebase
 │   ├── app/
 │   │   ├── app.component.*       # Shell: navegación, contenido de rutas y pie
 │   │   ├── app.config.ts         # Router, HTTP, Firebase y service worker
 │   │   ├── app.routes.ts         # Rutas principales
-│   │   ├── auth/
-│   │   │   ├── data-access/      # AuthService y acceso a usuarios/roles
-│   │   │   ├── features/         # Login, registro, cambio y rutas hijas
-│   │   │   └── utils/            # Validaciones auxiliares
-│   │   ├── components/           # Páginas y componentes de negocio
-│   │   ├── core/                 # Servicios centrales de tema y accesibilidad
-│   │   ├── shared/ui/            # Marca, iconos, botones y paneles reutilizables
-│   │   ├── services/             # APIs, perfil, planes, pagos, actividad y catálogos
+│   │   ├── core/                 # Configuración, estados, almacenamiento, fecha, tema y accesibilidad
+│   │   ├── layouts/public/ui/    # Cabecera y pie compartidos
+│   │   ├── features/             # Dominios; detalle en la sección 16
+│   │   │   ├── home/, public/, courses/
+│   │   │   ├── auth/, profile/, training/
+│   │   │   ├── memberships/, billing/, activity/
+│   │   │   └── products/, coach/, admin/, legacy/
+│   │   ├── shared/ui/            # Marca, iconos, botones, paneles, estados y avisos
+│   │   ├── shared/directives/    # Visibilidad de contraseña
+│   │   ├── shared/pipes/         # Capitalización, categorías y URL de YouTube
+│   │   ├── testing/              # Regresiones y apoyo para specs históricos
 │   │   ├── servicios/            # Servicio histórico de ejercicios Beeceptor
-│   │   ├── models/               # Producto, rutina, membresía, pago y sesión
-│   │   ├── pipes/                # Capitalización, categorías y URL de YouTube
 │   │   └── common/               # Servicio de ventana para el flujo telefónico
+│   ├── environments/             # Valores públicos para desarrollo/producción
 │   ├── assets/                   # Recursos históricos; no es la entrada de assets del build actual
 │   └── validators/               # Validación de contraseña y coincidencia
 ├── public/                       # Recursos copiados por Angular: imágenes, iconos y manifest
 │   └── theme-init.js              # Preferencia visual antes del primer render
-├── docs/design/                  # Referencias visuales de la fase 1
+├── docs/design/                  # Capturas y revisión adaptable del rediseño
 ├── server/
 │   ├── index.js                  # API del coach IA, módulos ES
 │   ├── services/
@@ -211,7 +213,7 @@ Hay servicios y componentes históricos que conviven con los actuales: `AuthServ
 
 ### Autenticación y perfil
 
-`auth/data-access/AuthService` utiliza Firebase Authentication para correo/contraseña y Google. El flujo telefónico usa Firebase Phone Auth y reCAPTCHA. Los nombres y roles se consultan en Firestore, principalmente en `usuarios`, con búsquedas por ID, UID o email; también hay lógica heredada para números telefónicos.
+`features/auth/data-access/AuthService` utiliza Firebase Authentication para correo/contraseña y Google. El flujo telefónico usa Firebase Phone Auth y reCAPTCHA. Los nombres y roles se consultan en Firestore, principalmente en `usuarios`, con búsquedas por ID, UID o email; también hay lógica heredada para números telefónicos.
 
 Para probarlos hay que habilitar cada proveedor en Firebase y autorizar el dominio de desarrollo. El servicio implementa un contador de intentos en Firestore y bloquea el login al alcanzar tres; su funcionamiento depende del documento y de los permisos remotos. Esto no debe confundirse con una protección de servidor propia.
 
@@ -248,9 +250,9 @@ Las cancelaciones de `/actividad` modifican ese historial local; no eliminan aut
 
 ### Productos y PayPal
 
-El catálogo está definido en `ProductosComponent`; conserva sus 40 artículos, incluidos el precio de prueba de $1 MXN del primer producto y las categorías originales. Permite búsqueda, filtros, ordenación y cantidades del carrito en memoria. Los fragmentos `#proteinas`, `#creatinas`, `#preentrenos`, `#accesorios` y `#ropa` siguen seleccionando su categoría.
+El catálogo está definido en `features/products/data-access/product-catalog.repository.ts`; conserva sus 40 artículos, incluidos el precio de prueba de $1 MXN del primer producto y las categorías originales. Permite búsqueda, filtros, ordenación y cantidades del carrito en memoria. Los fragmentos `#proteinas`, `#creatinas`, `#preentrenos`, `#accesorios` y `#ropa` siguen seleccionando su categoría.
 
-El SDK PayPal se carga en `src/index.html`; el componente conserva la creación/captura desde el navegador y los importes `purchase_units[].amount.value`. El usuario revisa el total antes de montar el botón; un SDK ausente muestra reintento. La interfaz solo vacía el carrito si PayPal comunica `status: COMPLETED`; un resultado pendiente o incierto conserva los artículos y pide verificar el proveedor. No se efectuaron cobros durante la revisión.
+`PayPalSdkLoader` carga el SDK al revisar el checkout; `PayPalCheckoutAdapter` conserva la creación/captura desde el navegador y los importes `purchase_units[].amount.value`. El usuario revisa el total antes de montar el botón; un SDK ausente muestra reintento. La interfaz solo vacía el carrito si PayPal comunica `status: COMPLETED`; un resultado pendiente o incierto conserva los artículos y pide verificar el proveedor. No se efectuaron cobros durante la revisión.
 
 El repositorio no implementa validación propia del importe en servidor, webhooks, inventario, pedidos persistentes o conciliación con `PagoService`. La disponibilidad del SDK o de sus botones no acredita una compra real. Usar cuentas sandbox para una futura prueba de pagos.
 
@@ -280,7 +282,7 @@ El chat utiliza cuatro personajes (`patricio`, `temach`, `arnold`, `chavo`) e in
 
 Las claves locales anteriores no llevan sufijo de UID: los datos son del navegador/origen y pueden verse al cambiar de cuenta en ese mismo entorno. No constituyen separación segura de usuarios. Borrar los datos del sitio elimina las modificaciones locales; en varias vistas reaparecen datos de demostración.
 
-La configuración web de `app.config.ts` apunta a **`dbgroom-4eba4`**, mientras `.firebaserc` selecciona **`gina1-838c7`** para Firebase CLI. No asumir que autenticación y despliegue utilizan el mismo proyecto. Comprobar esa diferencia antes de cualquier publicación.
+La configuración web de `environments/environment.defaults.ts`, utilizada por `app.config.ts`, apunta a **`dbgroom-4eba4`**, mientras `.firebaserc` selecciona **`gina1-838c7`** para Firebase CLI. No asumir que autenticación y despliegue utilizan el mismo proyecto. Comprobar esa diferencia antes de cualquier publicación.
 
 ## 9. APIs y dependencias externas
 
@@ -316,10 +318,10 @@ La instancia local usa el puerto indicado por `PORT`; los formularios actuales l
 | QR | `https://api-j6b4.onrender.com/api/user-qr/{uid}` |
 | Estadísticas | `https://api-j6b4.onrender.com/api/sessions/stats` |
 | Ejercicios | `https://arl150.github.io/ejercicios-api/ejercicios.json` |
-| Firebase | Configuración en `src/app/app.config.ts` |
+| Firebase | Configuración pública en `src/environments/environment.defaults.ts` |
 | PayPal, YouTube, Maps, redes y CDN | SDK, iframes, URLs e imágenes en HTML/componentes |
 
-El código de la API externa de QR/estadísticas no forma parte de este repositorio. No se verificó hoy su disponibilidad. La vista de gráficas consulta esa API periódicamente; es independiente de la ocupación estática de `/actividad`.
+El código de la API externa de QR/estadísticas no forma parte de este repositorio. No se validó su contrato contra un entorno controlado ni se garantiza su disponibilidad. La vista de gráficas consulta esa API periódicamente; es independiente de la ocupación estática de `/actividad`.
 
 ## 10. Comandos disponibles y verificación
 
@@ -331,8 +333,10 @@ El código de la API externa de QR/estadísticas no forma parte de este reposito
 | `npm run watch` | Compila desarrollo y observa cambios |
 | `npm test` | Ejecuta Karma/Jasmine |
 | `npm run test:design` | Pruebas aisladas del sistema visual, tema, búsqueda y shell |
-| `npm run test:frontend` | Sistema visual y pruebas de recorridos de la fase 2; proveedores remotos simulados en los tests |
+| `npm run test:frontend` | Sistema visual, recorridos y contratos de fases 2/3; proveedores remotos simulados |
 | `npm run check:design` | Contraste de tokens y aplicación del tema antes de pintar |
+| `npm run check:architecture` | Fronteras de datos, ausencia de `any` explícito, recursos y rutas diferidas |
+| `npm run typecheck` | Tipos de la aplicación y de todas las pruebas |
 | `npm run ng -- <argumentos>` | Pasa argumentos al Angular CLI local |
 
 No existen scripts raíz `test:ci`, `test:backend`, `check` o `notifications` en este checkout.
@@ -384,7 +388,7 @@ docker compose up --build
 | `backend-ia` | 3000 | 3000 |
 | `backend-notif` | 3000 | 3001 |
 
-**Limitaciones actuales:** la imagen de `server/` instala dependencias solamente de ese directorio, pero su manifiesto no las declara; el inicio aislado de la imagen puede fallar. Nginx usa su configuración predeterminada, sin un archivo propio de fallback SPA o proxy en este checkout; recargar rutas internas puede devolver 404. Los destinos HTTP del frontend siguen siendo los escritos en el código, incluidos Render y `localhost:3000`.
+**Limitaciones actuales:** la imagen de `server/` instala dependencias solamente de ese directorio, pero su manifiesto no las declara; el inicio aislado de la imagen puede fallar. Nginx usa su configuración predeterminada, sin un archivo propio de fallback SPA o proxy en este checkout; recargar rutas internas puede devolver 404. Los destinos HTTP del frontend se centralizan por entorno y conservan Render y `localhost:3000`; la fase 3 no cambió la infraestructura.
 
 La configuración Docker solamente se leyó: no se construyeron ni iniciaron contenedores. Para ver el proyecto ahora, usar preferentemente el flujo local de las secciones 1 y 2.
 
@@ -426,13 +430,13 @@ Existen `public/manifest.webmanifest`, iconos y `ngsw-config.json`; la compilaci
 - Los locks de la raíz y `back/` están versionados. La regla `package-lock.json` de `.gitignore` puede ocultar locks nuevos, pero no deja de rastrear los ya versionados. Actualmente no hay un lock propio en `server/`.
 - `.env`, dependencias, logs, compilación y caché Angular se excluyen según `.gitignore`. No copiar secretos a este README, scripts o commits.
 - Los archivos de `scripts/` y `back/find_fernanda.js` son diagnósticos históricos. No forman parte del inicio y no deben ejecutarse automáticamente contra cuentas reales; algunos contienen datos fijos o referencias a credenciales administrativas.
-- `src/types.d.ts` define manualmente varios exports de Firebase como `any`. Puede ocultar incompatibilidades: la ausencia de errores de tipos no acredita una integración correcta.
+- La fase 3 retiró las declaraciones manuales de Firebase de `src/types.d.ts`. Se compila con los tipos del SDK y se validan respuestas en los límites revisados; eso no acredita permisos ni disponibilidad remota.
 - [Actividades del proyecto](actividades_del_proyecto_espaciogym.md) y [documentación del workflow](r_brica_workflow_del_proyecto.md) acompañan el desarrollo académico. Sus estados deben contrastarse con el código y las ejecuciones verificadas.
 - Hay recursos y dependencias de terceros. Sus avisos y `3rdpartylicenses.txt` no sustituyen una licencia general para el código propio; no existe `LICENSE` en la raíz.
 
 ### Prioridades para una futura revisión de código
 
-Separar dependencias del backend IA; parametrizar URLs y secretos; alinear proyectos Firebase; aplicar autorización real en rutas, APIs y datos; revisar el aislamiento local por usuario; conectar pagos, membresías y actividad con datos persistentes; validar fechas y precios; configurar SPA/proxy en Docker; revisar PWA, tipos, pruebas y dependencias.
+Separar dependencias del backend IA; configurar URLs de despliegue y retirar secretos de los backends; alinear proyectos Firebase; aplicar autorización real en rutas, APIs y datos; revisar el aislamiento local por usuario; conectar pagos, membresías y actividad con datos persistentes; validar fechas y precios; configurar SPA/proxy en Docker; revisar PWA, tipos, pruebas y dependencias.
 
 Estas prioridades de integración siguen pendientes. Para visualizar el proyecto, el recorrido principal sigue siendo **`npm ci` → `npm start` → http://localhost:4200**. Iniciar `npm run server` en paralelo solamente cuando se necesite el coach IA.
 
@@ -503,7 +507,7 @@ npm run test:design
 - 20 pruebas del sistema visual aprobadas: preferencias, cambios del sistema, almacenamiento bloqueado, limpieza de listeners, plataforma servidor, accesibilidad independiente, búsqueda y shell.
 - `check:design` comprueba 25 pares de color por tema y 7 escenarios del script inicial. Contraste texto/superficie: **14,68:1 claro / 15,40:1 oscuro**; texto secundario: **6,00:1 / 7,80:1**; texto sobre botón: **7,18:1 / 8,39:1**. Los pares normales evaluados superan 4,5:1; foco y series de gráfica evaluados superan 3:1.
 - Revisión manual en navegador de temas, persistencia tras recarga, menús, Escape/foco, búsqueda, tabla de ejercicios y tamaños de pantalla móviles y de escritorio. Referencias en [docs/design](docs/design/).
-- **La suite general `npm test -- --watch=false --browsers=ChromeHeadless` no pasa**: los specs previos de sign-in/sign-up importan exports nombrados que sus componentes no ofrecen; `safe-url.pipe.spec.ts` construye el pipe sin `DomSanitizer`. La batería `design` tiene alcance explícito y no reemplaza esa suite.
+- **Estado histórico de la fase 1:** la suite general fallaba por imports de sign-in/sign-up y la construcción de `SafeUrlPipe`. Esos problemas y las dependencias faltantes de los specs se corrigieron en la fase 3; consultar su validación actual en la sección 16.
 - No se declara conformidad integral de accesibilidad ni validación de todas las páginas/estados, lectores de pantalla, voces, servicios externos o transacciones. La entrega inicial se limitó a la fase 1; su continuación se documenta en la sección 15.
 
 Para continuar, conservar los tokens y componentes de esta fase como base. Evitar colores literales nuevos para la interfaz; usar `--color-action` y `--color-on-action` juntos, mantener estados semánticos y comprobar ambas apariencias antes de añadir una pantalla.
@@ -511,3 +515,196 @@ Para continuar, conservar los tokens y componentes de esta fase como base. Evita
 ![Referencia de escritorio, tema claro](docs/design/fase1-claro-escritorio.png)
 
 ![Referencia de escritorio, tema oscuro](docs/design/fase1-oscuro-escritorio.png)
+
+## 15. Rediseño frontend — fase 2 · recorridos
+
+La fase 2 reemplaza las pantallas aisladas por recorridos con títulos, etiquetas persistentes, estados explícitos, filtros y acciones consistentes. El inicio presenta una selección editorial con fotografías existentes del gimnasio; los contenidos completos tienen su propia ruta. Los videos cargan el reproductor al seleccionar una guía y las redes enlazan a sus canales sin incrustaciones en el inicio.
+
+La siguiente matriz describe el resultado conservado y reorganizado en la fase 3. “Conectado” identifica el origen del código; no significa que se haya confirmado una transacción real durante la revisión.
+
+| Ruta | Experiencia y funciones | Origen / límite |
+| --- | --- | --- |
+| `/` → `/home` | Hero, servicios, instalaciones, planes y horarios; enlaces claros | Contenido del proyecto y catálogo local |
+| `/nosotros` | Historia, fotografía y contenido disponible para lectura | Contenido público |
+| `/servicio` | Tarjetas de servicios y acceso a agenda/cursos | Oferta publicada; disponibilidad por confirmar |
+| `/ubicacion` | Dirección, horarios, teléfono y mapa con título | Google Maps externo; futuras sucursales sin confirmar |
+| `/carrusel` | Fotografía principal, miniaturas y anterior/siguiente | Seis recursos existentes de instalaciones |
+| `/responsables` | Integrantes y fotografías del proyecto | Contenido académico conservado |
+| `/redes/:id` | Canales oficiales y enlaces externos | Parámetro compatible; sin publicaciones inventadas |
+| `/buscar?q=...` | Búsqueda, contador, limpiar y sin resultados | Catálogo local de cursos |
+| `/detalle/:id` | Detalle reactivo al ID y curso no encontrado | Mismos datos del catálogo |
+| `/ejercicios` | Nombre, grupo y equipo; restablecer, contador, grupos plegables, tabla/tarjetas | JSON remoto; error y reintento, sin catálogo ficticio de respaldo |
+| `/videos` | Categorías, miniaturas y reproducción bajo demanda | YouTube; sin autoplay |
+| `/auth/sign-in` | Correo/contraseña, Google, CAPTCHA, contraseña visible y bloqueo de doble envío | Firebase; requiere configuración remota |
+| `/auth/sign-up` | Validación y confirmación de contraseña, CAPTCHA y errores | Firebase Auth y documento de usuario |
+| `/sesion` | Redirección al acceso unificado | Alias compatible de `/auth/sign-in` |
+| `/phone` | Teléfono, CAPTCHA, envío de código y OTP | Firebase Phone Auth; ningún SMS enviado en QA |
+| `/change` | Reautenticación y cambio de contraseña con estado de operación | Firebase; sin modificación de credenciales en QA |
+| `/micuenta` | Identidad remota, perfil editable, validación y acceso a apariencia | Perfil local del navegador; guardar requiere persistencia confirmada |
+| `/f2` | Resumen de entrenamiento, validación de fecha, registro y aviso separados | Firestore + Render + QR externo; reintentar aviso no crea otro registro |
+| `/f3` | Resumen de clase, validación y asistencia/aviso separados | Misma colección, campos y destinos existentes |
+| `/membresias` | Vigencia, renovación, ciclos, comparación y revisión previa | Demostración local; Black Elite exige reconocer la tarifa contradictoria |
+| `/estado-cuenta` | Resumen, filtros, anotaciones, detalle y documento imprimible escapado | Demostración local; sin movimiento bancario ni comprobante fiscal |
+| `/actividad` | Historial, filtros, cancelación local, ocupación y alertas | Ejemplos locales; no sincroniza reservas ni representa aforo en vivo |
+| `/productos` | Búsqueda, categorías, orden, cantidades, carrito y revisión de compra | Catálogo local y SDK PayPal; sin inventario/pedidos propios |
+| `/coach-ia` | Perfil, rutina por día, impresión, coaches y conversación con recuperación | API IA existente; rechaza plantillas con `exito: false` como éxito personalizado |
+| `/editar1` | Filtrar, editar una copia, cancelar y confirmar eliminación de agendas | Firestore; permisos reales dependen del servidor |
+| `/editar2` | Misma interacción para asistencias | Firestore; sin operaciones reales de edición/eliminación en QA |
+| `/graficos` | Consulta, pausa, actualización, último resultado válido y tabla alternativa | API externa; ausencias como “No informado”, no ceros inventados |
+| `/form` | Flujo histórico identificado como ejemplo, validación y resumen local | Conserva claves y cuentas de prueba; no abre una sesión Firebase |
+| `/footer` | Contacto y enlaces con identidad de página | Un solo pie, sin duplicar el del shell |
+
+Las tarifas originales se mantienen: Básico $350, Pro $550 y Black $1200. El catálogo llama trimestral a Black, mientras el cálculo heredado trata el importe como base mensual. La interfaz lo advierte; no se decidió una tarifa comercial nueva. También se conservan los 40 productos y el primer SKU de $1, señalado como importe de prueba.
+
+Los formularios mantienen sus valores ante errores recuperables. No se reenvían automáticamente reservas ni pagos. Las confirmaciones distinguen registro guardado, aviso aceptado por el servicio, captura indicada por PayPal y cadena QR recibida. Ninguna de esas señales acredita por sí sola las demás.
+
+## 16. Consolidación frontend — fase 3 · 27/10/2026
+
+### Responsabilidades y archivos
+
+Las páginas activas se trasladaron de `components/`, `auth/features/`, `services/` y `models/` a dominios de `features/`. Se actualizaron las importaciones de aplicación, pruebas y configuración. Se mantienen las direcciones web y los nombres de los campos existentes. Las 26 rutas de componente principales usan `loadComponent`; `/auth` carga sus rutas hijas mediante `loadChildren`.
+
+| Carpeta | Responsabilidad |
+| --- | --- |
+| `core/config/` | Tokens `APP_ENDPOINTS`, `PAYPAL_CONFIG` y valores públicos por entorno |
+| `core/data-access/` | Contratos compartidos `RequestState`, `OperationState`, errores recuperables |
+| `core/storage/` | Lectura validada, persistencia y metadatos de versión; protección de copias incompatibles |
+| `core/date/` | Fechas de calendario local para ejemplos y escrituras locales nuevas |
+| `core/theme/`, `core/accessibility/`, `core/auth/`, `core/navigation/` | Preferencias, accesibilidad, CAPTCHA/errores y metadatos de páginas |
+| `layouts/public/ui/` | Cabecera y pie del shell común; no se duplica otro shell de socio |
+| `shared/ui/` | Iconografía SVG, marca, botones, paneles, encabezado, consulta/errores y aviso de almacenamiento |
+| `shared/directives/`, `shared/pipes/` | Visibilidad de contraseña y transformaciones compartidas |
+| `features/home/`, `features/public/` | Inicio y contenido público |
+| `features/courses/` | Búsqueda, detalle y catálogo local tipado |
+| `features/auth/`, `features/profile/` | Sesión Firebase y perfil local, con contratos separados |
+| `features/training/` | Ejercicios, videos, agenda, asistencia, QR y adaptadores relacionados |
+| `features/memberships/`, `features/billing/`, `features/activity/` | Demostraciones locales de membresía, cuenta y actividad |
+| `features/products/` | Catálogo, `CartStore`, cargador del SDK y adaptador PayPal |
+| `features/coach/` | Contratos, validación y API de rutinas/conversación |
+| `features/admin/` | Gestión de registros y estadísticas remotas |
+| `features/legacy/` | Ejemplo `/form`, almacén local y experimentos históricos conservados |
+
+`pages/` coordina formularios, navegación y acciones; `data-access/` resuelve HTTP, Firebase o persistencia local. `models/` contiene contratos y validadores de datos. `ui/` aparece donde hay una pieza concreta reutilizada, como QR. No se crearon carpetas vacías para completar una plantilla.
+
+Se retiraron los `any` explícitos del código de producción revisado y las declaraciones que sustituían los exports de Firebase. Se utiliza el SDK real; las respuestas JSON se reciben como `unknown` donde se validan. Los límites revisados incluyen usuario, perfil, planes, pagos, actividad, ejercicios, cursos, reservas, asistencias, productos, carrito, rutina, coaches, mensajes, estados y errores. Las interfaces limitadas de PayPal describen la superficie consumida por el adaptador, sin declarar un módulo ficticio del proveedor.
+
+### Adaptadores e inyección
+
+Las páginas consumen contratos con tokens de Angular; el proveedor predeterminado se declara en cada `*.repository.ts`. Un futuro adaptador se podrá registrar con `provide`/`useClass` sobre el mismo token, sin cambiar la página ni inventar un endpoint ahora.
+
+| Token / frontera | Implementación actual | Naturaleza |
+| --- | --- | --- |
+| `SESSION` | `AuthService` | Firebase Auth y Firestore existentes; el CAPTCHA continúa asociado al SDK Firebase |
+| `PROFILES` | `PerfilSocioService` | Perfil de demostración en `gym_perfil_socio` |
+| `MEMBERSHIPS` | `MembresiaService` | Planes y membresía locales |
+| `BILLING` | `PagoService` | Historial/resumen de anotaciones locales |
+| `ACTIVITY` | `SesionService` | Sesiones, alertas y ocupación de ejemplo |
+| `COURSES` | `CursoService` | Catálogo local de cursos |
+| `PRODUCT_CATALOG` | `LocalProductCatalog` | 40 productos originales, devueltos como copias |
+| `EXERCISES` | `EjercicioService` | JSON HTTP remoto con validación y tiempo límite |
+| `TRAINING` | `FirestoreTrainingAdapter` | Colecciones actuales, escrituras explícitas y notificaciones HTTP independientes |
+| `QR_CODES` | `QrService` | API remota; UID codificado y cadena recibida validada |
+| `STATISTICS` | `HttpStatisticsAdapter` | API remota; valores numéricos no negativos |
+| `COACH` | `RutinaService` | API IA actual; contratos y tiempos de espera, sin reenvío automático |
+| Checkout | `PayPalSdkLoader`, `PayPalCheckoutAdapter`, `CartStore` | SDK del proveedor y carrito en memoria; no es un backend de pedidos |
+
+Las consultas que pueden cambiar de origen exponen observables: catálogos, membresía, perfil, cuenta y actividad pueden emitir tras una respuesta HTTP. Las páginas muestran carga/error y ofrecen reintento de lectura. Las mutaciones admiten confirmación local síncrona o una `Promise`; las páginas esperan su resolución antes de anunciar éxito. El futuro adaptador HTTP debe resolver tras la confirmación del servidor y emitir el estado confirmado en sus observables. Los getters síncronos de algunos servicios históricos se conservan para compatibilidad, pero las páginas migradas no los necesitan para cargar datos.
+
+Los contratos de Firestore conservan `formularioEntrenamiento` y `asistencias`. La reserva mantiene `entrenamiento`, `fecha`, `turno`, `usuario`, `email`, `telefono` y `nombre`; la asistencia mantiene `clase`, `fecha`, `hora` y `alumno`. Las actualizaciones administrativas envían únicamente los campos editables que ya utilizaban. No se añadieron servidores, colecciones, webhooks, guardas ni autorizaciones remotas.
+
+### Configuración pública por entorno
+
+`src/environments/environment.defaults.ts` reúne las URLs, la configuración web Firebase y el client ID/currency públicos de PayPal. `environment.ts` usa esos valores en desarrollo; `environment.production.ts` los comparte con `production: true` mediante `fileReplacements` en `angular.json`. **Los destinos de producción y desarrollo son actualmente los mismos**, por compatibilidad.
+
+| Campo de `services` | Destino conservado |
+| --- | --- |
+| `notifications` | `https://gymseminario.onrender.com` |
+| `qr` | `https://api-j6b4.onrender.com/api/user-qr` |
+| `statistics` | `https://api-j6b4.onrender.com/api/sessions/stats` |
+| `exercises` | `https://arl150.github.io/ejercicios-api/ejercicios.json` |
+| `legacyExercises` | `https://gym-proyecto.free.beeceptor.com/todos`, servicio histórico sin ruta activa |
+| `coach` | `http://localhost:3000/api` |
+
+Para cambiar un entorno, editar su objeto de configuración, conservar los campos de `ServiceEndpoints` y ejecutar build/pruebas. No se leen secretos de un `.env` del navegador ni se expone una clave Gemini, SMTP, Twilio o credencial administrativa nueva. La configuración Firebase web y el client ID PayPal son identificadores públicos; las restricciones del proveedor y la autorización de datos deben aplicarse fuera del cliente. El despliegue del coach requiere decidir una URL HTTPS accesible por los usuarios.
+
+### Persistencia compatible y migración
+
+Se conservan las cinco claves de perfil/membresía/pagos/sesiones/alertas de la sección 8 y su JSON original. `BrowserStorage` acepta el formato histórico como versión 0 compatible con la versión 1. La lectura no modifica el contenido. Al guardar se escribe el mismo tipo de payload y se registra la versión 1 en la clave adicional **`grom.storage.versions`**, un mapa de versiones sin datos personales.
+
+Los perfiles históricos parciales se completan con sus valores predeterminados **en memoria**, conservando los campos guardados. Una lista vacía válida sigue vacía y no se rellena con ejemplos. Una copia ilegible, incompatible o de versión futura se conserva; se muestran valores de ejemplo con un aviso y se bloquea su reemplazo. Un fallo de escritura no actualiza el estado observable como si se hubiera guardado. No se cambian automáticamente claves por usuario ni se atribuyen datos antiguos a una cuenta.
+
+Para una futura versión 2: definir el esquema y su migración pura, probarla con copias de v0/v1, ofrecer exportación/respaldo antes de una transformación incompatible, validar la salida y confirmar la escritura antes de actualizar los metadatos. Ante cualquier error se conserva el original. El aislamiento por UID requerirá decidir cómo recuperar y atribuir los datos existentes, sin borrar ni reasignar silenciosamente perfiles.
+
+El tema conserva `grom.theme` y su script de primer pintado; no se mezcla con la versión de los datos. `/form` conserva `usuarioActual`, `ultimaSesion`, `formTemplateData` y `sesionesSeleccionadas`. El carrito se mantiene en memoria durante la visita y sobrevive a navegación Angular; recargar lo reinicia. Ninguno de estos mecanismos proporciona aislamiento seguro de usuarios ni sincronización entre dispositivos.
+
+### Estados, accesibilidad y mantenimiento visual
+
+Los contratos distinguen estado inicial, cargando, datos, vacío y error recuperable; las operaciones distinguen reposo, en curso, éxito y fallo. `app-request-state` presenta consultas/cargas/errores compartidos en ejercicios, estadísticas, cursos, productos, membresía, perfil, cuenta y actividad. El resto de pantallas utiliza las mismas clases, botones y tokens de `pages.css`/`auth.css`, con mensajes específicos del recorrido.
+
+Una reserva confirmada conserva su ID aunque falle el aviso; el reintento exige ese registro y solo invoca la notificación. Un QR debe ser una cadena válida de su API. Un dato ausente en estadísticas no se convierte en cero. La rutina requiere `exito: true` y contenido válido; los fallos de chat no aparecen como respuestas del coach. PayPal solo vacía el carrito al devolver `COMPLETED`; ante una captura pendiente/incierta, el adaptador conserva artículos y bloquea otra orden durante esa visita. Este bloqueo cliente no es idempotencia ni conciliación en servidor.
+
+Se mantienen Claro, Oscuro y Sistema, foco visible, enlace para saltar al contenido, paneles CDK con restauración de foco, nombres para botones de icono, etiquetas de formularios, estados acompañados de texto y reducción de movimiento. Cambiar tema no reconstruye las páginas ni vacía formularios, filtros o carrito. Los filtros de equipo agrupan diferencias de mayúsculas y acentos sin modificar el JSON original. Las fechas de demostración nuevas utilizan el calendario local y mantienen los 18 días iniciales de membresía; no se reescriben fechas previamente guardadas.
+
+Chart.js se registra al abrir estadísticas. PayPal se solicita al revisar el checkout; los reproductores se insertan bajo demanda. Las fotografías tienen dimensiones/proporciones y las imágenes fuera del contenido principal usan carga diferida donde corresponde. Se retiraron Bootstrap y sus scripts, Font Awesome, Boxicons, la fuente Material Icons y los estilos puente sin usos, además del CSS/map generado antiguo de videos después de migrar a su SCSS activo. La interfaz usa `app-icon`; las imágenes de marca y QR conservan sus superficies específicas. Los colores de impresión en papel permanecen deliberadamente independientes del tema.
+
+### Componentes históricos conservados
+
+| Archivo / componente | Situación comprobada |
+| --- | --- |
+| `features/legacy/pages/usuario/` | Activo en `/form`; ejemplo local separado de Firebase. Se conservan claves y cuentas de prueba; confirmación y horario validan el flujo histórico |
+| `features/legacy/pages/auth/` | Experimento anterior sin ruta activa; `/sesion` redirige al acceso actual. Conservado, sin CDN de iconos y sin `BrowserModule` duplicado |
+| `features/training/pages/dashboard/` | Composición histórica ejercicios/videos, sin entrada en el router |
+| `features/training/ui/filtro-ejercicios/` | Filtro Material histórico; la biblioteca actual usa sus filtros integrados |
+| `features/training/ui/qr-view/*.html`, `*.css` | Recursos históricos; el componente actual declara template/estilos inline |
+| `features/legacy/data-access/auth-service.service.ts`, `usuario.service.ts` | Estado local histórico; no sustituye la sesión Firebase |
+| `features/training/data-access/api.service.ts` | Cliente histórico de notificaciones conservado y parametrizado; las páginas usan `TRAINING` |
+| `src/app/micuenta.service.ts` | Servicio compat histórico para `users/{uid}`; la página actual no lo consume |
+| `src/app/servicios/ejercicio.service.ts` | Cliente Beeceptor histórico, distinto del catálogo activo |
+| `src/app/window.service.ts`, `common/window.service.ts` | Dos utilidades históricas conservadas; el flujo telefónico actual no depende de un resultado global en `window` |
+| `src/app/admin.ts`, `carrusel.ts`, `app.module.ts` | Fuentes históricas fuera del arranque standalone; no se eliminaron por su nombre o aparente duplicidad |
+
+### Verificación y evidencias
+
+Desde la raíz:
+
+```powershell
+npm ci
+npm run typecheck
+npm run check:architecture
+npm run check:design
+npm run build
+$env:CHROME_BIN = 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
+npm test -- --watch=false --browsers=ChromeHeadless
+npm run test:frontend
+```
+
+Con Chrome instalado normalmente no hace falta definir `CHROME_BIN`. `test:frontend` conserva un alcance explícito; `npm test` incluye también los specs históricos reparados. Los tests de construcción históricos reciben dependencias aisladas; las regresiones de comportamiento y adaptadores configuran sus propios proveedores. El spec de sesión anónima usa el SDK Firebase con persistencia en memoria, sin operaciones de cuentas remotas. El workflow de integración actualiza sus globs a la estructura nueva; no se ejecutó GitHub Actions desde esta revisión.
+
+Resultados finales, con Node 24.16.0, npm 11.13.0 y Edge 156 del equipo:
+
+- **Producción compilada:** carga inicial reportada por Angular de **972,45 kB** y transferencia estimada de **259,20 kB**. Son cifras del bundle, no una medición de velocidad de red ni Lighthouse. Permanecen los avisos CommonJS de SweetAlert2 y `qrcode`.
+- **154 pruebas de la suite completa aprobadas**, incluidos los specs históricos reparados. **93 pruebas de la batería frontend aprobadas**; esta batería es un subconjunto de la anterior y sus cifras no se suman.
+- `typecheck` pasa para aplicación y pruebas. `check:architecture` revisa 29 páginas y las fronteras establecidas. `check:design` pasa 25 pares por tema y 7 escenarios del script inicial. La revisión de whitespace con Git no detecta errores.
+- **95 comprobaciones de disposición:** ocho páginas principales × tres anchos (360/768/1440) × dos temas = 48; las 20 vistas restantes y tres casos de navegación (alias, ID inexistente e inicio) en móvil y ambos temas = 46; una comprobación adicional de reflujo a 720 px CSS. Sin desbordamiento horizontal detectado, con un título principal y un pie por vista revisada.
+- Recorridos manuales: navegación móvil por teclado y Escape, foco dentro del diálogo y retorno al abrirlo/cerrarlo; menú Material; carrito móvil; cancelación de revisión Black Elite; búsqueda sin coincidencias y restablecer; conservación del carrito/filtros al cambiar tema; carrito al navegar; Sistema aplicado según el dispositivo y conservado al recargar; control de movimiento reducido.
+- Comparación del catálogo contra la versión de partida: **los 40 objetos de producto conservan todos sus campos y precios**. Las nuevas regresiones cubren persistencia fallida/corrupta/futura, compatibilidad de perfiles parciales, fecha local, sustitución de proveedores, contratos HTTP, respuestas incompatibles y reintento de avisos sin duplicar reservas.
+
+El [registro de verificaciones](docs/design/fase3-verification.json) resume los resultados. El [informe adaptable](docs/design/fase3-responsive-audit.json) registra el alcance, cada ruta/ancho/tema y los límites. Las mediciones de disposición corresponden al navegador sin sesión; no comprueban todos los estados de una cuenta autenticada ni su autorización. El zoom nativo no cambió al enviar el atajo desde el navegador integrado: se verificó reflujo a 720 px CSS y se deja explícita la comprobación nativa pendiente. No se certifican WCAG, lectores de pantalla, impresión en un dispositivo o transacciones externas.
+
+Capturas comparables: [inicio claro en escritorio](docs/design/fase3-inicio-claro-1440.png), [inicio oscuro en escritorio](docs/design/fase3-inicio-oscuro-1440.png), [inicio claro móvil](docs/design/fase3-inicio-claro-360.png), [inicio oscuro móvil](docs/design/fase3-inicio-oscuro-360.png), [ejercicios móvil](docs/design/fase3-ejercicios-claro-360.png) y [carrito móvil](docs/design/fase3-carrito-claro-360.png).
+
+![Fase 3, inicio claro en escritorio](docs/design/fase3-inicio-claro-1440.png)
+
+![Fase 3, inicio oscuro en escritorio](docs/design/fase3-inicio-oscuro-1440.png)
+
+### Integración futura y pendientes concretos
+
+1. Confirmar catálogo comercial: periodo/precio Black Elite, SKU de $1, descuentos, horarios y beneficios anunciados.
+2. Acordar contratos HTTP para perfil, membresías, cuenta y actividad. Implementar adaptadores del mismo contrato y cambiar sus proveedores; mantener una demostración visible hasta disponer de persistencia real.
+3. Definir autorización en APIs y reglas Firestore, validación de identidad y aislamiento de datos por socio. Ocultar menús y los roles locales no sustituyen esos controles.
+4. Implementar pedidos/precios validados en servidor, idempotencia, conciliación y webhooks antes de tratar el checkout cliente como sistema de ventas. Un fallo de red no habilita reenviar un pago a ciegas.
+5. Validar con cuentas y entornos de prueba autorizados Firebase, CAPTCHA, Gemini, PayPal sandbox, correo, SMS, QR y permisos administrativos. Las pruebas con dobles no acreditan esos servicios reales.
+6. Resolver la URL HTTPS del coach, diferencia de proyectos Firebase, secretos ya existentes en `back/`, dependencias aisladas de servidores, fallback SPA en Docker y estrategia PWA antes de publicar.
+7. Completar auditoría con lector de pantalla, zoom nativo al 200 %, dispositivos reales y flujo de impresión. La comprobación de reflujo a 720 px CSS no equivale por sí sola a certificar el zoom del navegador.
+
+Esta entrega no ejecuta commits, despliegues, cobros, envíos de SMS/correo, cambios de contraseña ni escrituras/eliminaciones remotas de prueba.

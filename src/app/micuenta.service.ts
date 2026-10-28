@@ -1,27 +1,29 @@
 // firebase.service.ts
-import { Injectable } from '@angular/core';
-import { AngularFireAuth } from '@angular/fire/compat/auth';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
-import { Observable, of, switchMap } from 'rxjs';
+import { Injectable } from "@angular/core";
+import { AngularFireAuth } from "@angular/fire/compat/auth";
+import { AngularFirestore } from "@angular/fire/compat/firestore";
+import { Observable, of, switchMap } from "rxjs";
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: "root",
 })
 export class MicuentaService {
   constructor(
     private afAuth: AngularFireAuth,
-    private afs: AngularFirestore
+    private afs: AngularFirestore,
   ) {}
 
-  getUserData(): Observable<any> {
+  getUserData(): Observable<Record<string, unknown> | null> {
     return this.afAuth.authState.pipe(
-      switchMap(user => {
+      switchMap((user) => {
         if (user) {
-          return this.afs.doc(`users/${user.uid}`).valueChanges();
+          return this.afs
+            .doc<Record<string, unknown>>(`users/${user.uid}`)
+            .valueChanges();
         } else {
           return of(null);
         }
-      })
+      }),
     );
   }
 }

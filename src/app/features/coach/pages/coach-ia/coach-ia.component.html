@@ -1,0 +1,332 @@
+<section class="feature-page stack">
+  <div class="notice no-print">
+    <app-icon name="spark" />
+    <p>
+      Las rutinas y conversaciones utilizan tu perfil y un servicio de IA.
+      Revisa la información antes de aplicarla y no la uses como evaluación
+      médica.
+    </p>
+  </div>
+  @if (cargandoAuth) {
+    <div class="surface" role="status">
+      <p>Consultando tu sesión…</p>
+      <div class="loading-line"></div>
+    </div>
+  } @else if (!usuarioAutenticado) {
+    <div class="coach-welcome surface">
+      <app-icon name="spark" /><span class="eyebrow"
+        >Tu siguiente paso, con orientación</span
+      >
+      <h2>Accede para usar las herramientas.</h2>
+      <p class="muted">
+        Configura tu perfil, solicita una rutina o conversa con un coach. El
+        acceso actual comprueba tu sesión de Firebase; no valida una membresía
+        de pago.
+      </p>
+      @if (errorMensaje) {
+        <p class="notice notice--error" role="alert">{{ errorMensaje }}</p>
+      }
+      <div class="form-actions">
+        <button
+          appButton="primary"
+          type="button"
+          [disabled]="authBusy"
+          (click)="loginConGoogle()"
+        >
+          {{ authBusy ? "Conectando…" : "Continuar con Google" }}</button
+        ><a appButton="secondary" routerLink="/auth/sign-in"
+          >Usar otro acceso</a
+        >
+      </div>
+    </div>
+  } @else {
+    <app-request-state
+      class="no-print"
+      [state]="profileState"
+      loadingLabel="Consultando el perfil…"
+      (retry)="loadProfile()"
+    />
+    <div class="toolbar no-print">
+      <p class="help">
+        {{ usuarioNombre || "Sesión activa" }} · Perfil local:
+        {{ perfil.nombre }}
+      </p>
+      <a class="text-link" routerLink="/micuenta"
+        >1. Revisar perfil<app-icon name="external"
+      /></a>
+    </div>
+    <div class="view-switch no-print" aria-label="Herramientas del coach">
+      <button
+        type="button"
+        [attr.aria-pressed]="pestanaActiva === 'rutina'"
+        (click)="pestanaActiva = 'rutina'"
+      >
+        2. Crear rutina</button
+      ><button
+        type="button"
+        [attr.aria-pressed]="pestanaActiva === 'chat'"
+        (click)="pestanaActiva = 'chat'"
+      >
+        3. Conversar
+      </button>
+    </div>
+    @if (pestanaActiva === "rutina") {
+      @if (!rutina) {
+        <form
+          class="surface routine-form"
+          #routineForm="ngForm"
+          (ngSubmit)="generarRutina(routineForm)"
+          [attr.aria-busy]="cargando"
+        >
+          <span class="eyebrow">Parámetros de esta solicitud</span>
+          <h2>Define tu semana.</h2>
+          <p class="help">
+            Se enviará tu perfil local al servicio de IA. Estos ajustes no
+            sobrescriben el perfil guardado.
+          </p>
+          <div class="form-grid">
+            <div class="field">
+              <label for="routine-days">Días para entrenar</label
+              ><select
+                id="routine-days"
+                name="days"
+                [(ngModel)]="perfil.diasDisponibles"
+                required
+              >
+                @for (day of opcionesDias; track day) {
+                  <option [ngValue]="day">{{ day }} días por semana</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label for="routine-objective">Objetivo</label
+              ><select
+                id="routine-objective"
+                name="objective"
+                [(ngModel)]="perfil.objetivo"
+                required
+              >
+                @for (objective of objetivos; track objective) {
+                  <option [value]="objective">{{ objective }}</option>
+                }
+              </select>
+            </div>
+            <div class="field full-width">
+              <label for="routine-note">Indicación para esta sesión</label
+              ><textarea
+                id="routine-note"
+                name="note"
+                [(ngModel)]="perfil.restriccionesMedicas"
+                rows="3"
+              ></textarea>
+            </div>
+          </div>
+          @if (errorMensaje) {
+            <div class="notice notice--error" role="alert">
+              {{ errorMensaje }}
+            </div>
+          }
+          @if (cargando) {
+            <p class="help" role="status">
+              Esperando una respuesta del servicio de rutinas…
+            </p>
+            <div class="loading-line"></div>
+          }
+          <div class="form-actions">
+            <button
+              appButton="primary"
+              type="submit"
+              [disabled]="cargando || !profileReady"
+            >
+              {{ cargando ? "Solicitando rutina…" : "Solicitar rutina"
+              }}<app-icon name="arrow" /></button
+            ><a appButton="secondary" routerLink="/micuenta"
+              >Revisar perfil completo</a
+            >
+          </div>
+        </form>
+      } @else {
+        <div class="routine-result stack">
+          <header class="surface">
+            <div class="toolbar">
+              <span class="status status--accent">{{
+                rutina.nivelRecomendado
+              }}</span
+              ><span class="help">{{
+                origenRespuesta === "cache"
+                  ? "Respuesta almacenada en caché"
+                  : origenRespuesta === "gemini"
+                    ? "Respuesta de Gemini"
+                    : "Origen no verificado"
+              }}</span>
+            </div>
+            <h2>{{ rutina.tituloRutina }}</h2>
+            <p class="muted">{{ rutina.objetivo }}</p>
+            <div class="form-actions no-print">
+              <button
+                appButton="secondary"
+                type="button"
+                (click)="imprimirRutina()"
+              >
+                Imprimir rutina<app-icon name="external" /></button
+              ><button appButton="ghost" type="button" (click)="nuevaRutina()">
+                Nueva solicitud
+              </button>
+            </div>
+          </header>
+          <div class="routine-days">
+            @for (day of rutina.diasSemana; track $index) {
+              <details class="surface routine-day" [open]="$first">
+                <summary>
+                  <span
+                    ><span class="eyebrow">{{ day.dia }}</span
+                    ><strong>{{ day.grupoMuscular }}</strong></span
+                  ><app-icon name="chevron" />
+                </summary>
+                <ol>
+                  @for (exercise of day.ejercicios; track $index) {
+                    <li>
+                      <h3>{{ exercise.nombre }}</h3>
+                      <div class="exercise-meta">
+                        <span>{{ exercise.series }} series</span
+                        ><span>{{ exercise.repeticiones }} repeticiones</span
+                        ><span
+                          >{{ exercise.descansoSegundos }} s de descanso</span
+                        >
+                      </div>
+                      @if (exercise.notasCoach) {
+                        <p class="help">{{ exercise.notasCoach }}</p>
+                      }
+                    </li>
+                  }
+                </ol>
+              </details>
+            }
+          </div>
+          <article class="surface">
+            <h3>Indicaciones de la respuesta</h3>
+            <p class="muted">{{ rutina.recomendacionesGenerales }}</p>
+            <p class="help">
+              Resultado generado por IA. No es una evaluación profesional.
+            </p>
+          </article>
+        </div>
+      }
+    }
+    @if (pestanaActiva === "chat") {
+      <div class="chat-layout">
+        <aside class="surface coach-list">
+          <span class="eyebrow">Una conversación a tu manera</span>
+          <h2>Elige un coach.</h2>
+          @if (coachesLoading) {
+            <p class="help" role="status">Consultando coaches…</p>
+          }
+          @if (coachesError) {
+            <p class="field-error" role="alert">{{ coachesError }}</p>
+            <button
+              appButton="secondary"
+              type="button"
+              (click)="cargarCoaches()"
+            >
+              Reintentar conexión
+            </button>
+          }
+          @for (coach of coaches; track coach.id) {
+            <button
+              type="button"
+              class="coach-choice"
+              [attr.aria-pressed]="coachActivo?.id === coach.id"
+              [disabled]="enviandoMensaje"
+              (click)="seleccionarCoach(coach)"
+            >
+              <span aria-hidden="true">{{ coach.emoji }}</span
+              ><span
+                ><strong>{{ coach.nombre }}</strong
+                ><small>{{ coach.titulo }}</small></span
+              >
+            </button>
+          }
+        </aside>
+        <div class="surface conversation">
+          <header>
+            <h2>{{ coachActivo?.nombre || "Conversación" }}</h2>
+            <p class="help">
+              {{
+                coachActivo?.frase ||
+                  "Conecta con el servicio para elegir un coach."
+              }}
+            </p>
+          </header>
+          <div
+            class="chat-log"
+            role="log"
+            aria-live="polite"
+            aria-label="Mensajes de la conversación"
+          >
+            @for (message of mensajes; track $index) {
+              <article
+                class="chat-message"
+                [class.from-user]="message.remitente === 'usuario'"
+              >
+                <span
+                  >{{
+                    message.remitente === "usuario" ? "Tú" : coachActivo?.nombre
+                  }}
+                  · {{ message.hora }}</span
+                >
+                <p>{{ message.texto }}</p>
+              </article>
+            } @empty {
+              <div class="chat-start">
+                <app-icon name="spark" />
+                <p>La conversación empieza cuando envías tu primer mensaje.</p>
+              </div>
+            }
+            @if (enviandoMensaje) {
+              <p class="help" role="status">Esperando respuesta del coach…</p>
+              <div class="loading-line"></div>
+            }
+          </div>
+          @if (chatError) {
+            <div class="notice notice--error" role="alert">
+              <p>{{ chatError }}</p>
+              <button
+                appButton="secondary"
+                type="button"
+                [disabled]="enviandoMensaje"
+                (click)="retryMessage()"
+              >
+                Reenviar
+              </button>
+            </div>
+          }
+          <form class="chat-composer" (ngSubmit)="enviarMensaje()">
+            <label for="coach-message">Tu mensaje</label
+            ><textarea
+              id="coach-message"
+              name="message"
+              [(ngModel)]="mensajeInput"
+              rows="3"
+              placeholder="Escribe tu pregunta…"
+              [disabled]="!coachActivo || enviandoMensaje"
+            ></textarea>
+            <div class="toolbar">
+              <span class="help"
+                >Se envían perfil, rutina e historial al servicio.</span
+              ><button
+                appButton="primary"
+                type="submit"
+                [disabled]="
+                  !coachActivo || enviandoMensaje || !mensajeInput.trim()
+                "
+              >
+                {{ enviandoMensaje ? "Enviando…" : "Enviar"
+                }}<app-icon name="arrow" />
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
+  }
+</section>

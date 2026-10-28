@@ -1,16 +1,16 @@
-import { TestBed } from "@angular/core/testing";
-import { provideRouter } from "@angular/router";
+import { Dialog } from "@angular/cdk/dialog";
 import { provideHttpClient } from "@angular/common/http";
 import { provideHttpClientTesting } from "@angular/common/http/testing";
+import { TestBed } from "@angular/core/testing";
 import { Firestore } from "@angular/fire/firestore";
+import { provideRouter } from "@angular/router";
 import { of } from "rxjs";
-import { AuthService } from "../../auth/data-access/auth.service";
-import { Formulario2Component } from "../../components/formulario2/formulario2.component";
-import { Formulario3Component } from "../../components/formulario3/formulario3.component";
-import { Editar1Component } from "../../components/editar1/editar1.component";
-import { Editar2Component } from "../../components/editar2/editar2.component";
-import { Dialog } from "@angular/cdk/dialog";
 import Swal from "sweetalert2";
+import { Editar1Component } from "../../features/admin/pages/editar1/editar1.component";
+import { Editar2Component } from "../../features/admin/pages/editar2/editar2.component";
+import { AuthService } from "../../features/auth/data-access/auth.service";
+import { Formulario2Component } from "../../features/training/pages/formulario2/formulario2.component";
+import { Formulario3Component } from "../../features/training/pages/formulario3/formulario3.component";
 
 describe("Connected registration safeguards", () => {
   let auth: any;
@@ -86,7 +86,12 @@ describe("Administrative editing", () => {
     spyOn(Editar2Component.prototype, "load").and.stub();
     TestBed.configureTestingModule({
       imports: [Editar1Component, Editar2Component],
-      providers: [provideRouter([]), { provide: Firestore, useValue: {} }],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: Firestore, useValue: {} },
+      ],
     });
   });
   afterEach(() => TestBed.inject(Dialog).closeAll());

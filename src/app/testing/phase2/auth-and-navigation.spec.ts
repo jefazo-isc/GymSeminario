@@ -2,15 +2,15 @@ import { Component } from "@angular/core";
 import { TestBed } from "@angular/core/testing";
 import { provideRouter, Router } from "@angular/router";
 import { of } from "rxjs";
-import SignInComponent from "../../auth/features/sign-in/sign-in.component";
-import SignUpComponent from "../../auth/features/sign-up/sign-up.component";
-import { AuthService } from "../../auth/data-access/auth.service";
-import { CaptchaController } from "../../core/auth/captcha-controller";
-import { authErrorMessage } from "../../core/auth/auth-feedback";
-import { PasswordToggleDirective } from "../../shared/ui/password-toggle.directive";
-import { pageMetaFor } from "../../core/navigation/page-meta";
 import { routes } from "../../app.routes";
-import { HomeComponent } from "../../components/home/home.component";
+import { authErrorMessage } from "../../core/auth/auth-feedback";
+import { CaptchaController } from "../../core/auth/captcha-controller";
+import { pageMetaFor } from "../../core/navigation/page-meta";
+import { AuthService } from "../../features/auth/data-access/auth.service";
+import SignInComponent from "../../features/auth/pages/sign-in/sign-in.component";
+import SignUpComponent from "../../features/auth/pages/sign-up/sign-up.component";
+import { HomeComponent } from "../../features/home/pages/home/home.component";
+import { PasswordToggleDirective } from "../../shared/directives/password-toggle.directive";
 
 @Component({
   standalone: true,

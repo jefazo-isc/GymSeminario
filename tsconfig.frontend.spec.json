@@ -2,11 +2,12 @@
   "extends": "./tsconfig.design.spec.json",
   "include": [
     "src/app/app.component.spec.ts",
-    "src/app/components/navbar/navbar.component.spec.ts",
-    "src/app/components/footer/footer.component.spec.ts",
+    "src/app/layouts/public/ui/navbar/navbar.component.spec.ts",
+    "src/app/layouts/public/ui/footer/footer.component.spec.ts",
     "src/app/core/**/*.spec.ts",
     "src/app/shared/**/*.spec.ts",
     "src/app/testing/phase2/**/*.spec.ts",
+    "src/app/testing/phase3/**/*.spec.ts",
     "src/**/*.d.ts"
   ]
 }

@@ -1,16 +1,17 @@
-import { TestBed } from '@angular/core/testing';
+import { TestBed } from "@angular/core/testing";
+import { smokeDependencies } from "../testing/smoke-dependencies";
 
-import { WindowService } from './window.service';
+import { WindowService } from "./window.service";
 
-describe('WindowService', () => {
+describe("WindowService", () => {
   let service: WindowService;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({ providers: smokeDependencies() });
     service = TestBed.inject(WindowService);
   });
 
-  it('should be created', () => {
+  it("should be created", () => {
     expect(service).toBeTruthy();
   });
 });

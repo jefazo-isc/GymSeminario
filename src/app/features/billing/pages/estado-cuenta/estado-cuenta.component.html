@@ -1,0 +1,388 @@
+<section class="feature-page stack">
+  @if (busy) {
+    <p class="notice" role="status">
+      La operación está en curso. Espera su confirmación.
+    </p>
+  }
+  <div class="notice">
+    <app-icon name="monitor" />
+    <p>
+      <strong>Estado de cuenta de demostración.</strong> Los importes y
+      anotaciones se guardan localmente. No están vinculados a un banco, a
+      PayPal ni a Firestore.
+    </p>
+  </div>
+  <app-request-state
+    [state]="accountState"
+    loadingLabel="Consultando el estado de cuenta…"
+    (retry)="loadAccount()"
+  />
+  @if (!accountLoading && !accountError) {
+    @if (feedback) {
+      <p class="notice" role="status">{{ feedback }}</p>
+    }
+    <div class="grid-3">
+      <article class="surface">
+        <span class="help">Anotado como pagado</span>
+        <div class="metric">
+          {{
+            resumen.totalPagado | currency: "MXN" : "symbol-narrow" : "1.2-2"
+          }}
+        </div>
+        <span class="status status--success">Total local · MXN</span>
+      </article>
+      <article class="surface">
+        <span class="help">Pendiente en el ejemplo</span>
+        <div class="metric">
+          {{
+            resumen.totalPendiente | currency: "MXN" : "symbol-narrow" : "1.2-2"
+          }}
+        </div>
+        <span class="status status--warning">Sin cobro automático</span>
+      </article>
+      <article class="surface">
+        <span class="help">Última anotación pagada</span>
+        <div class="metric">
+          {{
+            resumen.ultimoPago
+              ? (resumen.ultimoPago.monto
+                | currency: "MXN" : "symbol-narrow" : "1.2-2")
+              : "—"
+          }}
+        </div>
+        <span class="help">{{
+          resumen.ultimoPago?.fecha || "Sin registros"
+        }}</span>
+      </article>
+    </div>
+    <div class="view-switch" aria-label="Secciones de estado de cuenta">
+      <button
+        type="button"
+        [attr.aria-pressed]="vistaActiva === 'cuenta'"
+        (click)="vistaActiva = 'cuenta'"
+      >
+        Resumen</button
+      ><button
+        type="button"
+        [attr.aria-pressed]="vistaActiva === 'historial'"
+        (click)="vistaActiva = 'historial'"
+      >
+        Historial</button
+      ><button
+        type="button"
+        [attr.aria-pressed]="vistaActiva === 'registrar'"
+        (click)="vistaActiva = 'registrar'"
+      >
+        Nueva anotación
+      </button>
+    </div>
+    @if (vistaActiva === "cuenta") {
+      <div class="grid-2">
+        <article class="surface">
+          <span class="eyebrow">Distribución del ejemplo</span>
+          <h2>Un registro fácil de revisar.</h2>
+          <p class="muted">
+            {{ porcentajePagado }}% del importe total está anotado como pagado.
+          </p>
+          <meter
+            min="0"
+            max="100"
+            [value]="porcentajePagado"
+            aria-label="Porcentaje anotado como pagado"
+          >
+            {{ porcentajePagado }}%
+          </meter>
+          <p class="help">
+            Este porcentaje se calcula exclusivamente con los movimientos
+            locales.
+          </p>
+          <div class="form-actions">
+            <button
+              appButton="secondary"
+              type="button"
+              (click)="vistaActiva = 'historial'; filtroEstado = 'pendiente'"
+            >
+              Revisar pendientes<app-icon name="arrow" />
+            </button>
+          </div>
+        </article>
+        <article class="surface">
+          <span class="eyebrow">Último registro pagado</span>
+          @if (resumen.ultimoPago; as payment) {
+            <h2>{{ payment.concepto }}</h2>
+            <dl class="detail-list">
+              <div>
+                <dt>Folio</dt>
+                <dd>{{ payment.folio }}</dd>
+              </div>
+              <div>
+                <dt>Método anotado</dt>
+                <dd>{{ payment.metodo }}</dd>
+              </div>
+              <div>
+                <dt>Periodo</dt>
+                <dd>{{ payment.periodo || "Sin periodo" }}</dd>
+              </div>
+            </dl>
+            <button
+              appButton="secondary"
+              type="button"
+              (click)="openDetail(payment, paymentDetail)"
+            >
+              Ver detalle
+            </button>
+          } @else {
+            <p class="muted">Todavía no hay anotaciones pagadas.</p>
+          }
+        </article>
+      </div>
+    }
+    @if (vistaActiva === "historial") {
+      <div class="filters">
+        <div class="field">
+          <label for="payment-query">Buscar movimiento</label
+          ><input
+            id="payment-query"
+            type="search"
+            class="control"
+            [(ngModel)]="query"
+            placeholder="Folio o concepto"
+          />
+        </div>
+        <div class="field">
+          <label for="payment-state">Estado local</label
+          ><select id="payment-state" [(ngModel)]="filtroEstado">
+            <option value="todos">Todos</option>
+            <option value="pagado">Pagado</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+        </div>
+        <button
+          appButton="ghost"
+          type="button"
+          (click)="query = ''; filtroEstado = 'todos'"
+        >
+          Restablecer
+        </button>
+      </div>
+      @if (pagosFiltrados.length) {
+        <div
+          class="table-scroll"
+          role="region"
+          aria-label="Historial de anotaciones locales"
+          tabindex="0"
+        >
+          <table class="data-table">
+            <caption>
+              {{
+                pagosFiltrados.length
+              }}
+              movimientos locales
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Concepto / folio</th>
+                <th scope="col">Fecha</th>
+                <th scope="col" class="amount">Importe MXN</th>
+                <th scope="col">Estado</th>
+                <th scope="col">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (payment of pagosFiltrados; track payment.id) {
+                <tr>
+                  <td>
+                    <strong>{{ payment.concepto }}</strong
+                    ><small>{{ payment.folio }}</small>
+                  </td>
+                  <td>{{ payment.fecha | date: "dd/MM/yyyy" }}</td>
+                  <td class="amount">
+                    {{
+                      payment.monto
+                        | currency: "MXN" : "symbol-narrow" : "1.2-2"
+                    }}
+                  </td>
+                  <td>
+                    <span
+                      class="status"
+                      [class.status--success]="payment.estado === 'Pagado'"
+                      [class.status--warning]="payment.estado === 'Pendiente'"
+                      >{{ payment.estado }}</span
+                    >
+                  </td>
+                  <td>
+                    <div class="actions">
+                      <button
+                        appButton="secondary"
+                        type="button"
+                        (click)="openDetail(payment, paymentDetail)"
+                      >
+                        Detalle
+                      </button>
+                      @if (payment.estado === "Pendiente") {
+                        <button
+                          appButton="ghost"
+                          type="button"
+                          [disabled]="busy"
+                          (click)="marcarComoPagado(payment)"
+                        >
+                          Anotar pagado</button
+                        ><button
+                          appButton="ghost"
+                          type="button"
+                          [disabled]="busy"
+                          (click)="cancelarPago(payment)"
+                        >
+                          Cancelar
+                        </button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <div class="empty-state">
+          <app-icon name="grid" />
+          <h2>Sin movimientos con esos filtros.</h2>
+          <button
+            appButton="secondary"
+            type="button"
+            (click)="query = ''; filtroEstado = 'todos'"
+          >
+            Ver todos
+          </button>
+        </div>
+      }
+    }
+    @if (vistaActiva === "registrar") {
+      <form
+        class="surface payment-form"
+        #paymentForm="ngForm"
+        (ngSubmit)="registrarPago(paymentForm)"
+        novalidate
+      >
+        <span class="eyebrow">Solo en este navegador</span>
+        <h2>Añade una anotación.</h2>
+        <p class="help">
+          Registrar un método de pago no inicia una transacción.
+        </p>
+        <div class="form-grid">
+          <div class="field">
+            <label for="new-concept">Concepto</label
+            ><select
+              id="new-concept"
+              name="concepto"
+              [(ngModel)]="nuevoConcepto"
+            >
+              @for (concept of conceptos; track concept) {
+                <option [value]="concept">{{ concept }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label for="new-amount">Importe (MXN)</label
+            ><input
+              id="new-amount"
+              name="monto"
+              type="number"
+              [(ngModel)]="nuevoMonto"
+              required
+              min="0.01"
+              step=".01"
+            />
+          </div>
+          <div class="field full-width">
+            <label for="new-method">Método que quieres anotar</label
+            ><select id="new-method" name="metodo" [(ngModel)]="nuevoMetodo">
+              @for (method of metodos; track method) {
+                <option [value]="method">{{ method }}</option>
+              }
+            </select>
+          </div>
+          <div class="field full-width">
+            <label for="new-note">Nota opcional</label
+            ><textarea
+              id="new-note"
+              name="descripcion"
+              [(ngModel)]="nuevoDescripcion"
+              maxlength="500"
+              rows="3"
+            ></textarea>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button appButton="primary" type="submit" [disabled]="busy">
+            {{ busy ? "Revisando…" : "Revisar anotación" }}</button
+          ><button
+            appButton="secondary"
+            type="button"
+            (click)="vistaActiva = 'historial'"
+          >
+            Volver al historial
+          </button>
+        </div>
+      </form>
+    }
+  }
+</section>
+<ng-template #paymentDetail>
+  @if (selectedPayment; as payment) {
+    <article class="payment-detail">
+      <header class="toolbar">
+        <div>
+          <span class="eyebrow">Detalle local</span>
+          <h2 id="payment-detail-title">{{ payment.concepto }}</h2>
+        </div>
+        <button
+          class="ui-icon-button payment-detail-close"
+          type="button"
+          aria-label="Cerrar detalle"
+          (click)="closeDetail()"
+        >
+          <app-icon name="close" />
+        </button>
+      </header>
+      <div class="metric">
+        {{ payment.monto | currency: "MXN" : "symbol-narrow" : "1.2-2" }}
+      </div>
+      <span class="status">{{ payment.estado }} · Solo en este navegador</span>
+      <dl class="detail-list">
+        <div>
+          <dt>Folio</dt>
+          <dd>{{ payment.folio }}</dd>
+        </div>
+        <div>
+          <dt>Fecha</dt>
+          <dd>{{ payment.fecha | date: "dd/MM/yyyy" }}</dd>
+        </div>
+        <div>
+          <dt>Periodo</dt>
+          <dd>{{ payment.periodo || "Sin periodo" }}</dd>
+        </div>
+        <div>
+          <dt>Método anotado</dt>
+          <dd>{{ payment.metodo }}</dd>
+        </div>
+        <div>
+          <dt>Notas</dt>
+          <dd>{{ payment.descripcion || "Sin notas" }}</dd>
+        </div>
+      </dl>
+      <p class="help">
+        El documento de impresión es un registro de ejemplo, no un comprobante
+        bancario o fiscal.
+      </p>
+      <button
+        appButton="secondary"
+        type="button"
+        (click)="imprimirRecibo(payment)"
+      >
+        Imprimir registro local<app-icon name="external" />
+      </button>
+    </article>
+  }
+</ng-template>

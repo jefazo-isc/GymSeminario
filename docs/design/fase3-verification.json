@@ -1,0 +1,60 @@
+{
+  "reviewedOn": "2026-10-27",
+  "timezone": "America/Mexico_City",
+  "baseline": "f3461d7cf2a12a670d346561e03b2b40215fa751",
+  "scope": "Frontend only. No commit, deployment, remote data mutation, credential change or financial operation.",
+  "checks": {
+    "productionBuild": {
+      "passed": true,
+      "initialRawKb": 972.45,
+      "estimatedTransferKb": 259.2,
+      "warnings": [
+        "CommonJS: sweetalert2",
+        "CommonJS: qrcode"
+      ]
+    },
+    "fullSuite": {
+      "command": "npm test -- --watch=false --browsers=ChromeHeadless",
+      "passed": 154,
+      "failed": 0
+    },
+    "frontendSuite": {
+      "command": "npm run test:frontend",
+      "passed": 93,
+      "failed": 0,
+      "subsetOfFullSuite": true
+    },
+    "typecheck": {
+      "passed": true,
+      "projects": [
+        "tsconfig.app.json",
+        "tsconfig.spec.json"
+      ]
+    },
+    "architecture": {
+      "passed": true,
+      "pages": 29
+    },
+    "design": {
+      "passed": true,
+      "contrastPairsPerTheme": 25,
+      "prepaintScenarios": 7
+    },
+    "responsive": {
+      "passed": true,
+      "checks": 95,
+      "report": "fase3-responsive-audit.json"
+    },
+    "catalog": {
+      "products": 40,
+      "allFieldsAndPricesMatchBaseline": true
+    },
+    "backendFilesModified": []
+  },
+  "limits": [
+    "Remote providers were simulated in behavioral/contract tests; the anonymous Firebase session test used in-memory SDK state.",
+    "Browser route review used a signed-out session.",
+    "No real Firebase user creation, SMS, email, Gemini generation, Firestore mutation or PayPal transaction was performed.",
+    "Native browser zoom 200 percent, screen-reader audit and physical printing require further manual validation."
+  ]
+}
