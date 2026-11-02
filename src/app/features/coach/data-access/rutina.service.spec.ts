@@ -74,7 +74,9 @@ describe("RutinaService", () => {
       expect(res.data.tituloRutina).toBe("Rutina de Fuerza");
     });
 
-    const req = httpMock.expectOne("http://localhost:3000/api/rutina");
+    const req = httpMock.expectOne((request) =>
+      request.url.endsWith("/api/rutina")
+    );
     expect(req.request.method).toBe("POST");
     expect(req.request.body).toEqual(mockPerfil);
     req.flush(mockRespuesta);

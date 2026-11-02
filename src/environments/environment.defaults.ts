@@ -7,7 +7,7 @@ export const environment = {
     statistics: "https://api-j6b4.onrender.com/api/sessions/stats",
     exercises: "https://arl150.github.io/ejercicios-api/ejercicios.json",
     legacyExercises: "https://gym-proyecto.free.beeceptor.com/todos",
-    coach: "https://gymseminario.onrender.com/api",
+    coach: "http://localhost:3000/api",
   },
   firebase: {
     apiKey: "AIzaSyBUIzZqDR_spIfFsRkPVqh3ClnpRqLlsOQ",
