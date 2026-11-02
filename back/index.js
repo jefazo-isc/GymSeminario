@@ -1,18 +1,94 @@
-const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const nodemailer = require('nodemailer');
+import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+import bodyParser from 'body-parser';
+import nodemailer from 'nodemailer';
+import twilio from 'twilio';
+import rateLimit from 'express-rate-limit';
+
+import { generarRutinaEntrenamiento } from './services/routineCoach.service.js';
+import { COACHES, chatearConCoach } from './services/coachChat.service.js';
 
 const app = express();
-const twilio = require('twilio');
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(bodyParser.json());
 
-app.get('/', (req, res) => {
-  res.json({ status: 'ok', mensaje: 'API GROM Backend en línea 🚀' });
+// Rate limiter general
+const limiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  message: { error: 'Demasiadas solicitudes, intente más tarde.' }
 });
+app.use(limiter);
+
+// Rate limiter para IA
+const limiterIA = rateLimit({
+  windowMs: 60 * 1000,
+  max: 15,
+  message: { exito: false, error: 'Protección de cuota activa: por favor espera unos segundos.' }
+});
+
+// Endpoint raíz y comprobación de estado
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', mensaje: 'API GROM Backend + Coach IA en línea 🚀' });
+});
+
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    servicio: 'GROM Backend Full',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  ENDPOINTS DE COACH IA (GEMINI)
+// ══════════════════════════════════════════════════════════════════════════════
+
+// Lista de Coaches
+app.get('/api/coaches', (req, res) => {
+  const lista = Object.values(COACHES).map(({ id, nombre, titulo, emoji, frase }) => ({
+    id, nombre, titulo, emoji, frase
+  }));
+  res.json(lista);
+});
+
+// Chat con Coach IA
+app.post('/api/coach/chat', limiterIA, async (req, res) => {
+  try {
+    const { coachId, mensaje, historial, contextoRutina, perfilUsuario } = req.body;
+    if (!mensaje || !mensaje.trim()) {
+      return res.status(400).json({ error: 'Mensaje requerido' });
+    }
+    const respuesta = await chatearConCoach({ coachId, mensaje, historial, contextoRutina, perfilUsuario });
+    res.json(respuesta);
+  } catch (err) {
+    console.error('Error en /api/coach/chat:', err);
+    res.status(500).json({ error: 'Error procesando el chat.' });
+  }
+});
+
+// Generar rutina de entrenamiento
+app.post('/api/rutina', limiterIA, async (req, res) => {
+  try {
+    const perfil = req.body;
+    const resultado = await generarRutinaEntrenamiento(perfil);
+    res.json(resultado);
+  } catch (err) {
+    console.error('Error en /api/rutina:', err);
+    res.status(500).json({ error: 'Error interno del servidor.' });
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  ENDPOINTS DE NOTIFICACIONES Y ASISTENCIA (NODEMAILER & TWILIO)
+// ══════════════════════════════════════════════════════════════════════════════
 
 app.post('/enviar-correo', async (req, res) => {
   const { correo, nombre, entrenamiento, fecha, turno } = req.body;
@@ -24,27 +100,16 @@ app.post('/enviar-correo', async (req, res) => {
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: 'carlosvm12345678@gmail.com',
-      pass: 'temoxwazusjxxrnr'
+      user: process.env.EMAIL_USER || 'carlosvm12345678@gmail.com',
+      pass: process.env.EMAIL_PASS || 'temoxwazusjxxrnr'
     }
   });
 
   const mailOptions = {
-    from: 'carlosvm12345678@gmail.com',
+    from: process.env.EMAIL_USER || 'carlosvm12345678@gmail.com',
     to: correo,
     subject: 'Confirmación de entrenamiento',
-    text: `Hola ${nombre},
-
-Gracias por registrarte al entrenamiento. Aquí están los detalles:
-
-- 🏋️ Entrenamiento: ${entrenamiento}
-- 📅 Fecha: ${fecha}
-- ⏰ Turno: ${turno}
-
-¡Nos vemos pronto!
-
-Saludos,
-GROM`
+    text: `Hola ${nombre},\n\nGracias por registrarte al entrenamiento. Aquí están los detalles:\n\n- 🏋️ Entrenamiento: ${entrenamiento}\n- 📅 Fecha: ${fecha}\n- ⏰ Turno: ${turno}\n\n¡Nos vemos pronto!\n\nSaludos,\nGROM`
   };
 
   try {
@@ -56,7 +121,6 @@ GROM`
   }
 });
 
-
 app.post('/enviar-asistencia', async (req, res) => {
   const { correo, nombre, clase, fecha, hora } = req.body;
 
@@ -65,17 +129,16 @@ app.post('/enviar-asistencia', async (req, res) => {
   }
 
   try {
-    // Configura tu transporte de correo
     const transporter = nodemailer.createTransport({
-      service: 'gmail', // O el servicio que uses
+      service: 'gmail',
       auth: {
-         user: 'carlosvm12345678@gmail.com',
-         pass: 'temoxwazusjxxrnr'
+        user: process.env.EMAIL_USER || 'carlosvm12345678@gmail.com',
+        pass: process.env.EMAIL_PASS || 'temoxwazusjxxrnr'
       }
     });
 
     const info = await transporter.sendMail({
-      from: 'tu-correo@gmail.com',
+      from: process.env.EMAIL_USER || 'tu-correo@gmail.com',
       to: correo,
       subject: 'Confirmación de Asistencia',
       html: `
@@ -97,31 +160,26 @@ app.post('/enviar-asistencia', async (req, res) => {
   }
 });
 
-
-
-///////////api celular
+// Configuración Twilio
 const accountSid = process.env.TWILIO_ACCOUNT_SID || 'TU_TWILIO_ACCOUNT_SID';
 const authToken = process.env.TWILIO_AUTH_TOKEN || 'TU_TWILIO_AUTH_TOKEN';
-let client = null;
+let twilioClient = null;
 
 if (accountSid && accountSid.startsWith('AC') && authToken && authToken !== 'TU_TWILIO_AUTH_TOKEN') {
-  client = twilio(accountSid, authToken);
-} else {
-  console.warn('Advertencia: Twilio no está configurado con credenciales válidas (accountSid debe iniciar con AC).');
+  twilioClient = twilio(accountSid, authToken);
 }
 
-// Ruta para enviar SMS
 app.post('/enviar-sms', async (req, res) => {
   const { telefono, mensaje } = req.body;
 
-  if (!client) {
+  if (!twilioClient) {
     return res.status(503).json({ success: false, error: 'Servicio Twilio no configurado.' });
   }
 
   try {
-    const response = await client.messages.create({
+    const response = await twilioClient.messages.create({
       body: mensaje,
-      from: '+15077095977',
+      from: process.env.TWILIO_PHONE_NUMBER || '+15077095977',
       to: telefono,
     });
 
@@ -132,7 +190,6 @@ app.post('/enviar-sms', async (req, res) => {
   }
 });
 
-
 app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
+  console.log(`🚀 Servidor GROM Backend + Coach IA corriendo en http://localhost:${PORT}`);
 });
