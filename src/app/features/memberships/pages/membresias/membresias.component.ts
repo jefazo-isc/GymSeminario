@@ -116,7 +116,7 @@ export class MembresiasComponent {
     return plan.periodo !== "Mensual";
   }
   comparisonBenefits(plan: PlanCatalogo) {
-    return plan.beneficios.map((benefit, i) =>
+    return plan.beneficios.map((benefit) =>
       benefit.startsWith("Todos los beneficios Pro")
         ? benefit +
           ": " +

@@ -4,7 +4,6 @@ import {
   ConceptoPago,
   MetodoPago,
   Pago,
-  ResumenCuenta,
 } from "../models/pago.model";
 import { PagoService } from "./pago.service";
 export interface BillingRepository {

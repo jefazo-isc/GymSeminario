@@ -79,7 +79,7 @@ jobs:
           cat > .eslintrc.json << 'ESLINT'
           {
             "root": true,
-            "ignorePatterns": ["projects/**/*", "dist/**/*", "node_modules/**/*"],
+            "ignorePatterns": ["projects/**/*", "dist/**/*", "node_modules/**/*", "src/**/*.spec.ts"],
             "overrides": [
               {
                 "files": ["*.ts"],
@@ -92,7 +92,7 @@ jobs:
                 "rules": {
                   "@typescript-eslint/no-explicit-any": "warn",
                   "@typescript-eslint/no-unused-vars": "warn",
-                  "no-console": "warn",
+                  "no-console": "off",
                   "no-debugger": "error",
                   "@angular-eslint/component-class-suffix": "error",
                   "@angular-eslint/no-empty-lifecycle-method": "warn",

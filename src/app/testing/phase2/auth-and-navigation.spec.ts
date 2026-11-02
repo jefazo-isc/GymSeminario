@@ -18,10 +18,10 @@ import { PasswordToggleDirective } from "../../shared/directives/password-toggle
   template:
     '<input appPassword #pass="appPassword"><button type="button" (click)="pass.toggle()" [attr.aria-pressed]="pass.visible()">{{pass.label()}}</button>',
 })
-class PasswordHarness {}
+class PasswordHarnessComponent {}
 describe("Password control", () => {
   it("starts masked and exposes its selected state without losing the input value", () => {
-    const fixture = TestBed.createComponent(PasswordHarness);
+    const fixture = TestBed.createComponent(PasswordHarnessComponent);
     fixture.detectChanges();
     const input: HTMLInputElement =
       fixture.nativeElement.querySelector("input");
