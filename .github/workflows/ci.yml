@@ -53,6 +53,13 @@ jobs:
       - name: 🔨 Compilación — Construir la aplicación Angular (producción)
         run: npm run build -- --configuration production
 
+      - name: 📦 Artefacto — Guardar build de producción para despliegue
+        uses: actions/upload-artifact@v4
+        with:
+          name: angular-dist
+          path: dist/libreria1/browser
+          retention-days: 1
+
       # ─────────────────────────────────────────────────────────────────────
       # CRITERIO 5 (15%): Análisis estático de código — ESLint / Angular Lint
       # ─────────────────────────────────────────────────────────────────────
@@ -381,6 +388,12 @@ jobs:
       # ─────────────────────────────────────────────────────────────────────
       # DESPLIEGUE CONTINUO (CD): Publicar Frontend en GitHub Pages
       # ─────────────────────────────────────────────────────────────────────
+      - name: 📥 Artefacto — Descargar build de producción
+        uses: actions/download-artifact@v4
+        with:
+          name: angular-dist
+          path: dist/libreria1/browser
+
       - name: 🌐 GitHub Pages — Desplegar frontend Angular
         if: github.ref == 'refs/heads/main'
         uses: peaceiris/actions-gh-pages@v4
