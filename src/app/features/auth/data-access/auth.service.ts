@@ -387,8 +387,11 @@ export class AuthService implements SessionRepository {
   }
 
   async getCurrentUser(): Promise<FirebaseUser | null> {
-    await this.auth.authStateReady();
-    return this.auth.currentUser;
+    const authInstance = this.auth as any;
+    if (typeof authInstance?.authStateReady === "function") {
+      await authInstance.authStateReady();
+    }
+    return authInstance?.currentUser ?? null;
   }
 
   sendPhoneCode(phone: string, verifier: ApplicationVerifier) {

@@ -16,8 +16,10 @@ on:
 
 # ── Permisos mínimos necesarios ───────────────────────────────────────────────
 permissions:
-  contents: read
+  contents: write   # Para publicar en GitHub Pages y releases
   packages: write   # Para publicar imagen en GitHub Container Registry
+  pages: write      # Para despliegue a GitHub Pages
+  id-token: write
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  JOB 1 ── Construcción y Verificación de Código
@@ -368,6 +370,17 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # ─────────────────────────────────────────────────────────────────────
+      # DESPLIEGUE CONTINUO (CD): Publicar Frontend en GitHub Pages
+      # ─────────────────────────────────────────────────────────────────────
+      - name: 🌐 GitHub Pages — Desplegar frontend Angular
+        if: github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist/libreria1/browser
+          cname: ''
 
       - name: ✅ Pipeline completado — Resumen
         run: |

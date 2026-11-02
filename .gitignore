@@ -25,3 +25,6 @@ Thumbs.db
 # Archives
 *.zip
 *.tar.gz
+
+server/edge_gym.db*
+
