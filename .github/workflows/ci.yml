@@ -348,6 +348,11 @@ jobs:
             type=sha,prefix=sha-,format=short
             type=semver,pattern={{version}}
 
+      - name: 🐳 Docker — Preparar nombre de repositorio en minúsculas (lowercase)
+        id: repo_lower
+        run: |
+          echo "REPO_LOWER=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+
       - name: 🐳 Docker — Construir y publicar imagen Angular (Nginx)
         uses: docker/build-push-action@v6
         with:
@@ -367,8 +372,8 @@ jobs:
           file: ./server/Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}-server:latest
-            ghcr.io/${{ github.repository }}-server:sha-${{ github.sha }}
+            ghcr.io/${{ env.REPO_LOWER }}-server:latest
+            ghcr.io/${{ env.REPO_LOWER }}-server:sha-${{ github.sha }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
