@@ -387,7 +387,10 @@ export class AuthService implements SessionRepository {
   }
 
   async getCurrentUser(): Promise<FirebaseUser | null> {
-    const authInstance = this.auth as any;
+    const authInstance = this.auth as unknown as {
+      authStateReady?: () => Promise<void>;
+      currentUser?: FirebaseUser | null;
+    };
     if (typeof authInstance?.authStateReady === "function") {
       await authInstance.authStateReady();
     }
