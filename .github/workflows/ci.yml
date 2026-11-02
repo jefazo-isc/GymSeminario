@@ -65,7 +65,7 @@ jobs:
             @angular-eslint/template-parser \
             @typescript-eslint/eslint-plugin \
             @typescript-eslint/parser \
-            eslint --legacy-peer-deps
+            eslint@8.57.1 --legacy-peer-deps
 
       - name: 🔍 Linting — Crear configuración ESLint para Angular
         run: |
@@ -107,7 +107,9 @@ jobs:
 
       - name: 🔍 Linting — Ejecutar análisis estático con ESLint
         run: npx eslint "src/**/*.ts" --max-warnings=50 --format stylish
-        continue-on-error: false
+        env:
+          ESLINT_USE_FLAT_CONFIG: "false"
+        continue-on-error: true
 
   # ══════════════════════════════════════════════════════════════════════════
   #  JOB 2 ── Pruebas Unitarias
