@@ -1,0 +1,1 @@
+function a(s,r){return t=>{let l=t.get(s)?.value,n=t.get(r)?.value;if(l!==n)t.get(r)?.setErrors({mismatch:!0});else{let e=t.get(r)?.errors;e&&e.mismatch&&(delete e.mismatch,Object.keys(e).length===0?t.get(r)?.setErrors(null):t.get(r)?.setErrors(e))}return null}}export{a};

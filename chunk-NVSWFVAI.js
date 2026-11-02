@@ -1,0 +1,1 @@
+var s=n=>!!n&&typeof n=="object"&&!Array.isArray(n),i=n=>typeof n=="string",t=n=>typeof n=="number"&&Number.isFinite(n),o=n=>Array.isArray(n)&&n.every(i),e=n=>r=>Array.isArray(r)&&r.every(n);export{s as a,i as b,t as c,o as d,e};
