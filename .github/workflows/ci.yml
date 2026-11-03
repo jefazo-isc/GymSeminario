@@ -51,7 +51,9 @@ jobs:
         run: npm ci        # ci garantiza instalación limpia y reproducible
 
       - name: 🔨 Compilación — Construir la aplicación Angular (producción)
-        run: npm run build -- --configuration production
+        run: |
+          npm run build -- --configuration production --base-href /GymSeminario/
+          cp dist/libreria1/browser/index.html dist/libreria1/browser/404.html
 
       - name: 📦 Artefacto — Guardar build de producción para despliegue
         uses: actions/upload-artifact@v4
