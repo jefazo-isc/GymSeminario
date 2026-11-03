@@ -3,14 +3,14 @@
     <span class="eyebrow">Tu acceso</span>
     <h2>Una contraseña<br />que solo tú conozcas.</h2>
     <p>
-      Este formulario verifica tu correo y contraseña actual mediante Firebase.
+      Este formulario verifica tu correo y contraseña actual.
       Si utilizas Google o teléfono, continúa con ese proveedor de acceso.
     </p>
   </aside>
   <div class="auth-card">
     @if (success) {
       <div class="notice notice--success" role="status">
-        Tu contraseña se actualizó en Firebase.
+        Tu contraseña se actualizó correctamente.
       </div>
       <a appButton="primary" routerLink="/auth/sign-in">Volver a ingresar</a>
     } @else {

@@ -15,19 +15,7 @@
     />
   </aside>
   <div class="auth-card">
-    <div class="auth-alternatives">
-      <button
-        appButton="secondary"
-        type="button"
-        (click)="conGoogle()"
-        [disabled]="!!busy"
-      >
-        {{ busy === "google" ? "Conectando…" : "Continuar con Google" }}</button
-      ><a appButton="secondary" routerLink="/phone"
-        ><app-icon name="user" />Usar teléfono</a
-      >
-    </div>
-    <div class="auth-divider">o con tu correo</div>
+    <div class="auth-divider">Crea tu cuenta</div>
     @if (message) {
       <p class="notice notice--error" role="alert">{{ message }}</p>
     }
@@ -126,25 +114,11 @@
           }
         </span>
       </div>
-      <div class="field">
-        <span>Verificación de seguridad</span>
-        <div class="captcha-holder" id="sign-up-recaptcha"></div>
-        @if (captcha.error()) {
-          <span class="field-error">{{ captcha.error() }}</span
-          ><button appButton="ghost" type="button" (click)="captcha.init()">
-            Volver a cargar CAPTCHA
-          </button>
-        } @else {
-          <small class="help"
-            >Completa el CAPTCHA para habilitar el envío.</small
-          >
-        }
-      </div>
       <div class="form-actions">
         <button
           appButton="primary"
           type="submit"
-          [disabled]="!!busy || !captcha.resolved()"
+          [disabled]="!!busy"
         >
           {{ busy === "email" ? "Enviando…" : "Crear mi cuenta"
           }}<app-icon name="arrow" />

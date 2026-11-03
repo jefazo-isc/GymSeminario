@@ -1,100 +1,25 @@
 <section class="feature-page auth-layout">
   <aside class="auth-aside">
-    <span class="eyebrow">Verifica tu número</span>
-    <h2>Una forma más<br />de entrar.</h2>
+    <span class="eyebrow">Verificación</span>
+    <h2>Autenticación<br />por teléfono.</h2>
     <p>
-      Firebase enviará un código al número que indiques. La entrega depende del
-      servicio de SMS y de la configuración del proyecto.
+      Esta función no está disponible en este momento. Usa tu correo y
+      contraseña para acceder.
     </p>
   </aside>
   <div class="auth-card">
     @if (usuarioLogueado) {
       <div class="notice notice--success" role="status">
-        La sesión de Firebase está activa. {{ nombreUsuario || "" }}
+        Sesión activa. {{ nombreUsuario || "" }}
       </div>
       <a appButton="primary" routerLink="/micuenta">Ir a mi cuenta</a>
     } @else {
-      @if (message) {
-        <p class="notice notice--error" role="alert">{{ message }}</p>
-      }
-      <form
-        (ngSubmit)="btnVerificar ? verificarCodigo() : enviarCodigo()"
-        [attr.aria-busy]="busy"
-      >
-        <div class="field">
-          <label for="phone-number">Número con prefijo internacional</label
-          ><input
-            id="phone-number"
-            name="phone"
-            type="tel"
-            autocomplete="tel"
-            [(ngModel)]="phoneNumber"
-            placeholder="+52…"
-            aria-describedby="phone-help"
-            [readonly]="btnVerificar"
-          /><small class="help" id="phone-help"
-            >Incluye + y el código del país, sin espacios.</small
-          >
-          @if (phoneNumber && !esNumeroValido()) {
-            <span class="field-error"
-              >Revisa el prefijo y la longitud del número.</span
-            >
-          }
-        </div>
-        <div
-          class="captcha-holder"
-          id="recaptcha-container"
-          [hidden]="btnVerificar"
-        ></div>
-        @if (btnVerificar) {
-          <div class="notice" role="status">
-            El código se solicitó a Firebase. Revisa el SMS para continuar.
-          </div>
-          <div class="field">
-            <label for="phone-otp">Código de seis dígitos</label
-            ><input
-              id="phone-otp"
-              name="otp"
-              type="text"
-              inputmode="numeric"
-              autocomplete="one-time-code"
-              maxlength="6"
-              pattern="[0-9]{6}"
-              [(ngModel)]="otp"
-            />
-          </div>
-          <button
-            appButton="primary"
-            type="submit"
-            [disabled]="busy || otp.length !== 6"
-          >
-            {{ busy ? "Verificando…" : "Verificar código" }}</button
-          ><button
-            appButton="ghost"
-            type="button"
-            (click)="btnVerificar = false; captcha.init()"
-            [disabled]="busy"
-          >
-            Cambiar número o solicitar otro código
-          </button>
-        } @else {
-          @if (captcha.error()) {
-            <span class="field-error" role="alert">{{ captcha.error() }}</span
-            ><button appButton="ghost" type="button" (click)="captcha.init()">
-              Volver a cargar CAPTCHA
-            </button>
-          }
-          <button
-            appButton="primary"
-            type="submit"
-            [disabled]="busy || !esNumeroValido() || !captcha.resolved()"
-          >
-            {{ busy ? "Solicitando código…" : "Solicitar código SMS" }}
-          </button>
-        }
-      </form>
+      <div class="notice notice--warning" role="alert">
+        La autenticación por teléfono no está disponible. Usa tu correo y
+        contraseña.
+      </div>
       <div class="auth-links">
-        <a routerLink="/auth/sign-in">Prefiero usar mi correo</a>
+        <a appButton="primary" routerLink="/auth/sign-in">Ir al inicio de sesión</a>
       </div>
     }
   </div>

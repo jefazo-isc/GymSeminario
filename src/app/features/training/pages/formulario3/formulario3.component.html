@@ -2,7 +2,7 @@
   <div class="notice">
     <app-icon name="calendar" />
     <p>
-      <strong>Registro conectado a Firestore.</strong> Esta operación es
+      <strong>Registro de clase.</strong> Esta operación es
       independiente del historial local de Mi actividad. El aviso por correo o
       SMS se confirma por separado.
     </p>
@@ -12,7 +12,7 @@
   } @else if (!authenticated) {
     <div class="notice notice--warning">
       <p>
-        Necesitas una sesión de Firebase para confirmar el registro.
+        Necesitas iniciar sesión para confirmar el registro.
         <a routerLink="/auth/sign-in">Ingresar</a>.
       </p>
     </div>
@@ -21,7 +21,7 @@
     <div class="registration-result stack">
       <div class="surface">
         <span class="status status--success"
-          ><app-icon name="check" />Registro guardado en Firestore</span
+          ><app-icon name="check" />Registro guardado</span
         >
         <h2>Tu selección quedó registrada.</h2>
         <p class="help">
