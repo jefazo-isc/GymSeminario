@@ -1,26 +1,100 @@
 <section class="feature-page auth-layout">
   <aside class="auth-aside">
-    <span class="eyebrow">Verificación</span>
-    <h2>Autenticación<br />por teléfono.</h2>
+    <span class="eyebrow">Acceso rápido</span>
+    <h2>Entra con<br />tu teléfono.</h2>
     <p>
-      Esta función no está disponible en este momento. Usa tu correo y
-      contraseña para acceder.
+      Te enviamos un código de verificación. Solo necesitas tu número con
+      prefijo internacional.
     </p>
   </aside>
   <div class="auth-card">
     @if (usuarioLogueado) {
       <div class="notice notice--success" role="status">
-        Sesión activa. {{ nombreUsuario || "" }}
+        ✓ Sesión activa como <strong>{{ nombreUsuario }}</strong>
       </div>
       <a appButton="primary" routerLink="/micuenta">Ir a mi cuenta</a>
+    } @else if (codigoEnviado) {
+      <!-- Paso 2: ingresar código -->
+      <div class="notice notice--info" role="status">
+        📱 {{ hint }}
+      </div>
+      @if (message) {
+        <p class="notice notice--error" role="alert">{{ message }}</p>
+      }
+      <form (ngSubmit)="verificarCodigo()" [attr.aria-busy]="busy">
+        <div class="field">
+          <label for="phone-otp">Código de 6 dígitos</label>
+          <input
+            id="phone-otp"
+            name="otp"
+            type="text"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            maxlength="6"
+            pattern="[0-9]{6}"
+            [(ngModel)]="otp"
+            placeholder="123456"
+            class="otp-input"
+          />
+          <small class="help">Ingresa el código que recibiste.</small>
+        </div>
+        <div class="form-actions">
+          <button
+            appButton="primary"
+            type="submit"
+            [disabled]="busy || otp.length !== 6"
+          >
+            {{ busy ? "Verificando…" : "Verificar código" }}
+          </button>
+          <button
+            appButton="ghost"
+            type="button"
+            (click)="reiniciar()"
+            [disabled]="busy"
+          >
+            Cambiar número
+          </button>
+        </div>
+      </form>
     } @else {
-      <div class="notice notice--warning" role="alert">
-        La autenticación por teléfono no está disponible. Usa tu correo y
-        contraseña.
-      </div>
-      <div class="auth-links">
-        <a appButton="primary" routerLink="/auth/sign-in">Ir al inicio de sesión</a>
-      </div>
+      <!-- Paso 1: ingresar número -->
+      @if (message) {
+        <p class="notice notice--error" role="alert">{{ message }}</p>
+      }
+      <form (ngSubmit)="enviarCodigo()" [attr.aria-busy]="busy">
+        <div class="field">
+          <label for="phone-number">Número con prefijo internacional</label>
+          <input
+            id="phone-number"
+            name="phone"
+            type="tel"
+            autocomplete="tel"
+            [(ngModel)]="phoneNumber"
+            placeholder="+52 55 1234 5678"
+            aria-describedby="phone-help"
+          />
+          <small class="help" id="phone-help">
+            Incluye + y el código del país. Ej: +52 para México.
+          </small>
+          @if (phoneNumber && !esNumeroValido()) {
+            <span class="field-error">
+              Formato inválido. Incluye el prefijo +52 (o el de tu país).
+            </span>
+          }
+        </div>
+        <div class="form-actions">
+          <button
+            appButton="primary"
+            type="submit"
+            [disabled]="busy || !esNumeroValido()"
+          >
+            {{ busy ? "Enviando…" : "Enviar código SMS" }}
+          </button>
+        </div>
+      </form>
     }
+    <div class="auth-links">
+      <a routerLink="/auth/sign-in">Prefiero usar mi correo</a>
+    </div>
   </div>
 </section>

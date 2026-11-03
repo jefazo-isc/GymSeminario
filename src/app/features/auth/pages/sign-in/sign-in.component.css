@@ -1,3 +1,47 @@
 :host {
   display: block;
 }
+
+/* Botón de Google renderizado por GIS */
+.google-btn-wrapper {
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: opacity 0.2s;
+}
+
+.google-btn-wrapper.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* GIS inyecta un iframe — forzar ancho completo */
+.google-btn-wrapper :deep(div),
+.google-btn-wrapper :deep(iframe) {
+  width: 100% !important;
+}
+
+.social-loading {
+  font-size: 0.875rem;
+  color: var(--color-text-muted, #666);
+}
+
+/* Botón de teléfono */
+.btn-phone {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+  width: 100%;
+}
+
+.auth-alternatives {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}

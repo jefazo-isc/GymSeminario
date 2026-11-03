@@ -119,9 +119,51 @@ export class AuthService implements SessionRepository {
     return resp;
   }
 
-  /** Google sign-in ya no disponible — lanza error amigable */
+  /** Google sign-in usando Google Identity Services (GIS) */
   async signInWithGoogle(): Promise<unknown> {
-    throw new Error("El acceso con Google no está disponible en este momento.");
+    return new Promise((resolve, reject) => {
+      const win = window as unknown as {
+        google?: { accounts: { id: { initialize: (c: object) => void; prompt: () => void } } };
+      };
+      if (!win.google?.accounts?.id) {
+        reject(new Error('Google Sign-In no disponible. Recarga la página.'));
+        return;
+      }
+      win.google.accounts.id.initialize({
+        client_id: '366321485374-143tbv091m8a3r6ajps5jsodpj9aeah0.apps.googleusercontent.com',
+        callback: async (response: { credential: string }) => {
+          try {
+            const result = await this.signInWithGoogleCredential(response.credential);
+            resolve(result);
+          } catch (e) { reject(e); }
+        },
+        cancel_on_tap_outside: true,
+      });
+      win.google.accounts.id.prompt();
+    });
+  }
+
+  async signInWithGoogleCredential(credential: string): Promise<unknown> {
+    const resp = await firstValueFrom(
+      this.http.post<AuthResponse>(`${this.backendUrl}/api/auth/google`, { credential })
+    );
+    this.saveSession(resp.token, resp.user);
+    return resp;
+  }
+
+  /** Phone sign-in — envía código al backend (demo: usa 123456) */
+  async sendPhoneCode(phone: string, _verifier: unknown): Promise<unknown> {
+    return firstValueFrom(
+      this.http.post<{ ok: boolean; mensaje: string }>(`${this.backendUrl}/api/auth/phone`, { phone })
+    );
+  }
+
+  async verifyPhoneCode(phone: string, code: string): Promise<unknown> {
+    const resp = await firstValueFrom(
+      this.http.post<AuthResponse>(`${this.backendUrl}/api/auth/phone`, { phone, code })
+    );
+    this.saveSession(resp.token, resp.user);
+    return resp;
   }
 
   async cerrarSesion(): Promise<void> {
@@ -149,11 +191,7 @@ export class AuthService implements SessionRepository {
     throw new Error("Cambia tu contraseña desde el panel de administración.");
   }
 
-  /** No aplica en JWT — mantiene compatibilidad */
-  async sendPhoneCode(_phone: string, _verifier: unknown): Promise<unknown> {
-    throw new Error("Autenticación por teléfono no disponible.");
-  }
-
+  /** No aplica en JWT — se reemplazó por verifyPhoneCode */
   async lookupPhone(_phone: string): Promise<void> { /* noop */ }
 
   // ── Admin helpers ───────────────────────────────────────────────────────────

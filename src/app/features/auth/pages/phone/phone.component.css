@@ -1,3 +1,17 @@
-:host {
-  display: block;
+:host { display: block; }
+
+.otp-input {
+  font-size: 1.5rem;
+  letter-spacing: 0.5rem;
+  text-align: center;
+  font-weight: 600;
+  max-width: 200px;
+}
+
+.notice--info {
+  background: color-mix(in srgb, var(--color-primary, #2563eb) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary, #2563eb) 30%, transparent);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
 }

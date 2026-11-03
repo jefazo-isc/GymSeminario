@@ -8,6 +8,10 @@ import rateLimit from 'express-rate-limit';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import Database from 'better-sqlite3';
+import { OAuth2Client } from 'google-auth-library';
+
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '366321485374-143tbv091m8a3r6ajps5jsodpj9aeah0.apps.googleusercontent.com';
+const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 import { generarRutinaEntrenamiento } from './services/routineCoach.service.js';
 import { COACHES, chatearConCoach } from './services/coachChat.service.js';
@@ -15,14 +19,15 @@ import { COACHES, chatearConCoach } from './services/coachChat.service.js';
 const db = new Database('./gym.db');
 const JWT_SECRET = process.env.JWT_SECRET || 'gym-seminario-secret-2026';
 
-// Crear tabla de usuarios si no existe
+// También crear tabla para usuarios de Google/phone (sin contraseña obligatoria)
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL,
+    password TEXT NOT NULL DEFAULT '',
     nombre TEXT NOT NULL,
     role TEXT NOT NULL DEFAULT 'user',
+    provider TEXT NOT NULL DEFAULT 'email',
     created_at TEXT DEFAULT (datetime('now'))
   )
 `);
@@ -295,6 +300,69 @@ app.post('/api/auth/set-role', (req, res) => {
   } catch {
     res.status(401).json({ error: 'Token inválido.' });
   }
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  GOOGLE OAUTH — verificar ID token y emitir JWT propio
+// ══════════════════════════════════════════════════════════════════════════════
+app.post('/api/auth/google', async (req, res) => {
+  const { credential } = req.body;
+  if (!credential) return res.status(400).json({ error: 'Token de Google requerido.' });
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const email = payload.email;
+    const nombre = payload.name || email.split('@')[0];
+
+    let user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+    if (!user) {
+      const info = db.prepare(
+        "INSERT INTO users (email, password, nombre, role, provider) VALUES (?, '', ?, 'user', 'google')"
+      ).run(email, nombre);
+      user = { id: info.lastInsertRowid, email, nombre, role: 'user' };
+    }
+
+    const token = jwt.sign(
+      { uid: user.id, email: user.email, nombre: user.nombre, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+    res.json({ token, user: { uid: user.id, email: user.email, nombre: user.nombre, role: user.role } });
+  } catch (e) {
+    console.error('Error Google auth:', e.message);
+    res.status(401).json({ error: 'Token de Google inválido o expirado.' });
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  PHONE AUTH — demo con código 123456
+// ══════════════════════════════════════════════════════════════════════════════
+app.post('/api/auth/phone', (req, res) => {
+  const { phone, code } = req.body;
+  if (!phone) return res.status(400).json({ error: 'Número requerido.' });
+  if (!code) {
+    return res.json({ ok: true, mensaje: 'Código enviado. Para demo usa: 123456' });
+  }
+  if (code !== '123456') return res.status(401).json({ error: 'Código incorrecto.' });
+
+  const email = `phone_${phone.replace(/\D/g, '')}@gymseminario.demo`;
+  let user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+  if (!user) {
+    const info = db.prepare(
+      "INSERT INTO users (email, password, nombre, role, provider) VALUES (?, '', ?, 'user', 'phone')"
+    ).run(email, phone);
+    user = { id: info.lastInsertRowid, email, nombre: phone, role: 'user' };
+  }
+
+  const token = jwt.sign(
+    { uid: user.id, email: user.email, nombre: user.nombre, role: user.role },
+    JWT_SECRET,
+    { expiresIn: '7d' }
+  );
+  res.json({ token, user: { uid: user.id, email: user.email, nombre: user.nombre, role: user.role } });
 });
 
 app.listen(PORT, () => {

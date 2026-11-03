@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit, inject } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormsModule } from "@angular/forms";
-import { RouterLink } from "@angular/router";
+import { Router, RouterLink } from "@angular/router";
 import { signal } from "@angular/core";
 import { authErrorMessage } from "../../../../core/auth/auth-feedback";
 import { ButtonDirective } from "../../../../shared/ui/button.directive";
@@ -16,15 +16,17 @@ import { SESSION } from "../../data-access/session.repository";
 })
 export class PhoneComponent implements OnInit, OnDestroy {
   private service = inject(SESSION);
+  private router = inject(Router);
+
   phoneNumber = "";
   otp = "";
-  message = "La autenticación por teléfono no está disponible. Usa tu correo y contraseña.";
+  message = "";
+  hint = "";
   busy = false;
-  btnVerificar = false;
+  codigoEnviado = false;
   usuarioLogueado = false;
   nombreUsuario: string | null = null;
 
-  // Stub para compatibilidad con la plantilla HTML que usa captcha.resolved() / captcha.ready()
   readonly captcha = {
     resolved: signal(true),
     ready: signal(true),
@@ -43,20 +45,48 @@ export class PhoneComponent implements OnInit, OnDestroy {
       .subscribe((uid) => (this.usuarioLogueado = !!uid));
   }
 
-  ngOnInit() { /* noop */ }
-  ngOnDestroy() { /* noop */ }
+  ngOnInit() {}
+  ngOnDestroy() {}
 
   esNumeroValido() {
     return /^\+[1-9]\d{7,14}$/.test(this.phoneNumber.trim());
   }
 
   async enviarCodigo() {
-    this.message = "La autenticación por teléfono no está disponible. Usa tu correo y contraseña.";
+    if (!this.esNumeroValido()) return;
+    this.busy = true;
+    this.message = "";
+    try {
+      const svc = this.service as any;
+      const resp = await svc.sendPhoneCode(this.phoneNumber.trim(), null);
+      this.codigoEnviado = true;
+      this.hint = resp?.mensaje ?? "Código enviado. Para demo usa: 123456";
+    } catch (err) {
+      this.message = authErrorMessage(err);
+    } finally {
+      this.busy = false;
+    }
   }
 
   async verificarCodigo() {
-    this.message = authErrorMessage(new Error("Autenticación por teléfono no disponible."));
+    if (this.otp.length !== 6) return;
+    this.busy = true;
+    this.message = "";
+    try {
+      const svc = this.service as any;
+      await svc.verifyPhoneCode(this.phoneNumber.trim(), this.otp);
+      await this.router.navigate(["/home"]);
+    } catch (err) {
+      this.message = authErrorMessage(err);
+    } finally {
+      this.busy = false;
+    }
   }
 
-  async buscarUsuarioPorTelefono(_phone: string) { /* noop */ }
+  reiniciar() {
+    this.codigoEnviado = false;
+    this.otp = "";
+    this.message = "";
+    this.hint = "";
+  }
 }
