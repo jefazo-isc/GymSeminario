@@ -1,1 +1,0 @@
-import{a as n}from"./chunk-66HGQY4D.js";import{aa as i}from"./chunk-LYZ4VKZ4.js";var e=new i("GROM public service endpoints",{providedIn:"root",factory:()=>n.services}),o=new i("PayPal public configuration",{providedIn:"root",factory:()=>n.paypal});export{e as a,o as b};
