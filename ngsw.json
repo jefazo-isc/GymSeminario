@@ -1,6 +1,6 @@
 {
   "configVersion": 1,
-  "timestamp": 1793684396656,
+  "timestamp": 1793684453199,
   "index": "/GymSeminario/index.html",
   "assetGroups": [
     {
@@ -290,7 +290,7 @@
     "/GymSeminario/img/voz/detener.jpg": "0751ea6676040df331932166db9f51f29e4c3b9a",
     "/GymSeminario/img/voz/pausando.jpg": "38c27401ea27ba551773200bd4f834522c43d8c2",
     "/GymSeminario/img/voz/play.png": "781df40268c7e121402e5bab68bdd58dc60f9cff",
-    "/GymSeminario/index.html": "8052e684578e7511ead97682086862f6f1600738",
+    "/GymSeminario/index.html": "78715e5e0893f029196a8bf9a495b009f197889b",
     "/GymSeminario/main-KRSTQ2F2.js": "a23a2a66a72bb64df8d13ddad948620078893e42",
     "/GymSeminario/manifest.webmanifest": "b02c2bbc38756b150721fde6754e2049c957d365",
     "/GymSeminario/polyfills-B6TNHZQ6.js": "bf76ac291d7f51c1139b7edcf86b359a30c08c64",
