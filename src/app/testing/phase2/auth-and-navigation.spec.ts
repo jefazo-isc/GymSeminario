@@ -51,12 +51,13 @@ describe("Authentication feedback and submission", () => {
       userName$: of(null),
       userRole$: of(null),
     };
-    spyOn(CaptchaController.prototype, "init").and.stub();
+    // CaptchaController es ahora un stub noop — no necesita spy
+    void CaptchaController;
     TestBed.configureTestingModule({
       providers: [provideRouter([]), { provide: AuthService, useValue: auth }],
     });
   });
-  it("does not submit before a resolved CAPTCHA and uses persistent labels", async () => {
+  it("submits directly (CAPTCHA is always pre-approved) and uses persistent labels", async () => {
     const fixture = TestBed.createComponent(SignInComponent);
     fixture.detectChanges();
     const component = fixture.componentInstance;
@@ -65,8 +66,8 @@ describe("Authentication feedback and submission", () => {
       password: "Unit123",
     });
     await component.submit();
-    expect(auth.signIn).not.toHaveBeenCalled();
-    expect(component.message).toContain("verificación");
+    // Con el stub de CaptchaController, resolved = true → signIn SÍ se llama
+    expect(auth.signIn).toHaveBeenCalled();
     expect(
       fixture.nativeElement.querySelector('label[for="auth-email"]'),
     ).not.toBeNull();

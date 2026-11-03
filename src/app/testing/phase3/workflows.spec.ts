@@ -1,6 +1,5 @@
 import { TestBed } from "@angular/core/testing";
 import { provideRouter } from "@angular/router";
-import { User } from "firebase/auth";
 import { of } from "rxjs";
 import { routes } from "../../app.routes";
 import { ThemeService } from "../../core/theme/theme.service";
@@ -24,19 +23,18 @@ import { RequestStateComponent } from "../../shared/ui/request-state/request-sta
 
 describe("Confirmed record and independent notification", () => {
   let repository: jasmine.SpyObj<TrainingRepository>;
+  afterEach(() => localStorage.removeItem("gym_user"));
   beforeEach(() => {
+    // Simular usuario en localStorage (reemplaza getCurrentUser de Firebase)
+    localStorage.setItem("gym_user", JSON.stringify({
+      uid: "unit", nombre: "Unit", email: "unit@example.test", role: "user"
+    }));
     repository = jasmine.createSpyObj<TrainingRepository>("training", [
       "createBooking",
       "notifyBooking",
     ]);
     repository.createBooking.and.resolveTo({ id: "confirmed-unit" });
     repository.notifyBooking.and.rejectWith(new Error("Notification offline"));
-    const user = {
-      uid: "unit",
-      displayName: "Unit",
-      email: "unit@example.test",
-      phoneNumber: null,
-    } as User;
     TestBed.configureTestingModule({
       imports: [Formulario2Component],
       providers: [
@@ -45,7 +43,7 @@ describe("Confirmed record and independent notification", () => {
         {
           provide: SESSION,
           useValue: {
-            getCurrentUser: () => Promise.resolve(user),
+            getCurrentUser: () => Promise.resolve(null),
             userUid$: of(null),
           } as Partial<SessionRepository>,
         },
