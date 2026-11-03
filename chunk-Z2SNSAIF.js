@@ -1,0 +1,1 @@
+import{va as e}from"./chunk-N6J3ZJSV.js";var r=class{resolved=e(!0);ready=e(!0);error=e("");constructor(n,d){}get instance(){}init(){this.resolved.set(!0),this.ready.set(!0)}destroy(){}};export{r as a};
