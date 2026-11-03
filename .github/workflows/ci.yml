@@ -237,11 +237,10 @@ jobs:
       - name: 🔗 Integración — Ejecutar pruebas de servicios con HttpClientTesting
         run: |
           npx ng test \
+            --configuration=integration \
             --no-watch \
             --no-progress \
-            --browsers=ChromeHeadless \
-            --include="src/app/features/**/data-access/**/*.spec.ts" \
-            --include="src/app/testing/phase3/remote-adapters.spec.ts"
+            --browsers=ChromeHeadless
         env:
           CHROME_BIN: /usr/bin/google-chrome
 
