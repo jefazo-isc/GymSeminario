@@ -5,9 +5,35 @@ import bodyParser from 'body-parser';
 import nodemailer from 'nodemailer';
 import twilio from 'twilio';
 import rateLimit from 'express-rate-limit';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import Database from 'better-sqlite3';
 
 import { generarRutinaEntrenamiento } from './services/routineCoach.service.js';
 import { COACHES, chatearConCoach } from './services/coachChat.service.js';
+
+const db = new Database('./gym.db');
+const JWT_SECRET = process.env.JWT_SECRET || 'gym-seminario-secret-2026';
+
+// Crear tabla de usuarios si no existe
+db.exec(`
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    nombre TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'user',
+    created_at TEXT DEFAULT (datetime('now'))
+  )
+`);
+
+// Crear usuario admin por defecto si no existe
+const adminExists = db.prepare('SELECT id FROM users WHERE email = ?').get('admin@gymseminario.com');
+if (!adminExists) {
+  const hash = bcrypt.hashSync('Admin1234!', 10);
+  db.prepare("INSERT INTO users (email, password, nombre, role) VALUES (?, ?, ?, ?)").run('admin@gymseminario.com', hash, 'Administrador', 'admin');
+  console.log('✅ Usuario admin creado: admin@gymseminario.com / Admin1234!');
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -187,6 +213,87 @@ app.post('/enviar-sms', async (req, res) => {
   } catch (error) {
     console.error('Error al enviar SMS:', error);
     res.status(500).send({ success: false, error: error.message });
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  AUTH ENDPOINTS — JWT + SQLite (sin Firebase)
+// ══════════════════════════════════════════════════════════════════════════════
+
+// Registro
+app.post('/api/auth/register', (req, res) => {
+  const { email, password, nombre } = req.body;
+  if (!email || !password || !nombre)
+    return res.status(400).json({ error: 'Faltan datos: email, password y nombre son requeridos.' });
+  try {
+    const hash = bcrypt.hashSync(password, 10);
+    const result = db.prepare('INSERT INTO users (email, password, nombre, role) VALUES (?, ?, ?, ?)')
+      .run(email.trim().toLowerCase(), hash, nombre.trim(), 'user');
+    const user = { uid: result.lastInsertRowid, email: email.trim().toLowerCase(), nombre: nombre.trim(), role: 'user' };
+    const token = jwt.sign(user, JWT_SECRET, { expiresIn: '7d' });
+    res.json({ token, user });
+  } catch (e) {
+    if (e.message.includes('UNIQUE'))
+      return res.status(409).json({ error: 'El correo ya está registrado. Intenta iniciar sesión.' });
+    console.error('Error en /api/auth/register:', e);
+    res.status(500).json({ error: 'Error al registrar usuario.' });
+  }
+});
+
+// Login
+app.post('/api/auth/login', (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password)
+    return res.status(400).json({ error: 'Faltan datos.' });
+  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email.trim().toLowerCase());
+  if (!user || !bcrypt.compareSync(password, user.password))
+    return res.status(401).json({ error: 'Correo o contraseña incorrectos.' });
+  const payload = { uid: user.id, email: user.email, nombre: user.nombre, role: user.role };
+  const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+  res.json({ token, user: payload });
+});
+
+// Perfil propio (requiere token)
+app.get('/api/auth/me', (req, res) => {
+  const auth = req.headers.authorization;
+  if (!auth?.startsWith('Bearer ')) return res.status(401).json({ error: 'No autorizado.' });
+  try {
+    const decoded = jwt.verify(auth.slice(7), JWT_SECRET);
+    const user = db.prepare('SELECT id, email, nombre, role FROM users WHERE id = ?').get(decoded.uid);
+    if (!user) return res.status(404).json({ error: 'Usuario no encontrado.' });
+    res.json({ uid: user.id, email: user.email, nombre: user.nombre, role: user.role });
+  } catch {
+    res.status(401).json({ error: 'Token inválido.' });
+  }
+});
+
+// Admin: listar todos los usuarios
+app.get('/api/auth/users', (req, res) => {
+  const auth = req.headers.authorization;
+  if (!auth?.startsWith('Bearer ')) return res.status(401).json({ error: 'No autorizado.' });
+  try {
+    const decoded = jwt.verify(auth.slice(7), JWT_SECRET);
+    if (decoded.role !== 'admin') return res.status(403).json({ error: 'Solo administradores.' });
+    const users = db.prepare('SELECT id, email, nombre, role, created_at FROM users').all();
+    res.json(users);
+  } catch {
+    res.status(401).json({ error: 'Token inválido.' });
+  }
+});
+
+// Admin: cambiar rol de usuario
+app.post('/api/auth/set-role', (req, res) => {
+  const auth = req.headers.authorization;
+  if (!auth?.startsWith('Bearer ')) return res.status(401).json({ error: 'No autorizado.' });
+  try {
+    const decoded = jwt.verify(auth.slice(7), JWT_SECRET);
+    if (decoded.role !== 'admin') return res.status(403).json({ error: 'Solo administradores.' });
+    const { userId, role } = req.body;
+    if (!['admin', 'user'].includes(role)) return res.status(400).json({ error: 'Rol inválido. Usa admin o user.' });
+    db.prepare('UPDATE users SET role = ? WHERE id = ?').run(role, userId);
+    res.json({ ok: true, mensaje: `Rol actualizado a ${role}` });
+  } catch {
+    res.status(401).json({ error: 'Token inválido.' });
   }
 });
 

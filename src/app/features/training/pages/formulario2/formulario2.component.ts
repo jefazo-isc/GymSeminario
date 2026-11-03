@@ -7,7 +7,7 @@ import {
   Validators,
 } from "@angular/forms";
 import { RouterLink } from "@angular/router";
-import { User as FirebaseUser } from "firebase/auth";
+import type { NotificationIdentity } from "../../data-access/../models/registration.model";
 import { ButtonDirective } from "../../../../shared/ui/button.directive";
 import { IconComponent } from "../../../../shared/ui/icon/icon.component";
 import { SESSION } from "../../../auth/data-access/session.repository";
@@ -49,19 +49,17 @@ export class Formulario2Component implements OnInit {
   notificationError = false;
   authReady = false;
   authenticated = false;
-  private user: FirebaseUser | null = null;
+  private user: { email: string | null; phoneNumber: string | null; displayName: string | null } | null = null;
   ngOnInit() {
-    this.auth
-      .getCurrentUser()
-      .then((user) => {
-        this.user = user;
-        this.authenticated = !!user;
-        this.authReady = true;
-      })
-      .catch(() => {
-        this.authReady = true;
-        this.error = "No se pudo consultar la sesión de Firebase.";
-      });
+    const raw = localStorage.getItem("gym_user");
+    if (raw) {
+      try {
+        const u = JSON.parse(raw);
+        this.user = { email: u.email ?? null, phoneNumber: null, displayName: u.nombre ?? null };
+        this.authenticated = true;
+      } catch { /* noop */ }
+    }
+    this.authReady = true;
   }
   private localDate() {
     const date = new Date();
@@ -87,20 +85,21 @@ export class Formulario2Component implements OnInit {
     }
     this.loading.set(true);
     try {
-      const user = await this.auth.getCurrentUser();
-      if (!user?.uid) {
+      const raw = localStorage.getItem("gym_user");
+      const u = raw ? JSON.parse(raw) : null;
+      if (!u?.email && !u?.uid) {
         this.error = "Inicia sesión antes de registrar un entrenamiento.";
         return;
       }
-      this.user = user;
+      this.user = { email: u.email ?? null, phoneNumber: null, displayName: u.nombre ?? null };
       const record = await this.training.createBooking({
         entrenamiento,
         fecha,
         turno,
-        usuario: user.uid,
-        email: user.email || null,
-        telefono: user.phoneNumber || null,
-        nombre: user.displayName,
+        usuario: String(u.uid ?? ""),
+        email: u.email || null,
+        telefono: null,
+        nombre: u.nombre ?? null,
       });
       this.recordId = record.id;
       this.clase = entrenamiento;

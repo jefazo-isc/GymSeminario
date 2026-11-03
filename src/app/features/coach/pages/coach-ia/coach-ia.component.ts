@@ -119,27 +119,20 @@ export class CoachIaComponent implements OnInit {
   }
   private listeningToName = false;
   verificarAutenticacion() {
-    this.auth
-      .getCurrentUser()
-      .then(async (user) => {
-        this.cargandoAuth = false;
-        this.usuarioAutenticado = !!user;
-        this.usuarioNombre = user?.displayName || user?.email || null;
-        if (user) {
-          try {
-            await this.profiles.actualizarNombre(
-              user.displayName || user.email?.split("@")[0] || "Socio",
-            );
-          } catch {
-            this.errorMensaje =
-              "Tu sesión está activa, pero no pudimos guardar el nombre en el perfil local.";
-          }
+    this.cargandoAuth = false;
+    const raw = localStorage.getItem("gym_user");
+    if (raw) {
+      try {
+        const u = JSON.parse(raw);
+        this.usuarioAutenticado = true;
+        this.usuarioNombre = u.nombre || u.email || null;
+        if (u.nombre) {
+          Promise.resolve(this.profiles.actualizarNombre(u.nombre)).catch(() => {
+            this.errorMensaje = "Tu sesión está activa, pero no pudimos guardar el nombre en el perfil local.";
+          });
         }
-      })
-      .catch(() => {
-        this.cargandoAuth = false;
-        this.errorMensaje = "No se pudo consultar tu sesión.";
-      });
+      } catch { /* noop */ }
+    }
     if (this.listeningToName) return;
     this.listeningToName = true;
     this.auth.userName$

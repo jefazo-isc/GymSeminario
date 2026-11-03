@@ -3,7 +3,7 @@ import { Component, inject, OnInit, signal } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { RouterLink } from "@angular/router";
-import { User as FirebaseUser } from "firebase/auth";
+import type { NotificationIdentity } from "../../data-access/../models/registration.model";
 import { ButtonDirective } from "../../../../shared/ui/button.directive";
 import { IconComponent } from "../../../../shared/ui/icon/icon.component";
 import { SESSION } from "../../../auth/data-access/session.repository";
@@ -40,24 +40,23 @@ export class Formulario3Component implements OnInit {
   notificationError = false;
   authReady = false;
   authenticated = false;
-  private user: FirebaseUser | null = null;
+  private user: { email: string | null; phoneNumber: string | null; displayName: string | null } | null = null;
   constructor() {
     this.auth.userName$
       .pipe(takeUntilDestroyed())
       .subscribe((name) => (this.userName = name));
   }
   ngOnInit() {
-    this.auth
-      .getCurrentUser()
-      .then((user) => {
-        this.user = user;
-        this.authenticated = !!user;
-        this.authReady = true;
-      })
-      .catch(() => {
-        this.authReady = true;
-        this.error = "No se pudo consultar la sesión de Firebase.";
-      });
+    // Construir usuario desde localStorage (JWT)
+    const raw = localStorage.getItem("gym_user");
+    if (raw) {
+      try {
+        const u = JSON.parse(raw);
+        this.user = { email: u.email ?? null, phoneNumber: null, displayName: u.nombre ?? null };
+        this.authenticated = true;
+      } catch { /* noop */ }
+    }
+    this.authReady = true;
   }
   async guardar() {
     if (this.loading() || this.enviado) return;
@@ -74,12 +73,13 @@ export class Formulario3Component implements OnInit {
     this.nuevo.alumno = this.userName;
     this.loading.set(true);
     try {
-      const user = await this.auth.getCurrentUser();
-      if (!user) {
+      const raw = localStorage.getItem("gym_user");
+      const u = raw ? JSON.parse(raw) : null;
+      if (!u) {
         this.error = "Inicia sesión para registrar una asistencia.";
         return;
       }
-      this.user = user;
+      this.user = { email: u.email ?? null, phoneNumber: null, displayName: u.nombre ?? null };
       const result = await this.training.createAttendance(this.nuevo);
       this.recordId = result.id;
       this.clase = this.nuevo.clase;

@@ -102,17 +102,15 @@ export class MicuentaComponent implements OnInit {
       });
   }
   ngOnInit() {
-    this.auth
-      .getCurrentUser()
-      .then((user) => {
-        this.email = user?.email || null;
-        this.nombre = user?.displayName || this.nombre;
-        this.authReady = true;
-      })
-      .catch(() => {
-        this.authReady = true;
-        this.authError = "No se pudo consultar la sesión de Firebase.";
-      });
+    const raw = localStorage.getItem("gym_user");
+    if (raw) {
+      try {
+        const u = JSON.parse(raw);
+        this.email = u.email || null;
+        this.nombre = u.nombre || this.nombre;
+      } catch { /* noop */ }
+    }
+    this.authReady = true;
   }
   get imc() {
     if (!this.perfil.peso || !this.perfil.altura) return 0;

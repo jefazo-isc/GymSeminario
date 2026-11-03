@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from "@angular/core";
+import { Component, inject } from "@angular/core";
 import {
   FormBuilder,
   FormGroup,
@@ -6,25 +6,23 @@ import {
   Validators,
 } from "@angular/forms";
 import { Router } from "@angular/router";
-import { getAuth, RecaptchaVerifier } from "firebase/auth";
+import { CommonModule } from "@angular/common";
 import { SESSION } from "../../../auth/data-access/session.repository";
 
 @Component({
   selector: "app-auth",
   templateUrl: "./auth.component.html",
   styleUrls: ["./auth.component.css"],
-  imports: [BrowserModule, ReactiveFormsModule],
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule],
 })
-export class AuthComponent implements OnInit {
+export class AuthComponent {
   private _fb = inject(FormBuilder);
   private _authService = inject(SESSION);
   private router = inject(Router);
-  private firebaseAuth = getAuth();
 
-  // Toggle para mostrar login o registro
   isSignIn = true;
 
-  // Formularios
   signInForm: FormGroup = this._fb.group({
     email: ["", [Validators.required, Validators.email]],
     password: ["", Validators.required],
@@ -36,93 +34,37 @@ export class AuthComponent implements OnInit {
     password: ["", Validators.required],
   });
 
-  captchaResuelto = false;
-  recaptchaVerifier!: RecaptchaVerifier;
-
-  ngOnInit() {
-    this.initRecaptcha();
-  }
-
-  initRecaptcha() {
-    if (this.recaptchaVerifier) {
-      this.recaptchaVerifier.clear();
-    }
-    this.recaptchaVerifier = new RecaptchaVerifier(
-      this.firebaseAuth,
-      "recaptcha-container",
-      {
-        size: "normal",
-        callback: (response: string) => {
-          console.log("reCAPTCHA resuelto:", response);
-          this.captchaResuelto = true;
-        },
-        "expired-callback": () => {
-          console.warn("reCAPTCHA expirado");
-          this.captchaResuelto = false;
-        },
-      },
-    );
-    this.recaptchaVerifier.render();
-  }
+  captchaResuelto = true; // siempre resuelto (sin Firebase ReCAPTCHA)
 
   toggleForm() {
     this.isSignIn = !this.isSignIn;
-    this.captchaResuelto = false;
-    this.recaptchaVerifier.clear();
-    this.initRecaptcha();
   }
 
   async onSignInSubmit() {
     if (this.signInForm.invalid) return;
-
-    if (!this.captchaResuelto) {
-      alert("Por favor, completa el reCAPTCHA.");
-      return;
-    }
-
     const { email, password } = this.signInForm.value;
-
     try {
       await this._authService.signIn({ email, password });
       this.router.navigate(["/home"]);
     } catch (error) {
       console.error(error);
-      alert("Error al iniciar sesión");
-      this.recaptchaVerifier.clear();
-      this.initRecaptcha();
-      this.captchaResuelto = false;
+      alert("Correo o contraseña incorrectos.");
     }
   }
 
   async onSignUpSubmit() {
     if (this.signUpForm.invalid) return;
-
-    if (!this.captchaResuelto) {
-      alert("Por favor, completa el reCAPTCHA.");
-      return;
-    }
-
     const { nombre, email, password } = this.signUpForm.value;
-
     try {
       await this._authService.signUp({ nombre, email, password });
       this.router.navigate(["/home"]);
     } catch (error) {
       console.error(error);
-      alert("Error al registrarse");
-      this.recaptchaVerifier.clear();
-      this.initRecaptcha();
-      this.captchaResuelto = false;
+      alert("Error al registrarse. El correo puede ya estar en uso.");
     }
   }
 
   async conGoogle() {
-    try {
-      const result = await this._authService.signInWithGoogle();
-      console.log("Usuario autenticado con Google:", result.user);
-      this.router.navigate(["/home"]);
-    } catch (error) {
-      console.error("Error en autenticación con Google:", error);
-    }
+    alert("El acceso con Google no está disponible. Usa tu correo y contraseña.");
   }
 }
