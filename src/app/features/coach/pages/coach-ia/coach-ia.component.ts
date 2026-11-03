@@ -191,6 +191,24 @@ export class CoachIaComponent implements OnInit {
     this.mensajes = [];
     this.chatError = "";
     this.failedText = "";
+    this.reproducirVozCoach(coach.id);
+  }
+
+  private audioActual: HTMLAudioElement | null = null;
+  reproducirVozCoach(coachId: string) {
+    try {
+      if (this.audioActual) {
+        this.audioActual.pause();
+        this.audioActual = null;
+      }
+      const audioUrl = `audio/coaches/${coachId}.mp3`;
+      this.audioActual = new Audio(audioUrl);
+      this.audioActual.play().catch(() => {
+        // Fallback silencioso si el navegador bloquea autoplay sin interacción previa
+      });
+    } catch {
+      // Audio no disponible
+    }
   }
   enviarMensaje(retry = false) {
     if (
