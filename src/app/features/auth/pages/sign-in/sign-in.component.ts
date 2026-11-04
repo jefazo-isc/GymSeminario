@@ -45,39 +45,35 @@ export default class SignInComponent implements OnInit, AfterViewInit, OnDestroy
 
   ngOnInit() {
     this.captcha.init();
-    this.loadGoogleGIS();
   }
 
   ngAfterViewInit() {
-    this.renderGoogleButton();
+    this.initGoogleAuth();
   }
 
   ngOnDestroy() {
     this.captcha.destroy();
   }
 
-  private loadGoogleGIS() {
+  private initGoogleAuth() {
     if (!isPlatformBrowser(this.platformId)) return;
-    if ((window as any).google?.accounts?.id) {
-      this.renderGoogleButton();
-      return;
-    }
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    script.onload = () => this.renderGoogleButton();
-    document.head.appendChild(script);
+    const checkGIS = () => {
+      const g = (window as any).google?.accounts?.id;
+      if (g && this.googleBtnRef?.nativeElement) {
+        this.renderGoogleButton(g);
+      } else {
+        setTimeout(checkGIS, 150);
+      }
+    };
+    checkGIS();
   }
 
-  private renderGoogleButton() {
-    if (!isPlatformBrowser(this.platformId)) return;
-    const g = (window as any).google?.accounts?.id;
-    if (!g || !this.googleBtnRef?.nativeElement) return;
+  private renderGoogleButton(g: any) {
+    if (!this.googleBtnRef?.nativeElement) return;
+    this.googleBtnRef.nativeElement.innerHTML = '';
 
     g.initialize({
       client_id: GOOGLE_CLIENT_ID,
-      ux_mode: 'popup',
       auto_select: false,
       callback: async (response: { credential: string }) => {
         this.busy = 'google';
@@ -92,14 +88,13 @@ export default class SignInComponent implements OnInit, AfterViewInit, OnDestroy
           this.busy = null;
         }
       },
-      cancel_on_tap_outside: true,
     });
 
     g.renderButton(this.googleBtnRef.nativeElement, {
       theme: 'outline',
       size: 'large',
       shape: 'rectangular',
-      width: '100%',
+      width: 320,
       text: 'signin_with',
       locale: 'es',
     });
