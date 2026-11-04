@@ -1,9 +1,17 @@
 // Mercury (Inception Labs) — API compatible con OpenAI
 const MERCURY_BASE_URL = process.env.MERCURY_BASE_URL || 'https://api.inceptionlabs.ai/v1';
-const MERCURY_API_KEY  = process.env.MERCURY_API_KEY || process.env.GEMINI_API_KEY;
-const MERCURY_MODEL    = process.env.MERCURY_MODEL || process.env.GEMINI_MODEL || 'mercury-2';
+const MERCURY_API_KEY  = process.env.MERCURY_API_KEY;
+const MERCURY_MODEL    = process.env.MERCURY_MODEL || 'mercury-2';
 
-async function mercuryChat(messages, { temperature = 0.8, maxTokens = 300 } = {}) {
+// Gemini (Google) — Solo modelos flash-lite y gemma obligatorios
+const GEMINI_API_KEY   = process.env.GEMINI_API_KEY || 'AIzaSyBk2ZXp0bHSH6CG_AehB0oU6EJQzrJk0Z4';
+const GEMINI_MODELS    = ['gemini-2.5-flash-lite', 'gemini-3.1-flash-lite', 'gemma-4-26b-a4b-it', 'gemma-4-31b-it'];
+
+/**
+ * Llama a la API de Mercury (formato OpenAI)
+ */
+async function mercuryChat(messages, { temperature = 0.8, maxTokens = 900 } = {}) {
+  if (!MERCURY_API_KEY) throw new Error('MERCURY_API_KEY no configurada');
   const resp = await fetch(`${MERCURY_BASE_URL}/chat/completions`, {
     method: 'POST',
     headers: {
@@ -25,6 +33,74 @@ async function mercuryChat(messages, { temperature = 0.8, maxTokens = 300 } = {}
 
   const data = await resp.json();
   return data.choices?.[0]?.message?.content ?? '';
+}
+
+/**
+ * Llama a la API de Gemini (Google) usando solo flash-lite y gemma
+ */
+async function geminiChat(messages, { temperature = 0.8, maxTokens = 1200 } = {}) {
+  if (!GEMINI_API_KEY) throw new Error('GEMINI_API_KEY no configurada');
+  const contents = [];
+  let systemInstruction = null;
+  for (const m of messages) {
+    if (m.role === 'system') {
+      systemInstruction = m.content;
+    } else {
+      contents.push({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.content }]
+      });
+    }
+  }
+
+  const body = {
+    contents,
+    generationConfig: { temperature, maxOutputTokens: maxTokens }
+  };
+  if (systemInstruction) {
+    body.systemInstruction = { parts: [{ text: systemInstruction }] };
+  }
+
+  let lastError = null;
+  for (const model of GEMINI_MODELS) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      if (!resp.ok) {
+        const errText = await resp.text();
+        lastError = new Error(`Gemini (${model}) ${resp.status}: ${errText}`);
+        continue;
+      }
+
+      const data = await resp.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (text) return text;
+    } catch (err) {
+      lastError = err;
+    }
+  }
+
+  throw lastError || new Error('Todos los modelos flash-lite / gemma de Gemini fallaron');
+}
+
+/**
+ * Intenta Mercury primero; si falla, recurre a Gemini (flash-lite/gemma)
+ */
+async function aiChat(messages, opts = {}) {
+  if (MERCURY_API_KEY) {
+    try {
+      const text = await mercuryChat(messages, opts);
+      if (text && text.trim()) return text;
+    } catch (mercuryErr) {
+      console.warn('[COACH_CHAT] Mercury falló, usando Gemini (flash-lite/gemma) como respaldo:', mercuryErr.message);
+    }
+  }
+  return await geminiChat(messages, opts);
 }
 
 export const COACHES = {
@@ -117,7 +193,7 @@ export async function chatearConCoach({ coachId, mensaje, historial = [], contex
   messages.push({ role: 'user', content: mensaje });
 
   try {
-    const respuesta = await mercuryChat(messages, { temperature: 0.85, maxTokens: 900 });
+    const respuesta = await aiChat(messages, { temperature: 0.85, maxTokens: 900 });
     return {
       exito: true,
       coach: coach.nombre,

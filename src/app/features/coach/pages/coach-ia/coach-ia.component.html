@@ -155,9 +155,11 @@
               ><span class="help">{{
                 origenRespuesta === "cache"
                   ? "Respuesta almacenada en caché"
-                  : origenRespuesta === "gemini"
-                    ? "Respuesta de Gemini"
-                    : "Origen no verificado"
+                  : origenRespuesta === "mercury"
+                    ? "Respuesta de Mercury"
+                    : origenRespuesta === "gemini"
+                      ? "Respuesta de Gemini"
+                      : "Origen no verificado"
               }}</span>
             </div>
             <h2>{{ rutina.tituloRutina }}</h2>
@@ -237,7 +239,7 @@
               class="coach-choice"
               [attr.aria-pressed]="coachActivo?.id === coach.id"
               [disabled]="enviandoMensaje"
-              (click)="seleccionarCoach(coach)"
+              (click)="seleccionarCoach(coach, true)"
             >
               <span aria-hidden="true">{{ coach.emoji }}</span
               ><span

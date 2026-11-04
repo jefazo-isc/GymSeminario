@@ -163,7 +163,8 @@
   scroll-behavior: auto;
 }
 .chat-message {
-  max-width: 88%;
+  max-width: 92%;
+  min-width: 0;
   align-self: flex-start;
 }
 .chat-message > span {
@@ -359,30 +360,63 @@
   margin-bottom: 0.25em;
 }
 
-/* Tablas (GFM) */
+/* Tablas (GFM) — contenedor scrollable para no romper el layout */
+.coach-markdown .table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  margin: 14px 0;
+  border: 1px solid var(--color-border, #cbd5e1);
+  border-radius: var(--radius-sm, 6px);
+  background: var(--color-surface, #ffffff);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  -webkit-overflow-scrolling: touch;
+}
 .coach-markdown table {
   width: 100%;
+  min-width: 580px;
   border-collapse: collapse;
-  margin: 0.8em 0;
   font-size: 0.8125rem;
-  overflow-x: auto;
-  display: block;
+  table-layout: auto;
 }
 .coach-markdown thead {
-  background: var(--color-accent-soft, rgba(0,0,0,.06));
-}
-.coach-markdown th,
-.coach-markdown td {
-  padding: 8px 12px;
-  border: 1px solid var(--color-border, rgba(0,0,0,.12));
-  text-align: left;
-  white-space: nowrap;
+  background: var(--color-surface-secondary, #f1f5f9);
 }
 .coach-markdown th {
   font-weight: 700;
+  color: var(--color-text-primary, #0f172a);
+  padding: 10px 14px;
+  border-bottom: 2px solid var(--color-border, #94a3b8);
+  border-right: 1px solid var(--color-border, #e2e8f0);
+  white-space: nowrap !important;
+  text-align: left;
+}
+.coach-markdown td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+  border-right: 1px solid var(--color-border, #e2e8f0);
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  white-space: normal;
+  line-height: 1.5;
+}
+.coach-markdown th:last-child,
+.coach-markdown td:last-child {
+  border-right: none;
+}
+.coach-markdown td:first-child {
+  font-weight: 600;
+  white-space: nowrap !important;
+}
+.coach-markdown tbody tr:last-child td {
+  border-bottom: none;
 }
 .coach-markdown tbody tr:nth-child(even) {
-  background: var(--color-surface-secondary, rgba(0,0,0,.02));
+  background: var(--color-surface-secondary, rgba(0, 0, 0, 0.02));
+}
+.coach-markdown tbody tr:hover td {
+  background: rgba(0, 0, 0, 0.02);
 }
 
 /* Bloques de código inline */

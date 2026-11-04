@@ -180,13 +180,15 @@ export class CoachIaComponent implements OnInit {
         },
       });
   }
-  seleccionarCoach(coach: CoachInfo) {
+  seleccionarCoach(coach: CoachInfo, fromUserClick = false) {
     if (this.enviandoMensaje) return;
     this.coachActivo = coach;
     this.mensajes = [];
     this.chatError = "";
     this.failedText = "";
-    this.reproducirVozCoach(coach.id);
+    if (fromUserClick) {
+      this.reproducirVozCoach(coach.id);
+    }
   }
 
   private audioActual: HTMLAudioElement | null = null;

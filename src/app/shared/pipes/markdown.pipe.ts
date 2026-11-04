@@ -24,7 +24,15 @@ export class MarkdownPipe implements PipeTransform {
     if (!value) {
       return '';
     }
-    const html = marked.parse(value) as string;
+    let html = marked.parse(value) as string;
+    // Envolver tablas en contenedor scrollable para pantallas pequeñas
+    html = html.replace(
+      /<table>/g,
+      '<div class="table-wrap"><table>'
+    ).replace(
+      /<\/table>/g,
+      '</table></div>'
+    );
     return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 }
