@@ -21,6 +21,15 @@ firebase-debug.log*
 # System & OS files
 .DS_Store
 Thumbs.db
+*.jpeg
+*.jpg
+*.png
+*.mp4
+*.docx
+*.pdf
+
+# Aider chat & cache
+.aider*
 
 # Archives
 *.zip
