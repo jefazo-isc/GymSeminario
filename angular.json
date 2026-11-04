@@ -30,7 +30,11 @@
               "src/styles/material.scss",
               "src/styles.css"
             ],
-            "scripts": []
+            "scripts": [],
+            "allowedCommonJsDependencies": [
+              "sweetalert2",
+              "qrcode"
+            ]
           },
           "configurations": {
             "production": {
@@ -126,7 +130,11 @@
               "src/styles/material.scss",
               "src/styles.css"
             ],
-            "scripts": []
+            "scripts": [],
+            "allowedCommonJsDependencies": [
+              "sweetalert2",
+              "qrcode"
+            ]
           }
         },
         "deploy": {

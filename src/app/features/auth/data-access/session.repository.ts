@@ -17,7 +17,9 @@ export interface SessionRepository {
   loadUserRole(uid: string, phone?: string, email?: string): Promise<void>;
   incrementarIntentosPorEmail(email: string): Promise<void>;
   cambiarPassword(user: LoginData, nuevoPassword: string): Promise<void>;
-  sendPhoneCode(phone: string, verifier: unknown): Promise<unknown>;
+  sendPhoneCode(phone: string, verifier?: unknown): Promise<unknown>;
+  verifyPhoneCode(phone: string, code: string): Promise<unknown>;
+  signInWithGoogleCredential(credential: string): Promise<unknown>;
   lookupPhone(phone: string): Promise<void>;
 }
 

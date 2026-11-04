@@ -152,7 +152,8 @@ export class AuthService implements SessionRepository {
   }
 
   /** Phone sign-in — envía código al backend (demo: usa 123456) */
-  async sendPhoneCode(phone: string, _verifier: unknown): Promise<unknown> {
+  async sendPhoneCode(phone: string, ..._unused: unknown[]): Promise<unknown> {
+    void _unused;
     return firstValueFrom(
       this.http.post<{ ok: boolean; mensaje: string }>(`${this.backendUrl}/api/auth/phone`, { phone })
     );
@@ -175,7 +176,8 @@ export class AuthService implements SessionRepository {
   }
 
   /** No aplica en JWT — mantiene compatibilidad de interfaz */
-  async loadUserRole(_uid: string, _phone?: string, _email?: string): Promise<void> {
+  async loadUserRole(..._args: unknown[]): Promise<void> {
+    void _args;
     const raw = localStorage.getItem(this.USER_KEY);
     if (!raw) return;
     try {
@@ -185,14 +187,19 @@ export class AuthService implements SessionRepository {
   }
 
   /** No aplica en JWT */
-  async incrementarIntentosPorEmail(_email: string): Promise<void> { /* noop */ }
+  async incrementarIntentosPorEmail(..._args: unknown[]): Promise<void> {
+    void _args;
+  }
 
-  async cambiarPassword(_user: LoginData, _nuevoPassword: string): Promise<void> {
+  async cambiarPassword(..._args: unknown[]): Promise<void> {
+    void _args;
     throw new Error("Cambia tu contraseña desde el panel de administración.");
   }
 
   /** No aplica en JWT — se reemplazó por verifyPhoneCode */
-  async lookupPhone(_phone: string): Promise<void> { /* noop */ }
+  async lookupPhone(..._args: unknown[]): Promise<void> {
+    void _args;
+  }
 
   // ── Admin helpers ───────────────────────────────────────────────────────────
 

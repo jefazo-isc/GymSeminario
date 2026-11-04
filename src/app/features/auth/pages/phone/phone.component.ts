@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, inject } from "@angular/core";
+import { Component, inject } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormsModule } from "@angular/forms";
 import { Router, RouterLink } from "@angular/router";
@@ -14,7 +14,7 @@ import { SESSION } from "../../data-access/session.repository";
   templateUrl: "./phone.component.html",
   styleUrl: "./phone.component.css",
 })
-export class PhoneComponent implements OnInit, OnDestroy {
+export class PhoneComponent {
   private service = inject(SESSION);
   private router = inject(Router);
 
@@ -45,9 +45,6 @@ export class PhoneComponent implements OnInit, OnDestroy {
       .subscribe((uid) => (this.usuarioLogueado = !!uid));
   }
 
-  ngOnInit() {}
-  ngOnDestroy() {}
-
   esNumeroValido() {
     return /^\+[1-9]\d{7,14}$/.test(this.phoneNumber.trim());
   }
@@ -57,8 +54,7 @@ export class PhoneComponent implements OnInit, OnDestroy {
     this.busy = true;
     this.message = "";
     try {
-      const svc = this.service as any;
-      const resp = await svc.sendPhoneCode(this.phoneNumber.trim(), null);
+      const resp = (await this.service.sendPhoneCode(this.phoneNumber.trim(), null)) as { mensaje?: string } | undefined;
       this.codigoEnviado = true;
       this.hint = resp?.mensaje ?? "Código enviado. Para demo usa: 123456";
     } catch (err) {
@@ -73,8 +69,7 @@ export class PhoneComponent implements OnInit, OnDestroy {
     this.busy = true;
     this.message = "";
     try {
-      const svc = this.service as any;
-      await svc.verifyPhoneCode(this.phoneNumber.trim(), this.otp);
+      await this.service.verifyPhoneCode(this.phoneNumber.trim(), this.otp);
       await this.router.navigate(["/home"]);
     } catch (err) {
       this.message = authErrorMessage(err);

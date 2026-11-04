@@ -14,6 +14,11 @@ import { SESSION } from "../../data-access/session.repository";
 
 const GOOGLE_CLIENT_ID = '366321485374-143tbv091m8a3r6ajps5jsodpj9aeah0.apps.googleusercontent.com';
 
+interface GoogleIdentityServices {
+  initialize(config: Record<string, unknown>): void;
+  renderButton(element: HTMLElement, options: Record<string, unknown>): void;
+}
+
 @Component({
   selector: "app-sign-up",
   standalone: true,
@@ -65,8 +70,9 @@ export default class SignUpComponent implements OnInit, AfterViewInit, OnDestroy
 
   private initGoogleAuth() {
     if (!isPlatformBrowser(this.platformId)) return;
+    const win = window as unknown as { google?: { accounts?: { id?: GoogleIdentityServices } } };
     const checkGIS = () => {
-      const g = (window as any).google?.accounts?.id;
+      const g = win.google?.accounts?.id;
       if (g && this.googleBtnRef?.nativeElement) {
         this.renderGoogleButton(g);
       } else {
@@ -76,7 +82,7 @@ export default class SignUpComponent implements OnInit, AfterViewInit, OnDestroy
     checkGIS();
   }
 
-  private renderGoogleButton(g: any) {
+  private renderGoogleButton(g: GoogleIdentityServices) {
     if (!this.googleBtnRef?.nativeElement) return;
     this.googleBtnRef.nativeElement.innerHTML = '';
 
@@ -88,8 +94,7 @@ export default class SignUpComponent implements OnInit, AfterViewInit, OnDestroy
           this.busy = 'google';
           this.message = '';
           try {
-            const svc = this.service as any;
-            await svc.signInWithGoogleCredential(response.credential);
+            await this.service.signInWithGoogleCredential(response.credential);
             await this.router.navigate(['/home']);
           } catch (error) {
             this.message = authErrorMessage(error);
