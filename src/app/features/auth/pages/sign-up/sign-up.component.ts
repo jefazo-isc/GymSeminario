@@ -1,5 +1,5 @@
 import { CommonModule } from "@angular/common";
-import { Component, inject, OnDestroy, OnInit, AfterViewInit, ElementRef, ViewChild, PLATFORM_ID } from "@angular/core";
+import { Component, inject, NgZone, OnDestroy, OnInit, AfterViewInit, ElementRef, ViewChild, PLATFORM_ID } from "@angular/core";
 import { isPlatformBrowser } from "@angular/common";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import { Router, RouterLink } from "@angular/router";
@@ -32,6 +32,7 @@ export default class SignUpComponent implements OnInit, AfterViewInit, OnDestroy
   private fb = inject(FormBuilder);
   private service = inject(SESSION);
   private router = inject(Router);
+  private ngZone = inject(NgZone);
   private platformId = inject(PLATFORM_ID);
 
   @ViewChild('googleBtn') googleBtnRef!: ElementRef<HTMLDivElement>;
@@ -82,18 +83,20 @@ export default class SignUpComponent implements OnInit, AfterViewInit, OnDestroy
     g.initialize({
       client_id: GOOGLE_CLIENT_ID,
       auto_select: false,
-      callback: async (response: { credential: string }) => {
-        this.busy = 'google';
-        this.message = '';
-        try {
-          const svc = this.service as any;
-          await svc.signInWithGoogleCredential(response.credential);
-          await this.router.navigate(['/home']);
-        } catch (error) {
-          this.message = authErrorMessage(error);
-        } finally {
-          this.busy = null;
-        }
+      callback: (response: { credential: string }) => {
+        this.ngZone.run(async () => {
+          this.busy = 'google';
+          this.message = '';
+          try {
+            const svc = this.service as any;
+            await svc.signInWithGoogleCredential(response.credential);
+            await this.router.navigate(['/home']);
+          } catch (error) {
+            this.message = authErrorMessage(error);
+          } finally {
+            this.busy = null;
+          }
+        });
       },
     });
 
