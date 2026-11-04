@@ -1,7 +1,7 @@
 // Mercury (Inception Labs) — API compatible con OpenAI
 const MERCURY_BASE_URL = process.env.MERCURY_BASE_URL || 'https://api.inceptionlabs.ai/v1';
-const MERCURY_API_KEY  = process.env.GEMINI_API_KEY;
-const MERCURY_MODEL    = process.env.GEMINI_MODEL   || 'mercury-coder-small';
+const MERCURY_API_KEY  = process.env.MERCURY_API_KEY || process.env.GEMINI_API_KEY;
+const MERCURY_MODEL    = process.env.MERCURY_MODEL || process.env.GEMINI_MODEL || 'mercury-2';
 
 // Cache en memoria (TTL: 12 horas)
 const cacheRutinas = new Map();
