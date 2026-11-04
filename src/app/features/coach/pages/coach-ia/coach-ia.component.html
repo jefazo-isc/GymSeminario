@@ -274,7 +274,11 @@
                   }}
                   · {{ message.hora }}</span
                 >
-                <p>{{ message.texto }}</p>
+                @if (message.remitente === 'usuario') {
+                  <p>{{ message.texto }}</p>
+                } @else {
+                  <div class="coach-markdown" [innerHTML]="message.texto | markdown"></div>
+                }
               </article>
             } @empty {
               <div class="chat-start">

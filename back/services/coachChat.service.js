@@ -89,14 +89,16 @@ export async function chatearConCoach({ coachId, mensaje, historial = [], contex
   let systemContent = coach.systemPrompt + '\n\n';
 
   if (perfilUsuario) {
-    systemContent += `DATOS DEL SOCIO:\n` +
+    systemContent += `DATOS DE CONTEXTO DEL SOCIO (Usa esta información para adaptar tu respuesta de forma precisa al género, contextura, edad y nivel del usuario, pero NO recites ni menciones todos estos datos mecánicamente a cada rato; menciónalos solo cuando sea estrictamente útil o pertinente para la respuesta):\n` +
       `- Nombre: ${perfilUsuario.nombre || 'Socio'}\n` +
+      `- Género / Sexo: ${perfilUsuario.genero || 'No especificado'}\n` +
       `- Edad: ${perfilUsuario.edad || 25} años\n` +
       `- Peso: ${perfilUsuario.peso ? perfilUsuario.peso + ' kg' : 'No especificado'}\n` +
       `- Altura: ${perfilUsuario.altura ? perfilUsuario.altura + ' cm' : 'No especificado'}\n` +
-      `- Objetivo: ${perfilUsuario.objetivo || 'Ponerse mamado'}\n` +
-      `- Nivel: ${perfilUsuario.nivel || 'Intermedio'}\n` +
-      `- Lesiones: ${perfilUsuario.restriccionesMedicas || 'Ninguna'}\n\n`;
+      `- Objetivo principal: ${perfilUsuario.objetivo || 'Ponerse mamado'}\n` +
+      `- Días disponibles para entrenar: ${perfilUsuario.diasDisponibles || 4} días por semana\n` +
+      `- Nivel de experiencia: ${perfilUsuario.nivel || 'Intermedio'}\n` +
+      `- Lesiones o restricciones médicas: ${perfilUsuario.restriccionesMedicas || 'Ninguna'}\n\n`;
   }
 
   if (contextoRutina) {

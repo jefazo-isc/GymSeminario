@@ -18,6 +18,7 @@ import { RouterLink } from "@angular/router";
 import { authErrorMessage } from "../../../../core/auth/auth-feedback";
 import { ButtonDirective } from "../../../../shared/ui/button.directive";
 import { IconComponent } from "../../../../shared/ui/icon/icon.component";
+import { MarkdownPipe } from "../../../../shared/pipes/markdown.pipe";
 import { SESSION } from "../../../auth/data-access/session.repository";
 import { PROFILES } from "../../../profile/data-access/profile.repository";
 import { COACH } from "../../data-access/coach.repository";
@@ -39,6 +40,7 @@ export { validRoutine } from "../../models/rutina.guard";
     RouterLink,
     ButtonDirective,
     IconComponent,
+    MarkdownPipe,
   ],
   templateUrl: "./coach-ia.component.html",
   styleUrl: "./coach-ia.component.css",
