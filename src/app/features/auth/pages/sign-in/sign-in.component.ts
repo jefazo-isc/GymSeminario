@@ -77,6 +77,8 @@ export default class SignInComponent implements OnInit, AfterViewInit, OnDestroy
 
     g.initialize({
       client_id: GOOGLE_CLIENT_ID,
+      ux_mode: 'popup',
+      auto_select: false,
       callback: async (response: { credential: string }) => {
         this.busy = 'google';
         this.message = '';
