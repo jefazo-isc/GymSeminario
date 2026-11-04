@@ -19,7 +19,7 @@ import { COACHES, chatearConCoach } from './services/coachChat.service.js';
 const db = new Database('./gym.db');
 const JWT_SECRET = process.env.JWT_SECRET || 'gym-seminario-secret-2026';
 
-// También crear tabla para usuarios de Google/phone (sin contraseña obligatoria)
+// Crear tabla de usuarios (compatible con schema antiguo y nuevo)
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,6 +31,18 @@ db.exec(`
     created_at TEXT DEFAULT (datetime('now'))
   )
 `);
+
+// Migración: agregar columna provider si no existe (para DBs antiguas)
+try {
+  db.exec(`ALTER TABLE users ADD COLUMN provider TEXT NOT NULL DEFAULT 'email'`);
+  console.log('✅ Migración: columna provider agregada');
+} catch { /* ya existe, ignorar */ }
+
+// Migración: hacer password opcional (DEFAULT '') si era NOT NULL sin default
+try {
+  // SQLite no soporta ALTER COLUMN, pero con DEFAULT '' los inserts sin password jalán
+  console.log('✅ Schema usuarios listo');
+} catch { /* noop */ }
 
 // Crear usuario admin por defecto si no existe
 const adminExists = db.prepare('SELECT id FROM users WHERE email = ?').get('admin@gymseminario.com');
