@@ -115,7 +115,7 @@ export async function chatearConCoach({ coachId, mensaje, historial = [], contex
   messages.push({ role: 'user', content: mensaje });
 
   try {
-    const respuesta = await mercuryChat(messages, { temperature: 0.85, maxTokens: 280 });
+    const respuesta = await mercuryChat(messages, { temperature: 0.85, maxTokens: 900 });
     return {
       exito: true,
       coach: coach.nombre,
