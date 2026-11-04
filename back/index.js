@@ -62,6 +62,16 @@ app.use(cors({
 }));
 app.use(bodyParser.json());
 
+// Logger visible en Render para monitorear cada solicitud
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    console.log(`[HTTP] ${req.method} ${req.originalUrl} -> ${res.statusCode} (${duration}ms)`);
+  });
+  next();
+});
+
 // Rate limiter general
 const limiter = rateLimit({
   windowMs: 60 * 1000,
