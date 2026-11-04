@@ -52,6 +52,26 @@ if (!adminExists) {
   console.log('✅ Usuario admin creado: admin@gymseminario.com / Admin1234!');
 }
 
+// Configurar a Yahir como Administrador y Gerente
+const yahirEmail = 'guevara.cardona.yahir@gmail.com';
+const yahirUser = db.prepare('SELECT id, role FROM users WHERE email = ?').get(yahirEmail);
+if (yahirUser) {
+  if (yahirUser.role !== 'admin') {
+    db.prepare('UPDATE users SET role = ? WHERE email = ?').run('admin', yahirEmail);
+    console.log(`✅ Yahir (${yahirEmail}) actualizado con rol de Administrador/Gerente.`);
+  }
+} else {
+  const hashYahir = bcrypt.hashSync('Admin1234!', 10);
+  db.prepare("INSERT INTO users (email, password, nombre, role, provider) VALUES (?, ?, ?, ?, ?)").run(
+    yahirEmail,
+    hashYahir,
+    'Yahir Guevara Cardona',
+    'admin',
+    'google'
+  );
+  console.log(`✅ Yahir (${yahirEmail}) creado automáticamente con rol de Administrador/Gerente.`);
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -112,8 +132,34 @@ app.get('/api/coaches', (req, res) => {
   res.json(lista);
 });
 
+// Helper para verificar si el usuario tiene acceso a los modelos de IA
+const EMAIL_PERMITIDO_IA = 'guevara.cardona.yahir@gmail.com';
+
+function validarAccesoIA(req) {
+  const auth = req.headers.authorization;
+  if (!auth?.startsWith('Bearer ')) return { permitido: false, motivo: 'Debes iniciar sesión con tu cuenta autorizada.' };
+  try {
+    const decoded = jwt.verify(auth.slice(7), JWT_SECRET);
+    const email = (decoded.email || '').toLowerCase().trim();
+    if (email === EMAIL_PERMITIDO_IA || email === 'admin@gymseminario.com') {
+      return { permitido: true, user: decoded };
+    }
+    return { permitido: false, motivo: `Acceso restringido: Solo el administrador (${EMAIL_PERMITIDO_IA}) tiene acceso a las funciones de IA por el momento.` };
+  } catch {
+    return { permitido: false, motivo: 'Token de sesión expirado o inválido.' };
+  }
+}
+
 // Chat con Coach IA
 app.post('/api/coach/chat', limiterIA, async (req, res) => {
+  const acceso = validarAccesoIA(req);
+  if (!acceso.permitido) {
+    return res.status(403).json({
+      exito: false,
+      coach: 'Sistema',
+      respuesta: `⚠️ ${acceso.motivo}`
+    });
+  }
   try {
     const { coachId, mensaje, historial, contextoRutina, perfilUsuario } = req.body;
     if (!mensaje || !mensaje.trim()) {
@@ -129,6 +175,13 @@ app.post('/api/coach/chat', limiterIA, async (req, res) => {
 
 // Generar rutina de entrenamiento
 app.post('/api/rutina', limiterIA, async (req, res) => {
+  const acceso = validarAccesoIA(req);
+  if (!acceso.permitido) {
+    return res.status(403).json({
+      exito: false,
+      error: acceso.motivo
+    });
+  }
   try {
     const perfil = req.body;
     const resultado = await generarRutinaEntrenamiento(perfil);
@@ -336,15 +389,20 @@ app.post('/api/auth/google', async (req, res) => {
       audience: GOOGLE_CLIENT_ID,
     });
     const payload = ticket.getPayload();
-    const email = payload.email;
+    const email = payload.email.toLowerCase().trim();
     const nombre = payload.name || email.split('@')[0];
+    const esAdminAutorizado = email === 'guevara.cardona.yahir@gmail.com' || email === 'admin@gymseminario.com';
 
     let user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
     if (!user) {
+      const assignedRole = esAdminAutorizado ? 'admin' : 'user';
       const info = db.prepare(
-        "INSERT INTO users (email, password, nombre, role, provider) VALUES (?, '', ?, 'user', 'google')"
-      ).run(email, nombre);
-      user = { id: info.lastInsertRowid, email, nombre, role: 'user' };
+        "INSERT INTO users (email, password, nombre, role, provider) VALUES (?, '', ?, ?, 'google')"
+      ).run(email, nombre, assignedRole);
+      user = { id: info.lastInsertRowid, email, nombre, role: assignedRole };
+    } else if (esAdminAutorizado && user.role !== 'admin') {
+      db.prepare('UPDATE users SET role = ? WHERE id = ?').run('admin', user.id);
+      user.role = 'admin';
     }
 
     const token = jwt.sign(
