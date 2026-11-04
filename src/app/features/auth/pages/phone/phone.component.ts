@@ -1,4 +1,4 @@
-import { Component, inject } from "@angular/core";
+import { Component, OnInit, inject } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormsModule } from "@angular/forms";
 import { Router, RouterLink } from "@angular/router";
@@ -14,7 +14,7 @@ import { SESSION } from "../../data-access/session.repository";
   templateUrl: "./phone.component.html",
   styleUrl: "./phone.component.css",
 })
-export class PhoneComponent {
+export class PhoneComponent implements OnInit {
   private service = inject(SESSION);
   private router = inject(Router);
 
@@ -43,6 +43,10 @@ export class PhoneComponent {
     this.service.userUid$
       .pipe(takeUntilDestroyed())
       .subscribe((uid) => (this.usuarioLogueado = !!uid));
+  }
+
+  ngOnInit(): void {
+    this.captcha.init();
   }
 
   esNumeroValido() {
