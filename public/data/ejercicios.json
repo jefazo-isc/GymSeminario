@@ -1,0 +1,142 @@
+{
+  "datosPorParte": [
+    {
+      "parte": "Pecho",
+      "ejercicios": [
+        {
+          "nombre": "Flexiones",
+          "series": "4",
+          "repeticiones": "12",
+          "equipo": "Ninguno"
+        },
+        {
+          "nombre": "Press de banca",
+          "series": "4",
+          "repeticiones": "10",
+          "equipo": "Banca, barra"
+        },
+        {
+          "nombre": "Aperturas con mancuernas",
+          "series": "3",
+          "repeticiones": "12",
+          "equipo": "Mancuernas"
+        }
+      ]
+    },
+    {
+      "parte": "Espalda",
+      "ejercicios": [
+        {
+          "nombre": "Pull-up",
+          "series": "4",
+          "repeticiones": "10",
+          "equipo": "Barras"
+        },
+        {
+          "nombre": "Remo con barra",
+          "series": "4",
+          "repeticiones": "12",
+          "equipo": "Barra"
+        },
+        {
+          "nombre": "Jalones al pecho",
+          "series": "3",
+          "repeticiones": "12",
+          "equipo": "Polea"
+        }
+      ]
+    },
+    {
+      "parte": "Piernas",
+      "ejercicios": [
+        {
+          "nombre": "Sentadillas",
+          "series": "4",
+          "repeticiones": "12",
+          "equipo": "Ninguno"
+        },
+        {
+          "nombre": "Prensa de pierna",
+          "series": "4",
+          "repeticiones": "10",
+          "equipo": "Máquina"
+        },
+        {
+          "nombre": "Curl de pierna",
+          "series": "3",
+          "repeticiones": "12",
+          "equipo": "Máquina"
+        }
+      ]
+    },
+    {
+      "parte": "Hombros",
+      "ejercicios": [
+        {
+          "nombre": "Press militar",
+          "series": "4",
+          "repeticiones": "10",
+          "equipo": "Barra o mancuernas"
+        },
+        {
+          "nombre": "Elevaciones laterales",
+          "series": "3",
+          "repeticiones": "15",
+          "equipo": "Mancuernas"
+        },
+        {
+          "nombre": "Pájaros",
+          "series": "3",
+          "repeticiones": "15",
+          "equipo": "Mancuernas"
+        }
+      ]
+    },
+    {
+      "parte": "Brazos",
+      "ejercicios": [
+        {
+          "nombre": "Curl de bíceps",
+          "series": "4",
+          "repeticiones": "12",
+          "equipo": "Mancuernas o barra"
+        },
+        {
+          "nombre": "Fondos para tríceps",
+          "series": "4",
+          "repeticiones": "10",
+          "equipo": "Barras paralelas"
+        },
+        {
+          "nombre": "Extensión de tríceps en polea",
+          "series": "3",
+          "repeticiones": "15",
+          "equipo": "Polea"
+        }
+      ]
+    },
+    {
+      "parte": "Abdominales",
+      "ejercicios": [
+        {
+          "nombre": "Crunch",
+          "series": "4",
+          "repeticiones": "20",
+          "equipo": "Ninguno"
+        },
+        {
+          "nombre": "Elevación de piernas",
+          "series": "4",
+          "repeticiones": "15",
+          "equipo": "Ninguno"
+        },
+        {
+          "nombre": "Plancha",
+          "series": "3",
+          "repeticiones": "60 segundos",
+          "equipo": "Ninguno"
+        }
+      ]
+    }
+  ]
+}

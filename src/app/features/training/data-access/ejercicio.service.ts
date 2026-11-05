@@ -1,6 +1,6 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable, inject } from "@angular/core";
-import { map, timeout } from "rxjs";
+import { catchError, map, timeout } from "rxjs";
 import { APP_ENDPOINTS } from "../../../core/config/app-endpoints";
 import {
   isFiniteNumber,
@@ -31,7 +31,8 @@ export class EjercicioService {
   private endpoints = inject(APP_ENDPOINTS);
   getEjercicios() {
     return this.http.get<unknown>(this.endpoints.exercises).pipe(
-      timeout(15000),
+      timeout(8000),
+      catchError(() => this.http.get<unknown>("data/ejercicios.json")),
       map((v) => {
         if (!isExerciseCatalog(v))
           throw new Error("Catálogo de ejercicios no válido.");
