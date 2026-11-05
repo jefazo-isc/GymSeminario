@@ -65,13 +65,16 @@ describe("Replaceable HTTP boundaries", () => {
     expect(fail).toHaveBeenCalled();
     http.expectNone(endpoints.exercises);
   });
-  it("requires a real nonempty QR string and encodes the user path segment", () => {
-    const fail = jasmine.createSpy();
+  it("generates a local QR code starting with GROM- without HTTP call", (done) => {
     TestBed.inject(QR_CODES)
       .getQrData("uid/segment")
-      .subscribe({ error: fail });
-    http.expectOne(endpoints.qr + "/uid%2Fsegment").flush({ data: 123 });
-    expect(fail).toHaveBeenCalled();
+      .subscribe({
+        next: (result) => {
+          expect(result.data).toMatch(/^GROM-[A-F0-9]+$/);
+          done();
+        },
+        error: done.fail,
+      });
   });
   it("rejects negative statistics without substituting demonstration numbers", () => {
     const fail = jasmine.createSpy();

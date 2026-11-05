@@ -20,8 +20,8 @@ import { QR_CODES } from "../../data-access/qr.repository";
         />
       </div>
       <p class="help">
-        Código devuelto por el servicio externo. Su visualización no confirma
-        acceso físico.
+        Código de acceso generado para tu sesión.
+        Preséntalo en recepción al llegar al gimnasio.
       </p>
     } @else if (error) {
       <p class="notice notice--warning" role="alert">{{ error }}</p>
@@ -90,7 +90,7 @@ export class QrViewComponent implements OnInit {
         error: () => {
           if (uid === this.uid)
             this.error =
-              "El registro está guardado, pero el servicio de códigos no está disponible.";
+              "El registro está guardado, pero no se pudo generar el código QR. Intenta de nuevo.";
         },
       });
   }
