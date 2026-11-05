@@ -4,6 +4,7 @@ import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import { generarRutinaEntrenamiento } from './services/routineCoach.service.js';
 import { COACHES, chatearConCoach } from './services/coachChat.service.js';
+import { sendBookingNotification, sendAttendanceNotification } from './services/email.service.js';
 import { authAndQuotaGuard } from './middleware/auth.middleware.js';
 import { registrarAsistenciaEdge } from './services/quota.service.js';
 
@@ -76,6 +77,40 @@ app.post('/api/rutina', authAndQuotaGuard, async (req, res) => {
   } catch (err) {
     console.error('Error en /api/rutina:', err);
     res.status(500).json({ error: 'Error interno del servidor.' });
+  }
+});
+
+// Endpoint para enviar confirmación de correo al agendar entrenamiento
+app.post('/enviar-correo', async (req, res) => {
+  const { correo, nombre, entrenamiento, fecha, turno } = req.body;
+
+  if (!correo || !nombre || !entrenamiento || !fecha || !turno) {
+    return res.status(400).json({ error: 'Faltan datos requeridos (correo, nombre, entrenamiento, fecha, turno)' });
+  }
+
+  try {
+    const resultado = await sendBookingNotification({ correo, nombre, entrenamiento, fecha, turno });
+    res.json({ mensaje: 'Correo enviado', resultado });
+  } catch (error) {
+    console.error('Error al enviar el correo:', error);
+    res.status(500).json({ error: 'Error al enviar el correo' });
+  }
+});
+
+// Endpoint para enviar confirmación de asistencia por correo
+app.post('/enviar-asistencia', async (req, res) => {
+  const { correo, nombre, clase, fecha, hora } = req.body;
+
+  if (!correo || !nombre || !clase || !fecha || !hora) {
+    return res.status(400).json({ mensaje: 'Faltan campos requeridos.' });
+  }
+
+  try {
+    const resultado = await sendAttendanceNotification({ correo, nombre, clase, fecha, hora });
+    res.status(200).json({ mensaje: 'Correo enviado', resultado });
+  } catch (error) {
+    console.error('Error al enviar el correo:', error);
+    res.status(500).json({ mensaje: 'Error al enviar el correo.' });
   }
 });
 

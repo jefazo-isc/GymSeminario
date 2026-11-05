@@ -15,6 +15,7 @@ const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 import { generarRutinaEntrenamiento } from './services/routineCoach.service.js';
 import { COACHES, chatearConCoach } from './services/coachChat.service.js';
+import { sendBookingNotification, sendAttendanceNotification } from './services/email.service.js';
 
 const db = new Database('./gym.db');
 const JWT_SECRET = process.env.JWT_SECRET || 'gym-seminario-secret-2026';
@@ -203,26 +204,11 @@ app.post('/enviar-correo', async (req, res) => {
     return res.status(400).json({ error: 'Faltan datos' });
   }
 
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER || 'carlosvm12345678@gmail.com',
-      pass: process.env.EMAIL_PASS || 'temoxwazusjxxrnr'
-    }
-  });
-
-  const mailOptions = {
-    from: process.env.EMAIL_USER || 'carlosvm12345678@gmail.com',
-    to: correo,
-    subject: 'Confirmación de entrenamiento',
-    text: `Hola ${nombre},\n\nGracias por registrarte al entrenamiento. Aquí están los detalles:\n\n- 🏋️ Entrenamiento: ${entrenamiento}\n- 📅 Fecha: ${fecha}\n- ⏰ Turno: ${turno}\n\n¡Nos vemos pronto!\n\nSaludos,\nGROM`
-  };
-
   try {
-    await transporter.sendMail(mailOptions);
-    res.json({ mensaje: 'Correo enviado' });
+    const resultado = await sendBookingNotification({ correo, nombre, entrenamiento, fecha, turno });
+    res.json({ mensaje: 'Correo enviado', resultado });
   } catch (error) {
-    console.error(error);
+    console.error('Error al enviar el correo:', error);
     res.status(500).json({ error: 'Error al enviar el correo' });
   }
 });
@@ -235,31 +221,8 @@ app.post('/enviar-asistencia', async (req, res) => {
   }
 
   try {
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER || 'carlosvm12345678@gmail.com',
-        pass: process.env.EMAIL_PASS || 'temoxwazusjxxrnr'
-      }
-    });
-
-    const info = await transporter.sendMail({
-      from: process.env.EMAIL_USER || 'tu-correo@gmail.com',
-      to: correo,
-      subject: 'Confirmación de Asistencia',
-      html: `
-        <h2>Hola ${nombre}</h2>
-        <p>Tu asistencia se ha registrado correctamente:</p>
-        <ul>
-          <li><strong>Clase:</strong> ${clase}</li>
-          <li><strong>Fecha:</strong> ${fecha}</li>
-          <li><strong>Hora:</strong> ${hora}</li>
-        </ul>
-        <p>¡Gracias por asistir!</p>
-      `
-    });
-
-    res.status(200).json({ mensaje: 'Correo enviado', info });
+    const resultado = await sendAttendanceNotification({ correo, nombre, clase, fecha, hora });
+    res.status(200).json({ mensaje: 'Correo enviado', resultado });
   } catch (error) {
     console.error('Error al enviar el correo:', error);
     res.status(500).json({ mensaje: 'Error al enviar el correo.' });
