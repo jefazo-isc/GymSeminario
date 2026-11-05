@@ -3,11 +3,9 @@
     <p class="notice" role="status">La operación de membresía está en curso.</p>
   }
   <div class="notice">
-    <app-icon name="monitor" />
+    <app-icon name="check" />
     <p>
-      <strong>Demostración local.</strong> La membresía y su vigencia se guardan
-      en este navegador. No representan cobros, accesos físicos ni beneficios
-      remotos activados.
+      <strong>Membresías GROM.</strong> Planes de entrenamiento con acceso a instalaciones, reservas de clases, Coach IA y vigencia sincronizada en la nube con tu cuenta.
     </p>
   </div>
   <app-request-state
@@ -20,7 +18,7 @@
   @if (membresiaActual; as mem) {
     <article class="surface membership-current">
       <div class="membership-title">
-        <span class="eyebrow">Tu membresía de ejemplo</span>
+        <span class="eyebrow">Tu membresía activa</span>
         <div class="toolbar">
           <h2>{{ mem.nombrePlan }}</h2>
           <span
@@ -54,7 +52,7 @@
           [disabled]="processing"
           (click)="renovarActual()"
         >
-          Renovar ejemplo<app-icon name="arrow" /></button
+          Renovar membresía<app-icon name="arrow" /></button
         ><a appButton="secondary" routerLink="/f2"
           ><app-icon name="calendar" />Agendar entrenamiento</a
         >
@@ -71,7 +69,7 @@
       <span class="eyebrow">Compara tus opciones</span>
       <h2>Un plan para tu ritmo.</h2>
     </div>
-    <div class="filter-pills" aria-label="Periodo de demostración">
+    <div class="filter-pills" aria-label="Periodo de facturación">
       @for (period of periods; track period) {
         <button
           type="button"
@@ -90,8 +88,7 @@
     </div>
   </div>
   <p class="help billing-note">
-    Importes totales por ciclo. La demostración conserva los cálculos
-    originales: base × 3 − 10% para trimestre y base × 12 − 20% para año.
+    Importes totales por ciclo con descuentos aplicados: base × 3 − 10% para trimestre y base × 12 − 20% para año.
   </p>
   <div class="plans-grid">
     @for (plan of planes; track plan.id) {

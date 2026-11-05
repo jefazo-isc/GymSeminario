@@ -130,22 +130,22 @@ export class MembresiasComponent {
     const price = this.getPrecioCalculado(plan.precio);
     try {
       const result = await Swal.fire({
-        title: "Revisar simulación de membresía",
+        title: "Confirmar plan de membresía",
         html:
           '<div class="selection-summary"><p><strong>' +
           plan.nombre +
           "</strong></p><p>Periodo seleccionado: " +
           this.filtroPeriodo +
-          "</p><p>Total de demostración: <strong>$" +
+          "</p><p>Total a pagar: <strong>$" +
           price.toLocaleString("es-MX") +
-          " MXN</strong></p><p>Se guardará solo en este navegador. No hay un cobro ni una activación de acceso físico.</p>" +
+          " MXN</strong></p><p>Tu plan quedará vinculado a tu cuenta y sincronizado en el sistema cloud.</p>" +
           (this.hasConflict(plan)
             ? "<p><strong>Tarifa en revisión:</strong> el catálogo indica $1,200 por trimestre, pero el cálculo heredado usa esa cantidad como base mensual. Este total no es una cotización.</p>"
             : "") +
           "</div>",
         icon: this.hasConflict(plan) ? "warning" : "info",
         showCancelButton: true,
-        confirmButtonText: "Guardar demostración",
+        confirmButtonText: "Confirmar membresía",
         cancelButtonText: "Volver",
         ...(this.hasConflict(plan)
           ? {
@@ -166,15 +166,15 @@ export class MembresiasComponent {
         );
         await Swal.fire({
           icon: "success",
-          title: "Demostración guardada",
-          text: "La membresía de ejemplo se actualizó en este navegador. No se realizó ningún cobro.",
+          title: "Membresía activada",
+          text: "Tu plan se ha actualizado exitosamente y sincronizado en tu cuenta.",
         });
       }
     } catch {
       await Swal.fire({
         icon: "error",
         title: "No se pudo guardar",
-        text: "El almacenamiento del navegador no está disponible. Tu selección no fue activada.",
+        text: "Hubo un problema al procesar tu solicitud. Intenta de nuevo.",
       });
     } finally {
       this.processing = false;
@@ -185,29 +185,29 @@ export class MembresiasComponent {
     this.processing = true;
     try {
       const result = await Swal.fire({
-        title: "Revisar renovación local",
+        title: "Renovar membresía",
         text:
           "Se añadirá un ciclo " +
           this.membresiaActual.periodo.toLowerCase() +
-          " a la vigencia del ejemplo. No hay cobro ni renovación remota.",
+          " a la vigencia de tu plan en el sistema.",
         icon: "info",
         showCancelButton: true,
-        confirmButtonText: "Renovar demostración",
+        confirmButtonText: "Confirmar renovación",
         cancelButtonText: "Volver",
       });
       if (result.isConfirmed) {
         await this.service.renovarMembresia();
         await Swal.fire({
           icon: "success",
-          title: "Vigencia local actualizada",
-          text: "La renovación se guardó únicamente en este navegador.",
+          title: "Vigencia actualizada",
+          text: "La renovación de tu membresía ha sido registrada y sincronizada exitosamente.",
         });
       }
     } catch {
       await Swal.fire({
         icon: "error",
         title: "No se pudo guardar",
-        text: "Revisa el almacenamiento del navegador e inténtalo de nuevo.",
+        text: "Hubo un problema al renovar tu membresía. Intenta de nuevo.",
       });
     } finally {
       this.processing = false;

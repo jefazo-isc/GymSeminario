@@ -33,6 +33,22 @@ db.exec(`
   )
 `);
 
+// Crear tabla de membresías
+db.exec(`
+  CREATE TABLE IF NOT EXISTS memberships (
+    id TEXT PRIMARY KEY,
+    user_email TEXT NOT NULL,
+    plan_nombre TEXT NOT NULL,
+    precio REAL NOT NULL,
+    periodo TEXT NOT NULL,
+    fecha_inicio TEXT NOT NULL,
+    fecha_fin TEXT NOT NULL,
+    estado TEXT NOT NULL DEFAULT 'Activa',
+    beneficios TEXT NOT NULL DEFAULT '[]',
+    updated_at TEXT DEFAULT (datetime('now'))
+  )
+`);
+
 // Migración: agregar columna provider si no existe (para DBs antiguas)
 try {
   db.exec(`ALTER TABLE users ADD COLUMN provider TEXT NOT NULL DEFAULT 'email'`);
@@ -406,6 +422,88 @@ app.post('/api/auth/phone', (req, res) => {
     { expiresIn: '7d' }
   );
   res.json({ token, user: { uid: user.id, email: user.email, nombre: user.nombre, role: user.role } });
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  MEMBERSHIPS API — Persistencia en base de datos cloud (Render)
+// ══════════════════════════════════════════════════════════════════════════════
+app.get('/api/membership', (req, res) => {
+  try {
+    const email = req.query.email;
+    if (!email) return res.status(400).json({ error: 'Email requerido' });
+    const mem = db.prepare(`
+      SELECT * FROM memberships 
+      WHERE user_email = ? 
+      ORDER BY datetime(updated_at) DESC 
+      LIMIT 1
+    `).get(email);
+
+    if (!mem) return res.status(404).json({ error: 'No se encontró membresía' });
+
+    res.json({
+      id: mem.id,
+      nombrePlan: mem.plan_nombre,
+      precio: mem.precio,
+      periodo: mem.periodo,
+      fechaInicio: mem.fecha_inicio,
+      fechaFin: mem.fecha_fin,
+      estado: mem.estado,
+      beneficios: JSON.parse(mem.beneficios || '[]')
+    });
+  } catch (err) {
+    console.error('Error al consultar membresía:', err);
+    res.status(500).json({ error: 'Error al consultar membresía' });
+  }
+});
+
+app.post('/api/membership', (req, res) => {
+  try {
+    const { email, id, nombrePlan, precio, periodo, fechaInicio, fechaFin, estado, beneficios } = req.body;
+    if (!email || !nombrePlan) {
+      return res.status(400).json({ error: 'Datos de membresía incompletos' });
+    }
+    const memId = id || `MEM-${Math.floor(100000 + Math.random() * 900000)}`;
+    const beneficiosJson = JSON.stringify(beneficios || []);
+
+    const stmt = db.prepare(`
+      INSERT INTO memberships (id, user_email, plan_nombre, precio, periodo, fecha_inicio, fecha_fin, estado, beneficios, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      ON CONFLICT(id) DO UPDATE SET
+        plan_nombre = excluded.plan_nombre,
+        precio = excluded.precio,
+        periodo = excluded.periodo,
+        fecha_inicio = excluded.fecha_inicio,
+        fecha_fin = excluded.fecha_fin,
+        estado = excluded.estado,
+        beneficios = excluded.beneficios,
+        updated_at = datetime('now')
+    `);
+
+    stmt.run(memId, email, nombrePlan, precio, periodo, fechaInicio, fechaFin, estado || 'Activa', beneficiosJson);
+
+    res.json({ ok: true, mensaje: 'Membresía guardada en la base de datos cloud', id: memId });
+  } catch (err) {
+    console.error('Error al guardar membresía:', err);
+    res.status(500).json({ error: 'Error al registrar membresía' });
+  }
+});
+
+app.post('/api/membership/renew', (req, res) => {
+  try {
+    const { id, fechaFin, estado } = req.body;
+    if (!id || !fechaFin) return res.status(400).json({ error: 'ID y fecha de fin requeridos' });
+
+    db.prepare(`
+      UPDATE memberships 
+      SET fecha_fin = ?, estado = ?, updated_at = datetime('now')
+      WHERE id = ?
+    `).run(fechaFin, estado || 'Activa', id);
+
+    res.json({ ok: true, mensaje: 'Membresía renovada en la base de datos cloud' });
+  } catch (err) {
+    console.error('Error al renovar membresía:', err);
+    res.status(500).json({ error: 'Error al renovar membresía' });
+  }
 });
 
 app.listen(PORT, () => {

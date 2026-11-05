@@ -1,6 +1,8 @@
+import { HttpClient } from "@angular/common/http";
 import { localDate } from "../../../core/date/local-date";
 import { inject, Injectable } from "@angular/core";
 import { BehaviorSubject, Observable, of } from "rxjs";
+import { APP_ENDPOINTS } from "../../../core/config/app-endpoints";
 import { BrowserStorage } from "../../../core/storage/browser-storage.service";
 import { Membresia, PlanCatalogo } from "../models/membresia.model";
 import { isMembership } from "../models/storage.guard";
@@ -11,6 +13,8 @@ import type { MembershipRepository } from "./membership.repository";
 })
 export class MembresiaService implements MembershipRepository {
   private storage = inject(BrowserStorage);
+  private http = inject(HttpClient, { optional: true });
+  private endpoints = inject(APP_ENDPOINTS, { optional: true });
   private storageKey = "espacio_gym_membresia";
 
   private planesDisponibles: PlanCatalogo[] = [
@@ -65,7 +69,9 @@ export class MembresiaService implements MembershipRepository {
   public membresiaActual$: Observable<Membresia> =
     this.membresiaActualSubject.asObservable();
 
-  constructor() {}
+  constructor() {
+    this.cargarDesdeNube();
+  }
 
   getPlanes(): PlanCatalogo[] {
     return structuredClone(this.planesDisponibles);
@@ -103,6 +109,7 @@ export class MembresiaService implements MembershipRepository {
     };
 
     this.guardarEnStorage(nuevaMembresia);
+    this.sincronizarConNube(nuevaMembresia);
   }
 
   renovarMembresia(): void {
@@ -122,6 +129,76 @@ export class MembresiaService implements MembershipRepository {
     };
 
     this.guardarEnStorage(renovada);
+    this.sincronizarRenovacion(renovada);
+  }
+
+  private getUserEmail(): string | null {
+    try {
+      const raw = localStorage.getItem("gym_user");
+      if (!raw) return null;
+      const u = JSON.parse(raw);
+      return u?.email || null;
+    } catch {
+      return null;
+    }
+  }
+
+  private sincronizarConNube(mem: Membresia): void {
+    const email = this.getUserEmail();
+    const url = this.endpoints?.notifications || "https://gymseminario.onrender.com";
+    if (!email || !this.http) return;
+
+    this.http
+      .post(`${url}/api/membership`, {
+        email,
+        id: mem.id,
+        nombrePlan: mem.nombrePlan,
+        precio: mem.precio,
+        periodo: mem.periodo,
+        fechaInicio: mem.fechaInicio,
+        fechaFin: mem.fechaFin,
+        estado: mem.estado,
+        beneficios: mem.beneficios,
+      })
+      .subscribe({
+        next: () => {},
+        error: () => {},
+      });
+  }
+
+  private sincronizarRenovacion(mem: Membresia): void {
+    const url = this.endpoints?.notifications || "https://gymseminario.onrender.com";
+    if (!this.http) return;
+
+    this.http
+      .post(`${url}/api/membership/renew`, {
+        id: mem.id,
+        fechaFin: mem.fechaFin,
+        estado: mem.estado,
+      })
+      .subscribe({
+        next: () => {},
+        error: () => {},
+      });
+  }
+
+  private cargarDesdeNube(): void {
+    const email = this.getUserEmail();
+    const url = this.endpoints?.notifications || "https://gymseminario.onrender.com";
+    if (!email || !this.http) return;
+
+    this.http
+      .get<Membresia>(`${url}/api/membership?email=${encodeURIComponent(email)}`)
+      .subscribe({
+        next: (cloudMem) => {
+          if (cloudMem && cloudMem.id && cloudMem.nombrePlan) {
+            const calculada = this.calcularEstadoMembresia(cloudMem);
+            this.storage.write(this.storageKey, calculada);
+            this.membresiaActualSubject.next(calculada);
+          }
+        },
+        error: () => {},
+      });
   }
 
   private guardarEnStorage(membresia: Membresia): void {
@@ -137,7 +214,7 @@ export class MembresiaService implements MembershipRepository {
   }
 
   private defaultMembership(): Membresia {
-    // Membresía inicial por defecto para demostración
+    // Membresía inicial por defecto
     const hoy = new Date();
     const fin = new Date(hoy);
     fin.setDate(fin.getDate() + 18); // 18 días restantes

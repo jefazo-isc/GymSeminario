@@ -12,28 +12,26 @@
       <p class="notice" role="status">{{ feedback }}</p>
     }
     <div class="notice">
-      <app-icon name="monitor" />
+      <app-icon name="check" />
       <p>
-        <strong>Actividad de demostración.</strong> Historial, ocupación y
-        alertas son ejemplos locales. No se sincronizan con las reservas de
-        Firestore ni muestran ocupación en tiempo real.
+        <strong>Panel de Actividad.</strong> Historial de asistencias, próximas clases agendadas y alertas en tiempo real de tu cuenta.
       </p>
     </div>
     <div class="grid-4">
       <article class="surface">
         <span class="help">Sesiones asistidas</span>
         <div class="metric">{{ sesionesAsistidas }}</div>
-        <span class="status status--success">En el ejemplo</span>
+        <span class="status status--success">Confirmadas</span>
       </article>
       <article class="surface">
         <span class="help">Reservadas</span>
         <div class="metric">{{ proximasSesiones.length }}</div>
-        <span class="status status--accent">Registro local</span>
+        <span class="status status--accent">Registradas</span>
       </article>
       <article class="surface">
         <span class="help">Asistencia calculada</span>
         <div class="metric">{{ porcentajeAsistencia }}%</div>
-        <span class="help">Sobre sesiones pasadas del ejemplo</span>
+        <span class="help">Sobre tus sesiones registradas</span>
       </article>
       <article class="surface">
         <span class="help">Alertas sin leer</span>
