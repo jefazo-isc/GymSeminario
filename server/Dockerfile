@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM node:22-alpine
 WORKDIR /app
 
 # Instalar dependencias del sistema necesarias para compilar módulos nativos como better-sqlite3 en Alpine
