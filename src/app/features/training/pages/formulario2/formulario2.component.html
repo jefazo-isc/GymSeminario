@@ -2,9 +2,7 @@
   <div class="notice">
     <app-icon name="calendar" />
     <p>
-      <strong>Registro de clase.</strong> Esta operación es
-      independiente del historial local de Mi actividad. El aviso por correo o
-      SMS se confirma por separado.
+      <strong>Reserva tu sesión.</strong> Selecciona tu actividad, fecha y turno para entrenar en espacioGYM.
     </p>
   </div>
   @if (!authReady) {
@@ -133,8 +131,7 @@
           </div>
         </dl>
         <p class="help">
-          Se guardará tu selección en el sistema del gimnasio. La confirmación
-          del aviso por correo o SMS es independiente.
+          Se registrará tu reserva en el sistema y se confirmará por correo electrónico.
         </p>
         @if (error) {
           <p class="field-error" role="alert">{{ error }}</p>

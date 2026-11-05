@@ -2,9 +2,7 @@
   <div class="notice">
     <app-icon name="calendar" />
     <p>
-      <strong>Registro de clase.</strong> Esta operación es
-      independiente del historial local de Mi actividad. El aviso por correo o
-      SMS se confirma por separado.
+      <strong>Registro de asistencia.</strong> Confirma tu llegada a clase para registrar tu entrada y generar tu código de acceso.
     </p>
   </div>
   @if (!authReady) {
@@ -133,8 +131,7 @@
           </div>
         </dl>
         <p class="help">
-          Se guardará tu asistencia en el sistema del gimnasio. La confirmación
-          del aviso por correo o SMS es independiente.
+          Se registrará tu asistencia en el sistema y se generará tu comprobante de acceso.
         </p>
         @if (error) {
           <p class="field-error" role="alert">{{ error }}</p>
