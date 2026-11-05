@@ -16,6 +16,7 @@ const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 import { generarRutinaEntrenamiento } from './services/routineCoach.service.js';
 import { COACHES, chatearConCoach } from './services/coachChat.service.js';
 import { sendBookingNotification, sendAttendanceNotification } from './services/email.service.js';
+import { AI_STATUS } from './services/aiProvider.service.js';
 
 const db = new Database('./gym.db');
 const JWT_SECRET = process.env.JWT_SECRET || 'gym-seminario-secret-2026';
@@ -134,6 +135,13 @@ app.get('/api/health', (req, res) => {
     status: 'ok',
     servicio: 'GROM Backend Full',
     timestamp: new Date().toISOString()
+  });
+});
+
+app.get('/api/ai/status', (req, res) => {
+  res.json({
+    timestamp: new Date().toISOString(),
+    aiTracker: AI_STATUS
   });
 });
 

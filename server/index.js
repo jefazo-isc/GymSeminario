@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import { generarRutinaEntrenamiento } from './services/routineCoach.service.js';
 import { COACHES, chatearConCoach } from './services/coachChat.service.js';
 import { sendBookingNotification, sendAttendanceNotification } from './services/email.service.js';
+import { AI_STATUS } from './services/aiProvider.service.js';
 import { authAndQuotaGuard } from './middleware/auth.middleware.js';
 import { registrarAsistenciaEdge } from './services/quota.service.js';
 import Database from 'better-sqlite3';
@@ -56,6 +57,13 @@ app.get('/api/health', (req, res) => {
     status: 'ok',
     dispositivo: 'ZTE K92 Edge Server (FTM mode)',
     timestamp: new Date().toISOString()
+  });
+});
+
+app.get('/api/ai/status', (req, res) => {
+  res.json({
+    timestamp: new Date().toISOString(),
+    aiTracker: AI_STATUS
   });
 });
 

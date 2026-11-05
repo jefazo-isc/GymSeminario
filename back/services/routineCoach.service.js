@@ -1,123 +1,8 @@
-// Mercury (Inception Labs) — API compatible con OpenAI
-const MERCURY_BASE_URL = process.env.MERCURY_BASE_URL || 'https://api.inceptionlabs.ai/v1';
-const MERCURY_API_KEY  = process.env.MERCURY_API_KEY;
-const MERCURY_MODEL    = process.env.MERCURY_MODEL || 'mercury-2';
-
-// Gemini (Google) — Fallback automático y robusto
-const GEMINI_API_KEY   = process.env.GEMINI_API_KEY || 'AIzaSyBk2ZXp0bHSH6CG_AehB0oU6EJQzrJk0Z4';
-const GEMINI_MODELS    = ['gemini-2.5-flash-lite', 'gemini-3.1-flash-lite', 'gemma-4-26b-a4b-it', 'gemma-4-31b-it'];
+import { executeAiQuery } from './aiProvider.service.js';
 
 // Cache en memoria (TTL: 12 horas)
 const cacheRutinas = new Map();
 const TTL_CACHE_MS = 12 * 60 * 60 * 1000;
-
-/**
- * Llama a la API de Mercury (formato OpenAI)
- */
-async function mercuryChat(messages, { temperature = 0.3, maxTokens = 3500 } = {}) {
-  if (!MERCURY_API_KEY) throw new Error('MERCURY_API_KEY no configurada');
-  const resp = await fetch(`${MERCURY_BASE_URL}/chat/completions`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${MERCURY_API_KEY}`
-    },
-    body: JSON.stringify({
-      model: MERCURY_MODEL,
-      messages,
-      temperature,
-      max_tokens: maxTokens,
-      response_format: { type: 'json_object' }
-    })
-  });
-
-  if (!resp.ok) {
-    const err = await resp.text();
-    throw new Error(`Mercury API ${resp.status}: ${err}`);
-  }
-
-  const data = await resp.json();
-  return data.choices?.[0]?.message?.content ?? '';
-}
-
-/**
- * Llama a la API de Gemini (Google) como fallback resiliente
- */
-async function geminiChat(messages, { temperature = 0.3, maxTokens = 8192 } = {}) {
-  if (!GEMINI_API_KEY) throw new Error('GEMINI_API_KEY no configurada');
-
-  const contents = [];
-  let systemInstruction = null;
-  for (const m of messages) {
-    if (m.role === 'system') {
-      systemInstruction = m.content;
-    } else {
-      contents.push({
-        role: m.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: m.content }]
-      });
-    }
-  }
-
-  const body = {
-    contents,
-    generationConfig: {
-      temperature,
-      maxOutputTokens: maxTokens,
-      responseMimeType: 'application/json'
-    }
-  };
-  if (systemInstruction) {
-    body.systemInstruction = { parts: [{ text: systemInstruction }] };
-  }
-
-  let lastError = null;
-  for (const model of GEMINI_MODELS) {
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
-      const resp = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-
-      if (!resp.ok) {
-        const errText = await resp.text();
-        lastError = new Error(`Gemini (${model}) ${resp.status}: ${errText}`);
-        continue;
-      }
-
-      const data = await resp.json();
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (text) return text;
-    } catch (err) {
-      lastError = err;
-    }
-  }
-
-  throw lastError || new Error('Todos los modelos de Gemini fallaron.');
-}
-
-/**
- * Intenta Mercury primero; si falla, recurre a Gemini
- */
-async function aiChat(messages, opts = {}) {
-  if (MERCURY_API_KEY) {
-    try {
-      const text = await mercuryChat(messages, opts);
-      if (text && text.trim()) {
-        return { text, origen: 'mercury' };
-      }
-    } catch (mercuryErr) {
-      console.warn('[RUTINA] Mercury falló, usando Gemini como respaldo:', mercuryErr.message);
-    }
-  } else {
-    console.info('[RUTINA] Usando Gemini para generación de rutina.');
-  }
-
-  const text = await geminiChat(messages, opts);
-  return { text, origen: 'gemini' };
-}
 
 /**
  * Normaliza y valida la rutina para asegurar compatibilidad estricta con validRoutine
@@ -217,9 +102,9 @@ Perfil del socio:
 - Lesiones o restricciones: ${restriccionesMedicas}`;
 
   try {
-    const { text: raw, origen } = await aiChat(
+    const { text: raw, origen } = await executeAiQuery(
       [{ role: 'user', content: prompt }],
-      { temperature: 0.3, maxTokens: 8192 }
+      { temperature: 0.3, maxTokens: 8192, jsonMode: true }
     );
 
     // Extraer JSON limpio

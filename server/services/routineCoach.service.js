@@ -1,157 +1,144 @@
-import { GoogleGenAI, Type } from "@google/genai";
+import { executeAiQuery } from './aiProvider.service.js';
 
-// Inicializamos el cliente de Gemini utilizando la API Key guardada en variables de entorno
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
-// Mantenemos un modelo fijo, veloz y económico por defecto
-const MODELO_GEMINI = process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
-
-// Cache en memoria para ahorrar llamadas repetidas (TTL: 12 horas)
+// Cache en memoria (TTL: 12 horas)
 const cacheRutinas = new Map();
 const TTL_CACHE_MS = 12 * 60 * 60 * 1000;
 
-// Esquema JSON estricto que debe devolver la IA
-const esquemaRutina = {
-  type: Type.OBJECT,
-  properties: {
-    tituloRutina: { type: Type.STRING },
-    objetivo: { type: Type.STRING },
-    nivelRecomendado: { type: Type.STRING },
-    diasSemana: {
-      type: Type.ARRAY,
-      items: {
-        type: Type.OBJECT,
-        properties: {
-          dia: { type: Type.STRING },
-          grupoMuscular: { type: Type.STRING },
-          ejercicios: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                nombre: { type: Type.STRING },
-                series: { type: Type.INTEGER },
-                repeticiones: { type: Type.STRING },
-                descansoSegundos: { type: Type.INTEGER },
-                notasCoach: { type: Type.STRING }
-              },
-              required: ["nombre", "series", "repeticiones", "descansoSegundos"]
-            }
+/**
+ * Normaliza y valida la rutina para asegurar compatibilidad estricta con validRoutine
+ */
+function normalizarRutina(raw, perfil) {
+  const r = typeof raw === 'object' && raw !== null ? raw : {};
+  return {
+    tituloRutina: String(r.tituloRutina || `Rutina Personalizada para ${perfil?.nombre || 'Socio'}`),
+    objetivo: String(r.objetivo || perfil?.objetivo || 'Acondicionamiento físico'),
+    nivelRecomendado: String(r.nivelRecomendado || perfil?.nivel || 'Intermedio'),
+    recomendacionesGenerales: String(r.recomendacionesGenerales || 'Mantén una buena hidratación, calienta 10 minutos antes de comenzar y descansa adecuadamente.'),
+    diasSemana: Array.isArray(r.diasSemana) && r.diasSemana.length > 0
+      ? r.diasSemana.map((d, i) => ({
+          dia: String(d.dia || `Día ${i + 1}`),
+          grupoMuscular: String(d.grupoMuscular || 'General'),
+          ejercicios: Array.isArray(d.ejercicios) && d.ejercicios.length > 0
+            ? d.ejercicios.map(e => ({
+                nombre: String(e.nombre || 'Ejercicio'),
+                series: Number(e.series) > 0 ? Number(e.series) : 3,
+                repeticiones: String(e.repeticiones || '10-12'),
+                descansoSegundos: Number(e.descansoSegundos) >= 0 ? Number(e.descansoSegundos) : 60,
+                notasCoach: String(e.notasCoach || 'Mantener postura controlada.')
+              }))
+            : [
+                { nombre: 'Sentadillas', series: 4, repeticiones: '10-12', descansoSegundos: 90, notasCoach: 'Espalda recta' },
+                { nombre: 'Flexiones / Press', series: 4, repeticiones: '8-10', descansoSegundos: 90, notasCoach: 'Control de bajada' }
+              ]
+        }))
+      : [
+          {
+            dia: 'Día 1',
+            grupoMuscular: 'Cuerpo Completo',
+            ejercicios: [
+              { nombre: 'Sentadilla libre', series: 4, repeticiones: '10-12', descansoSegundos: 90, notasCoach: 'Mantener la espalda recta.' },
+              { nombre: 'Press de banca', series: 4, repeticiones: '8-10', descansoSegundos: 90, notasCoach: 'Control en el descenso.' },
+              { nombre: 'Jalón al pecho', series: 3, repeticiones: '10-12', descansoSegundos: 60, notasCoach: 'Escápulas atrás y abajo.' }
+            ]
           }
-        },
-        required: ["dia", "grupoMuscular", "ejercicios"]
-      }
-    },
-    recomendacionesGenerales: { type: Type.STRING }
-  },
-  required: ["tituloRutina", "objetivo", "nivelRecomendado", "diasSemana", "recomendacionesGenerales"]
-};
+        ]
+  };
+}
 
 /**
- * Genera una rutina personalizada estructurada a partir del perfil del socio.
- * @param {Object} perfilSocio - Datos del cliente (ej. edad, objetivo, diasDisponibles, nivel, lesiones)
- * @returns {Promise<Object>} Objeto JSON estructurado con la rutina generada.
+ * Genera rutina de entrenamiento personalizada
  */
 export async function generarRutinaEntrenamiento(perfilSocio) {
   const {
-    nombre = "Socio",
+    nombre = 'Socio',
     edad = 25,
     peso = 70,
     altura = 170,
-    genero = "No especificado",
-    objetivo = "Ganancia muscular",
+    genero = 'No especificado',
+    objetivo = 'Ganancia muscular',
     diasDisponibles = 4,
-    nivel = "Intermedio",
-    restriccionesMedicas = "Ninguna"
-  } = perfilSocio;
+    nivel = 'Intermedio',
+    restriccionesMedicas = 'Ninguna'
+  } = perfilSocio || {};
 
-  // Clave de caché para no gastar cuota si se piden los mismos datos
-  const claveCache = `${nombre.trim().toLowerCase()}_${peso}_${altura}_${objetivo.trim().toLowerCase()}_${diasDisponibles}_${nivel.trim().toLowerCase()}_${restriccionesMedicas.trim().toLowerCase()}`;
+  const claveCache = `${String(nombre).trim().toLowerCase()}_${peso}_${altura}_${String(objetivo).trim().toLowerCase()}_${diasDisponibles}_${String(nivel).trim().toLowerCase()}`;
   const enCache = cacheRutinas.get(claveCache);
   if (enCache && Date.now() - enCache.timestamp < TTL_CACHE_MS) {
-    return {
-      exito: true,
-      origen: "cache",
-      data: enCache.data
-    };
+    return { exito: true, origen: 'cache', data: enCache.data };
   }
 
-  const prompt = `
-Eres un entrenador físico y coach deportivo profesional de un centro de acondicionamiento físico.
-Debes diseñar una rutina de entrenamiento personalizada con base en el siguiente perfil biomecánico del cliente:
+  const prompt = `Eres un entrenador físico profesional de alto nivel. Diseña una rutina de entrenamiento personalizada y devuelve ÚNICAMENTE un objeto JSON válido con exactamente esta estructura (sin texto adicional ni markdown):
+{
+  "tituloRutina": "Nombre motivador de la rutina",
+  "objetivo": "${objetivo}",
+  "nivelRecomendado": "${nivel}",
+  "diasSemana": [
+    {
+      "dia": "Día 1 - Lunes",
+      "grupoMuscular": "Pecho y Tríceps",
+      "ejercicios": [
+        {
+          "nombre": "Press de banca plano",
+          "series": 4,
+          "repeticiones": "10-12",
+          "descansoSegundos": 90,
+          "notasCoach": "Bajar controlado y no rebotar en el pecho."
+        }
+      ]
+    }
+  ],
+  "recomendacionesGenerales": "Recomendaciones de nutrición, calentamiento y descanso."
+}
 
+Perfil del socio:
 - Nombre: ${nombre}
-- Edad: ${edad} años
-- Peso corporal: ${peso} kg
-- Altura: ${altura} cm
 - Género: ${genero}
-- Objetivo principal: ${objetivo}
-- Días disponibles a la semana: ${diasDisponibles} días
+- Edad: ${edad} años
+- Peso: ${peso} kg
+- Altura: ${altura} cm
+- Objetivo: ${objetivo}
+- Días disponibles por semana: ${diasDisponibles} días
 - Nivel de experiencia: ${nivel}
-- Restricciones médicas o lesiones: ${restriccionesMedicas}
-
-REGLAS DE GENERACIÓN:
-1. Adapta la intensidad, ejercicios y descansos considerando el peso (${peso} kg), la altura (${altura} cm) y el objetivo (${objetivo}).
-2. Diseña únicamente la cantidad de días solicitada (${diasDisponibles} días).
-3. Asigna entre 3 y 5 ejercicios clave por cada día de entrenamiento.
-4. El descanso entre series debe expresarse en segundos enteros (ejemplo: 60, 90, 120).
-5. Sé preciso, profesional y directo en las recomendaciones.
-`;
+- Lesiones o restricciones: ${restriccionesMedicas}`;
 
   try {
-    const respuesta = await ai.models.generateContent({
-      model: MODELO_GEMINI,
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: esquemaRutina,
-        temperature: 0.3
-      }
-    });
+    const { text: raw, origen } = await executeAiQuery(
+      [{ role: 'user', content: prompt }],
+      { temperature: 0.3, maxTokens: 8192, jsonMode: true }
+    );
 
-    const datosFormateados = JSON.parse(respuesta.text);
-    // Guardar en caché para reusar y proteger cuota
-    cacheRutinas.set(claveCache, { data: datosFormateados, timestamp: Date.now() });
+    // Extraer JSON limpio
+    const match = raw.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('No se encontró JSON en la respuesta de la IA');
 
-    return {
-      exito: true,
-      origen: "gemini",
-      data: datosFormateados
-    };
+    const datosCrudos = JSON.parse(match[0]);
+    const datosNormalizados = normalizarRutina(datosCrudos, perfilSocio);
+
+    cacheRutinas.set(claveCache, { data: datosNormalizados, timestamp: Date.now() });
+
+    return { exito: true, origen, data: datosNormalizados };
   } catch (error) {
-    console.error("[ERROR EN RUTINE_COACH_SERVICE]:", error);
+    console.error('[ERROR RUTINA IA]:', error.message);
 
-    // Mecanismo de respuesta de respaldo (fallback) si falla la API o se excede la cuota
     return {
       exito: false,
-      error: "No se pudo conectar con el servicio de IA. Se devuelve una plantilla base.",
+      error: 'No se pudo conectar con el servicio de IA. Se devuelve una plantilla base.',
       data: {
-        tituloRutina: "Rutina General de Mantenimiento (Modo Respaldo)",
-        objetivo: objetivo,
+        tituloRutina: `Rutina General de Mantenimiento (${nivel})`,
+        objetivo,
         nivelRecomendado: nivel,
         diasSemana: [
           {
-            dia: "Día 1",
-            grupoMuscular: "Cuerpo Completo / General",
+            dia: 'Día 1',
+            grupoMuscular: 'Cuerpo Completo / General',
             ejercicios: [
-              {
-                nombre: "Sentadilla libre",
-                series: 4,
-                repeticiones: "10-12",
-                descansoSegundos: 90,
-                notasCoach: "Mantener la espalda recta durante todo el movimiento."
-              },
-              {
-                nombre: "Flexiones de pecho",
-                series: 3,
-                repeticiones: "12-15",
-                descansoSegundos: 60,
-                notasCoach: "Controlar el descenso."
-              }
+              { nombre: 'Sentadilla libre', series: 4, repeticiones: '10-12', descansoSegundos: 90, notasCoach: 'Mantener la espalda recta.' },
+              { nombre: 'Press de banca', series: 4, repeticiones: '8-10', descansoSegundos: 90, notasCoach: 'Control en el descenso.' },
+              { nombre: 'Jalón al pecho', series: 3, repeticiones: '10-12', descansoSegundos: 60, notasCoach: 'Escápulas atrás y abajo.' }
             ]
           }
         ],
-        recomendacionesGenerales: "Por favor, mantén una buena hidratación y consulta con un entrenador en la sala si la IA no está disponible momentáneamente."
+        recomendacionesGenerales: 'Mantén buena hidratación y consulta con un entrenador si necesitas ajustes.'
       }
     };
   }
