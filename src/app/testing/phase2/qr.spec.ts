@@ -1,4 +1,4 @@
-import { fakeAsync, flushMicrotasks, TestBed, tick } from "@angular/core/testing";
+import { TestBed } from "@angular/core/testing";
 import { BehaviorSubject } from "rxjs";
 import { SESSION } from "../../features/auth/data-access/session.repository";
 import { QrService } from "../../features/training/data-access/qr.service";
@@ -28,24 +28,19 @@ describe("Local QR generation", () => {
     let first = "";
     svc.getQrData("unit-user").subscribe((r) => {
       first = r.data;
-      setTimeout(() => {
-        svc.getQrData("unit-user").subscribe((r2) => {
-          expect(r2.data).not.toBe(first);
-          done();
-        });
-      }, 5);
+    });
+    svc.getQrData("unit-user").subscribe((r2) => {
+      expect(r2.data).not.toBe(first);
+      done();
     });
   });
 
-  it("keeps the QR contract and clears the previous user code after logout", fakeAsync(() => {
+  it("keeps the QR contract and clears the previous user code after logout", () => {
     const uid$ = new BehaviorSubject<string | null>("unit-user");
     TestBed.overrideProvider(SESSION, { useValue: { userUid$: uid$ } });
     const fixture = TestBed.createComponent(QrViewComponent);
     fixture.componentRef.setInput("clase", "Yoga");
     fixture.componentRef.setInput("fecha", "2026-10-28");
-    fixture.detectChanges();
-    flushMicrotasks();
-    tick();
     fixture.detectChanges();
 
     expect(fixture.componentInstance.qrValue).toMatch(/^GROM-.+-Yoga-2026-10-28$/);
@@ -54,5 +49,5 @@ describe("Local QR generation", () => {
     fixture.detectChanges();
     expect(fixture.componentInstance.qrValue).toBeNull();
     expect(fixture.componentInstance.error).toContain("sesión");
-  }));
+  });
 });
