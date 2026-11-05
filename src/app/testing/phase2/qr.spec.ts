@@ -1,6 +1,6 @@
-import { TestBed } from "@angular/core/testing";
+import { fakeAsync, flushMicrotasks, TestBed, tick } from "@angular/core/testing";
 import { BehaviorSubject } from "rxjs";
-import { AuthService } from "../../features/auth/data-access/auth.service";
+import { SESSION } from "../../features/auth/data-access/session.repository";
 import { QrService } from "../../features/training/data-access/qr.service";
 import { QrViewComponent } from "../../features/training/ui/qr-view/qr-view.component";
 
@@ -28,7 +28,6 @@ describe("Local QR generation", () => {
     let first = "";
     svc.getQrData("unit-user").subscribe((r) => {
       first = r.data;
-      // Small delay to ensure different timestamp
       setTimeout(() => {
         svc.getQrData("unit-user").subscribe((r2) => {
           expect(r2.data).not.toBe(first);
@@ -38,22 +37,22 @@ describe("Local QR generation", () => {
     });
   });
 
-  it("keeps the QR contract and clears the previous user code after logout", () => {
-    const uid = new BehaviorSubject<string | null>("unit-user");
-    TestBed.overrideProvider(AuthService, { useValue: { userUid$: uid } });
+  it("keeps the QR contract and clears the previous user code after logout", fakeAsync(() => {
+    const uid$ = new BehaviorSubject<string | null>("unit-user");
+    TestBed.overrideProvider(SESSION, { useValue: { userUid$: uid$ } });
     const fixture = TestBed.createComponent(QrViewComponent);
     fixture.componentRef.setInput("clase", "Yoga");
     fixture.componentRef.setInput("fecha", "2026-10-28");
     fixture.detectChanges();
+    flushMicrotasks();
+    tick();
+    fixture.detectChanges();
 
-    // Wait for the async QR generation
-    fixture.whenStable().then(() => {
-      fixture.detectChanges();
-      expect(fixture.componentInstance.qrValue).toMatch(/^GROM-.+-Yoga-/);
+    expect(fixture.componentInstance.qrValue).toMatch(/^GROM-.+-Yoga-2026-10-28$/);
 
-      uid.next(null);
-      expect(fixture.componentInstance.qrValue).toBeNull();
-      expect(fixture.componentInstance.error).toContain("sesión");
-    });
-  });
+    uid$.next(null);
+    fixture.detectChanges();
+    expect(fixture.componentInstance.qrValue).toBeNull();
+    expect(fixture.componentInstance.error).toContain("sesión");
+  }));
 });
