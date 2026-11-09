@@ -14,25 +14,25 @@ export class ServiciosComponent {
     {
       name: "Indoor cycling",
       tag: "Resistencia y ritmo",
-      image: "img/cursos/spinning.jpeg",
+      image: "img/cursos/spinning.webp",
       text: "Clases de spinning para trabajar tu resistencia cardiovascular en bicicleta fija.",
     },
     {
       name: "Zumba",
       tag: "Movimiento en grupo",
-      image: "img/CARRUSEL/3.png",
+      image: "img/CARRUSEL/3.webp",
       text: "Baila, muévete y suma actividad física a tu semana con una sesión en grupo.",
     },
     {
       name: "CrossFit",
       tag: "Fuerza y condición",
-      image: "img/cursos/cross-training.jpeg",
+      image: "img/cursos/cross-training.webp",
       text: "Entrenamiento en distintas estaciones que combina fuerza, agilidad y trabajo cardiovascular.",
     },
     {
       name: "Pesas y fuerza",
       tag: "Entrena a tu ritmo",
-      image: "img/CARRUSEL/2.png",
+      image: "img/CARRUSEL/2.webp",
       text: "Un área equipada para desarrollar tu entrenamiento de fuerza con orientación del equipo.",
     },
   ];

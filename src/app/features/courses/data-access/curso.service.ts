@@ -12,7 +12,7 @@ export class CursoService implements CourseRepository {
       id: 1,
       nombre: "Pilates Básico",
       duracion: "3h",
-      img: "img/cursos/pilates.jpeg",
+      img: "img/cursos/pilates.webp",
       descripcion:
         "Clase básica de pilates para fortalecer el core y mejorar la postura.",
     },
@@ -20,7 +20,7 @@ export class CursoService implements CourseRepository {
       id: 2,
       nombre: "Pilates Avanzado",
       duracion: "4h",
-      img: "img/cursos/pilates-avanzado.jpeg",
+      img: "img/cursos/pilates-avanzado.webp",
       descripcion:
         "Sesión intensiva de pilates con ejercicios de nivel avanzado.",
     },
@@ -28,7 +28,7 @@ export class CursoService implements CourseRepository {
       id: 3,
       nombre: "Calistenia Funcional",
       duracion: "4h",
-      img: "img/cursos/calistenia.jpeg",
+      img: "img/cursos/calistenia.webp",
       descripcion:
         "Entrenamiento con el peso corporal para fuerza y resistencia.",
     },
@@ -36,7 +36,7 @@ export class CursoService implements CourseRepository {
       id: 4,
       nombre: "Yoga Relax",
       duracion: "2h",
-      img: "img/cursos/yoga-relax.jpeg",
+      img: "img/cursos/yoga-relax.webp",
       descripcion:
         "Clase suave de yoga enfocada en respiración y estiramiento.",
     },
@@ -44,7 +44,7 @@ export class CursoService implements CourseRepository {
       id: 5,
       nombre: "Yoga Intensivo",
       duracion: "5h",
-      img: "img/cursos/yoga-intensivo.jpeg",
+      img: "img/cursos/yoga-intensivo.webp",
       descripcion:
         "Sesión completa de yoga para mejorar flexibilidad y concentración.",
     },
@@ -52,21 +52,21 @@ export class CursoService implements CourseRepository {
       id: 6,
       nombre: "Cardio Box",
       duracion: "3h",
-      img: "img/cursos/cardio-box.jpeg",
+      img: "img/cursos/cardio-box.webp",
       descripcion: "Clase energética combinando movimientos de boxeo y cardio.",
     },
     {
       id: 7,
       nombre: "Spinning",
       duracion: "1h",
-      img: "img/cursos/spinning.jpeg",
+      img: "img/cursos/spinning.webp",
       descripcion: "Entrenamiento de alta intensidad en bicicleta fija.",
     },
     {
       id: 8,
       nombre: "Cross Training",
       duracion: "5h",
-      img: "img/cursos/cross-training.jpeg",
+      img: "img/cursos/cross-training.webp",
       descripcion:
         "Rutina de fuerza, agilidad y cardio con diferentes estaciones.",
     },
@@ -74,14 +74,14 @@ export class CursoService implements CourseRepository {
       id: 9,
       nombre: "Stretching",
       duracion: "2h",
-      img: "img/cursos/stretching.jpeg",
+      img: "img/cursos/stretching.webp",
       descripcion: "Clase enfocada en estiramiento, recuperación y movilidad.",
     },
     {
       id: 10,
       nombre: "Entrenamiento Funcional",
       duracion: "4h",
-      img: "img/cursos/funcional.jpeg",
+      img: "img/cursos/funcional.webp",
       descripcion:
         "Ejercicios que simulan movimientos reales para mejorar el rendimiento diario.",
     },
@@ -89,14 +89,14 @@ export class CursoService implements CourseRepository {
       id: 11,
       nombre: "Bootcamp",
       duracion: "3h",
-      img: "img/cursos/bootcamp.jpeg",
+      img: "img/cursos/bootcamp.webp",
       descripcion: "Entrenamiento militar intensivo en grupo al aire libre.",
     },
     {
       id: 12,
       nombre: "Power Yoga",
       duracion: "4h",
-      img: "img/cursos/power-yoga.jpeg",
+      img: "img/cursos/power-yoga.webp",
       descripcion:
         "Versión más intensa de yoga con enfoque en fuerza y balance.",
     },

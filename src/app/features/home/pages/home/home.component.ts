@@ -15,19 +15,19 @@ export class HomeComponent {
       number: "01",
       name: "Fuerza y pesas",
       description: "Construye tu entrenamiento, un movimiento a la vez.",
-      image: "img/CARRUSEL/2.png",
+      image: "img/CARRUSEL/2.webp",
     },
     {
       number: "02",
       name: "Indoor cycling",
       description: "Encuentra energía y ritmo sobre la bicicleta.",
-      image: "img/cursos/spinning.jpeg",
+      image: "img/cursos/spinning.webp",
     },
     {
       number: "03",
       name: "Entrenamiento en grupo",
       description: "Zumba y CrossFit para sumar movimiento a tu semana.",
-      image: "img/cursos/cross-training.jpeg",
+      image: "img/cursos/cross-training.webp",
     },
   ];
 }
