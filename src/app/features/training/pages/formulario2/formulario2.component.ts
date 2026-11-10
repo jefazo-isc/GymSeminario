@@ -12,6 +12,12 @@ import { IconComponent } from "../../../../shared/ui/icon/icon.component";
 import { SESSION } from "../../../auth/data-access/session.repository";
 import { TRAINING } from "../../data-access/training.repository";
 import { QrViewComponent } from "../../ui/qr-view/qr-view.component";
+interface StoredGymUserSession {
+  uid?: string | number;
+  email?: string | null;
+  nombre?: string | null;
+}
+
 @Component({
   selector: "app-formulario2",
   standalone: true,
@@ -58,11 +64,11 @@ export class Formulario2Component implements OnInit {
     }
     this.authReady = true;
   }
-  private safeGetUser(): any {
+  private safeGetUser(): StoredGymUserSession | null {
     const raw = localStorage.getItem("gym_user");
     if (!raw) return null;
     try {
-      return JSON.parse(raw);
+      return JSON.parse(raw) as StoredGymUserSession;
     } catch {
       return null;
     }
