@@ -354,7 +354,7 @@ jobs:
 
       - name: 🐳 Docker — Extraer metadatos (tags y labels)
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
@@ -368,7 +368,7 @@ jobs:
           echo "REPO_LOWER=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
       - name: 🐳 Docker — Construir y publicar imagen Angular (Nginx)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./Dockerfile
@@ -380,7 +380,7 @@ jobs:
           platforms: linux/amd64
 
       - name: 🐳 Docker — Publicar imagen del servidor Express
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./server
           file: ./server/Dockerfile
