@@ -183,6 +183,8 @@ jobs:
       # ─────────────────────────────────────────────────────────────────────
       - name: 📥 Checkout — Descargar código fuente
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       # ─────────────────────────────────────────────────────────────────────
       # CRITERIO 2 (5%): Entorno
@@ -266,6 +268,8 @@ jobs:
       # ─────────────────────────────────────────────────────────────────────
       - name: 📥 Checkout — Descargar código fuente
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       # ─────────────────────────────────────────────────────────────────────
       # CRITERIO 2 (5%): Entorno
@@ -300,10 +304,7 @@ jobs:
         uses: trufflesecurity/trufflehog@main
         with:
           path: ./
-          base: ${{ github.event.repository.default_branch }}
-          head: HEAD
           extra_args: --only-verified
-        continue-on-error: true
 
       - name: 📊 Artefacto — Subir reporte de vulnerabilidades
         uses: actions/upload-artifact@v4
