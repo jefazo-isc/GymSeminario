@@ -8,6 +8,12 @@ import { IconComponent } from "../../../../shared/ui/icon/icon.component";
 import { SESSION } from "../../../auth/data-access/session.repository";
 import { TRAINING } from "../../data-access/training.repository";
 import { QrViewComponent } from "../../ui/qr-view/qr-view.component";
+interface StoredGymUserSession {
+  uid?: string | number;
+  email?: string | null;
+  nombre?: string | null;
+}
+
 @Component({
   selector: "app-formulario3",
   standalone: true,
@@ -50,7 +56,7 @@ export class Formulario3Component implements OnInit {
     const raw = localStorage.getItem("gym_user");
     if (raw) {
       try {
-        const u = JSON.parse(raw);
+        const u = JSON.parse(raw) as StoredGymUserSession;
         this.user = { email: u.email ?? null, phoneNumber: null, displayName: u.nombre ?? null };
         this.authenticated = true;
         if (!this.userName && u.nombre) {
@@ -68,10 +74,10 @@ export class Formulario3Component implements OnInit {
       return;
     }
     const raw = localStorage.getItem("gym_user");
-    let u: any = null;
+    let u: StoredGymUserSession | null = null;
     if (raw) {
       try {
-        u = JSON.parse(raw);
+        u = JSON.parse(raw) as StoredGymUserSession;
       } catch {
         u = null;
       }
