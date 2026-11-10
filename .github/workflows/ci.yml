@@ -27,24 +27,24 @@ permissions:
 jobs:
   build-and-verify:
     name: 🏗️ Build & Verificación de Código
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       # ─────────────────────────────────────────────────────────────────────
       # CRITERIO 1 (5%): Descarga de código fuente
       # ─────────────────────────────────────────────────────────────────────
       - name: 📥 Checkout — Descargar código fuente del repositorio
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0   # Historial completo para análisis de calidad
 
       # ─────────────────────────────────────────────────────────────────────
       # CRITERIO 2 (5%): Configuración del entorno y dependencias
       # ─────────────────────────────────────────────────────────────────────
-      - name: ⚙️ Setup — Configurar Node.js 20
-        uses: actions/setup-node@v4
+      - name: ⚙️ Setup — Configurar Node.js 22 LTS
+        uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "npm"     # Caché de dependencias para acelerar ejecuciones
 
       - name: 📦 Dependencias — Instalar paquetes del proyecto
@@ -56,7 +56,7 @@ jobs:
           cp dist/libreria1/browser/index.html dist/libreria1/browser/404.html
 
       - name: 📦 Artefacto — Guardar build de producción para despliegue
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: angular-dist
           path: dist/libreria1/browser
@@ -125,7 +125,7 @@ jobs:
   # ══════════════════════════════════════════════════════════════════════════
   unit-tests:
     name: 🧪 Pruebas Unitarias (Karma + Jasmine)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: build-and-verify
 
     steps:
@@ -133,15 +133,15 @@ jobs:
       # CRITERIO 1 (5%): Checkout
       # ─────────────────────────────────────────────────────────────────────
       - name: 📥 Checkout — Descargar código fuente
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # ─────────────────────────────────────────────────────────────────────
       # CRITERIO 2 (5%): Entorno y dependencias
       # ─────────────────────────────────────────────────────────────────────
-      - name: ⚙️ Setup — Configurar Node.js 20
-        uses: actions/setup-node@v4
+      - name: ⚙️ Setup — Configurar Node.js 22 LTS
+        uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "npm"
 
       - name: 📦 Dependencias — Instalar paquetes
@@ -162,7 +162,7 @@ jobs:
           CHROME_BIN: /usr/bin/google-chrome
 
       - name: 📊 Cobertura — Subir reporte de cobertura como artefacto
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: cobertura-pruebas-unitarias
@@ -174,7 +174,7 @@ jobs:
   # ══════════════════════════════════════════════════════════════════════════
   integration-tests:
     name: 🔗 Pruebas de Integración (HttpClientTesting)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: build-and-verify
 
     steps:
@@ -182,17 +182,17 @@ jobs:
       # CRITERIO 1 (5%): Checkout
       # ─────────────────────────────────────────────────────────────────────
       - name: 📥 Checkout — Descargar código fuente
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       # ─────────────────────────────────────────────────────────────────────
       # CRITERIO 2 (5%): Entorno
       # ─────────────────────────────────────────────────────────────────────
-      - name: ⚙️ Setup — Configurar Node.js 20
-        uses: actions/setup-node@v4
+      - name: ⚙️ Setup — Configurar Node.js 22 LTS
+        uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "npm"
 
       - name: 📦 Dependencias — Instalar paquetes
@@ -247,7 +247,7 @@ jobs:
           CHROME_BIN: /usr/bin/google-chrome
 
       - name: 📊 Artefacto — Subir reporte de integración
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: reporte-pruebas-integracion
@@ -259,7 +259,7 @@ jobs:
   # ══════════════════════════════════════════════════════════════════════════
   security-audit:
     name: 🛡️ Análisis de Vulnerabilidades (npm audit)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: build-and-verify
 
     steps:
@@ -267,17 +267,17 @@ jobs:
       # CRITERIO 1 (5%): Checkout
       # ─────────────────────────────────────────────────────────────────────
       - name: 📥 Checkout — Descargar código fuente
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       # ─────────────────────────────────────────────────────────────────────
       # CRITERIO 2 (5%): Entorno
       # ─────────────────────────────────────────────────────────────────────
-      - name: ⚙️ Setup — Configurar Node.js 20
-        uses: actions/setup-node@v4
+      - name: ⚙️ Setup — Configurar Node.js 22 LTS
+        uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "npm"
 
       - name: 📦 Dependencias — Instalar paquetes
@@ -307,7 +307,7 @@ jobs:
           extra_args: --only-verified
 
       - name: 📊 Artefacto — Subir reporte de vulnerabilidades
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: reporte-vulnerabilidades
@@ -319,7 +319,7 @@ jobs:
   # ══════════════════════════════════════════════════════════════════════════
   docker-publish:
     name: 🐳 Empaquetado Docker → GitHub Packages (GHCR)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [unit-tests, integration-tests, security-audit]
     # Solo publicar en push a main (no en PRs)
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -329,7 +329,7 @@ jobs:
       # CRITERIO 1 (5%): Checkout con historial para metadatos de imagen
       # ─────────────────────────────────────────────────────────────────────
       - name: 📥 Checkout — Descargar código fuente
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # ─────────────────────────────────────────────────────────────────────
       # CRITERIO 7 (25%): Empaquetado — Build y push a GHCR
@@ -391,7 +391,7 @@ jobs:
       # DESPLIEGUE CONTINUO (CD): Publicar Frontend en GitHub Pages
       # ─────────────────────────────────────────────────────────────────────
       - name: 📥 Artefacto — Descargar build de producción
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: angular-dist
           path: dist/libreria1/browser
