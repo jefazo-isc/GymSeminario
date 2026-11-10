@@ -1,1 +1,0 @@
-import{wa as e}from"./chunk-IME7KJ5Y.js";var r=class{resolved=e(!0);ready=e(!0);error=e("");constructor(...n){}get instance(){}init(){this.resolved.set(!0),this.ready.set(!0)}destroy(){}};export{r as a};
