@@ -537,6 +537,99 @@
       font-family: var(--font-code);
       padding: 0 4px;
     }
+
+    /* Micro-animaciones CSS y efectos visuales interactivos */
+    @keyframes pulse-badge {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.92; }
+    }
+
+    @keyframes glow-accent {
+      0%, 100% { box-shadow: 0 0 10px rgba(55, 93, 103, 0.15); }
+      50% { box-shadow: 0 0 20px rgba(55, 93, 103, 0.4); }
+    }
+
+    .badge-pulse {
+      animation: pulse-badge 2.6s infinite ease-in-out;
+    }
+
+    .card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      transition: transform 0.25s ease, border-color 0.25s ease;
+    }
+
+    .flow-node:hover {
+      border-color: var(--accent);
+      box-shadow: 0 4px 12px rgba(55, 93, 103, 0.15);
+      transform: translateY(-2px);
+      transition: all 0.2s ease;
+    }
+
+    /* ═════════════════════════════════════════════════════════════════
+       ESTILOS DE IMPRESIÓN OFICIALES (EXPORTACIÓN A PDF EXACTA 16:9)
+       ═════════════════════════════════════════════════════════════════ */
+    @media print {
+      @page {
+        size: 16in 9in;
+        margin: 0;
+      }
+
+      *, *:before, *:after {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      html, body {
+        width: 16in !important;
+        height: auto !important;
+        overflow: visible !important;
+        background: var(--bg) !important;
+        color: var(--text) !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        perspective: none !important;
+      }
+
+      #progress-line, .nav-pill, .evidence-link, .nav-btn {
+        display: none !important;
+      }
+
+      .viewport {
+        display: block !important;
+        width: 16in !important;
+        height: auto !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+
+      .slide {
+        position: relative !important;
+        display: flex !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+        width: 16in !important;
+        height: 9in !important;
+        max-width: 16in !important;
+        max-height: 9in !important;
+        page-break-after: always !important;
+        page-break-inside: avoid !important;
+        break-after: page !important;
+        break-inside: avoid !important;
+        transform: none !important;
+        filter: none !important;
+        transition: none !important;
+        clip-path: none !important;
+        border-radius: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0.55in 0.85in !important;
+        box-sizing: border-box !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -636,29 +729,40 @@
          DIAPOSITIVA 2: AVANCES POST-MVP (TRANSICIÓN: SLIDE RIGHT 3D)
          ═════════════════════════════════════════════════════════════════ -->
     <section class="slide t-slide-right-3d">
-      <span class="slide-badge">Criterio 1 · 20% de la Calificación</span>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span class="slide-badge">Criterio 1 · 20% de la Calificación</span>
+        <span class="badge-ok badge-pulse">Diferenciación Técnica: MVP vs. Segunda Entrega</span>
+      </div>
       <h2>Avances en el Proyecto con Respecto al MVP</h2>
-      <p class="slide-desc">Desarrollo de módulos transaccionales correspondientes a los Sprints 2 y 3</p>
+      <p class="slide-desc">Línea base inicial (Sprint 1) frente al incremento transaccional completo evaluado en la Segunda Entrega (Sprints 2 y 3)</p>
 
       <div class="grid-2">
-        <div class="card">
-          <div class="card-title" style="color: var(--text-muted);">Alcance del MVP Inicial (Sprint 1)</div>
+        <div class="card" style="border-left: 4px solid var(--border-strong);">
+          <div class="card-title" style="color: var(--text-muted);">
+            <span class="badge-pending" style="font-size: 0.72rem;">Línea Base</span>
+            Alcance del MVP Inicial (Sprint 1)
+          </div>
           <ul>
-            <li>Portal web estático de presentación institucional e informativa.</li>
+            <li>Portal web informativo institucional y catálogo estático de tarifas.</li>
             <li>Consulta de ubicación mediante Google Maps e información de horarios.</li>
-            <li>Autenticación básica de clientes y catálogo informativo de tarifas.</li>
-            <li>Sin persistencia de reservas, estados de cuenta ni pases de acceso.</li>
+            <li>Autenticación básica de clientes (Email/Password y Google OAuth).</li>
+            <li>Perfil básico del socio sin operaciones transaccionales ni agendamientos.</li>
+            <li><strong>Limitación del MVP:</strong> Sin persistencia de reservas, sin torniquete QR, sin mailing transaccional ni estados de cuenta.</li>
           </ul>
         </div>
 
-        <div class="card" style="background: var(--surface-accent); border-color: var(--accent);">
-          <div class="card-title">Incremento Post-MVP (Sprints 2 y 3)</div>
+        <div class="card" style="background: var(--surface-accent); border-color: var(--accent); border-left: 4px solid var(--accent);">
+          <div class="card-title">
+            <span class="badge-ok badge-pulse" style="font-size: 0.72rem;">Segunda Entrega</span>
+            Incremento Transaccional Post-MVP (Sprints 2 y 3)
+          </div>
           <ul>
-            <li><strong>Agendamiento Transaccional (<code>/agendar</code>):</strong> Reserva con control de cupos por turno.</li>
+            <li><strong>Agendamiento Transaccional (<code>/agendar</code>):</strong> Control de cupos por turno y actividad.</li>
             <li><strong>Pase de Acceso QR Vectorial:</strong> Generación instantánea para torniquete de recepción.</li>
-            <li><strong>Mailing Automático:</strong> Despacho de confirmación transaccional por Brevo REST API.</li>
-            <li><strong>Membresías Cloud:</strong> Persistencia y cálculo de vigencias en SQLite en Render.</li>
-            <li><strong>Coach Virtual IA:</strong> Orquestador de planes asistidos por modelos LLM.</li>
+            <li><strong>Registro de Asistencia (<code>/asistencia</code>):</strong> Validación de sesión y registro de presencia.</li>
+            <li><strong>Mailing Automático:</strong> Despacho de confirmación transaccional vía Brevo REST API (puerto 443).</li>
+            <li><strong>Membresías Cloud:</strong> Persistencia relacional ACID y cálculo de vigencias en SQLite en Render.</li>
+            <li><strong>Coach Virtual IA:</strong> Orquestador de planes asistidos por Google Gemini 3.5 Flash.</li>
           </ul>
         </div>
       </div>
@@ -686,10 +790,15 @@
       </div>
 
       <div class="evidence-bar">
-        <span class="evidence-label">Prueba funcional directa del módulo de reservas:</span>
-        <a href="https://jefazo-isc.github.io/GymSeminario/agendar" target="_blank" class="evidence-link">
-          🔗 Probar Agendamiento y Generación de QR (<code>/agendar</code>) ↗
-        </a>
+        <span class="evidence-label">Prueba funcional de módulos de la Segunda Entrega:</span>
+        <div class="evidence-links-group">
+          <a href="https://jefazo-isc.github.io/GymSeminario/agendar" target="_blank" class="evidence-link">
+            📅 Agendamiento y Pase QR (<code>/agendar</code>) ↗
+          </a>
+          <a href="https://jefazo-isc.github.io/GymSeminario/asistencia" target="_blank" class="evidence-link secondary">
+            📋 Registro de Asistencia (<code>/asistencia</code>) ↗
+          </a>
+        </div>
       </div>
     </section>
 
@@ -697,64 +806,79 @@
          DIAPOSITIVA 3: MAPEO DE HISTORIAS DE USUARIO (TRANSICIÓN: FLIP X)
          ═════════════════════════════════════════════════════════════════ -->
     <section class="slide t-flip-x">
-      <span class="slide-badge">Metodología Ágil</span>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span class="slide-badge">Metodología Ágil</span>
+        <span class="badge-ok badge-pulse">18 Historias Terminadas y Trazables en Git</span>
+      </div>
       <h2>Mapeo de Historias de Usuario (Jira / Scrum)</h2>
-      <p class="slide-desc">Backlog estructurado con 18 historias de usuario terminadas y trazables en el código</p>
+      <p class="slide-desc">Trazabilidad oficial de requerimientos desde el Product Backlog hacia los componentes Angular y servicios Backend</p>
 
       <table>
         <thead>
           <tr>
+            <th>Fase / Entrega</th>
             <th>Sprint</th>
             <th>Clave Jira</th>
-            <th>Historia de Usuario</th>
+            <th>Historias de Usuario Cubiertas</th>
             <th>Estado en Código</th>
           </tr>
         </thead>
         <tbody>
-          <tr>
+          <!-- BLOQUE 1: MVP INICIAL -->
+          <tr style="background: rgba(100, 116, 139, 0.08);">
+            <td><span class="badge-pending" style="font-size: 0.74rem;">MVP Inicial</span></td>
             <td><strong>Sprint 1</strong></td>
             <td><code>SCRUM-16..22, 40</code></td>
-            <td>Sitio Público, Ubicación, Catálogo, Redes y Google OAuth</td>
-            <td><span class="badge-ok">Terminada (100%)</span></td>
+            <td>HU-01 a HU-08 · Portal público, ubicación Maps, catálogo estático, redes y autenticación (Email + Google OAuth)</td>
+            <td><span class="badge-ok">Línea Base (100%)</span></td>
           </tr>
-          <tr>
+          <!-- BLOQUE 2: SEGUNDA ENTREGA -->
+          <tr style="background: rgba(55, 93, 103, 0.08);">
+            <td rowspan="5" style="vertical-align: middle; font-weight: bold; color: var(--accent); border-right: 2px solid var(--accent);">
+              <span class="badge-ok badge-pulse" style="font-size: 0.74rem;">2da Entrega</span>
+            </td>
             <td><strong>Sprint 2</strong></td>
             <td><code>SCRUM-24..26</code></td>
-            <td>Registro, Consulta de Vigencia y Renovación de Membresías</td>
+            <td>HU-10, 11, 12 · Alta de membresías, consulta de vigencia sincronizada y renovación transaccional</td>
             <td><span class="badge-ok">Terminada (100%)</span></td>
           </tr>
-          <tr>
+          <tr style="background: rgba(55, 93, 103, 0.05);">
             <td><strong>Sprint 2</strong></td>
             <td><code>SCRUM-27..29</code></td>
-            <td>Registro de Pagos, Historial y Estados de Cuenta</td>
+            <td>HU-15, 16, 17 · Registro de pagos, historial de transacciones y estados de cuenta en cliente</td>
             <td><span class="badge-ok">Terminada (100%)</span></td>
           </tr>
-          <tr>
+          <tr style="background: rgba(55, 93, 103, 0.08);">
             <td><strong>Sprint 3</strong></td>
             <td><code>SCRUM-31..33</code></td>
-            <td>Reserva de Sesiones, Cancelación y Pase QR Dinámico</td>
+            <td>HU-23, 24, 25 · Reserva de sesiones (<code>/agendar</code>), pase QR dinámico, registro de asistencia (<code>/asistencia</code>) e historial</td>
             <td><span class="badge-ok">Terminada (100%)</span></td>
           </tr>
-          <tr>
+          <tr style="background: rgba(55, 93, 103, 0.05);">
             <td><strong>Sprint 3</strong></td>
             <td><code>SCRUM-34..36</code></td>
-            <td>Rutinas Asistidas por Coach Virtual IA y Consulta de Planes</td>
+            <td>HU-18, 20 · Rutinas personalizadas con Coach Virtual IA (Google Gemini 3.5 Flash) y consulta de planes</td>
             <td><span class="badge-ok">Terminada (100%)</span></td>
           </tr>
-          <tr>
+          <tr style="background: rgba(55, 93, 103, 0.08);">
             <td><strong>Sprint 3</strong></td>
             <td><code>SCRUM-41..43</code></td>
-            <td>Métricas Gerenciales de Asistencia y Reportes de Ocupación</td>
+            <td>HU-27, 28, 29 · Panel de control gerencial con gráficas de afluencia por día y ocupación de horarios (<code>/graficos</code>)</td>
             <td><span class="badge-ok">Terminada (100%)</span></td>
           </tr>
         </tbody>
       </table>
 
       <div class="evidence-bar">
-        <span class="evidence-label">Registro de actividades y estados de cuenta en producción:</span>
-        <a href="https://jefazo-isc.github.io/GymSeminario/estado-cuenta" target="_blank" class="evidence-link">
-          🔗 Consultar Estado de Cuenta en Producción ↗
-        </a>
+        <span class="evidence-label">Comprobación de módulos en producción:</span>
+        <div class="evidence-links-group">
+          <a href="https://jefazo-isc.github.io/GymSeminario/estado-cuenta" target="_blank" class="evidence-link">
+            💳 Estado de Cuenta (<code>/estado-cuenta</code>) ↗
+          </a>
+          <a href="https://jefazo-isc.github.io/GymSeminario/graficos" target="_blank" class="evidence-link secondary">
+            📊 Gráficos Gerenciales (<code>/graficos</code>) ↗
+          </a>
+        </div>
       </div>
     </section>
 
@@ -927,9 +1051,9 @@
 
         <div class="card" style="border-color: var(--accent); background: var(--surface-accent);">
           <div class="card-title">Resguardo de API Keys en Render</div>
-          <p>• <strong>Cero Secretos en Repositorio:</strong> Las llaves (<code>GEMINI_API_KEY</code>, <code>MERCURY_API_KEY</code>, <code>BREVO_API_KEY</code>) residen exclusivamente en las <strong>Variables de Entorno seguras de Render (<code>process.env</code>)</strong>.</p>
+          <p>• <strong>Cero Secretos en Repositorio:</strong> Las credenciales activas (<code>GEMINI_LLAVE</code>, <code>MERCURY_API_KEY</code>, <code>BREVO_API_KEY</code>) residen exclusivamente en las <strong>Variables de Entorno seguras de Render (<code>process.env</code>)</strong> y GitHub Secrets.</p>
+          <p style="margin-top: 6px;">• <strong>Rotación y Resiliencia:</strong> Clave Gemini renovada y vinculada dinámicamente como <code>GEMINI_LLAVE</code> en el dashboard cloud sin tocar el código fuente.</p>
           <p style="margin-top: 6px;">• <strong>TruffleHog en CI:</strong> Escaneo criptográfico de commits evitando filtración de credenciales.</p>
-          <p style="margin-top: 6px;">• <strong>authInterceptor:</strong> Bloquea el envío de tokens a CDNs externas.</p>
         </div>
       </div>
 
@@ -946,7 +1070,7 @@
          ═════════════════════════════════════════════════════════════════ -->
     <section class="slide t-glitch">
       <span class="slide-badge">Arquitectura de Alta Disponibilidad</span>
-      <h2>Coach Virtual IA: Google Gemini Flash Lite 3.5 & Mercury</h2>
+      <h2>Coach Virtual IA: Google Gemini 3.5 Flash & Mercury</h2>
       <p class="slide-desc">Orquestador con Circuit Breaker para garantizar tolerancia a fallos en el servicio</p>
 
       <div class="grid-3">
@@ -957,12 +1081,12 @@
 
         <div class="card" style="border-color: var(--border-strong);">
           <div class="card-title">Patrón Circuit Breaker</div>
-          <p>Si el proveedor primario responde error de autenticación (401), cuota agotada (429) o timeout, el circuito se abre por 5 minutos.</p>
+          <p>Si el proveedor primario responde error de autenticación (401), cuota agotada (429) o timeout, el circuito se abre automáticamente por 5 minutos.</p>
         </div>
 
         <div class="card" style="background: var(--surface-accent); border-color: var(--accent);">
-          <div class="card-title">Fallback (Gemini Flash Lite 3.5)</div>
-          <p>El tráfico conmuta inmediatamente hacia los modelos oficiales de <strong>Google Gemini Flash Lite 3.5</strong> sin interrupción para el socio.</p>
+          <div class="card-title">Fallback (Gemini 3.5 Flash)</div>
+          <p>El tráfico conmuta inmediatamente hacia el modelo oficial <strong>Google Gemini 3.5 Flash (<code>gemini-3.5-flash</code>)</strong> sin interrupción para el socio.</p>
         </div>
       </div>
 
@@ -983,7 +1107,7 @@
         </div>
         <div class="flow-arrow">➔</div>
         <div class="flow-node" style="color: var(--accent);">
-          <strong>4. Fallback Gemini Flash Lite 3.5</strong>
+          <strong>4. Fallback Gemini 3.5 Flash</strong>
           <small>Google GenAI API</small>
         </div>
       </div>
@@ -1000,46 +1124,49 @@
          DIAPOSITIVA 9: PIPELINE CI/CD (TRANSICIÓN: DIAGONAL SLIDE)
          ═════════════════════════════════════════════════════════════════ -->
     <section class="slide t-diagonal">
-      <span class="slide-badge">Criterio 2 · 15% de la Calificación</span>
-      <h2>Pipeline Automatizado en GitHub Actions (Run #58)</h2>
-      <p class="slide-desc">Flujo declarativo en <code>.github/workflows/ci.yml</code> con 156 pruebas automáticas exitosas</p>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span class="slide-badge">Criterio 2 · 15% de la Calificación</span>
+        <span class="badge-ok badge-pulse">Run #69 · 5/5 Jobs Verdes</span>
+      </div>
+      <h2>Pipeline Automatizado en GitHub Actions (Run #69)</h2>
+      <p class="slide-desc">Flujo declarativo en <code>.github/workflows/ci.yml</code> en runners Ubuntu 24.04 LTS con toolchain nativo Node 24</p>
 
       <div class="grid-3">
         <div class="card">
           <div class="card-title">1. Build & Linting</div>
-          <p>Compilación AOT en Angular 19 de producción. Verificación estricta con ESLint en TypeScript y templates.</p>
+          <p>Compilación AOT en Angular 19 de producción. Verificación estricta con ESLint eliminando advertencias y tipos <code>any</code> de raíz.</p>
         </div>
 
         <div class="card">
           <div class="card-title">2. Pruebas Unitarias</div>
-          <p><strong>156 pruebas unitarias</strong> ejecutadas exitosamente con Karma + Jasmine en Chrome Headless sobre Linux. 100% éxito.</p>
+          <p><strong>156 pruebas unitarias</strong> ejecutadas exitosamente con Karma + Jasmine en Chrome Headless sobre Linux. 100% éxito sin fallos.</p>
         </div>
 
         <div class="card">
           <div class="card-title">3. Pruebas Integración</div>
-          <p>39 especificaciones de servicios ejecutadas con <code>HttpClientTestingModule</code> garantizando aislamiento de red.</p>
+          <p>39 especificaciones de servicios ejecutadas con <code>HttpClientTestingModule</code> y generación de cobertura automatizada.</p>
         </div>
 
         <div class="card">
           <div class="card-title">4. Auditoría de Seguridad</div>
-          <p>Análisis de dependencias con <code>npm audit</code> y escaneo criptográfico de secretos en commits con <code>TruffleHog</code>.</p>
+          <p>Análisis de dependencias con <code>npm audit</code> y escaneo criptográfico de historial con <code>TruffleHog</code>.</p>
         </div>
 
         <div class="card">
           <div class="card-title">5. Empaquetado OCI</div>
-          <p>Construcción multi-stage de contenedor Docker (Node 22 / Nginx) y publicación en GitHub Packages (<code>ghcr.io</code>).</p>
+          <p>Construcción Docker multi-stage (Angular + Express) y publicación a GitHub Packages (<code>ghcr.io</code>).</p>
         </div>
 
         <div class="card">
-          <div class="card-title">6. Despliegue Continuo</div>
-          <p>Publicación automática del frontend en GitHub Pages y webhook de actualización hacia el backend en Render.</p>
+          <div class="card-title">6. Despliegue Nativo CD</div>
+          <p>Publicación automática a GitHub Pages vía <code>actions/deploy-pages@v5</code> y webhook continuo a Render.</p>
         </div>
       </div>
 
       <div class="evidence-bar">
-        <span class="evidence-label">Verificación en tiempo real del pipeline: Run #58 (100% Verde)</span>
-        <a href="https://github.com/jefazo-isc/GymSeminario/actions/runs/42759170281" target="_blank" class="evidence-link">
-          🔗 Ver Pipeline en GitHub Actions ↗
+        <span class="evidence-label">Verificación oficial del pipeline: Run #69 (100% Verde, 0 Errores):</span>
+        <a href="https://github.com/jefazo-isc/GymSeminario/actions/runs/42773663269" target="_blank" class="evidence-link">
+          🔗 Ver Pipeline en GitHub Actions (Run #69) ↗
         </a>
       </div>
     </section>
@@ -1048,30 +1175,39 @@
          DIAPOSITIVA 10: DOCKER Y GHCR (TRANSICIÓN: ACCORDION FOLD)
          ═════════════════════════════════════════════════════════════════ -->
     <section class="slide t-fold">
-      <span class="slide-badge">Contenedores y Despliegue</span>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span class="slide-badge">Contenedores y Despliegue</span>
+        <span class="badge-ok badge-pulse">2 Imágenes OCI Publicadas en GHCR</span>
+      </div>
       <h2>Empaquetado Docker y GitHub Container Registry (GHCR)</h2>
-      <p class="slide-desc">Construcción multi-stage reproducible y publicación de imágenes OCI</p>
+      <p class="slide-desc">Construcción multi-stage reproducible y publicación automatizada de imágenes OCI para Frontend y Backend</p>
 
       <div class="grid-2">
         <div class="card">
-          <div class="card-title">Estrategia Multi-Stage en Dockerfile</div>
-          <p>• <strong>Builder:</strong> Emplea la imagen oficial de <strong>Node.js 22 Alpine</strong>, instala dependencias deterministas con <code>npm ci</code> y compila la aplicación Angular en modo producción optimizado.</p>
-          <p style="margin-top: 10px;">• <strong>Runner:</strong> Transfiere únicamente los artefactos de <code>dist/</code> a una imagen ultraligera de <strong>Nginx Alpine</strong>, logrando un contenedor seguro y compacto de menos de 45 MB.</p>
+          <div class="card-title">1. Imagen Frontend: Angular 19 + Nginx Alpine</div>
+          <p>• <strong>Builder:</strong> Compilación optimizada en Node.js 22 LTS generando bundles con precaché PWA.</p>
+          <p style="margin-top: 8px;">• <strong>Runner Ultraligero:</strong> Transfiere únicamente los artefactos estáticos hacia Nginx Alpine, logrando una imagen final compacta y segura de menos de 45 MB.</p>
+          <p style="margin-top: 8px;">• <strong>Imagen en GHCR:</strong> <code>ghcr.io/jefazo-isc/gymseminario:latest</code></p>
         </div>
 
         <div class="card">
-          <div class="card-title">Publicación en GitHub Packages (GHCR)</div>
-          <p>• <strong>Registro OCI:</strong> Publicación en <code>ghcr.io/jefazo-isc/gymseminario</code> etiquetada automáticamente con el SHA del commit correspondiente.</p>
-          <p style="margin-top: 10px;">• <strong>Arquitectura:</strong> Compatible con servidores <code>linux/amd64</code>.</p>
-          <p style="margin-top: 10px;">• <strong>Sincronización:</strong> Permite despliegues automatizados hacia Render o cualquier orquestador de contenedores Kubernetes/Docker.</p>
+          <div class="card-title">2. Imagen Backend: Microservicio Express + SQLite</div>
+          <p>• <strong>Runtime Nativo:</strong> Contenedor Node 22 Alpine empaquetando el servidor Express, la base de datos relacional y los adaptadores de IA.</p>
+          <p style="margin-top: 8px;">• <strong>Build Resiliente:</strong> Instalación de dependencias de producción sin requerir acoplamiento a lockfiles locales en CI.</p>
+          <p style="margin-top: 8px;">• <strong>Imagen en GHCR:</strong> <code>ghcr.io/jefazo-isc/gymseminario-server:latest</code></p>
         </div>
       </div>
 
       <div class="evidence-bar">
         <span class="evidence-label">Registro oficial de contenedores del proyecto:</span>
-        <a href="https://github.com/jefazo-isc/GymSeminario/pkgs/container/gymseminario" target="_blank" class="evidence-link">
-          🔗 Ver Paquetes en GitHub Packages (GHCR) ↗
-        </a>
+        <div class="evidence-links-group">
+          <a href="https://github.com/jefazo-isc/GymSeminario/pkgs/container/gymseminario" target="_blank" class="evidence-link">
+            🐳 Contenedor Frontend en GHCR ↗
+          </a>
+          <a href="https://github.com/jefazo-isc/GymSeminario/pkgs/container/gymseminario-server" target="_blank" class="evidence-link secondary">
+            🐳 Contenedor Backend en GHCR ↗
+          </a>
+        </div>
       </div>
     </section>
 
@@ -1079,35 +1215,49 @@
          DIAPOSITIVA 11: DEMOSTRACIÓN EN VIVO (TRANSICIÓN: SHIELD PULSE)
          ═════════════════════════════════════════════════════════════════ -->
     <section class="slide t-shield">
-      <span class="slide-badge">Validación Funcional</span>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span class="slide-badge">Validación Funcional</span>
+        <span class="badge-ok badge-pulse">4 Módulos en Producción</span>
+      </div>
       <h2>Demostración Práctica del Sistema en Vivo</h2>
-      <p class="slide-desc">Flujo completo de extremo a extremo comprobable en entornos de producción</p>
+      <p class="slide-desc">Flujo completo de extremo a extremo comprobable en entornos de producción en GitHub Pages y Render Cloud</p>
 
-      <div class="grid-3">
+      <div class="grid-2">
         <div class="card">
-          <div class="card-title">1. Agendamiento y Pase QR</div>
-          <p>El socio selecciona actividad, fecha y turno en la PWA. El sistema genera el folio único y renderiza el código QR vectorial para torniquete.</p>
-          <a href="https://jefazo-isc.github.io/GymSeminario/agendar" target="_blank" style="color: var(--accent); font-weight: 700; font-size: 0.85rem; margin-top: auto;">Abrir Módulo de Agendamiento ↗</a>
+          <div class="card-title">1. Agendamiento y Pase QR Vectorial (HU-23)</div>
+          <p>El socio selecciona actividad, fecha y turno en la PWA. El sistema genera el folio único, envía correo transaccional vía Brevo y renderiza el código QR vectorial para torniquete.</p>
+          <a href="https://jefazo-isc.github.io/GymSeminario/agendar" target="_blank" style="color: var(--accent); font-weight: 700; font-size: 0.85rem; margin-top: auto;">🔗 Abrir Módulo de Agendamiento (<code>/agendar</code>) ↗</a>
         </div>
 
         <div class="card">
-          <div class="card-title">2. Despacho Brevo HTTPS</div>
-          <p>El backend en Render procesa la reserva y despacha el correo transaccional de confirmación mediante la API REST de Brevo en menos de 800 ms.</p>
-          <a href="https://gymseminario.onrender.com/api/health" target="_blank" style="color: var(--accent); font-weight: 700; font-size: 0.85rem; margin-top: auto;">Verificar Salud de API en Render ↗</a>
+          <div class="card-title">2. Registro de Asistencias y Turnos (HU-25)</div>
+          <p>Formulario de registro de presencia para socios y entrenadores, con validación de sesión autenticada y confirmación de recepción en el backend.</p>
+          <a href="https://jefazo-isc.github.io/GymSeminario/asistencia" target="_blank" style="color: var(--accent); font-weight: 700; font-size: 0.85rem; margin-top: auto;">🔗 Probar Registro de Asistencia (<code>/asistencia</code>) ↗</a>
         </div>
 
         <div class="card">
-          <div class="card-title">3. Membresía y Vigencia SQLite</div>
-          <p>Consulta de vigencias y transacciones sincronizadas con la base de datos relacional de Render respaldada con caché local.</p>
-          <a href="https://jefazo-isc.github.io/GymSeminario/membresias" target="_blank" style="color: var(--accent); font-weight: 700; font-size: 0.85rem; margin-top: auto;">Consultar Membresías Cloud ↗</a>
+          <div class="card-title">3. Membresías y Vigencia Relacional (HU-10..12)</div>
+          <p>Consulta de planes, fechas de corte y cálculo de vigencias sincronizadas con la base de datos relacional de Render respaldada con caché local.</p>
+          <a href="https://jefazo-isc.github.io/GymSeminario/membresias" target="_blank" style="color: var(--accent); font-weight: 700; font-size: 0.85rem; margin-top: auto;">🔗 Consultar Membresías Cloud (<code>/membresias</code>) ↗</a>
+        </div>
+
+        <div class="card">
+          <div class="card-title">4. Panel Gerencial y Métricas (HU-27)</div>
+          <p>Visualización interactiva de afluencia por día, porcentaje de ocupación por turno y KPIs operativos para toma de decisiones gerenciales.</p>
+          <a href="https://jefazo-isc.github.io/GymSeminario/graficos" target="_blank" style="color: var(--accent); font-weight: 700; font-size: 0.85rem; margin-top: auto;">🔗 Ver Panel de Gráficos (<code>/graficos</code>) ↗</a>
         </div>
       </div>
 
       <div class="evidence-bar">
-        <span class="evidence-label">Flujo de prueba en producción:</span>
-        <a href="https://jefazo-isc.github.io/GymSeminario/agendar" target="_blank" class="evidence-link">
-          🔗 Iniciar Demostración en Vivo (<code>/agendar</code>) ↗
-        </a>
+        <span class="evidence-label">Acceso directo a producción:</span>
+        <div class="evidence-links-group">
+          <a href="https://jefazo-isc.github.io/GymSeminario/agendar" target="_blank" class="evidence-link">
+            📅 Probar Agendamiento ↗
+          </a>
+          <a href="https://gymseminario.onrender.com/api/health" target="_blank" class="evidence-link secondary">
+            ⚡ Backend Health en Render ↗
+          </a>
+        </div>
       </div>
     </section>
 
