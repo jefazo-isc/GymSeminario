@@ -43,16 +43,5 @@
     <app-root></app-root>
 
     <noscript>Activa JavaScript para utilizar GROM 21.</noscript>
-    <script>
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker
-          .getRegistrations()
-          .then(function (registrations) {
-            for (let registration of registrations) {
-              registration.unregister();
-            }
-          });
-      }
-    </script>
   </body>
 </html>

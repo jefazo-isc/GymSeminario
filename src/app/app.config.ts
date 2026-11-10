@@ -1,5 +1,5 @@
 import { provideHttpClient, withInterceptors } from "@angular/common/http";
-import { ApplicationConfig, provideZoneChangeDetection } from "@angular/core";
+import { ApplicationConfig, isDevMode, provideZoneChangeDetection } from "@angular/core";
 import { provideAnimationsAsync } from "@angular/platform-browser/animations/async";
 import { provideRouter, withInMemoryScrolling } from "@angular/router";
 import { provideServiceWorker } from "@angular/service-worker";
@@ -19,7 +19,8 @@ export const appConfig: ApplicationConfig = {
     provideAnimationsAsync(),
     provideHttpClient(withInterceptors([authInterceptor])),
     provideServiceWorker("ngsw-worker.js", {
-      enabled: false,
+      enabled: !isDevMode(),
+      registrationStrategy: "registerWhenStable:30000",
     }),
   ],
 };
