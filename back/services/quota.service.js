@@ -39,14 +39,22 @@ db.exec(`
 const MAX_CONSULTAS_DIARIAS = parseInt(process.env.MAX_AI_QUOTA || '15', 10);
 
 export function verificarYActualizarCuota(uid, email) {
+  if (!uid) {
+    return { permitida: false, restantes: 0, error: 'UID de usuario requerido' };
+  }
+  const safeUid = String(uid).trim();
+  if (!safeUid) {
+    return { permitida: false, restantes: 0, error: 'UID de usuario inválido' };
+  }
+  const safeEmail = email ? String(email).trim() : 'desconocido';
   const hoy = new Date().toISOString().slice(0, 10);
-  const row = db.prepare('SELECT * FROM user_quotas WHERE uid = ?').get(uid);
+  const row = db.prepare('SELECT * FROM user_quotas WHERE uid = ?').get(safeUid);
 
   if (!row) {
     db.prepare(`
       INSERT INTO user_quotas (uid, email, consultas_hoy, ultimo_acceso)
       VALUES (?, ?, 1, ?)
-    `).run(uid, email || 'desconocido', hoy);
+    `).run(safeUid, safeEmail, hoy);
     return { permitida: true, restantes: MAX_CONSULTAS_DIARIAS - 1 };
   }
 
@@ -55,7 +63,7 @@ export function verificarYActualizarCuota(uid, email) {
       UPDATE user_quotas
       SET consultas_hoy = 1, ultimo_acceso = ?
       WHERE uid = ?
-    `).run(hoy, uid);
+    `).run(hoy, safeUid);
     return { permitida: true, restantes: MAX_CONSULTAS_DIARIAS - 1 };
   }
 
@@ -67,17 +75,20 @@ export function verificarYActualizarCuota(uid, email) {
     UPDATE user_quotas
     SET consultas_hoy = consultas_hoy + 1
     WHERE uid = ?
-  `).run(uid);
+  `).run(safeUid);
 
   return { permitida: true, restantes: MAX_CONSULTAS_DIARIAS - (row.consultas_hoy + 1) };
 }
 
 export function registrarAsistenciaEdge(uid, codigoQr) {
+  if (!uid || !codigoQr) {
+    throw new Error('UID y código QR requeridos para registrar asistencia Edge');
+  }
   const ahora = new Date().toISOString();
   return db.prepare(`
     INSERT INTO asistencias_edge (uid, codigo_qr, timestamp, sincronizado)
     VALUES (?, ?, ?, 0)
-  `).run(uid, codigoQr, ahora);
+  `).run(String(uid).trim(), String(codigoQr).trim(), ahora);
 }
 
 export default db;
