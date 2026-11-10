@@ -111,8 +111,8 @@ app.post('/api/rutina', authAndQuotaGuard, async (req, res) => {
   }
 });
 
-// Endpoint para enviar confirmación de correo al agendar entrenamiento
-app.post('/enviar-correo', async (req, res) => {
+// Endpoint para enviar confirmación de correo al agendar entrenamiento (compatible con y sin prefijo /api)
+app.post(['/enviar-correo', '/api/enviar-correo'], async (req, res) => {
   const { correo, nombre, entrenamiento, fecha, turno } = req.body;
 
   if (!correo || !nombre || !entrenamiento || !fecha || !turno) {
@@ -128,8 +128,8 @@ app.post('/enviar-correo', async (req, res) => {
   }
 });
 
-// Endpoint para enviar confirmación de asistencia por correo
-app.post('/enviar-asistencia', async (req, res) => {
+// Endpoint para enviar confirmación de asistencia por correo (compatible con y sin prefijo /api)
+app.post(['/enviar-asistencia', '/api/enviar-asistencia'], async (req, res) => {
   const { correo, nombre, clase, fecha, hora } = req.body;
 
   if (!correo || !nombre || !clase || !fecha || !hora) {

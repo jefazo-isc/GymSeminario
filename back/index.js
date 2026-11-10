@@ -221,7 +221,7 @@ app.post('/api/rutina', limiterIA, async (req, res) => {
 //  ENDPOINTS DE NOTIFICACIONES Y ASISTENCIA (NODEMAILER & TWILIO)
 // ══════════════════════════════════════════════════════════════════════════════
 
-app.post('/enviar-correo', async (req, res) => {
+app.post(['/enviar-correo', '/api/enviar-correo'], async (req, res) => {
   const { correo, nombre, entrenamiento, fecha, turno } = req.body;
 
   if (!correo || !nombre || !entrenamiento || !fecha || !turno) {
@@ -237,7 +237,7 @@ app.post('/enviar-correo', async (req, res) => {
   }
 });
 
-app.post('/enviar-asistencia', async (req, res) => {
+app.post(['/enviar-asistencia', '/api/enviar-asistencia'], async (req, res) => {
   const { correo, nombre, clase, fecha, hora } = req.body;
 
   if (!correo || !nombre || !clase || !fecha || !hora) {
