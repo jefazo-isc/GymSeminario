@@ -55,7 +55,8 @@ app.use(limiter);
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    dispositivo: 'ZTE K92 Edge Server (FTM mode)',
+    servicio: 'espacioGYM Backend Server',
+    geminiConfigured: !!(process.env.GEMINI_LLAVE || process.env.GEMINI_API_KEY),
     timestamp: new Date().toISOString()
   });
 });

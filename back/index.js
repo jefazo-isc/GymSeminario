@@ -134,6 +134,7 @@ app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
     servicio: 'GROM Backend Full',
+    geminiConfigured: !!(process.env.GEMINI_LLAVE || process.env.GEMINI_API_KEY),
     timestamp: new Date().toISOString()
   });
 });
