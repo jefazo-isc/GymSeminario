@@ -83,8 +83,8 @@ async function callMercury(messages, { temperature = 0.7, maxTokens = 1200, resp
  * Llama a la API de Gemini (Google) usando modelos vigentes
  */
 async function callGemini(messages, { temperature = 0.7, maxTokens = 2000, jsonMode = false } = {}) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error('GEMINI_API_KEY no configurada');
+  const apiKey = process.env.GEMINI_LLAVE || process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error('GEMINI_LLAVE o GEMINI_API_KEY no configurada');
 
   const contents = [];
   let systemInstruction = null;
@@ -183,7 +183,7 @@ export async function executeAiQuery(messages, opts = {}) {
   }
 
   // 2. Fallback a Gemini
-  const geminiKey = process.env.GEMINI_API_KEY;
+  const geminiKey = process.env.GEMINI_LLAVE || process.env.GEMINI_API_KEY;
   const geminiEnCooldown = ahora < AI_STATUS.gemini.cooldownHasta;
 
   if (geminiKey && !geminiEnCooldown) {
