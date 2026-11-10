@@ -50,15 +50,22 @@ export class Formulario2Component implements OnInit {
   authenticated = false;
   private user: { email: string | null; phoneNumber: string | null; displayName: string | null } | null = null;
   ngOnInit() {
-    const raw = localStorage.getItem("gym_user");
-    if (raw) {
-      try {
-        const u = JSON.parse(raw);
-        this.user = { email: u.email ?? null, phoneNumber: null, displayName: u.nombre ?? null };
-        this.authenticated = true;
-      } catch { /* noop */ }
+    this.minFecha = this.localDate();
+    const u = this.safeGetUser();
+    if (u) {
+      this.user = { email: u.email ?? null, phoneNumber: null, displayName: u.nombre ?? null };
+      this.authenticated = true;
     }
     this.authReady = true;
+  }
+  private safeGetUser(): any {
+    const raw = localStorage.getItem("gym_user");
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
   }
   private localDate() {
     const date = new Date();
@@ -77,15 +84,17 @@ export class Formulario2Component implements OnInit {
     this.formulario.markAllAsTouched();
     if (this.formulario.invalid) return;
     this.error = "";
-    const { entrenamiento, fecha, turno } = this.formulario.getRawValue();
+    const rawVal = this.formulario.getRawValue();
+    const entrenamiento = rawVal.entrenamiento?.trim() ?? "";
+    const fecha = rawVal.fecha?.trim() ?? "";
+    const turno = rawVal.turno?.trim() ?? "";
     if (fecha < this.minFecha) {
       this.error = "Selecciona hoy o una fecha posterior.";
       return;
     }
     this.loading.set(true);
     try {
-      const raw = localStorage.getItem("gym_user");
-      const u = raw ? JSON.parse(raw) : null;
+      const u = this.safeGetUser();
       if (!u?.email && !u?.uid) {
         this.error = "Inicia sesión antes de registrar un entrenamiento.";
         return;
@@ -149,6 +158,7 @@ export class Formulario2Component implements OnInit {
     this.recordId = "";
     this.error = "";
     this.notification = "";
+    this.minFecha = this.localDate();
     this.formulario.reset();
   }
 }
