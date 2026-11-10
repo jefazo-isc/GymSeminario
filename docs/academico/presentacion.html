@@ -8,7 +8,7 @@
     :root {
       --bg: #f7f7f5;
       --surface: #ffffff;
-      --surface-subtle: #f1f3f4;
+      --surface-subtle: #f0f3f4;
       --surface-accent: #eaf0f2;
       --text: #1f2937;
       --text-muted: #5b6470;
@@ -18,7 +18,9 @@
       --accent-hover: #294b54;
       --sage: #557363;
       --success-bg: #edf4ee;
-      --success-text: #35634c;
+      --success-text: #2c5943;
+      --warning-bg: #fdf6e7;
+      --warning-text: #8a611c;
       --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
       --font-code: "SF Mono", "Fira Code", Menlo, monospace;
     }
@@ -39,21 +41,22 @@
       display: flex;
       flex-direction: column;
       user-select: none;
+      perspective: 1200px;
     }
 
-    /* Barra de progreso sutil superior */
+    /* Barra de progreso superior discreta */
     #progress-line {
       position: fixed;
       top: 0;
       left: 0;
-      height: 3px;
+      height: 4px;
       background: linear-gradient(90deg, var(--accent), var(--sage));
       width: 0%;
-      transition: width 0.3s ease;
+      transition: width 0.35s ease;
       z-index: 100;
     }
 
-    /* Contenedor de Diapositivas a Pantalla Completa */
+    /* Viewport a pantalla completa limpia */
     .viewport {
       flex: 1;
       width: 100vw;
@@ -62,78 +65,184 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 30px 50px;
+      padding: 24px 40px;
     }
 
+    /* Estructura base de Diapositiva */
     .slide {
       position: absolute;
-      width: 92vw;
-      max-width: 1350px;
-      height: 88vh;
+      width: 93vw;
+      max-width: 1380px;
+      height: 90vh;
       max-height: 860px;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 40px 50px;
+      border-radius: 16px;
+      padding: 34px 46px;
       opacity: 0;
       visibility: hidden;
-      transform: translateY(12px) scale(0.985);
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.05), 0 2px 6px rgba(0, 0, 0, 0.02);
       overflow-y: auto;
+      backface-visibility: hidden;
     }
 
     .slide.active {
       opacity: 1;
       visibility: visible;
-      transform: translateY(0) scale(1);
+      pointer-events: auto;
     }
 
-    /* Encabezados y Jerarquía */
-    .slide-eyebrow {
+    /* ═════════════════════════════════════════════════════════════════
+       12 TRANSICIONES CSS ÚNICAS (UNA POR DIAPOSITIVA)
+       ═════════════════════════════════════════════════════════════════ */
+    
+    /* 1. Zoom Fade */
+    .slide.t-zoom {
+      transform: scale(0.92);
+      transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .slide.t-zoom.active { transform: scale(1); }
+
+    /* 2. Slide Right 3D Tilt */
+    .slide.t-slide-right-3d {
+      transform: translateX(120px) rotateY(-18deg);
+      transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .slide.t-slide-right-3d.active { transform: translateX(0) rotateY(0); }
+
+    /* 3. 3D Card Flip X */
+    .slide.t-flip-x {
+      transform: perspective(1000px) rotateX(25deg) translateY(50px);
+      transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .slide.t-flip-x.active { transform: perspective(1000px) rotateX(0) translateY(0); }
+
+    /* 4. Pop & Spring Bounce (Modularidad) */
+    .slide.t-bounce {
+      transform: scale(0.88) translateY(60px);
+      transition: all 0.5s cubic-bezier(0.34, 1.45, 0.64, 1);
+    }
+    .slide.t-bounce.active { transform: scale(1) translateY(0); }
+
+    /* 5. 3D Cube Rotate Y (Servicios Web) */
+    .slide.t-cube-y {
+      transform: perspective(1200px) rotateY(32deg) scale(0.92);
+      transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .slide.t-cube-y.active { transform: perspective(1200px) rotateY(0) scale(1); }
+
+    /* 6. Dynamic Swirl (Bases de Datos) */
+    .slide.t-swirl {
+      transform: rotate(-3deg) scale(0.94);
+      transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .slide.t-swirl.active { transform: rotate(0) scale(1); }
+
+    /* 7. Curtain Wipe (Seguridad) */
+    .slide.t-curtain {
+      clip-path: polygon(10% 0, 90% 0, 90% 100%, 10% 100%);
+      transform: scale(0.97);
+      transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .slide.t-curtain.active {
+      clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+      transform: scale(1);
+    }
+
+    /* 8. Glitch Skew Drop (Coach IA) */
+    .slide.t-glitch {
+      transform: translateY(-50px) skewY(2deg);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .slide.t-glitch.active { transform: translateY(0) skewY(0); }
+
+    /* 9. Isometric Slide (Pipeline CI/CD) */
+    .slide.t-diagonal {
+      transform: translate(-60px, 60px) scale(0.95);
+      transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .slide.t-diagonal.active { transform: translate(0, 0) scale(1); }
+
+    /* 10. Smooth Accordion Fold (Docker & GHCR) */
+    .slide.t-fold {
+      transform: scaleY(0.88) perspective(800px) rotateX(-16deg);
+      transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .slide.t-fold.active { transform: scaleY(1) perspective(800px) rotateX(0); }
+
+    /* 11. Security Shield Pulse (Demostración en Vivo) */
+    .slide.t-shield {
+      transform: scale(1.06);
+      filter: blur(4px);
+      transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .slide.t-shield.active { transform: scale(1); filter: blur(0); }
+
+    /* 12. Rise & Grand Finale (Conclusiones) */
+    .slide.t-finale {
+      transform: translateY(60px) scale(0.96);
+      transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .slide.t-finale.active { transform: translateY(0) scale(1); }
+
+    /* ═════════════════════════════════════════════════════════════════
+       ESTILOS TIPOGRÁFICOS Y TARJETAS
+       ═════════════════════════════════════════════════════════════════ */
+    .slide-badge {
       display: inline-block;
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       font-weight: 700;
       letter-spacing: 0.06em;
       text-transform: uppercase;
       color: var(--accent);
       background: var(--surface-accent);
-      padding: 4px 12px;
+      padding: 3px 12px;
       border-radius: 999px;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       align-self: flex-start;
     }
 
     h1 {
-      font-size: 2.5rem;
+      font-size: 2.35rem;
       font-weight: 800;
       color: var(--text);
       line-height: 1.15;
-      margin-bottom: 8px;
-    }
-
-    h2 {
-      font-size: 1.95rem;
-      font-weight: 800;
-      color: var(--text);
-      line-height: 1.2;
       margin-bottom: 6px;
     }
 
+    h2 {
+      font-size: 1.85rem;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.2;
+      margin-bottom: 4px;
+    }
+
     .slide-desc {
-      font-size: 1.05rem;
+      font-size: 0.96rem;
       color: var(--text-muted);
-      margin-bottom: 24px;
+      margin-bottom: 16px;
       line-height: 1.4;
     }
 
-    /* Grids y Tarjetas con Estilo Claro del Gimnasio */
+    code {
+      font-family: var(--font-code);
+      background: var(--surface-subtle);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.85em;
+      color: var(--accent);
+      border: 1px solid var(--border);
+    }
+
+    /* Grids y Layouts */
     .grid-2 {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 22px;
+      gap: 18px;
       flex: 1;
       min-height: 0;
     }
@@ -141,14 +250,6 @@
     .grid-3 {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 18px;
-      flex: 1;
-      min-height: 0;
-    }
-
-    .grid-4 {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
       gap: 16px;
       flex: 1;
       min-height: 0;
@@ -158,26 +259,27 @@
       background: var(--surface-subtle);
       border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 20px 22px;
+      padding: 16px 20px;
       display: flex;
       flex-direction: column;
+      position: relative;
     }
 
     .card-title {
-      font-size: 1.12rem;
+      font-size: 1.05rem;
       font-weight: 700;
       color: var(--accent);
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       display: flex;
       align-items: center;
       gap: 8px;
     }
 
     .card p {
-      font-size: 0.92rem;
+      font-size: 0.88rem;
       color: var(--text);
-      line-height: 1.5;
-      margin-bottom: 10px;
+      line-height: 1.45;
+      margin-bottom: 8px;
     }
 
     .card ul {
@@ -186,9 +288,9 @@
     }
 
     .card li {
-      font-size: 0.9rem;
+      font-size: 0.86rem;
       color: var(--text);
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       display: flex;
       align-items: flex-start;
       gap: 8px;
@@ -201,16 +303,16 @@
       font-weight: bold;
     }
 
-    /* Tablas de Información y Rúbricas */
+    /* Tablas formales */
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 8px;
-      font-size: 0.92rem;
+      margin-top: 6px;
+      font-size: 0.88rem;
     }
 
     th, td {
-      padding: 11px 14px;
+      padding: 9px 12px;
       text-align: left;
       border-bottom: 1px solid var(--border);
     }
@@ -219,39 +321,43 @@
       background: var(--surface-subtle);
       color: var(--accent);
       font-weight: 700;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       text-transform: uppercase;
       letter-spacing: 0.04em;
-    }
-
-    td {
-      color: var(--text);
     }
 
     .badge-ok {
       display: inline-block;
       background: var(--success-bg);
       color: var(--success-text);
-      padding: 3px 9px;
+      padding: 2px 8px;
       border-radius: 6px;
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       font-weight: 700;
     }
 
-    /* Botón de Enlace de Prueba en Vivo */
-    .live-evidence-bar {
+    /* Barra de Evidencia / Enlaces de Prueba */
+    .evidence-bar {
       margin-top: auto;
-      padding-top: 16px;
+      padding-top: 12px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
-    .evidence-text {
-      font-size: 0.85rem;
+    .evidence-label {
+      font-size: 0.84rem;
       color: var(--text-muted);
       font-weight: 500;
+    }
+
+    .evidence-links-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
     }
 
     .evidence-link {
@@ -261,10 +367,10 @@
       background: var(--accent);
       color: #ffffff;
       text-decoration: none;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       font-weight: 600;
-      padding: 7px 16px;
-      border-radius: 7px;
+      padding: 6px 14px;
+      border-radius: 6px;
       transition: background 0.2s, transform 0.1s;
     }
 
@@ -273,69 +379,137 @@
       transform: translateY(-1px);
     }
 
-    /* Portada de los 6 Integrantes */
-    .hero-container {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
+    .evidence-link.secondary {
+      background: var(--surface-subtle);
+      color: var(--accent);
+      border: 1px solid var(--border-strong);
     }
 
-    .team-grid {
+    .evidence-link.secondary:hover {
+      background: var(--surface-accent);
+    }
+
+    /* Portada de los 6 Integrantes con Fotos Reales */
+    .team-grid-6 {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
-      margin: 18px 0;
+      gap: 12px;
+      margin: 12px 0;
     }
 
-    .team-member {
+    .team-card {
       background: var(--surface-subtle);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px 16px;
+      border-radius: 10px;
+      padding: 10px 14px;
       display: flex;
       align-items: center;
       gap: 12px;
     }
 
-    .member-avatar {
-      width: 38px;
-      height: 38px;
+    .team-photo {
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
-      background: var(--accent);
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 800;
-      font-size: 0.9rem;
+      object-fit: cover;
+      border: 2px solid var(--accent);
       flex-shrink: 0;
+      background: var(--border);
     }
 
-    .member-info strong {
+    .team-meta strong {
       display: block;
       color: var(--text);
-      font-size: 0.92rem;
+      font-size: 0.88rem;
     }
 
-    .member-info span {
-      font-size: 0.78rem;
+    .team-meta span {
+      font-size: 0.75rem;
       color: var(--text-muted);
     }
 
-    /* Navegación Discreta en la Esquina Inferior */
-    .nav-floating {
-      position: fixed;
-      bottom: 16px;
-      right: 24px;
+    /* Diagramas y Flujos Visuales */
+    .flow-diagram {
       display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: 8px;
-      background: rgba(255, 255, 255, 0.9);
+      background: var(--surface-subtle);
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      margin: 10px 0;
+    }
+
+    .flow-node {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-align: center;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .flow-node small {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: normal;
+    }
+
+    .flow-arrow {
+      color: var(--accent);
+      font-weight: bold;
+      font-size: 1rem;
+    }
+
+    /* Diagrama escalonado de 5 capas */
+    .layers-diagram {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin: 8px 0;
+    }
+
+    .layer-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 14px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: 6px;
+      font-size: 0.84rem;
+    }
+
+    .layer-bar strong {
+      color: var(--accent);
+    }
+
+    .layer-bar span {
+      color: var(--text-muted);
+      font-size: 0.78rem;
+    }
+
+    /* Control de Navegación Discreto en la Esquina */
+    .nav-pill {
+      position: fixed;
+      bottom: 14px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.94);
       backdrop-filter: blur(8px);
       border: 1px solid var(--border);
       padding: 4px 10px;
       border-radius: 999px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
       z-index: 100;
     }
 
@@ -345,8 +519,8 @@
       color: var(--text-muted);
       cursor: pointer;
       font-weight: 700;
-      font-size: 0.9rem;
-      padding: 4px 8px;
+      font-size: 0.85rem;
+      padding: 3px 6px;
       border-radius: 4px;
       transition: color 0.15s, background 0.15s;
     }
@@ -356,44 +530,12 @@
       background: var(--surface-subtle);
     }
 
-    #page-count {
-      font-size: 0.8rem;
+    #slide-indicator {
+      font-size: 0.78rem;
       font-weight: 700;
       color: var(--accent);
       font-family: var(--font-code);
-      padding: 0 6px;
-    }
-
-    /* Impresión y PDF */
-    @media print {
-      body {
-        overflow: visible;
-        height: auto;
-        background: #fff;
-      }
-      .nav-floating, #progress-line {
-        display: none !important;
-      }
-      .viewport {
-        display: block;
-        padding: 0;
-        height: auto;
-      }
-      .slide {
-        position: relative !important;
-        opacity: 1 !important;
-        visibility: visible !important;
-        transform: none !important;
-        page-break-after: always;
-        width: 100% !important;
-        height: 100vh !important;
-        max-width: none !important;
-        max-height: none !important;
-        border: none !important;
-        border-radius: 0 !important;
-        box-shadow: none !important;
-        padding: 40px !important;
-      }
+      padding: 0 4px;
     }
   </style>
 </head>
@@ -403,154 +545,161 @@
 
   <main class="viewport">
 
-    <!-- DIAPOSITIVA 1: PORTADA INSTITUCIONAL CON LOS 6 INTEGRANTES -->
-    <section class="slide active">
-      <div class="hero-container">
-        <span class="slide-eyebrow">Universidad Autónoma de Aguascalientes · Centro de Ciencias Básicas</span>
-        <h1>espacioGYM · GROM 21</h1>
-        <p class="slide-desc" style="margin-bottom: 12px;">
-          Plataforma Web Progresiva y Backend Cloud para la Gestión Fitness Integral Asistida por Inteligencia Artificial
-        </p>
-
-        <div style="display: flex; gap: 24px; margin-bottom: 14px; font-size: 0.9rem; color: var(--text-muted); border-bottom: 1px solid var(--border); padding-bottom: 12px;">
-          <div><strong>Materia:</strong> Seminario de Sistemas Computacionales I (8° Semestre)</div>
-          <div><strong>Profesor Titular:</strong> Dr. Arturo Elías Ramírez</div>
-          <div><strong>Fecha:</strong> Noviembre 2026</div>
-        </div>
-
-        <div style="font-size: 0.82rem; font-weight: 700; text-transform: uppercase; color: var(--accent); letter-spacing: 0.05em; margin-bottom: 6px;">
-          Equipo Desarrollador (6 Integrantes)
-        </div>
-
-        <div class="team-grid">
-          <div class="team-member">
-            <div class="member-avatar">YG</div>
-            <div class="member-info">
-              <strong>Yahir Guevara Cardona</strong>
-              <span>Ingeniería en Sistemas</span>
-            </div>
-          </div>
-          <div class="team-member">
-            <div class="member-avatar">JV</div>
-            <div class="member-info">
-              <strong>Jose Alberto Vazquez Guerrero</strong>
-              <span>Ingeniería en Sistemas</span>
-            </div>
-          </div>
-          <div class="team-member">
-            <div class="member-avatar">LG</div>
-            <div class="member-info">
-              <strong>Luis Antonio García Gómez</strong>
-              <span>Ingeniería en Sistemas</span>
-            </div>
-          </div>
-          <div class="team-member">
-            <div class="member-avatar">MR</div>
-            <div class="member-info">
-              <strong>Martin Alfonso Romo Martínez</strong>
-              <span>Ingeniería en Sistemas</span>
-            </div>
-          </div>
-          <div class="team-member">
-            <div class="member-avatar">RP</div>
-            <div class="member-info">
-              <strong>Ricardo Padilla Hernández</strong>
-              <span>Ingeniería en Sistemas</span>
-            </div>
-          </div>
-          <div class="team-member">
-            <div class="member-avatar">JT</div>
-            <div class="member-info">
-              <strong>Jesús Eduardo Tapia Avalos</strong>
-              <span>Ingeniería en Sistemas</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="live-evidence-bar">
-          <span class="evidence-text">Entorno Oficial del Proyecto:</span>
-          <a href="https://jefazo-isc.github.io/GymSeminario/" target="_blank" class="evidence-link">
-            🌐 Visitar Sitio Web en Producción ↗
-          </a>
-        </div>
+    <!-- ═════════════════════════════════════════════════════════════════
+         DIAPOSITIVA 1: PORTADA INSTITUCIONAL (TRANSICIÓN: ZOOM FADE)
+         ═════════════════════════════════════════════════════════════════ -->
+    <section class="slide t-zoom active">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <span class="slide-badge">Universidad Autónoma de Aguascalientes · Centro de Ciencias Básicas</span>
+        <span class="badge-ok" style="font-size: 0.8rem;">9° Semestre · 2026</span>
       </div>
-    </section>
 
-    <!-- DIAPOSITIVA 2: CONTEXTO Y PROBLEMÁTICA -->
-    <section class="slide">
-      <span class="slide-eyebrow">Diagnóstico y Justificación</span>
-      <h2>Contexto y Problemática del Negocio</h2>
-      <p class="slide-desc">Modernización operativa y digitalización del acondicionamiento físico en Aguascalientes</p>
-
-      <div class="grid-3">
-        <div class="card">
-          <div class="card-title">Descontrol de Aforo</div>
-          <p>Los gimnasios independientes sufren saturación en horas pico y desaprovechamiento de turnos matutinos por falta de reservas anticipadas.</p>
-        </div>
-        <div class="card">
-          <div class="card-title">Cobros y Vigencias Manuales</div>
-          <p>Uso de libretas o software local aislado que provoca filtración de accesos sin membresía activa y pérdida de ingresos recurrentes.</p>
-        </div>
-        <div class="card">
-          <div class="card-title">Falta de Personalización</div>
-          <p>Atletas sin guía profesional por saturación de entrenadores de piso, provocando deserción temprana en los primeros 3 meses.</p>
+      <div style="display: flex; align-items: center; gap: 14px; margin-top: 4px;">
+        <img src="../../public/img/Responsables/logo.webp" alt="Logo espacioGYM" style="width: 50px; height: 50px; border-radius: 8px; object-fit: contain; border: 1px solid var(--border);" onerror="this.src='https://jefazo-isc.github.io/GymSeminario/img/Responsables/logo.webp'">
+        <div>
+          <h1>espacioGYM · GROM 21</h1>
+          <p class="slide-desc" style="margin-bottom: 4px;">
+            Plataforma Web Progresiva y Microservicios Cloud para la Gestión Integral de Gimnasios Asistida por IA
+          </p>
         </div>
       </div>
 
-      <div class="card" style="margin-top: 16px; background: var(--surface-accent); border-color: var(--border-strong);">
-        <div class="card-title" style="color: var(--accent);">Nuestra Solución: espacioGYM (GROM 21)</div>
-        <p>Una arquitectura desacoplada PWA + Backend Cloud con control de aforo en tiempo real, emisión de pases QR de torniquete, notificaciones transaccionales y Coach Virtual IA tolerante a fallos.</p>
+      <div style="display: flex; gap: 24px; font-size: 0.86rem; color: var(--text-muted); border-bottom: 1px solid var(--border); padding-bottom: 8px; margin: 8px 0 10px 0;">
+        <div><strong>Materia:</strong> Seminario de Sistemas Computacionales I (9° Semestre)</div>
+        <div><strong>Profesor Titular:</strong> Dr. Arturo Elías Ramírez</div>
+        <div><strong>Evaluación:</strong> Segundo Avance de Proyecto de Tesina</div>
       </div>
 
-      <div class="live-evidence-bar">
-        <span class="evidence-text">Servicio y Ubicación: San Mateo #2, Col. Alcázar, Jesús María, Ags.</span>
-        <a href="https://jefazo-isc.github.io/GymSeminario/servicios" target="_blank" class="evidence-link">
-          🔗 Ver Catálogo de Servicios en Producción ↗
+      <div style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--accent); letter-spacing: 0.05em; margin-bottom: 6px;">
+        Equipo de Desarrollo (6 Integrantes)
+      </div>
+
+      <div class="team-grid-6">
+        <div class="team-card">
+          <img src="../../public/img/Responsables/yahir.webp" class="team-photo" alt="Yahir" onerror="this.src='https://jefazo-isc.github.io/GymSeminario/img/Responsables/yahir.webp'">
+          <div class="team-meta">
+            <strong>Yahir Guevara Cardona</strong>
+            <span>Ing. en Sistemas Computacionales</span>
+          </div>
+        </div>
+
+        <div class="team-card">
+          <img src="../../public/img/Responsables/pepe.webp" class="team-photo" alt="Jose Alberto" onerror="this.src='https://jefazo-isc.github.io/GymSeminario/img/Responsables/pepe.webp'">
+          <div class="team-meta">
+            <strong>Jose Alberto Vazquez Guerrero</strong>
+            <span>Ing. en Sistemas Computacionales</span>
+          </div>
+        </div>
+
+        <div class="team-card">
+          <img src="../../public/img/Responsables/luis.webp" class="team-photo" alt="Luis Antonio" onerror="this.src='https://jefazo-isc.github.io/GymSeminario/img/Responsables/luis.webp'">
+          <div class="team-meta">
+            <strong>Luis Antonio García Gómez</strong>
+            <span>Ing. en Sistemas Computacionales</span>
+          </div>
+        </div>
+
+        <div class="team-card">
+          <img src="../../public/img/Responsables/martin.webp" class="team-photo" alt="Martin Alfonso" onerror="this.src='https://jefazo-isc.github.io/GymSeminario/img/Responsables/martin.webp'">
+          <div class="team-meta">
+            <strong>Martin Alfonso Romo Martínez</strong>
+            <span>Ing. en Sistemas Computacionales</span>
+          </div>
+        </div>
+
+        <div class="team-card">
+          <img src="../../public/img/Responsables/ricardo.webp" class="team-photo" alt="Ricardo" onerror="this.src='https://jefazo-isc.github.io/GymSeminario/img/Responsables/ricardo.webp'">
+          <div class="team-meta">
+            <strong>Ricardo Padilla Hernández</strong>
+            <span>Ing. en Sistemas Computacionales</span>
+          </div>
+        </div>
+
+        <div class="team-card">
+          <img src="../../public/img/Responsables/tapia.webp" class="team-photo" alt="Jesús Eduardo" onerror="this.src='https://jefazo-isc.github.io/GymSeminario/img/Responsables/tapia.webp'">
+          <div class="team-meta">
+            <strong>Jesús Eduardo Tapia Avalos</strong>
+            <span>Ing. en Sistemas Computacionales</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="evidence-bar">
+        <span class="evidence-label">Entorno Oficial del Proyecto en Producción:</span>
+        <a href="https://jefazo-isc.github.io/GymSeminario/" target="_blank" class="evidence-link">
+          🌐 Visitar Aplicación en Producción ↗
         </a>
       </div>
     </section>
 
-    <!-- DIAPOSITIVA 3: AVANCES POST-MVP (CRITERIO 1 · 20%) -->
-    <section class="slide">
-      <span class="slide-eyebrow">Criterio 1 · 20% de la Calificación</span>
-      <h2>Avances Significativos con Respecto al MVP</h2>
-      <p class="slide-desc">Evolución cuantitativa y cualitativa desde la entrega del MVP inicial</p>
+    <!-- ═════════════════════════════════════════════════════════════════
+         DIAPOSITIVA 2: AVANCES POST-MVP (TRANSICIÓN: SLIDE RIGHT 3D)
+         ═════════════════════════════════════════════════════════════════ -->
+    <section class="slide t-slide-right-3d">
+      <span class="slide-badge">Criterio 1 · 20% de la Calificación</span>
+      <h2>Avances en el Proyecto con Respecto al MVP</h2>
+      <p class="slide-desc">Desarrollo de módulos transaccionales correspondientes a los Sprints 2 y 3</p>
 
       <div class="grid-2">
         <div class="card">
           <div class="card-title" style="color: var(--text-muted);">Alcance del MVP Inicial (Sprint 1)</div>
           <ul>
-            <li>Portal web estático de presentación institucional.</li>
+            <li>Portal web estático de presentación institucional e informativa.</li>
             <li>Consulta de ubicación mediante Google Maps e información de horarios.</li>
-            <li>Inicio de sesión básico con Firebase Auth en memoria.</li>
-            <li>Sin persistencia de reservas ni emisión de comprobantes.</li>
+            <li>Autenticación básica de clientes y catálogo informativo de tarifas.</li>
+            <li>Sin persistencia de reservas, estados de cuenta ni pases de acceso.</li>
           </ul>
         </div>
+
         <div class="card" style="background: var(--surface-accent); border-color: var(--accent);">
           <div class="card-title">Incremento Post-MVP (Sprints 2 y 3)</div>
           <ul>
-            <li><strong>Agendamiento Transaccional (`/f2`):</strong> Reserva con control de cupos por turno.</li>
-            <li><strong>Pase de Acceso QR Vectorial:</strong> Generación instantánea para torniquete.</li>
-            <li><strong>Mailing Automático:</strong> Despacho de confirmación por Brevo REST API.</li>
-            <li><strong>Membresías Cloud:</strong> Sincronización en base de datos SQLite en Render.</li>
-            <li><strong>Coach Virtual IA:</strong> Generación de planes asistidos por LLMs.</li>
+            <li><strong>Agendamiento Transaccional (<code>/agendar</code>):</strong> Reserva con control de cupos por turno.</li>
+            <li><strong>Pase de Acceso QR Vectorial:</strong> Generación instantánea para torniquete de recepción.</li>
+            <li><strong>Mailing Automático:</strong> Despacho de confirmación transaccional por Brevo REST API.</li>
+            <li><strong>Membresías Cloud:</strong> Persistencia y cálculo de vigencias en SQLite en Render.</li>
+            <li><strong>Coach Virtual IA:</strong> Orquestador de planes asistidos por modelos LLM.</li>
           </ul>
         </div>
       </div>
 
-      <div class="live-evidence-bar">
-        <span class="evidence-text">Prueba funcional en vivo: Módulo de Agendamiento</span>
-        <a href="https://jefazo-isc.github.io/GymSeminario/f2" target="_blank" class="evidence-link">
-          🔗 Probar Agendamiento y Generación de QR (`/f2`) ↗
+      <div class="flow-diagram">
+        <div class="flow-node">
+          <strong>1. Selección de Clase</strong>
+          <small>Turno y Capacidad</small>
+        </div>
+        <div class="flow-arrow">➔</div>
+        <div class="flow-node">
+          <strong>2. Reserva en Backend</strong>
+          <small>API REST Render</small>
+        </div>
+        <div class="flow-arrow">➔</div>
+        <div class="flow-node">
+          <strong>3. Correo Brevo (443)</strong>
+          <small>Folio Transaccional</small>
+        </div>
+        <div class="flow-arrow">➔</div>
+        <div class="flow-node">
+          <strong>4. Pase QR Vectorial</strong>
+          <small>Torniquete de Acceso</small>
+        </div>
+      </div>
+
+      <div class="evidence-bar">
+        <span class="evidence-label">Prueba funcional directa del módulo de reservas:</span>
+        <a href="https://jefazo-isc.github.io/GymSeminario/agendar" target="_blank" class="evidence-link">
+          🔗 Probar Agendamiento y Generación de QR (<code>/agendar</code>) ↗
         </a>
       </div>
     </section>
 
-    <!-- DIAPOSITIVA 4: MAPEO DE HISTORIAS DE USUARIO -->
-    <section class="slide">
-      <span class="slide-eyebrow">Metodología Ágil</span>
-      <h2>Mapeo de Historias de Usuario (Scrum / Jira)</h2>
-      <p class="slide-desc">Trazabilidad formal de Sprints y avance real de desarrollo en el código fuente</p>
+    <!-- ═════════════════════════════════════════════════════════════════
+         DIAPOSITIVA 3: MAPEO DE HISTORIAS DE USUARIO (TRANSICIÓN: FLIP X)
+         ═════════════════════════════════════════════════════════════════ -->
+    <section class="slide t-flip-x">
+      <span class="slide-badge">Metodología Ágil</span>
+      <h2>Mapeo de Historias de Usuario (Jira / Scrum)</h2>
+      <p class="slide-desc">Backlog estructurado con 18 historias de usuario terminadas y trazables en el código</p>
 
       <table>
         <thead>
@@ -564,289 +713,409 @@
         <tbody>
           <tr>
             <td><strong>Sprint 1</strong></td>
-            <td>SCRUM-16..22</td>
-            <td>Sitio Público, Ubicación, Catálogo, Redes y Autenticación</td>
+            <td><code>SCRUM-16..22, 40</code></td>
+            <td>Sitio Público, Ubicación, Catálogo, Redes y Google OAuth</td>
             <td><span class="badge-ok">Terminada (100%)</span></td>
           </tr>
           <tr>
             <td><strong>Sprint 2</strong></td>
-            <td>SCRUM-24..26</td>
+            <td><code>SCRUM-24..26</code></td>
             <td>Registro, Consulta de Vigencia y Renovación de Membresías</td>
             <td><span class="badge-ok">Terminada (100%)</span></td>
           </tr>
           <tr>
             <td><strong>Sprint 2</strong></td>
-            <td>SCRUM-27..29</td>
+            <td><code>SCRUM-27..29</code></td>
             <td>Registro de Pagos, Historial y Estados de Cuenta</td>
             <td><span class="badge-ok">Terminada (100%)</span></td>
           </tr>
           <tr>
             <td><strong>Sprint 3</strong></td>
-            <td>SCRUM-31..33</td>
-            <td>Reserva de Clases, Cancelación y Pase QR Dinámico</td>
+            <td><code>SCRUM-31..33</code></td>
+            <td>Reserva de Sesiones, Cancelación y Pase QR Dinámico</td>
             <td><span class="badge-ok">Terminada (100%)</span></td>
           </tr>
           <tr>
             <td><strong>Sprint 3</strong></td>
-            <td>SCRUM-34..36</td>
+            <td><code>SCRUM-34..36</code></td>
             <td>Rutinas Asistidas por Coach Virtual IA y Consulta de Planes</td>
             <td><span class="badge-ok">Terminada (100%)</span></td>
           </tr>
           <tr>
             <td><strong>Sprint 3</strong></td>
-            <td>SCRUM-41..43</td>
+            <td><code>SCRUM-41..43</code></td>
             <td>Métricas Gerenciales de Asistencia y Reportes de Ocupación</td>
             <td><span class="badge-ok">Terminada (100%)</span></td>
           </tr>
         </tbody>
       </table>
 
-      <div class="live-evidence-bar">
-        <span class="evidence-text">Trazabilidad documentada: 18 de 25 historias completadas</span>
-        <a href="https://jefazo-isc.github.io/GymSeminario/membresias" target="_blank" class="evidence-link">
-          🔗 Consultar Membresías y Vigencias (`/membresias`) ↗
+      <div class="evidence-bar">
+        <span class="evidence-label">Registro de actividades y estados de cuenta en producción:</span>
+        <a href="https://jefazo-isc.github.io/GymSeminario/estado-cuenta" target="_blank" class="evidence-link">
+          🔗 Consultar Estado de Cuenta en Producción ↗
         </a>
       </div>
     </section>
 
-    <!-- DIAPOSITIVA 5: PIPELINE CI/CD (CRITERIO 2 · 15%) -->
-    <section class="slide">
-      <span class="slide-eyebrow">Criterio 2 · 15% de la Calificación</span>
-      <h2>Pipeline Automatizado en GitHub Actions</h2>
-      <p class="slide-desc">Integración Continua con 5 fases y 156 pruebas unitarias exitosas (Run #53 Verde)</p>
-
-      <div class="grid-3">
-        <div class="card">
-          <div class="card-title">1. Build & Linting</div>
-          <p>Compilación AOT de producción en Angular 19. Análisis estático estricto con ESLint para TypeScript y plantillas HTML.</p>
-        </div>
-        <div class="card">
-          <div class="card-title">2. Pruebas Unitarias</div>
-          <p><strong>156 pruebas automáticas</strong> ejecutadas en Google Chrome Headless sobre Linux con Karma + Jasmine. 0 fallas.</p>
-        </div>
-        <div class="card">
-          <div class="card-title">3. Pruebas Integración</div>
-          <p>39 especificaciones de servicios ejecutadas con `HttpClientTestingModule` sin conexiones vivas de red.</p>
-        </div>
-        <div class="card">
-          <div class="card-title">4. Auditoría de Seguridad</div>
-          <p>Inspección de vulnerabilidades con `npm audit` y escaneo criptográfico de commits con `TruffleHog`.</p>
-        </div>
-        <div class="card">
-          <div class="card-title">5. Empaquetado OCI</div>
-          <p>Construcción de imagen Docker multi-stage (Node 22 / Nginx) y publicación en GitHub Packages (`ghcr.io`).</p>
-        </div>
-        <div class="card">
-          <div class="card-title">6. Despliegue Continuo</div>
-          <p>Publicación automática del frontend en GitHub Pages y webhook de actualización hacia Render.</p>
-        </div>
-      </div>
-
-      <div class="live-evidence-bar">
-        <span class="evidence-text">Verificación en vivo del Pipeline: Run #53</span>
-        <a href="https://github.com/jefazo-isc/GymSeminario/actions" target="_blank" class="evidence-link">
-          🔗 Ver Ejecución en GitHub Actions ↗
-        </a>
-      </div>
-    </section>
-
-    <!-- DIAPOSITIVA 6: EMPAQUETADO DOCKER Y GHCR -->
-    <section class="slide">
-      <span class="slide-eyebrow">Contenedores y Despliegue</span>
-      <h2>Empaquetado Docker y GitHub Container Registry (GHCR)</h2>
-      <p class="slide-desc">Construcción reproducible y despliegue multi-arquitectura en la nube</p>
+    <!-- ═════════════════════════════════════════════════════════════════
+         DIAPOSITIVA 4: MODULARIDAD PWA MÓVIL (TRANSICIÓN: BOUNCE)
+         ═════════════════════════════════════════════════════════════════ -->
+    <section class="slide t-bounce">
+      <span class="slide-badge">Criterio 5 · 10% Aplicación Móvil PWA</span>
+      <h2>Modularidad de la Aplicación Móvil (Angular 19)</h2>
+      <p class="slide-desc">Estructura organizada en 5 capas desacopladas, Service Worker oficial y 76 activos WebP</p>
 
       <div class="grid-2">
         <div class="card">
-          <div class="card-title">Estrategia Multi-Stage en Dockerfile</div>
-          <p>• <strong>Fase de Construcción (Builder):</strong> Utiliza imagen oficial de **Node.js 22 Alpine**, instala dependencias limpias con `npm ci` y compila la aplicación Angular en modo producción.</p>
-          <p style="margin-top: 10px;">• <strong>Fase de Servidor Web (Runner):</strong> Se transfieren únicamente los artefactos compilados hacia una imagen ultraligera de **Nginx Alpine**, reduciendo el tamaño del contenedor a menos de 45 MB.</p>
+          <div class="card-title">Organización Arquitectónica en 5 Capas</div>
+          <div class="layers-diagram">
+            <div class="layer-bar">
+              <strong>1. Punto de Entrada (App Module)</strong>
+              <span><code>app.config.ts</code> · Lazy Loading · SW</span>
+            </div>
+            <div class="layer-bar">
+              <strong>2. Capa de Dominio</strong>
+              <span>Modelos e Interfaces TypeScript</span>
+            </div>
+            <div class="layer-bar">
+              <strong>3. Capa de Datos</strong>
+              <span>Servicios HTTP e Interceptores</span>
+            </div>
+            <div class="layer-bar">
+              <strong>4. Capa de Presentación (UI)</strong>
+              <span>Componentes Standalone reactivos</span>
+            </div>
+            <div class="layer-bar">
+              <strong>5. Librerías Compartidas</strong>
+              <span>Generador QR vectorial y directivas</span>
+            </div>
+          </div>
         </div>
-        <div class="card">
-          <div class="card-title">Publicación de Imágenes OCI</div>
-          <p>• <strong>Registro:</strong> `ghcr.io/jefazo-isc/gymseminario` etiquetadas automáticamente con el hash SHA del commit.</p>
-          <p style="margin-top: 10px;">• <strong>Seguridad:</strong> Autenticación automática mediante `GITHUB_TOKEN` con permisos de escritura de paquetes.</p>
-          <p style="margin-top: 10px;">• <strong>Compatibilidad:</strong> Multi-plataforma compilada para arquitecturas `linux/amd64`.</p>
+
+        <div class="card" style="background: var(--surface-accent);">
+          <div class="card-title">Capacidades PWA y Optimización WebP</div>
+          <p>• <strong>Service Worker (<code>ngsw-worker.js</code>):</strong> Precaché determinista de recursos estáticos según <code>ngsw-config.json</code> para carga ultrarrápida.</p>
+          <p style="margin-top: 8px;">• <strong>Optimización de Rendimiento:</strong> <strong>76 imágenes convertidas a formato <code>.webp</code></strong>, reduciendo el ancho de banda transferido en un 60%.</p>
+          <p style="margin-top: 8px;">• <strong>Manifiesto Web:</strong> Configurado en modo <code>standalone</code> con iconos adaptativos para instalación nativa en smartphones Android e iOS.</p>
         </div>
       </div>
 
-      <div class="live-evidence-bar">
-        <span class="evidence-text">Registro oficial de contenedores del proyecto</span>
-        <a href="https://github.com/jefazo-isc/GymSeminario/pkgs/container/gymseminario" target="_blank" class="evidence-link">
-          🔗 Ver Paquetes en GitHub Packages (GHCR) ↗
-        </a>
+      <div class="evidence-bar">
+        <span class="evidence-label">Comprobación de optimización en producción:</span>
+        <div class="evidence-links-group">
+          <a href="https://jefazo-isc.github.io/GymSeminario/galeria" target="_blank" class="evidence-link">
+            🖼️ Abrir Galería WebP (<code>/galeria</code>) ↗
+          </a>
+          <a href="https://jefazo-isc.github.io/GymSeminario/servicio" target="_blank" class="evidence-link secondary">
+            📋 Ver Catálogo de Servicios (<code>/servicio</code>) ↗
+          </a>
+        </div>
       </div>
     </section>
 
-    <!-- DIAPOSITIVA 7: SERVICIOS WEB (CRITERIO 3 · 10%) -->
-    <section class="slide">
-      <span class="slide-eyebrow">Criterio 3 · 10% de la Calificación</span>
+    <!-- ═════════════════════════════════════════════════════════════════
+         DIAPOSITIVA 5: SERVICIOS WEB (TRANSICIÓN: CUBE ROTATE Y)
+         ═════════════════════════════════════════════════════════════════ -->
+    <section class="slide t-cube-y">
+      <span class="slide-badge">Criterio 3 · 10% Servicios Web Empleados</span>
       <h2>Arquitectura de Servicios Web: Backend en Render</h2>
       <p class="slide-desc">Microservicio Node.js 22 LTS + Express y Notificaciones Brevo HTTPS</p>
 
       <div class="grid-2">
         <div class="card">
-          <div class="card-title">Migración de Protocolo: SMTP ➔ Brevo HTTPS REST</div>
-          <p>• <strong>El Reto:</strong> Las plataformas en la nube (Render, AWS, Vercel) bloquean por regla de firewall los puertos TCP salientes 25, 465 y 587 por motivos anti-spam. Nodemailer causaba bloqueos de conexión de 40+ segundos.</p>
-          <p style="margin-top: 10px;">• <strong>La Decisión:</strong> Migración completa a la **API REST HTTPS de Brevo v3 (puerto 443 estándar)** mediante llamadas `fetch` asíncronas no bloqueantes en Node.js 22.</p>
-          <p style="margin-top: 10px;">• <strong>Resultado:</strong> Respuestas de confirmación en menos de 800 ms y entrega garantizada en bandeja de entrada.</p>
+          <div class="card-title">Migración Crítica: SMTP ➔ Brevo HTTPS REST API</div>
+          <p>• <strong>Restricción Perimetral en la Nube:</strong> Plataformas como Render bloquean por política de red los puertos TCP salientes 25, 465 y 587 para evitar spam. Nodemailer generaba timeouts de 40+ segundos.</p>
+          <p style="margin-top: 6px;">• <strong>Decisión Técnica:</strong> Migración completa hacia la <strong>API REST HTTPS de Brevo v3 (puerto 443)</strong> usando llamadas <code>fetch</code> nativas en Node 22.</p>
+          <p style="margin-top: 6px;">• <strong>Rendimiento:</strong> Latencia reducida a menos de 800 milisegundos con confirmación vía identificador transaccional (<code>messageId</code>).</p>
         </div>
+
         <div class="card">
-          <div class="card-title">Catálogo de Endpoints REST</div>
-          <p>• `GET /api/health` ➔ Diagnóstico del servidor y tiempo de actividad.</p>
-          <p>• `GET /api/membership` ➔ Consulta de vigencia vinculada al correo.</p>
-          <p>• `POST /api/membership` ➔ Registro y actualización de planes.</p>
-          <p>• `POST /api/membership/renew` ➔ Renovación de ciclo de vigencia.</p>
-          <p>• `POST /api/enviar-correo` ➔ Confirmación transaccional con folio.</p>
-          <p>• `GET /api/ai/status` ➔ Telemetría activa del Circuit Breaker.</p>
+          <div class="card-title">Catálogo de Endpoints REST Oficiales</div>
+          <p>• <code>GET /api/health</code> ➔ Estado de salud y tiempo de actividad del backend.</p>
+          <p>• <code>GET /api/membership</code> ➔ Consulta de vigencia sincronizada en la nube.</p>
+          <p>• <code>POST /api/membership</code> ➔ Alta y actualización de plan de entrenamiento.</p>
+          <p>• <code>POST /api/membership/renew</code> ➔ Renovación de vigencia del usuario.</p>
+          <p>• <code>POST /api/enviar-correo</code> ➔ Despacho de confirmación con folio de reserva.</p>
+          <p>• <code>GET /api/ai/status</code> ➔ Telemetría activa del Circuit Breaker de IA.</p>
         </div>
       </div>
 
-      <div class="live-evidence-bar">
-        <span class="evidence-text">Comprobación en vivo del microservicio backend</span>
+      <div class="evidence-bar">
+        <span class="evidence-label">Diagnóstico de servicio en vivo sobre Render Cloud:</span>
         <a href="https://gymseminario.onrender.com/api/health" target="_blank" class="evidence-link">
-          🔗 Probar Endpoint `/api/health` en Render ↗
+          🔗 Probar Endpoint <code>/api/health</code> en Render ↗
         </a>
       </div>
     </section>
 
-    <!-- DIAPOSITIVA 8: RESILIENCIA IA Y CIRCUIT BREAKER -->
-    <section class="slide">
-      <span class="slide-eyebrow">Arquitectura de Alta Disponibilidad</span>
-      <h2>Coach Virtual IA: Orquestador con Circuit Breaker</h2>
-      <p class="slide-desc">Resiliencia y continuidad operativa entre Inception Mercury y Google Gemini</p>
-
-      <div class="grid-3">
-        <div class="card">
-          <div class="card-title">Proveedor Primario (Mercury)</div>
-          <p>Diseñado para inferencia ultra veloz en la generación de rutinas personalizadas estructuradas según el nivel y objetivo del atleta.</p>
-        </div>
-        <div class="card" style="border-color: var(--border-strong);">
-          <div class="card-title">Patrón Circuit Breaker</div>
-          <p>Si el proveedor primario responde error de autenticación (401), cuota agotada (429) o timeout, el circuito se abre por 5 minutos.</p>
-        </div>
-        <div class="card" style="background: var(--surface-accent); border-color: var(--accent);">
-          <div class="card-title">Fallback Activo (Gemini 2.5 Flash)</div>
-          <p>El tráfico se conmuta automáticamente a los modelos oficiales de Google Gemini sin degradación ni caída del backend.</p>
-        </div>
-      </div>
-
-      <div class="card" style="margin-top: 16px;">
-        <div class="card-title">Observabilidad y Monitoreo en Tiempo Real</div>
-        <p>El backend expone el estado de salud de ambos proveedores y el total de peticiones procesadas a través del endpoint público `/api/ai/status` para telemetría continua.</p>
-      </div>
-
-      <div class="live-evidence-bar">
-        <span class="evidence-text">Consulta de telemetría de IA en vivo</span>
-        <a href="https://gymseminario.onrender.com/api/ai/status" target="_blank" class="evidence-link">
-          🔗 Ver Estado de Circuit Breaker `/api/ai/status` ↗
-        </a>
-      </div>
-    </section>
-
-    <!-- DIAPOSITIVA 9: BASES DE DATOS (CRITERIO 4 · 10%) -->
-    <section class="slide">
-      <span class="slide-eyebrow">Criterio 4 · 10% de la Calificación</span>
-      <h2>Estructura de Bases de Datos: Persistencia Híbrida</h2>
-      <p class="slide-desc">Integración fundamentada entre NoSQL Documental y Relacional ACID</p>
+    <!-- ═════════════════════════════════════════════════════════════════
+         DIAPOSITIVA 6: BASES DE DATOS (TRANSICIÓN: SWIRL)
+         ═════════════════════════════════════════════════════════════════ -->
+    <section class="slide t-swirl">
+      <span class="slide-badge">Criterio 4 · 10% Estructura de Bases de Datos</span>
+      <h2>Persistencia Híbrida Justificada: NoSQL + SQL Relacional</h2>
+      <p class="slide-desc">Selección arquitectónica de motores según la naturaleza transaccional del dato</p>
 
       <div class="grid-3">
         <div class="card">
           <div class="card-title">Cloud Firestore (NoSQL)</div>
-          <p><strong>Justificación:</strong> Flexibilidad de esquemas para los perfiles dinámicos de los socios (historial médico, lesiones, objetivos atléticos polimórficos).</p>
-          <p style="margin-top: 8px;">• Colección `usuarios`</p>
-          <p>• Colección `sesiones_clase`</p>
+          <p><strong>Justificación:</strong> Perfiles de usuario dinámicos y polimórficos (historial de lesiones, preferencias, metas corporales).</p>
+          <ul>
+            <li>Colección <code>usuarios</code></li>
+            <li>Colección <code>sesiones_clase</code></li>
+            <li>Sincronización reactiva en tiempo real.</li>
+          </ul>
         </div>
-        <div class="card">
+
+        <div class="card" style="border-color: var(--accent); background: var(--surface-accent);">
           <div class="card-title">SQLite Relacional (SQL ACID)</div>
-          <p><strong>Justificación:</strong> Integridad matemática estricta y consistencia transaccional para cobros, folios de membresía y vigencias.</p>
-          <p style="margin-top: 8px;">• Tabla `memberships`</p>
-          <p>• Tabla `transacciones_pago`</p>
-          <p>• Modo WAL (Write-Ahead Logging)</p>
+          <p><strong>Justificación:</strong> Consistencia matemática estricta y transacciones atómicas para cobros y vigencias de membresía.</p>
+          <ul>
+            <li>Tabla <code>memberships</code> (vigencias)</li>
+            <li>Tabla <code>audit_log</code> (trazabilidad)</li>
+            <li>Modo WAL (Write-Ahead Logging) en Render.</li>
+          </ul>
         </div>
+
         <div class="card">
           <div class="card-title">LocalStorage PWA (Offline)</div>
-          <p><strong>Justificación:</strong> Resiliencia y disponibilidad local para consulta de ejercicios y rutinas dentro de instalaciones sin red celular.</p>
-          <p style="margin-top: 8px;">• Tokens JWT de sesión</p>
-          <p>• Caché de catálogo muscular</p>
+          <p><strong>Justificación:</strong> Resiliencia y disponibilidad local de catálogos y credenciales en áreas del gimnasio sin cobertura.</p>
+          <ul>
+            <li>Token JWT de sesión cifrado</li>
+            <li>Caché de catálogo de ejercicios</li>
+            <li>Preferencias de interfaz</li>
+          </ul>
         </div>
       </div>
 
-      <div class="live-evidence-bar">
-        <span class="evidence-text">Comprobación de persistencia de membresías en tiempo real</span>
-        <a href="https://jefazo-isc.github.io/GymSeminario/membresias" target="_blank" class="evidence-link">
-          🔗 Probar Renovación y Vigencia en Producción ↗
-        </a>
+      <div class="evidence-bar">
+        <span class="evidence-label">Persistencia activa de membresías en base de datos:</span>
+        <div class="evidence-links-group">
+          <a href="https://jefazo-isc.github.io/GymSeminario/membresias" target="_blank" class="evidence-link">
+            🔗 Consultar Membresías Cloud (<code>/membresias</code>) ↗
+          </a>
+          <a href="https://gymseminario.onrender.com/api/membership?email=demo@grom21.com" target="_blank" class="evidence-link secondary">
+            ⚡ Endpoint SQLite Render ↗
+          </a>
+        </div>
       </div>
     </section>
 
-    <!-- DIAPOSITIVA 10: MODULARIDAD PWA MÓVIL (CRITERIO 5 · 10%) -->
-    <section class="slide">
-      <span class="slide-eyebrow">Criterio 5 · 10% de la Calificación</span>
-      <h2>Modularidad de la Aplicación Móvil PWA</h2>
-      <p class="slide-desc">Desacoplamiento en capas con Angular 19, Service Worker y 76 activos WebP</p>
-
-      <div class="grid-2">
-        <div class="card">
-          <div class="card-title">Organización Arquitectónica</div>
-          <p>• <strong>Punto de Entrada:</strong> `app.config.ts`, enrutamiento con lazy loading y registro de `provideServiceWorker('ngsw-worker.js')` activo en producción.</p>
-          <p style="margin-top: 8px;">• <strong>Capa de Dominio:</strong> Modelos e interfaces TypeScript (`Membresia`, `SesionEntrenamiento`, `Usuario`) con cálculo de vigencias.</p>
-          <p style="margin-top: 8px;">• <strong>Capa de Datos:</strong> Servicios desacoplados de la UI con `HttpClient` y `authInterceptor` seguro.</p>
-        </div>
-        <div class="card" style="background: var(--surface-accent);">
-          <div class="card-title">Capacidades PWA y Optimización WebP</div>
-          <p>• <strong>Service Worker Oficial:</strong> Precaché determinista de recursos estáticos mediante `ngsw-config.json` para arranque instantáneo.</p>
-          <p style="margin-top: 8px;">• <strong>Optimización de Medios:</strong> 76 imágenes convertidas a formato **`.webp`**, reduciendo el ancho de banda transferido en más de 60%.</p>
-          <p style="margin-top: 8px;">• <strong>Manifiesto Web:</strong> Configurado en modo `standalone` para instalación directa en smartphones.</p>
-        </div>
-      </div>
-
-      <div class="live-evidence-bar">
-        <span class="evidence-text">Comprobación de optimización en producción</span>
-        <a href="https://jefazo-isc.github.io/GymSeminario/servicios" target="_blank" class="evidence-link">
-          🔗 Ver Galería WebP en Producción ↗
-        </a>
-      </div>
-    </section>
-
-    <!-- DIAPOSITIVA 11: SEGURIDAD INTEGRAL (CRITERIO 6 · 10%) -->
-    <section class="slide">
-      <span class="slide-eyebrow">Criterio 6 · 10% de la Calificación</span>
-      <h2>Estrategia de Seguridad: Defensa en Profundidad</h2>
-      <p class="slide-desc">Protección perimetral, control de accesos y mitigación de riesgos OWASP Top 10</p>
+    <!-- ═════════════════════════════════════════════════════════════════
+         DIAPOSITIVA 7: SEGURIDAD INTEGRAL (TRANSICIÓN: CURTAIN WIPE)
+         ═════════════════════════════════════════════════════════════════ -->
+    <section class="slide t-curtain">
+      <span class="slide-badge">Criterio 6 · 10% Opciones de Seguridad</span>
+      <h2>Estrategia de Seguridad: Resguardo en Render y Defensa</h2>
+      <p class="slide-desc">Protección perimetral, control de accesos y credenciales seguras en variables de entorno</p>
 
       <div class="grid-3">
         <div class="card">
-          <div class="card-title">Perímetro y Cifrado</div>
-          <p>• <strong>HTTPS Forzado (TLS 1.3):</strong> Cifrado de tráfico extremo a extremo.</p>
+          <div class="card-title">Perímetro y Tráfico Web</div>
+          <p>• <strong>HTTPS Forzado (TLS 1.3):</strong> Cifrado de extremo a extremo.</p>
           <p>• <strong>Mitigación DDoS:</strong> Proxy perimetral de Render y GitHub.</p>
           <p>• <strong>Cabeceras HTTP:</strong> Protección contra Clickjacking y Sniffing.</p>
         </div>
+
         <div class="card">
           <div class="card-title">Identidad y Control (RBAC)</div>
-          <p>• <strong>JWT Criptográfico:</strong> Tokens firmados con HMAC-SHA256.</p>
-          <p>• <strong>Separación de Roles:</strong> Permisos para Admin, Entrenador y Socio.</p>
-          <p>• <strong>Sanitización del DOM:</strong> Angular previene inyecciones XSS por diseño.</p>
+          <p>• <strong>JWT Criptográfico:</strong> Tokens firmados con HMAC-SHA256 (24h de expiración).</p>
+          <p>• <strong>Control de Acceso:</strong> Separación estricta de roles (Admin, Entrenador, Socio).</p>
+          <p>• <strong>Sanitización Angular:</strong> Protección nativa del DOM contra ataques XSS.</p>
         </div>
-        <div class="card">
-          <div class="card-title">DevSecOps en CI/CD</div>
-          <p>• <strong>TruffleHog:</strong> Escaneo criptográfico en cada commit.</p>
-          <p>• <strong>Variables de Entorno:</strong> Llaves privadas protegidas en la memoria de Render.</p>
-          <p>• <strong>authInterceptor:</strong> Bloquea el envío de tokens a CDNs externas.</p>
+
+        <div class="card" style="border-color: var(--accent); background: var(--surface-accent);">
+          <div class="card-title">Resguardo de API Keys en Render</div>
+          <p>• <strong>Cero Secretos en Repositorio:</strong> Las llaves (<code>GEMINI_API_KEY</code>, <code>MERCURY_API_KEY</code>, <code>BREVO_API_KEY</code>) residen exclusivamente en las <strong>Variables de Entorno seguras de Render (<code>process.env</code>)</strong>.</p>
+          <p style="margin-top: 6px;">• <strong>TruffleHog en CI:</strong> Escaneo criptográfico de commits evitando filtración de credenciales.</p>
+          <p style="margin-top: 6px;">• <strong>authInterceptor:</strong> Bloquea el envío de tokens a CDNs externas.</p>
         </div>
       </div>
 
-      <div class="live-evidence-bar">
-        <span class="evidence-text">Verificación de seguridad en el pipeline de GitHub</span>
+      <div class="evidence-bar">
+        <span class="evidence-label">Auditoría estática de seguridad y secretos en el workflow:</span>
         <a href="https://github.com/jefazo-isc/GymSeminario/blob/main/.github/workflows/ci.yml" target="_blank" class="evidence-link">
           🔗 Ver Configuración de Seguridad en CI/CD ↗
         </a>
       </div>
     </section>
 
-    <!-- DIAPOSITIVA 12: CONCLUSIONES Y ROADMAP -->
-    <section class="slide">
-      <span class="slide-eyebrow">Cierre y Proyección</span>
+    <!-- ═════════════════════════════════════════════════════════════════
+         DIAPOSITIVA 8: COACH IA & CIRCUIT BREAKER (TRANSICIÓN: GLITCH DROP)
+         ═════════════════════════════════════════════════════════════════ -->
+    <section class="slide t-glitch">
+      <span class="slide-badge">Arquitectura de Alta Disponibilidad</span>
+      <h2>Coach Virtual IA: Google Gemini Flash Lite 3.5 & Mercury</h2>
+      <p class="slide-desc">Orquestador con Circuit Breaker para garantizar tolerancia a fallos en el servicio</p>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">Proveedor Primario (Mercury)</div>
+          <p>Inferencia ultra veloz especializada en generación de rutinas periodizadas estructuradas según objetivos físicos y grupos musculares.</p>
+        </div>
+
+        <div class="card" style="border-color: var(--border-strong);">
+          <div class="card-title">Patrón Circuit Breaker</div>
+          <p>Si el proveedor primario responde error de autenticación (401), cuota agotada (429) o timeout, el circuito se abre por 5 minutos.</p>
+        </div>
+
+        <div class="card" style="background: var(--surface-accent); border-color: var(--accent);">
+          <div class="card-title">Fallback (Gemini Flash Lite 3.5)</div>
+          <p>El tráfico conmuta inmediatamente hacia los modelos oficiales de <strong>Google Gemini Flash Lite 3.5</strong> sin interrupción para el socio.</p>
+        </div>
+      </div>
+
+      <div class="flow-diagram">
+        <div class="flow-node">
+          <strong>1. Petición de Rutina</strong>
+          <small>Socio en la PWA</small>
+        </div>
+        <div class="flow-arrow">➔</div>
+        <div class="flow-node">
+          <strong>2. Intento Mercury</strong>
+          <small>Inception Labs</small>
+        </div>
+        <div class="flow-arrow">➔</div>
+        <div class="flow-node" style="color: #b91c1c;">
+          <strong>3. Fallo 429 / 401</strong>
+          <small>Circuit Breaker Abierto</small>
+        </div>
+        <div class="flow-arrow">➔</div>
+        <div class="flow-node" style="color: var(--accent);">
+          <strong>4. Fallback Gemini Flash Lite 3.5</strong>
+          <small>Google GenAI API</small>
+        </div>
+      </div>
+
+      <div class="evidence-bar">
+        <span class="evidence-label">Consulta del rastreador de estado del Circuit Breaker:</span>
+        <a href="https://gymseminario.onrender.com/api/ai/status" target="_blank" class="evidence-link">
+          🔗 Ver Telemetría en Vivo de IA (<code>/api/ai/status</code>) ↗
+        </a>
+      </div>
+    </section>
+
+    <!-- ═════════════════════════════════════════════════════════════════
+         DIAPOSITIVA 9: PIPELINE CI/CD (TRANSICIÓN: DIAGONAL SLIDE)
+         ═════════════════════════════════════════════════════════════════ -->
+    <section class="slide t-diagonal">
+      <span class="slide-badge">Criterio 2 · 15% de la Calificación</span>
+      <h2>Pipeline Automatizado en GitHub Actions (Run #53)</h2>
+      <p class="slide-desc">Flujo declarativo en <code>.github/workflows/ci.yml</code> con 156 pruebas automáticas exitosas</p>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">1. Build & Linting</div>
+          <p>Compilación AOT en Angular 19 de producción. Verificación estricta con ESLint en TypeScript y templates.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">2. Pruebas Unitarias</div>
+          <p><strong>156 pruebas unitarias</strong> ejecutadas exitosamente con Karma + Jasmine en Chrome Headless sobre Linux. 100% éxito.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">3. Pruebas Integración</div>
+          <p>39 especificaciones de servicios ejecutadas con <code>HttpClientTestingModule</code> garantizando aislamiento de red.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">4. Auditoría de Seguridad</div>
+          <p>Análisis de dependencias con <code>npm audit</code> y escaneo criptográfico de secretos en commits con <code>TruffleHog</code>.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">5. Empaquetado OCI</div>
+          <p>Construcción multi-stage de contenedor Docker (Node 22 / Nginx) y publicación en GitHub Packages (<code>ghcr.io</code>).</p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">6. Despliegue Continuo</div>
+          <p>Publicación automática del frontend en GitHub Pages y webhook de actualización hacia el backend en Render.</p>
+        </div>
+      </div>
+
+      <div class="evidence-bar">
+        <span class="evidence-label">Verificación en tiempo real del pipeline: Run #53</span>
+        <a href="https://github.com/jefazo-isc/GymSeminario/actions" target="_blank" class="evidence-link">
+          🔗 Ver Pipeline en GitHub Actions ↗
+        </a>
+      </div>
+    </section>
+
+    <!-- ═════════════════════════════════════════════════════════════════
+         DIAPOSITIVA 10: DOCKER Y GHCR (TRANSICIÓN: ACCORDION FOLD)
+         ═════════════════════════════════════════════════════════════════ -->
+    <section class="slide t-fold">
+      <span class="slide-badge">Contenedores y Despliegue</span>
+      <h2>Empaquetado Docker y GitHub Container Registry (GHCR)</h2>
+      <p class="slide-desc">Construcción multi-stage reproducible y publicación de imágenes OCI</p>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Estrategia Multi-Stage en Dockerfile</div>
+          <p>• <strong>Builder:</strong> Emplea la imagen oficial de <strong>Node.js 22 Alpine</strong>, instala dependencias deterministas con <code>npm ci</code> y compila la aplicación Angular en modo producción optimizado.</p>
+          <p style="margin-top: 10px;">• <strong>Runner:</strong> Transfiere únicamente los artefactos de <code>dist/</code> a una imagen ultraligera de <strong>Nginx Alpine</strong>, logrando un contenedor seguro y compacto de menos de 45 MB.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Publicación en GitHub Packages (GHCR)</div>
+          <p>• <strong>Registro OCI:</strong> Publicación en <code>ghcr.io/jefazo-isc/gymseminario</code> etiquetada automáticamente con el SHA del commit correspondiente.</p>
+          <p style="margin-top: 10px;">• <strong>Arquitectura:</strong> Compatible con servidores <code>linux/amd64</code>.</p>
+          <p style="margin-top: 10px;">• <strong>Sincronización:</strong> Permite despliegues automatizados hacia Render o cualquier orquestador de contenedores Kubernetes/Docker.</p>
+        </div>
+      </div>
+
+      <div class="evidence-bar">
+        <span class="evidence-label">Registro oficial de contenedores del proyecto:</span>
+        <a href="https://github.com/jefazo-isc/GymSeminario/pkgs/container/gymseminario" target="_blank" class="evidence-link">
+          🔗 Ver Paquetes en GitHub Packages (GHCR) ↗
+        </a>
+      </div>
+    </section>
+
+    <!-- ═════════════════════════════════════════════════════════════════
+         DIAPOSITIVA 11: DEMOSTRACIÓN EN VIVO (TRANSICIÓN: SHIELD PULSE)
+         ═════════════════════════════════════════════════════════════════ -->
+    <section class="slide t-shield">
+      <span class="slide-badge">Validación Funcional</span>
+      <h2>Demostración Práctica del Sistema en Vivo</h2>
+      <p class="slide-desc">Flujo completo de extremo a extremo comprobable en entornos de producción</p>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">1. Agendamiento y Pase QR</div>
+          <p>El socio selecciona actividad, fecha y turno en la PWA. El sistema genera el folio único y renderiza el código QR vectorial para torniquete.</p>
+          <a href="https://jefazo-isc.github.io/GymSeminario/agendar" target="_blank" style="color: var(--accent); font-weight: 700; font-size: 0.85rem; margin-top: auto;">Abrir Módulo de Agendamiento ↗</a>
+        </div>
+
+        <div class="card">
+          <div class="card-title">2. Despacho Brevo HTTPS</div>
+          <p>El backend en Render procesa la reserva y despacha el correo transaccional de confirmación mediante la API REST de Brevo en menos de 800 ms.</p>
+          <a href="https://gymseminario.onrender.com/api/health" target="_blank" style="color: var(--accent); font-weight: 700; font-size: 0.85rem; margin-top: auto;">Verificar Salud de API en Render ↗</a>
+        </div>
+
+        <div class="card">
+          <div class="card-title">3. Membresía y Vigencia SQLite</div>
+          <p>Consulta de vigencias y transacciones sincronizadas con la base de datos relacional de Render respaldada con caché local.</p>
+          <a href="https://jefazo-isc.github.io/GymSeminario/membresias" target="_blank" style="color: var(--accent); font-weight: 700; font-size: 0.85rem; margin-top: auto;">Consultar Membresías Cloud ↗</a>
+        </div>
+      </div>
+
+      <div class="evidence-bar">
+        <span class="evidence-label">Flujo de prueba en producción:</span>
+        <a href="https://jefazo-isc.github.io/GymSeminario/agendar" target="_blank" class="evidence-link">
+          🔗 Iniciar Demostración en Vivo (<code>/agendar</code>) ↗
+        </a>
+      </div>
+    </section>
+
+    <!-- ═════════════════════════════════════════════════════════════════
+         DIAPOSITIVA 12: CONCLUSIONES Y ROADMAP (TRANSICIÓN: FINALE)
+         ═════════════════════════════════════════════════════════════════ -->
+    <section class="slide t-finale">
+      <span class="slide-badge">Cierre y Proyección</span>
       <h2>Conclusiones y Trabajo Futuro (Tercera Entrega)</h2>
       <p class="slide-desc">Cumplimiento del 100% de la Segunda Entrega y proyección a la Entrega Final</p>
 
@@ -854,26 +1123,32 @@
         <div class="card" style="background: var(--surface-accent); border-color: var(--accent);">
           <div class="card-title">Logros Consolidados en Segunda Entrega</div>
           <ul>
-            <li>100% de la rúbrica institucional cubierta y sustentada.</li>
+            <li>100% de los criterios de la rúbrica institucional sustentados en código.</li>
             <li>Pipeline CI/CD con 156 pruebas automáticas en Chrome Headless.</li>
             <li>Servicios Web transaccionales con Brevo HTTPS y QR dinámico.</li>
             <li>Persistencia híbrida en producción con SQLite relacional y Firestore.</li>
             <li>PWA instalable con Service Worker oficial y 76 activos WebP.</li>
           </ul>
         </div>
+
         <div class="card">
           <div class="card-title">Roadmap para la Tercera Entrega (Cierre)</div>
           <ul>
-            <li>Integración con hardware de lectura QR (ESP32 para torniquete físico).</li>
-            <li>Pasarela de cobro recurrente con tarjeta mediante Stripe.</li>
-            <li>Sincronización offline bidireccional mediante IndexedDB.</li>
-            <li>Analítica avanzada de aforo con visión por computadora.</li>
+            <li>Hardware físico de torniquete: lector de código QR con microcontrolador ESP32.</li>
+            <li>Pasarela de cobro recurrente con tarjeta mediante Stripe SDK.</li>
+            <li>Sincronización offline bidireccional avanzada con IndexedDB.</li>
+            <li>Analítica visual de aforo y ocupación mediante visión computacional.</li>
           </ul>
         </div>
       </div>
 
-      <div class="live-evidence-bar">
-        <span class="evidence-text">Memoria técnica formal completa del proyecto</span>
+      <div style="margin-top: 14px; text-align: center;">
+        <h3 style="color: var(--accent); font-size: 1.25rem; margin-bottom: 2px;">¡Muchas Gracias por su Atención!</h3>
+        <p style="color: var(--text-muted); font-size: 0.85rem;">Sesión de preguntas y retroalimentación técnica con el Dr. Arturo Elías Ramírez.</p>
+      </div>
+
+      <div class="evidence-bar">
+        <span class="evidence-label">Memoria técnica formal completa del proyecto:</span>
         <a href="https://github.com/jefazo-isc/GymSeminario/blob/main/docs/academico/memoria_tecnica_segunda_entrega_espaciogym.md" target="_blank" class="evidence-link">
           🔗 Leer Memoria Técnica en el Repositorio ↗
         </a>
@@ -883,9 +1158,9 @@
   </main>
 
   <!-- Navegación Discreta Flotante en la Esquina -->
-  <div class="nav-floating">
+  <div class="nav-pill">
     <button class="nav-btn" onclick="prevSlide()" title="Anterior (Flecha Izquierda)">◀</button>
-    <span id="page-count">1 / 12</span>
+    <span id="slide-indicator">1 / 12</span>
     <button class="nav-btn" onclick="nextSlide()" title="Siguiente (Flecha Derecha o Espacio)">▶</button>
     <button class="nav-btn" onclick="toggleFullscreen()" title="Pantalla Completa (F)">⛶</button>
   </div>
@@ -893,7 +1168,7 @@
   <script>
     const slides = document.querySelectorAll('.slide');
     const progressLine = document.getElementById('progress-line');
-    const pageCount = document.getElementById('page-count');
+    const slideIndicator = document.getElementById('slide-indicator');
     let currentIndex = 0;
 
     function updateDeck(index) {
@@ -904,7 +1179,7 @@
       slides.forEach((s, i) => s.classList.toggle('active', i === currentIndex));
       const pct = ((currentIndex + 1) / slides.length) * 100;
       progressLine.style.width = pct + '%';
-      pageCount.textContent = `${currentIndex + 1} / ${slides.length}`;
+      slideIndicator.textContent = `${currentIndex + 1} / ${slides.length}`;
     }
 
     function nextSlide() { if (currentIndex < slides.length - 1) updateDeck(currentIndex + 1); }
@@ -918,7 +1193,7 @@
       }
     }
 
-    // Navegación por teclado (Flechas, Espacio, Teclas numéricas)
+    // Navegación por teclado
     document.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
         e.preventDefault();

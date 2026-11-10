@@ -52,11 +52,21 @@ export const routes: Routes = [
       ),
   },
   {
+    path: "galeria",
+    redirectTo: "/carrusel",
+    pathMatch: "full",
+  },
+  {
     path: "servicio",
     loadComponent: () =>
       import("./features/public/pages/servicios/servicios.component").then(
         (m) => m.ServiciosComponent,
       ),
+  },
+  {
+    path: "servicios",
+    redirectTo: "/servicio",
+    pathMatch: "full",
   },
   {
     path: "responsables",
@@ -136,7 +146,21 @@ export const routes: Routes = [
       ).then((m) => m.Formulario2Component),
   },
   {
+    path: "agendar",
+    loadComponent: () =>
+      import(
+        "./features/training/pages/formulario2/formulario2.component"
+      ).then((m) => m.Formulario2Component),
+  },
+  {
     path: "f3",
+    loadComponent: () =>
+      import(
+        "./features/training/pages/formulario3/formulario3.component"
+      ).then((m) => m.Formulario3Component),
+  },
+  {
+    path: "asistencia",
     loadComponent: () =>
       import(
         "./features/training/pages/formulario3/formulario3.component"
