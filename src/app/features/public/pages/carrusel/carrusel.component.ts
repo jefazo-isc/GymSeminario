@@ -22,17 +22,21 @@ export class CarruselComponent {
 
   // Método para cambiar la imagen activa al hacer click en un indicador
   setActiveImage(index: number): void {
-    this.currentIndex = index;
+    if (index >= 0 && index < this.images.length) {
+      this.currentIndex = index;
+    }
   }
 
   // Método para ir a la imagen anterior
   prevImage(): void {
+    if (!this.images || this.images.length === 0) return;
     this.currentIndex =
       this.currentIndex === 0 ? this.images.length - 1 : this.currentIndex - 1;
   }
 
   // Método para ir a la siguiente imagen
   nextImage(): void {
+    if (!this.images || this.images.length === 0) return;
     this.currentIndex =
       this.currentIndex === this.images.length - 1 ? 0 : this.currentIndex + 1;
   }
