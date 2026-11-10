@@ -53,6 +53,9 @@ export class Formulario3Component implements OnInit {
         const u = JSON.parse(raw);
         this.user = { email: u.email ?? null, phoneNumber: null, displayName: u.nombre ?? null };
         this.authenticated = true;
+        if (!this.userName && u.nombre) {
+          this.userName = u.nombre;
+        }
       } catch { /* noop */ }
     }
     this.authReady = true;
@@ -64,16 +67,24 @@ export class Formulario3Component implements OnInit {
       this.error = "Completa clase, fecha y hora.";
       return;
     }
-    if (!this.userName) {
+    const raw = localStorage.getItem("gym_user");
+    let u: any = null;
+    if (raw) {
+      try {
+        u = JSON.parse(raw);
+      } catch {
+        u = null;
+      }
+    }
+    const socioName = this.userName || u?.nombre;
+    if (!socioName) {
       this.error =
         "No se pudo obtener el nombre del socio. Revisa tu sesión antes de registrar la asistencia.";
       return;
     }
-    this.nuevo.alumno = this.userName;
+    this.nuevo.alumno = socioName;
     this.loading.set(true);
     try {
-      const raw = localStorage.getItem("gym_user");
-      const u = raw ? JSON.parse(raw) : null;
       if (!u) {
         this.error = "Inicia sesión para registrar una asistencia.";
         return;
