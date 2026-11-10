@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>espacioGYM (GROM 21) — Segunda Entrega Seminario I</title>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: #111827;
+      --card-border: #1f2937;
+      --accent: #10b981;
+      --accent-glow: rgba(16, 185, 129, 0.25);
+      --primary: #3b82f6;
+      --warning: #f59e0b;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      user-select: none;
+    }
+
+    /* Barra de progreso superior */
+    #progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #10b981, #3b82f6);
+      width: 0%;
+      transition: width 0.3s ease;
+      z-index: 100;
+    }
+
+    /* Contenedor de diapositivas */
+    .deck {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .slide {
+      position: absolute;
+      width: 90vw;
+      max-width: 1200px;
+      height: 85vh;
+      max-height: 800px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 40px 50px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(20px) scale(0.98);
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      overflow-y: auto;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0) scale(1);
+    }
+
+    /* Tipografía y Jerarquía */
+    .tag {
+      display: inline-block;
+      align-self: flex-start;
+      background: rgba(16, 185, 129, 0.12);
+      color: var(--accent);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+    }
+
+    .tag.primary {
+      background: rgba(59, 130, 246, 0.12);
+      color: var(--primary);
+      border-color: rgba(59, 130, 246, 0.3);
+    }
+
+    .tag.warning {
+      background: rgba(245, 158, 11, 0.12);
+      color: var(--warning);
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    h1 {
+      font-size: 2.4rem;
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 8px;
+      background: linear-gradient(120deg, #ffffff, #93c5fd);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    h2 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #fff;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      margin-bottom: 24px;
+    }
+
+    /* Grids y Layouts */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      flex: 1;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      flex: 1;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      flex: 1;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card h3 {
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card p {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      line-height: 1.45;
+      margin-bottom: 8px;
+    }
+
+    .card ul {
+      list-style: none;
+      margin-top: auto;
+    }
+
+    .card li {
+      font-size: 0.88rem;
+      color: #d1d5db;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    .card li::before {
+      content: "✔";
+      color: var(--accent);
+      font-weight: bold;
+    }
+
+    /* Tabla de métricas y rúbricas */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 0.9rem;
+    }
+
+    th, td {
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    th {
+      background: rgba(255, 255, 255, 0.04);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    td {
+      color: #d1d5db;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .badge-success {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    /* Portada Especial */
+    .hero-slide {
+      justify-content: center;
+      text-align: center;
+      align-items: center;
+    }
+
+    .hero-slide .tag {
+      align-self: center;
+    }
+
+    .hero-slide h1 {
+      font-size: 3.2rem;
+      margin-bottom: 12px;
+    }
+
+    .hero-slide .subtitle {
+      font-size: 1.25rem;
+      max-width: 700px;
+      margin: 0 auto 30px auto;
+    }
+
+    .meta-box {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 16px 28px;
+      display: inline-grid;
+      grid-template-columns: repeat(3, auto);
+      gap: 32px;
+      text-align: left;
+    }
+
+    .meta-item strong {
+      display: block;
+      color: #fff;
+      font-size: 0.95rem;
+    }
+
+    .meta-item span {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    /* Speaker Notes (Notas para el orador) */
+    .speaker-note {
+      margin-top: 16px;
+      background: rgba(59, 130, 246, 0.07);
+      border-left: 3px solid var(--primary);
+      padding: 10px 14px;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.85rem;
+      color: #bfdbfe;
+    }
+
+    .speaker-note strong {
+      color: #60a5fa;
+    }
+
+    /* Controles de navegación inferiores */
+    .controls {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: rgba(17, 24, 39, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--card-border);
+      padding: 8px 20px;
+      border-radius: 999px;
+      z-index: 100;
+    }
+
+    .btn-nav {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+
+    .btn-nav:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    #slide-indicator {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    /* Modo de Impresión para PDF (Ctrl + P) */
+    @media print {
+      body {
+        overflow: visible;
+        height: auto;
+      }
+      .controls, #progress-bar {
+        display: none !important;
+      }
+      .deck {
+        display: block;
+        height: auto;
+      }
+      .slide {
+        position: relative !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: none !important;
+        page-break-after: always;
+        width: 100% !important;
+        height: 100vh !important;
+        max-width: none !important;
+        max-height: none !important;
+        border: none !important;
+        border-radius: 0 !important;
+        margin-bottom: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="progress-bar"></div>
+
+  <div class="deck">
+
+    <!-- SLIDE 1: PORTADA -->
+    <section class="slide hero-slide active">
+      <span class="tag">Segunda Entrega de Avance de Proyecto</span>
+      <h1>espacioGYM · GROM 21</h1>
+      <p class="subtitle">Plataforma Web Progresiva y Backend Cloud para la Gestión Fitness Inteligente Asistida por IA</p>
+      
+      <div class="meta-box">
+        <div class="meta-item">
+          <span>Materia</span>
+          <strong>Seminario de Sistemas I</strong>
+        </div>
+        <div class="meta-item">
+          <span>Profesor Titular</span>
+          <strong>Dr. Arturo Elías Ramírez</strong>
+        </div>
+        <div class="meta-item">
+          <span>Estudiante / Desarrollador</span>
+          <strong>Yahir Guevara Cardona</strong>
+        </div>
+      </div>
+
+      <div class="speaker-note" style="max-width: 750px; margin-top: 30px;">
+        💡 <strong>Nota del expositor:</strong> Comienza agradeciendo al profesor. Explica que la solución pasó de ser una maqueta informativa a un ecosistema conectado en la nube con CI/CD, base de datos relacional y servicios transaccionales.
+      </div>
+    </section>
+
+    <!-- SLIDE 2: ÍNDICE DE EVALUACIÓN -->
+    <section class="slide">
+      <span class="tag primary">Rúbrica Institucional</span>
+      <h2>Contenido y Puntos de Evaluación</h2>
+      <p class="subtitle">Alineación estricta con los lineamientos de evaluación del 03 de Noviembre</p>
+      
+      <div class="grid-3">
+        <div class="card">
+          <h3>🎯 Avances Post-MVP (20%)</h3>
+          <p>Mapeo de historias de usuario en Jira, agendamiento de turnos, generación de QR y confirmación de correo.</p>
+        </div>
+        <div class="card">
+          <h3>⚙️ Pipeline CI/CD (15%)</h3>
+          <p>Automatización en GitHub Actions: Build Angular, ESLint, 156 pruebas unitarias, integración HTTP y Docker.</p>
+        </div>
+        <div class="card">
+          <h3>☁️ Servicios Web (10%)</h3>
+          <p>Backend en Node.js 22 LTS en Render, API REST de Brevo (HTTPS port 443) y Orquestador de IA dual.</p>
+        </div>
+        <div class="card">
+          <h3>🗄️ Bases de Datos (10%)</h3>
+          <p>Persistencia híbrida: SQLite relacional transaccional (WAL mode) + Cloud Firestore NoSQL + LocalStorage.</p>
+        </div>
+        <div class="card">
+          <h3>📱 PWA Móvil (10%)</h3>
+          <p>Modularidad Angular 19, Service Worker offline (`ngsw-worker`), manifiesto instalable e imágenes WebP.</p>
+        </div>
+        <div class="card">
+          <h3>🛡️ Seguridad Integral (10%)</h3>
+          <p>Defensa en profundidad: HTTPS forzado, JWT HS256, RBAC, escáner de secretos TruffleHog y Circuit Breaker.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 3: AVANCES POST-MVP -->
+    <section class="slide">
+      <span class="tag">Criterio 1 · 20% de la Calificación</span>
+      <h2>Avances Significativos con Respecto al MVP</h2>
+      <p class="subtitle">Transición del Sprint 1 (Informativo) a los Sprints 2 y 3 (Transaccionales)</p>
+      
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="color: #94a3b8;">📦 MVP Inicial (Sprint 1)</h3>
+          <ul>
+            <li>Landing page estática con horarios y ubicación de Google Maps.</li>
+            <li>Autenticación básica con Firebase y catálogo informativo.</li>
+            <li>Sin persistencia de reservas ni comprobantes digitales.</li>
+          </ul>
+        </div>
+        <div class="card" style="border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.04);">
+          <h3 style="color: #34d399;">🚀 Incremento Post-MVP (Sprints 2 y 3)</h3>
+          <ul>
+            <li><strong>Agendamiento Inteligente (`/f2`):</strong> Reserva con aforo por turnos (Matutino/Vespertino).</li>
+            <li><strong>Pase de Acceso QR Vectorial:</strong> Generación instantánea para control de torniquetes.</li>
+            <li><strong>Confirmación Transaccional Real:</strong> Despacho de emails vía Brevo REST API.</li>
+            <li><strong>Membresías Cloud:</strong> Sincronización de vigencias y cálculo de descuentos en Render.</li>
+            <li><strong>Dashboard de Métricas:</strong> Analítica visual de asistencia y horas pico.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="speaker-note">
+        💡 <strong>Nota del expositor:</strong> Haz énfasis en que la aplicación ya no es una simulación en memoria; cada reserva genera un ID real, despacha un correo al usuario y descuenta cupo en el backend.
+      </div>
+    </section>
+
+    <!-- SLIDE 4: MAPEO DE HISTORIAS DE USUARIO -->
+    <section class="slide">
+      <span class="tag primary">Metodología Ágil</span>
+      <h2>Mapeo de Historias de Usuario (Jira / Scrum)</h2>
+      <p class="subtitle">Seguimiento y estado de desarrollo del backlog del proyecto</p>
+      
+      <table>
+        <thead>
+          <tr>
+            <th>Sprint</th>
+            <th>Clave Jira</th>
+            <th>Historia de Usuario</th>
+            <th>Estado Real</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Sprint 1</strong></td>
+            <td>SCRUM-16..22</td>
+            <td>Sitio Público, Ubicación, Catálogo y Autenticación</td>
+            <td><span class="badge badge-success">Terminada (100%)</span></td>
+          </tr>
+          <tr>
+            <td><strong>Sprint 2</strong></td>
+            <td>SCRUM-24..29</td>
+            <td>Membresías, Vigencias, Pagos y Estado de Cuenta</td>
+            <td><span class="badge badge-success">Terminada (100%)</span></td>
+          </tr>
+          <tr>
+            <td><strong>Sprint 3</strong></td>
+            <td>SCRUM-31..33</td>
+            <td>Agendamiento de Sesiones, Pase QR y Cancelación</td>
+            <td><span class="badge badge-success">Terminada (100%)</span></td>
+          </tr>
+          <tr>
+            <td><strong>Sprint 3</strong></td>
+            <td>SCRUM-34..36</td>
+            <td>Coach Virtual IA con Orquestador de Fallback</td>
+            <td><span class="badge badge-success">Arquitectura Lista</span></td>
+          </tr>
+          <tr>
+            <td><strong>Sprint 3</strong></td>
+            <td>SCRUM-41..43</td>
+            <td>Métricas y Estadísticas de Asistencia y Aforo</td>
+            <td><span class="badge badge-success">Terminada (100%)</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="speaker-note">
+        💡 <strong>Nota del expositor:</strong> Muestra que el desarrollo no fue improvisado, sino guiado por historias de usuario con prioridades definidas y sprints trazables en el historial de Git.
+      </div>
+    </section>
+
+    <!-- SLIDE 5: PIPELINE CI/CD -->
+    <section class="slide">
+      <span class="tag">Criterio 2 · 15% de la Calificación</span>
+      <h2>Pipeline Automatizado en GitHub Actions</h2>
+      <p class="subtitle">5 Jobs concurrentes y secuenciales garantizando calidad continua (Run #53 Verde)</p>
+      
+      <div class="grid-3">
+        <div class="card">
+          <h3>1. Build & Linting</h3>
+          <p>Compilación estática AOT en Angular 19 de producción. Validación estricta con ESLint de accesibilidad y typescript.</p>
+        </div>
+        <div class="card">
+          <h3>2. Pruebas Unitarias</h3>
+          <p><strong>156 pruebas unitarias</strong> ejecutadas exitosamente con Karma + Jasmine en Google Chrome Headless sobre Linux.</p>
+        </div>
+        <div class="card">
+          <h3>3. Integración HTTP</h3>
+          <p>39 specs de integración con `HttpClientTesting` validando contratos de API sin conexiones vivas de red.</p>
+        </div>
+        <div class="card">
+          <h3>4. Auditoría de Seguridad</h3>
+          <p>Detección de vulnerabilidades con `npm audit` y escaneo criptográfico de secretos en commits con `TruffleHog`.</p>
+        </div>
+        <div class="card">
+          <h3>5. Empaquetado OCI</h3>
+          <p>Construcción de contenedor multi-stage sobre Node.js 22 Alpine y publicación en GitHub Container Registry (`ghcr.io`).</p>
+        </div>
+        <div class="card">
+          <h3>6. Despliegue Continuo (CD)</h3>
+          <p>Publicación automática del frontend en GitHub Pages y disparo de webhook de sincronización en Render.</p>
+        </div>
+      </div>
+
+      <div class="speaker-note">
+        💡 <strong>Nota del expositor:</strong> Este es uno de los puntos con mayor ponderación de la materia. Menciona que ningún commit llega a producción si rompe una sola prueba o si expone secretos.
+      </div>
+    </section>
+
+    <!-- SLIDE 6: SERVICIOS WEB -->
+    <section class="slide">
+      <span class="tag primary">Criterio 3 · 10% de la Calificación</span>
+      <h2>Arquitectura de Servicios Web Empleados</h2>
+      <p class="subtitle">Desacoplamiento backend-frontend y alta resiliencia en la nube</p>
+      
+      <div class="grid-3">
+        <div class="card">
+          <h3>Node.js 22 LTS + Express</h3>
+          <p>Servidor REST no bloqueante alojado en Render (`gymseminario.onrender.com`). Consume menos de 120MB de RAM y gestiona endpoints de membresías, reservas y salud.</p>
+        </div>
+        <div class="card">
+          <h3>Brevo HTTPS REST API</h3>
+          <p><strong>Decisión de diseño clave:</strong> Se migró de SMTP tradicional (puertos 465/587 que Render bloquea) a la API REST HTTPS (puerto 443). Entrega confirmada en menos de 800 ms.</p>
+        </div>
+        <div class="card">
+          <h3>Orquestador de IA Resiliente</h3>
+          <p>Patrón <strong>Circuit Breaker con Fallback Dual</strong> entre Inception Mercury y Google Gemini. Si un proveedor agota cuota o responde 401/429, conmuta sin tirar el backend.</p>
+        </div>
+      </div>
+
+      <div class="speaker-note">
+        💡 <strong>Pregunta típica del profe:</strong> <em>"¿Por qué no usaron Nodemailer con Gmail?"</em><br>
+        <strong>Tu respuesta:</strong> <em>"Porque las nubes modernas como Render bloquean los puertos SMTP salientes por prevención de spam. La API HTTPS de Brevo en el puerto 443 no sufre bloqueos y es 10 veces más rápida."</em>
+      </div>
+    </section>
+
+    <!-- SLIDE 7: BASES DE DATOS -->
+    <section class="slide">
+      <span class="tag">Criterio 4 · 10% de la Calificación</span>
+      <h2>Estructura de Bases de Datos: Persistencia Híbrida</h2>
+      <p class="subtitle">Selección técnica justificada según la naturaleza del dato</p>
+      
+      <div class="grid-3">
+        <div class="card">
+          <h3>Cloud Firestore (NoSQL)</h3>
+          <p><strong>Propósito:</strong> Perfiles de usuario y sincronización de clases en tiempo real.</p>
+          <ul>
+            <li>Colección `usuarios`</li>
+            <li>Colección `sesiones_clases`</li>
+            <li>Baja latencia y esquemas dinámicos para historial atlético.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>SQLite Relacional (SQL ACID)</h3>
+          <p><strong>Propósito:</strong> Integridad referencial en membresías y balances financieros.</p>
+          <ul>
+            <li>Tabla `memberships` (vigencias)</li>
+            <li>Tabla `transacciones_pago`</li>
+            <li>Modo WAL (Write-Ahead Logging) con `better-sqlite3`.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>LocalStorage / Cache PWA</h3>
+          <p><strong>Propósito:</strong> Resiliencia y soporte Offline-First en el cliente.</p>
+          <ul>
+            <li>Almacenamiento de token JWT</li>
+            <li>Catálogo de ejercicios musculares</li>
+            <li>Preferencia de tema e historial local</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="speaker-note">
+        💡 <strong>Nota del expositor:</strong> Justifica por qué es un error usar una sola base de datos para todo. El perfil deportivo necesita flexibilidad NoSQL, mientras que los cobros requieren consistencia transaccional ACID.
+      </div>
+    </section>
+
+    <!-- SLIDE 8: APLICACIÓN MÓVIL PWA -->
+    <section class="slide">
+      <span class="tag primary">Criterio 5 · 10% de la Calificación</span>
+      <h2>Modularidad de la Aplicación Móvil PWA</h2>
+      <p class="subtitle">Estructura limpia en Angular 19 y experiencia nativa en smartphones</p>
+      
+      <div class="grid-4">
+        <div class="card">
+          <h3>1. Entry Point</h3>
+          <p>`AppModule`, `app.config.ts`, carga perezosa de rutas (lazy loading) y registro del Service Worker (`ngsw-worker.js`).</p>
+        </div>
+        <div class="card">
+          <h3>2. Capa de Dominio</h3>
+          <p>Modelos e interfaces TypeScript inmutables (`Membresia`, `Usuario`, `SesionEntrenamiento`) con validaciones de vigencia.</p>
+        </div>
+        <div class="card">
+          <h3>3. Capa de Datos</h3>
+          <p>Servicios desacoplados de la UI (`MembresiaService`, `ReservaService`, `AuthService`) con `authInterceptor` seguro.</p>
+        </div>
+        <div class="card">
+          <h3>4. UI & Librerías</h3>
+          <p>Componentes Standalone reactivos, generador vectorial de códigos QR y 76 activos optimizados en formato **WebP**.</p>
+        </div>
+      </div>
+
+      <div class="speaker-note">
+        💡 <strong>Nota del expositor:</strong> Muestra en DevTools que la app tiene Service Worker activo y Web Manifest, permitiendo instalarla en Android/iOS sin pasar obligatoriamente por una tienda.
+      </div>
+    </section>
+
+    <!-- SLIDE 9: SEGURIDAD -->
+    <section class="slide">
+      <span class="tag warning">Criterio 6 · 10% de la Calificación</span>
+      <h2>Opciones y Estrategia de Seguridad Implementadas</h2>
+      <p class="subtitle">Defensa en Profundidad y mitigación activa del OWASP Top 10</p>
+      
+      <div class="grid-3">
+        <div class="card">
+          <h3>Defensa Perimetral & Web</h3>
+          <ul>
+            <li>Cifrado forzado con **HTTPS / TLS 1.3**.</li>
+            <li>Mitigación volumétrica de DDoS en proxy de Render y GitHub.</li>
+            <li>Encabezados HTTP estrictos contra Clickjacking y Sniffing.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Autenticación y Control (RBAC)</h3>
+          <ul>
+            <li>Tokens **JWT** firmados con algoritmo HMAC-SHA256.</li>
+            <li>Control de Acceso Basado en Roles (`Admin`, `Socio`, `Visitante`).</li>
+            <li>Federación de identidades mediante Google OAuth 2.0.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Seguridad en el Código</h3>
+          <ul>
+            <li><strong>TruffleHog:</strong> Escaneo de credenciales en cada commit.</li>
+            <li><strong>authInterceptor seguro:</strong> No envía tokens a dominios de terceros.</li>
+            <li>Sanitización de inputs contra inyecciones SQL y XSS.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="speaker-note">
+        💡 <strong>Punto fuerte:</strong> Menciona que las llaves sensibles de la API viven en las variables de entorno de Render (`process.env`) y no en archivos locales ni repositorios públicos.
+      </div>
+    </section>
+
+    <!-- SLIDE 10: DEMOSTRACIÓN EN VIVO -->
+    <section class="slide hero-slide">
+      <span class="tag">Validación en Tiempo Real</span>
+      <h2>Demostración Práctica del Sistema</h2>
+      <p class="subtitle">Verificación de servicios en producción de extremo a extremo</p>
+      
+      <div class="grid-3" style="max-width: 900px; text-align: left;">
+        <div class="card">
+          <h3>1. Frontend PWA</h3>
+          <p>Acceso desde GitHub Pages: agendar una clase en `/f2`, generar el QR y ver la confirmación de Brevo.</p>
+          <a href="https://jefazo-isc.github.io/GymSeminario/f2" target="_blank" style="color: #60a5fa; font-size: 0.85rem; font-weight: bold; text-decoration: none;">Abrir /f2 ↗</a>
+        </div>
+        <div class="card">
+          <h3>2. Backend Cloud</h3>
+          <p>Verificación del endpoint de salud y telemetría del Circuit Breaker de IA en Render.</p>
+          <a href="https://gymseminario.onrender.com/api/health" target="_blank" style="color: #60a5fa; font-size: 0.85rem; font-weight: bold; text-decoration: none;">Abrir /api/health ↗</a>
+        </div>
+        <div class="card">
+          <h3>3. Pipeline CI/CD</h3>
+          <p>Revisión en vivo de GitHub Actions con 156 pruebas unitarias y 5 jobs en verde.</p>
+          <a href="https://github.com/jefazo-isc/GymSeminario/actions" target="_blank" style="color: #60a5fa; font-size: 0.85rem; font-weight: bold; text-decoration: none;">Abrir Actions ↗</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 11: CONCLUSIONES -->
+    <section class="slide hero-slide">
+      <span class="tag primary">Cierre y Futuro</span>
+      <h2>Conclusiones y Próximos Pasos</h2>
+      <p class="subtitle">Cumplimiento del 100% de la Segunda Entrega y proyección a la Entrega Final</p>
+      
+      <div class="grid-2" style="max-width: 900px; text-align: left;">
+        <div class="card">
+          <h3 style="color: #34d399;">Logros Clave Consolidados</h3>
+          <ul>
+            <li>Arquitectura desacoplada, resiliente y publicada en producción.</li>
+            <li>Pipeline CI/CD con 156 pruebas unitarias automáticas en cada commit.</li>
+            <li>Solución real a limitaciones de nube (migración de SMTP a Brevo REST).</li>
+            <li>Optimización de recursos móviles con 76 imágenes WebP y Service Worker.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3 style="color: #38bdf8;">Roadmap para Tercera Entrega</h3>
+          <ul>
+            <li>Validación física de Código QR con hardware (ESP32 / lector en torniquete).</li>
+            <li>Pasarela de cobro recurrente con tarjeta mediante Stripe.</li>
+            <li>Sincronización offline-first bidireccional con IndexedDB.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div style="margin-top: 25px;">
+        <h3 style="color: #fff; font-size: 1.4rem;">¡Muchas Gracias!</h3>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Sesión abierta para preguntas y retroalimentación del jurado.</p>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Barra de Controles Inferiores -->
+  <div class="controls">
+    <button class="btn-nav" id="btn-prev" onclick="prevSlide()">◀ Anterior</button>
+    <span id="slide-indicator">1 / 11</span>
+    <button class="btn-nav" id="btn-next" onclick="nextSlide()">Siguiente ▶</button>
+    <button class="btn-nav" onclick="toggleFullscreen()" style="background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.4);">⛶ Pantalla Completa</button>
+  </div>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const progressBar = document.getElementById('progress-bar');
+    const slideIndicator = document.getElementById('slide-indicator');
+    let currentIndex = 0;
+
+    function updateSlide(index) {
+      if (index < 0) index = 0;
+      if (index >= slides.length) index = slides.length - 1;
+      currentIndex = index;
+
+      slides.forEach((slide, i) => {
+        slide.classList.toggle('active', i === currentIndex);
+      });
+
+      const progress = ((currentIndex + 1) / slides.length) * 100;
+      progressBar.style.width = progress + '%';
+      slideIndicator.textContent = `${currentIndex + 1} / ${slides.length}`;
+    }
+
+    function nextSlide() {
+      if (currentIndex < slides.length - 1) {
+        updateSlide(currentIndex + 1);
+      }
+    }
+
+    function prevSlide() {
+      if (currentIndex > 0) {
+        updateSlide(currentIndex - 1);
+      }
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    // Navegación por teclado
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key === 'f' || e.key === 'F') {
+        toggleFullscreen();
+      }
+    });
+
+    updateSlide(0);
+  </script>
+</body>
+</html>
