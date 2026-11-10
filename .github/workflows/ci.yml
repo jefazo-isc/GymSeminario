@@ -242,7 +242,9 @@ jobs:
             --configuration=integration \
             --no-watch \
             --no-progress \
-            --browsers=ChromeHeadless
+            --browsers=ChromeHeadless \
+            --code-coverage \
+            --karma-config=karma.integration.conf.js
         env:
           CHROME_BIN: /usr/bin/google-chrome
 
@@ -323,6 +325,9 @@ jobs:
     needs: [unit-tests, integration-tests, security-audit]
     # Solo publicar en push a main (no en PRs)
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       # ─────────────────────────────────────────────────────────────────────
@@ -396,7 +401,22 @@ jobs:
           name: angular-dist
           path: dist/libreria1/browser
 
-      - name: 🌐 GitHub Pages — Desplegar frontend Angular
+      - name: ⚙️ Pages — Configurar entorno GitHub Pages
+        if: github.ref == 'refs/heads/main'
+        uses: actions/configure-pages@v5
+
+      - name: 📦 Pages — Empaquetar artefacto para Pages
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/libreria1/browser
+
+      - name: 🚀 Pages — Desplegar oficialmente a GitHub Pages
+        if: github.ref == 'refs/heads/main'
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: 🌐 GitHub Pages (Legacy) — Sincronizar rama gh-pages
         if: github.ref == 'refs/heads/main'
         uses: peaceiris/actions-gh-pages@v4
         with:
