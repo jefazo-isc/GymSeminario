@@ -41,7 +41,8 @@ El frontend llama directamente a `http://localhost:3000/api`. Para utilizar ruti
 2. Preparar un `.env` en la **raíz** con una clave Gemini autorizada. Si ya existe, conservar su contenido y agregar únicamente lo necesario; no sobrescribirlo.
 
 ```dotenv
-GEMINI_API_KEY=TU_CLAVE_PRIVADA
+GEMINI_LLAVE=TU_CLAVE_PRIVADA   # Variable principal en Render / Entorno de despliegue
+GEMINI_API_KEY=TU_CLAVE_PRIVADA # Soporte para compatibilidad hacia atrás
 # Opcional: usar un identificador habilitado para tu cuenta.
 # GEMINI_MODEL=IDENTIFICADOR_DEL_MODELO
 ```
@@ -413,7 +414,7 @@ Existen `public/manifest.webmanifest`, iconos y `ngsw-config.json`; la compilaci
 | `npm ci` falla | Versión de Node, acceso al registro npm y coincidencia entre lock y manifiesto |
 | La web abre, pero el coach falla | Segunda terminal con `npm run server`, clave Gemini y puerto 3000 |
 | `Cannot find package` en IA | Dependencias instaladas en la raíz y ejecución desde esa carpeta |
-| Falla la creación del cliente Gemini | Definir `GEMINI_API_KEY` antes de iniciar; revisar modelo y permisos de la cuenta |
+| Falla la creación del cliente Gemini | Definir `GEMINI_LLAVE` o `GEMINI_API_KEY` antes de iniciar; revisar modelo y permisos de la cuenta |
 | `EADDRINUSE` | Dos procesos usan el mismo puerto; reservar 3000 para IA y 3001 para notificaciones |
 | Falla login, popup o CAPTCHA | Conexión, proveedor habilitado, dominio autorizado y configuración Firebase |
 | Login bloqueado tras varios intentos | Contador `intentos` y documento del usuario; existe un bloqueo cliente/Firestore |
