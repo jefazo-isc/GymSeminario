@@ -58,7 +58,8 @@ async function callMercury(messages, { temperature = 0.7, maxTokens = 1200, resp
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`
     },
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(15000)
   });
 
   if (!resp.ok) {
@@ -120,7 +121,8 @@ async function callGemini(messages, { temperature = 0.7, maxTokens = 2000, jsonM
       const resp = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(15000)
       });
 
       if (!resp.ok) {
