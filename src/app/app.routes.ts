@@ -147,10 +147,8 @@ export const routes: Routes = [
   },
   {
     path: "agendar",
-    loadComponent: () =>
-      import(
-        "./features/training/pages/formulario2/formulario2.component"
-      ).then((m) => m.Formulario2Component),
+    redirectTo: "/f2",
+    pathMatch: "full",
   },
   {
     path: "f3",
@@ -161,10 +159,8 @@ export const routes: Routes = [
   },
   {
     path: "asistencia",
-    loadComponent: () =>
-      import(
-        "./features/training/pages/formulario3/formulario3.component"
-      ).then((m) => m.Formulario3Component),
+    redirectTo: "/f3",
+    pathMatch: "full",
   },
   {
     path: "editar1",

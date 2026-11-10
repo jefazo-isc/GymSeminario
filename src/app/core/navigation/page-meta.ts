@@ -93,7 +93,20 @@ export const PAGE_META: Record<string, PageMeta> = {
       "Elige actividad, fecha y turno. Revisa tu selección antes de registrarla.",
     parent: member,
   },
+  agendar: {
+    title: "Haz espacio para entrenar.",
+    section: "Agendar entrenamiento",
+    description:
+      "Elige actividad, fecha y turno. Revisa tu selección antes de registrarla.",
+    parent: member,
+  },
   f3: {
+    title: "Cada visita cuenta.",
+    section: "Registrar asistencia",
+    description: "Registra clase, fecha y hora en el sistema de asistencias.",
+    parent: member,
+  },
+  asistencia: {
     title: "Cada visita cuenta.",
     section: "Registrar asistencia",
     description: "Registra clase, fecha y hora en el sistema de asistencias.",
