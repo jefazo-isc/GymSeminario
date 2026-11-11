@@ -50,6 +50,53 @@ db.exec(`
   )
 `);
 
+// Crear tabla de reservas de clases (Sincronización real en SQLite)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS bookings (
+    id TEXT PRIMARY KEY,
+    usuario TEXT,
+    email TEXT,
+    nombre TEXT,
+    entrenamiento TEXT NOT NULL,
+    fecha TEXT NOT NULL,
+    turno TEXT NOT NULL,
+    telefono TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+  )
+`);
+
+// Crear tabla de asistencias físicas registradas
+db.exec(`
+  CREATE TABLE IF NOT EXISTS attendances (
+    id TEXT PRIMARY KEY,
+    usuario TEXT,
+    email TEXT,
+    nombre TEXT,
+    clase TEXT NOT NULL,
+    fecha TEXT NOT NULL,
+    hora TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now'))
+  )
+`);
+
+// Semilla inicial si no hay reservas (para mantener los 4 registros históricos de Boxeo)
+try {
+  const countRow = db.prepare('SELECT COUNT(*) as count FROM bookings').get();
+  if (!countRow || countRow.count === 0) {
+    const seed = db.prepare(`
+      INSERT INTO bookings (id, usuario, email, nombre, entrenamiento, fecha, turno)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `);
+    seed.run('seed-box-1', '1', 'socio1@espaciogym.mx', 'Socio Box 1', 'Boxeo', '2026-11-01', 'Matutino');
+    seed.run('seed-box-2', '2', 'socio2@espaciogym.mx', 'Socio Box 2', 'Boxeo', '2026-11-02', 'Vespertino');
+    seed.run('seed-box-3', '3', 'socio3@espaciogym.mx', 'Socio Box 3', 'Boxeo', '2026-11-03', 'Matutino');
+    seed.run('seed-box-4', '4', 'socio4@espaciogym.mx', 'Socio Box 4', 'Boxeo', '2026-11-04', 'Vespertino');
+    console.log('✅ Semilla inicial de bookings cargada con 4 sesiones de Boxeo');
+  }
+} catch (e) {
+  console.warn('Advertencia al verificar semilla de bookings:', e.message);
+}
+
 // Migración: agregar columna provider si no existe (para DBs antiguas)
 try {
   db.exec(`ALTER TABLE users ADD COLUMN provider TEXT NOT NULL DEFAULT 'email'`);
@@ -251,6 +298,122 @@ app.post(['/enviar-asistencia', '/api/enviar-asistencia'], async (req, res) => {
   } catch (error) {
     console.error('Error al enviar el correo:', error);
     res.status(500).json({ mensaje: 'Error al enviar el correo.' });
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  ENDPOINTS DE RESERVAS, ASISTENCIAS Y ESTADÍSTICAS (SQLITE CENTRALIZADO)
+// ══════════════════════════════════════════════════════════════════════════════
+
+// Crear nueva reserva en la base de datos SQLite
+app.post(['/api/bookings', '/bookings'], (req, res) => {
+  try {
+    const { id, entrenamiento, fecha, turno, usuario, email, nombre, telefono } = req.body;
+    if (!entrenamiento || !fecha || !turno) {
+      return res.status(400).json({ error: 'Faltan campos obligatorios: entrenamiento, fecha, turno' });
+    }
+    const bookingId = id || `bk-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    db.prepare(`
+      INSERT INTO bookings (id, usuario, email, nombre, entrenamiento, fecha, turno, telefono)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      bookingId,
+      usuario ? String(usuario) : null,
+      email || null,
+      nombre || null,
+      entrenamiento.trim(),
+      fecha.trim(),
+      turno.trim(),
+      telefono || null
+    );
+    res.status(201).json({ id: bookingId, mensaje: 'Reserva registrada exitosamente en SQLite' });
+  } catch (err) {
+    console.error('Error al registrar reserva:', err);
+    res.status(500).json({ error: 'Error al registrar la reserva en base de datos' });
+  }
+});
+
+// Listar todas las reservas registradas
+app.get(['/api/bookings', '/bookings'], (req, res) => {
+  try {
+    const rows = db.prepare('SELECT * FROM bookings ORDER BY created_at DESC').all();
+    res.json(rows);
+  } catch (err) {
+    console.error('Error al listar reservas:', err);
+    res.status(500).json({ error: 'Error al obtener reservas' });
+  }
+});
+
+// Registrar asistencia física en SQLite
+app.post(['/api/attendances', '/attendances'], (req, res) => {
+  try {
+    const { id, clase, fecha, hora, usuario, email, nombre } = req.body;
+    if (!clase || !fecha || !hora) {
+      return res.status(400).json({ error: 'Faltan campos obligatorios: clase, fecha, hora' });
+    }
+    const attId = id || `att-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    db.prepare(`
+      INSERT INTO attendances (id, usuario, email, nombre, clase, fecha, hora)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      attId,
+      usuario ? String(usuario) : null,
+      email || null,
+      nombre || null,
+      clase.trim(),
+      fecha.trim(),
+      hora.trim()
+    );
+    res.status(201).json({ id: attId, mensaje: 'Asistencia registrada exitosamente en SQLite' });
+  } catch (err) {
+    console.error('Error al registrar asistencia:', err);
+    res.status(500).json({ error: 'Error al registrar asistencia' });
+  }
+});
+
+// Listar asistencias registradas
+app.get(['/api/attendances', '/attendances'], (req, res) => {
+  try {
+    const rows = db.prepare('SELECT * FROM attendances ORDER BY created_at DESC').all();
+    res.json(rows);
+  } catch (err) {
+    console.error('Error al listar asistencias:', err);
+    res.status(500).json({ error: 'Error al obtener asistencias' });
+  }
+});
+
+// Estadísticas en tiempo real calculadas directamente de SQLite
+app.get(['/api/sessions/stats', '/sessions/stats'], (req, res) => {
+  try {
+    const rows = db.prepare(`
+      SELECT entrenamiento, COUNT(*) as total
+      FROM bookings
+      GROUP BY entrenamiento
+    `).all();
+
+    const stats = {
+      Boxeo: 0,
+      Crossfit: 0,
+      Spinning: 0,
+      Yoga: 0,
+      Pesas: 0
+    };
+
+    for (const row of rows) {
+      const match = Object.keys(stats).find(
+        k => k.toLowerCase() === (row.entrenamiento || '').toLowerCase()
+      );
+      if (match) {
+        stats[match] = row.total;
+      } else if (row.entrenamiento) {
+        stats[row.entrenamiento] = row.total;
+      }
+    }
+
+    res.json(stats);
+  } catch (err) {
+    console.error('Error al calcular estadísticas en /api/sessions/stats:', err);
+    res.status(500).json({ error: 'Error al obtener estadísticas del servidor' });
   }
 });
 

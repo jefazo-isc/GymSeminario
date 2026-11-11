@@ -4,7 +4,7 @@ export const environment = {
   services: {
     notifications: "https://gymseminario.onrender.com",
     qr: "https://api-j6b4.onrender.com/api/user-qr",
-    statistics: "https://api-j6b4.onrender.com/api/sessions/stats",
+    statistics: "https://gymseminario.onrender.com/api/sessions/stats",
     exercises: "https://arl150.github.io/ejercicios-api/ejercicios.json",
     legacyExercises: "https://gym-proyecto.free.beeceptor.com/todos",
     coach: "http://localhost:3000/api",

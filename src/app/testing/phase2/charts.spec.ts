@@ -6,7 +6,7 @@ import {
 import { TestBed } from "@angular/core/testing";
 import { GraficosComponent } from "../../features/admin/pages/graficos/graficos.component";
 describe("Statistics integrity", () => {
-  const url = "https://api-j6b4.onrender.com/api/sessions/stats";
+  const url = "https://gymseminario.onrender.com/api/sessions/stats";
   beforeEach(() =>
     TestBed.configureTestingModule({
       imports: [GraficosComponent],

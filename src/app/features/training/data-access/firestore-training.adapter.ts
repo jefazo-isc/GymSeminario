@@ -43,6 +43,17 @@ export class FirestoreTrainingAdapter implements TrainingRepository {
   async createBooking(data: BookingCreate): Promise<{ id: string }> {
     const id = nextId();
     const record: BookingRecord = { ...data, id } as unknown as BookingRecord;
+
+    // Sincronizar en tiempo real con la base de datos SQLite central en Render
+    try {
+      const backendUrl = `${this.endpoints.notifications}/api/bookings`;
+      await firstValueFrom(
+        this.http.post<{ id: string }>(backendUrl, { ...data, id }).pipe(timeout(6000))
+      );
+    } catch (err) {
+      console.warn("No se pudo persistir en backend de inmediato, manteniendo en caché:", err);
+    }
+
     const updated = [...this.bookingsSubject.value, record];
     saveLS("gym_bookings", updated);
     this.bookingsSubject.next(updated);
@@ -52,6 +63,17 @@ export class FirestoreTrainingAdapter implements TrainingRepository {
   async createAttendance(data: AttendanceDraft): Promise<{ id: string }> {
     const id = nextId();
     const record: AttendanceRecord = { ...data, id } as unknown as AttendanceRecord;
+
+    // Sincronizar asistencia en tiempo real con SQLite central en Render
+    try {
+      const backendUrl = `${this.endpoints.notifications}/api/attendances`;
+      await firstValueFrom(
+        this.http.post<{ id: string }>(backendUrl, { ...data, id }).pipe(timeout(6000))
+      );
+    } catch (err) {
+      console.warn("No se pudo persistir asistencia en backend de inmediato:", err);
+    }
+
     const updated = [...this.attendancesSubject.value, record];
     saveLS("gym_attendances", updated);
     this.attendancesSubject.next(updated);
