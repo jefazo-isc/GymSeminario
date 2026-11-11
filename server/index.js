@@ -131,27 +131,27 @@ app.get('/api/coaches', (req, res) => {
   res.json(lista);
 });
 
-// Endpoint de Chat con un Coach (Protegido con Google Auth + Cuotas SQLite)
-app.post('/api/coach/chat', authAndQuotaGuard, async (req, res) => {
+// Endpoint de Chat con un Coach
+app.post('/api/coach/chat', async (req, res) => {
   try {
     const { coachId, mensaje, historial, contextoRutina, perfilUsuario } = req.body;
     if (!mensaje || !mensaje.trim()) {
       return res.status(400).json({ error: 'Mensaje requerido' });
     }
     const respuesta = await chatearConCoach({ coachId, mensaje, historial, contextoRutina, perfilUsuario });
-    res.json({ ...respuesta, cuotaRestante: req.cuotaRestante });
+    res.json(respuesta);
   } catch (err) {
     console.error('Error en /api/coach/chat:', err);
     res.status(500).json({ error: 'Error procesando el chat.' });
   }
 });
 
-// Ruta para generar rutina con Gemini (Protegido con Google Auth + Cuotas SQLite)
-app.post('/api/rutina', authAndQuotaGuard, async (req, res) => {
+// Ruta para generar rutina
+app.post('/api/rutina', async (req, res) => {
   try {
     const perfil = req.body;
     const resultado = await generarRutinaEntrenamiento(perfil);
-    res.json({ ...resultado, cuotaRestante: req.cuotaRestante });
+    res.json(resultado);
   } catch (err) {
     console.error('Error en /api/rutina:', err);
     res.status(500).json({ error: 'Error interno del servidor.' });

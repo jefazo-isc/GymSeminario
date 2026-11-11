@@ -123,15 +123,30 @@ export class AuthService implements SessionRepository {
   async signInWithGoogle(): Promise<unknown> {
     return new Promise((resolve, reject) => {
       const win = window as unknown as {
-        google?: { accounts: { id: { initialize: (c: object) => void; prompt: () => void } } };
+        google?: {
+          accounts: {
+            id: {
+              initialize: (c: object) => void;
+              prompt: (
+                cb?: (notification: {
+                  isNotDisplayed?: () => boolean;
+                  isSkippedMoment?: () => boolean;
+                  isDismissedMoment?: () => boolean;
+                }) => void
+              ) => void;
+            };
+          };
+        };
       };
       if (!win.google?.accounts?.id) {
         reject(new Error('Google Sign-In no disponible. Recarga la página.'));
         return;
       }
+      let settled = false;
       win.google.accounts.id.initialize({
         client_id: '366321485374-143tbv091m8a3r6ajps5jsodpj9aeah0.apps.googleusercontent.com',
         callback: async (response: { credential: string }) => {
+          settled = true;
           try {
             const result = await this.signInWithGoogleCredential(response.credential);
             resolve(result);
@@ -139,7 +154,19 @@ export class AuthService implements SessionRepository {
         },
         cancel_on_tap_outside: true,
       });
-      win.google.accounts.id.prompt();
+      win.google.accounts.id.prompt((notification) => {
+        if (
+          !settled &&
+          (notification?.isNotDisplayed?.() || notification?.isSkippedMoment?.())
+        ) {
+          settled = true;
+          reject(
+            new Error(
+              'El navegador bloqueó la ventana emergente de Google. Usa el botón de Google en la página de Ingresar o entra con tu correo.'
+            )
+          );
+        }
+      });
     });
   }
 

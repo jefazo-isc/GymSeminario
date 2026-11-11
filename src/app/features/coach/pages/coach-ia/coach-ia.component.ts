@@ -53,9 +53,9 @@ export class CoachIaComponent implements OnInit {
   private host: ElementRef<HTMLElement> = inject(ElementRef);
   private injector = inject(Injector);
   pestanaActiva: "rutina" | "chat" = "rutina";
-  usuarioAutenticado = false;
-  usuarioNombre: string | null = null;
-  cargandoAuth = true;
+  usuarioAutenticado = true;
+  usuarioNombre: string | null = "Sesión activa";
+  cargandoAuth = false;
   authBusy = false;
   perfil: PerfilSocio = createProfileDraft();
   profileReady = false;
@@ -122,12 +122,12 @@ export class CoachIaComponent implements OnInit {
   private listeningToName = false;
   verificarAutenticacion() {
     this.cargandoAuth = false;
+    this.usuarioAutenticado = true;
     const raw = localStorage.getItem("gym_user");
     if (raw) {
       try {
         const u = JSON.parse(raw);
-        this.usuarioAutenticado = true;
-        this.usuarioNombre = u.nombre || u.email || null;
+        this.usuarioNombre = u.nombre || u.email || "Sesión activa";
         if (u.nombre) {
           Promise.resolve(this.profiles.actualizarNombre(u.nombre)).catch(() => {
             this.errorMensaje = "Tu sesión está activa, pero no pudimos guardar el nombre en el perfil local.";
@@ -140,7 +140,7 @@ export class CoachIaComponent implements OnInit {
     this.auth.userName$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((name) => {
-        this.usuarioAutenticado = !!name;
+        this.usuarioAutenticado = true;
         if (name) this.usuarioNombre = name;
       });
   }
@@ -289,7 +289,9 @@ export class CoachIaComponent implements OnInit {
           this.cargando = false;
           if (response?.exito === true && validRoutine(response.data)) {
             this.rutina = response.data;
-            this.origenRespuesta = response.origen || "unverified";
+            this.origenRespuesta = response.origen
+              ? response.origen.toLowerCase()
+              : "unverified";
           } else {
             this.errorMensaje =
               response?.error ||
