@@ -978,49 +978,50 @@
          ═════════════════════════════════════════════════════════════════ -->
     <section class="slide t-swirl">
       <span class="slide-badge">Criterio 4 · 10% Estructura de Bases de Datos</span>
-      <h2>Persistencia Híbrida Justificada: NoSQL + SQL Relacional</h2>
-      <p class="slide-desc">Selección arquitectónica de motores según la naturaleza transaccional del dato</p>
+      <h2>Estructura de Base de Datos Centralizada: SQLite Relacional</h2>
+      <p class="slide-desc">Motor SQL ACID unificado en Render Cloud para sincronización en tiempo real y consistencia transaccional</p>
 
       <div class="grid-3">
-        <div class="card">
-          <div class="card-title">Cloud Firestore (NoSQL)</div>
-          <p><strong>Justificación:</strong> Perfiles de usuario dinámicos y polimórficos (historial de lesiones, preferencias, metas corporales).</p>
-          <ul>
-            <li>Colección <code>usuarios</code></li>
-            <li>Colección <code>sesiones_clase</code></li>
-            <li>Sincronización reactiva en tiempo real.</li>
-          </ul>
-        </div>
-
         <div class="card" style="border-color: var(--accent); background: var(--surface-accent);">
-          <div class="card-title">SQLite Relacional (SQL ACID)</div>
-          <p><strong>Justificación:</strong> Consistencia matemática estricta y transacciones atómicas para cobros y vigencias de membresía.</p>
+          <div class="card-title">Base de Datos Central (SQLite)</div>
+          <p><strong>Justificación:</strong> Modelo relacional unificado en el backend con integridad referencial y cero sobrecarga de red externa.</p>
           <ul>
-            <li>Tabla <code>memberships</code> (vigencias)</li>
-            <li>Tabla <code>audit_log</code> (trazabilidad)</li>
-            <li>Modo WAL (Write-Ahead Logging) en Render.</li>
+            <li>Tabla <code>users</code> (cuentas, roles y auth)</li>
+            <li>Tabla <code>memberships</code> (planes y vigencias)</li>
+            <li>Tabla <code>bookings</code> (reservas transaccionales)</li>
+            <li>Tabla <code>attendances</code> (asistencia física)</li>
           </ul>
         </div>
 
         <div class="card">
-          <div class="card-title">LocalStorage PWA (Offline)</div>
-          <p><strong>Justificación:</strong> Resiliencia y disponibilidad local de catálogos y credenciales en áreas del gimnasio sin cobertura.</p>
+          <div class="card-title">Garantías ACID & Modo WAL</div>
+          <p><strong>Justificación:</strong> Evitar condiciones de carrera al reservar cupos simultáneos y garantizar durabilidad en cobros.</p>
           <ul>
-            <li>Token JWT de sesión cifrado</li>
-            <li>Caché de catálogo de ejercicios</li>
-            <li>Preferencias de interfaz</li>
+            <li>Transacciones atómicas en agendamientos</li>
+            <li>Write-Ahead Logging (WAL) para lecturas concurrentes</li>
+            <li>Cálculo dinámico de estadísticas agrupadas</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Caché Offline en Cliente (PWA)</div>
+          <p><strong>Justificación:</strong> Resiliencia y disponibilidad local de pases QR y catálogos en zonas del gimnasio sin cobertura celular.</p>
+          <ul>
+            <li>Copia local de respaldo ante pérdida de red</li>
+            <li>Token JWT con expiración segura</li>
+            <li>Sincronización automática al recuperar señal</li>
           </ul>
         </div>
       </div>
 
       <div class="evidence-bar">
-        <span class="evidence-label">Persistencia activa de membresías en base de datos:</span>
+        <span class="evidence-label">Persistencia activa y estadísticas en tiempo real:</span>
         <div class="evidence-links-group">
-          <a href="https://jefazo-isc.github.io/GymSeminario/membresias" target="_blank" class="evidence-link">
-            🔗 Consultar Membresías Cloud (<code>/membresias</code>) ↗
+          <a href="https://gymseminario.onrender.com/api/sessions/stats" target="_blank" class="evidence-link">
+            ⚡ Estadísticas SQLite (<code>/api/sessions/stats</code>) ↗
           </a>
-          <a href="https://gymseminario.onrender.com/api/membership?email=demo@grom21.com" target="_blank" class="evidence-link secondary">
-            ⚡ Endpoint SQLite Render ↗
+          <a href="https://jefazo-isc.github.io/GymSeminario/graficos" target="_blank" class="evidence-link secondary">
+            📊 Gráficos Sincronizados (<code>/graficos</code>) ↗
           </a>
         </div>
       </div>
