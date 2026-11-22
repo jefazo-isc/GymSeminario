@@ -28,8 +28,7 @@ Thumbs.db
 *.mp4
 *.docx
 *.pdf
-!docs/academico/presentacion_segunda_entrega_espaciogym.pdf
-!public/presentacion_segunda_entrega_espaciogym.pdf
+*.odt
 
 # Aider chat & cache
 .aider*
