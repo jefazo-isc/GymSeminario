@@ -128,14 +128,6 @@ export const routes: Routes = [
       ),
   },
   {
-    path: "ejercicios",
-    canActivate: [noReceptionExerciseGuard],
-    loadComponent: () =>
-      import("./features/training/pages/ejercicios/ejercicios.component").then(
-        (m) => m.EjerciciosComponent,
-      ),
-  },
-  {
     path: "videos",
     canActivate: [noReceptionExerciseGuard],
     loadComponent: () =>

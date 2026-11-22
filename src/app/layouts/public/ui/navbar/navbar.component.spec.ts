@@ -112,6 +112,9 @@ describe("NavbarComponent", () => {
     expect(drawerText).not.toContain("Bloqueado");
     expect(
       document.querySelector('.mobile-navigation a[href="/ejercicios"]'),
+    ).toBeNull();
+    expect(
+      document.querySelector('.mobile-navigation a[href="/videos"]'),
     ).not.toBeNull();
     expect(
       document.querySelector('.mobile-navigation a[href="/coach-ia"]'),

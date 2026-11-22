@@ -62,18 +62,11 @@ export const PAGE_META: Record<string, PageMeta> = {
     description: "Información del catálogo de clases.",
     parent: { label: "Cursos", url: "/buscar" },
   },
-  ejercicios: {
-    title: "Entrena con intención.",
-    section: "Biblioteca de ejercicios",
-    description:
-      "Busca movimientos por grupo muscular y equipo. Una guía para acompañar tu entrenamiento.",
-  },
   videos: {
     title: "Mira. Aprende. Muévete.",
     section: "Guías en video",
     description:
       "Selecciona una guía para cargar su reproductor. Tú decides cuándo empezar.",
-    parent: { label: "Ejercicios", url: "/ejercicios" },
   },
   membresias: {
     title: "Elige cómo quieres entrenar.",

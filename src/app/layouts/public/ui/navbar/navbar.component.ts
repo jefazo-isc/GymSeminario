@@ -73,13 +73,12 @@ export class NavbarComponent {
     { path: "/responsables", label: "Equipo del proyecto", icon: "user" },
   ];
   readonly trainingLinks = [
-    { path: "/ejercicios", label: "Explorar ejercicios", icon: "grid" },
+    { path: "/f3", label: "Acceso rápido QR", icon: "check" },
     { path: "/videos", label: "Guías de entrenamiento", icon: "play" },
     { path: "/coach-ia", label: "Coach virtual IA", icon: "spark" },
     { path: "/productos", label: "Productos", icon: "external" },
   ];
   readonly guestTrainingLinks = [
-    { path: "/ejercicios", label: "Explorar ejercicios", icon: "grid" },
     { path: "/videos", label: "Guías de entrenamiento", icon: "play" },
     { path: "/productos", label: "Productos", icon: "external" },
   ];

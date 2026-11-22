@@ -14,14 +14,12 @@ import { STATISTICS } from "../../features/admin/data-access/statistics.reposito
 import { SesionService } from "../../features/activity/data-access/sesion.service";
 import { COACH } from "../../features/coach/data-access/coach.repository";
 import { PerfilSocio } from "../../features/profile/models/profile.model";
-import { EXERCISES } from "../../features/training/data-access/exercise.repository";
 import { QR_CODES } from "../../features/training/data-access/qr.repository";
 import { TRAINING } from "../../features/training/data-access/training.repository";
 
 describe("Replaceable HTTP boundaries", () => {
   const endpoints: ServiceEndpoints = {
     ...environment.services,
-    exercises: "https://example.test/exercises",
     qr: "https://example.test/qr",
     statistics: "https://example.test/stats",
     coach: "https://example.test/api",
@@ -48,23 +46,6 @@ describe("Replaceable HTTP boundaries", () => {
     expect(environment.services.qr).toBe(
       "https://api-j6b4.onrender.com/api/user-qr",
     );
-  });
-  it("reads the exercise endpoint from DI and rejects an incompatible response", () => {
-    const fail = jasmine.createSpy("failure");
-    TestBed.inject(EXERCISES).getEjercicios().subscribe({ error: fail });
-    http.expectOne(endpoints.exercises).flush({
-      datosPorParte: [{ parte: "Pecho", ejercicios: [{ nombre: null }] }],
-    });
-    expect(fail).toHaveBeenCalled();
-  });
-  it("propagates transport errors without making a second request", () => {
-    const fail = jasmine.createSpy("failure");
-    TestBed.inject(EXERCISES).getEjercicios().subscribe({ error: fail });
-    http
-      .expectOne(endpoints.exercises)
-      .flush(null, { status: 503, statusText: "Unavailable" });
-    expect(fail).toHaveBeenCalled();
-    http.expectNone(endpoints.exercises);
   });
   it("generates a local QR code starting with GROM- without HTTP call", (done) => {
     TestBed.inject(QR_CODES)

@@ -6,8 +6,6 @@ export interface ServiceEndpoints {
   notifications: string;
   qr: string;
   statistics: string;
-  exercises: string;
-  legacyExercises: string;
   coach: string;
 }
 

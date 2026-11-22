@@ -212,16 +212,14 @@ describe("Route guards", () => {
             "/scanner",
           );
         }
-        for (const exercisePath of ["/ejercicios", "/videos"]) {
-          expectRedirect(
-            await executeGuard(noReceptionExerciseGuard, exercisePath),
-            "/scanner",
-          );
-        }
+        expectRedirect(
+          await executeGuard(noReceptionExerciseGuard, "/videos"),
+          "/scanner",
+        );
       }
 
       localStorage.removeItem("gym_user");
-      expect(await executeGuard(noReceptionExerciseGuard, "/ejercicios")).toBeTrue();
+      expect(await executeGuard(noReceptionExerciseGuard, "/videos")).toBeTrue();
       localStorage.setItem(
         "gym_user",
         JSON.stringify({
@@ -241,7 +239,7 @@ describe("Route guards", () => {
           role: "receptionist",
         }),
       );
-      expect(await executeGuard(noReceptionExerciseGuard, "/ejercicios")).toBeTrue();
+      expect(await executeGuard(noReceptionExerciseGuard, "/videos")).toBeTrue();
     });
 
     it("falls back to /membresias if MEMBERSHIPS stream errors", async () => {

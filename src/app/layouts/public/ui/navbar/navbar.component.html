@@ -62,6 +62,15 @@
         >
           Entrenar<app-icon name="chevron" />
         </button>
+        @if (effectiveRole === 'subscriber' || effectiveRole === 'admin') {
+          <a
+            class="navigation-link"
+            routerLink="/f3"
+            routerLinkActive="is-active"
+            ariaCurrentWhenActive="page"
+            >Acceso QR</a
+          >
+        }
       }
     </nav>
     <div class="header-actions">
@@ -136,13 +145,15 @@
 </mat-menu>
 <mat-menu #trainingMenu="matMenu" class="grom-menu">
   <span class="grom-menu-label">Encuentra tu ritmo</span>
-  <a mat-menu-item routerLink="/ejercicios"><app-icon name="grid" />Explorar ejercicios</a>
-  <a mat-menu-item routerLink="/videos"><app-icon name="play" />Guías de entrenamiento</a>
   @if (effectiveRole === 'subscriber' || effectiveRole === 'admin') {
+    <a mat-menu-item routerLink="/f3" class="role-link--subscriber">
+      <app-icon name="check" />Acceso rápido QR
+    </a>
     <a mat-menu-item routerLink="/coach-ia" class="role-link--subscriber">
       <app-icon name="spark" />Coach virtual IA
     </a>
   }
+  <a mat-menu-item routerLink="/videos"><app-icon name="play" />Guías de entrenamiento</a>
   <a mat-menu-item routerLink="/productos"><app-icon name="external" />Productos</a>
   @if (!isMobile) {
     <hr />
@@ -274,17 +285,17 @@
           /></a>
         }
         <p class="ui-eyebrow">Entrenamiento</p>
-        <a class="mobile-link" routerLink="/ejercicios" (click)="closeMobile()"
-          >Explorar ejercicios<app-icon name="external"
-        /></a>
-        <a class="mobile-link" routerLink="/videos" (click)="closeMobile()"
-          >Guías de entrenamiento<app-icon name="external"
-        /></a>
         @if (effectiveRole === 'subscriber' || effectiveRole === 'admin') {
+          <a class="mobile-link role-mobile-link--subscriber" routerLink="/f3" (click)="closeMobile()"
+            >Acceso rápido QR<app-icon name="check"
+          /></a>
           <a class="mobile-link role-mobile-link--subscriber" routerLink="/coach-ia" (click)="closeMobile()"
             >Coach virtual IA<app-icon name="spark"
           /></a>
         }
+        <a class="mobile-link" routerLink="/videos" (click)="closeMobile()"
+          >Guías de entrenamiento<app-icon name="external"
+        /></a>
         <a class="mobile-link" routerLink="/productos" (click)="closeMobile()"
           >Productos<app-icon name="external"
         /></a>

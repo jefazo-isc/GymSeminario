@@ -1,6 +1,7 @@
 import { CommonModule } from "@angular/common";
 import { Component, inject } from "@angular/core";
 import { Router, RouterModule } from "@angular/router";
+import { isPureReceptionUser, readGymUser } from "../../../../core/auth/route.guards";
 import { CapacitorNativeService } from "../../../../core/mobile/capacitor-native.service";
 import { isMobileVersion } from "../../../../core/mobile/is-mobile";
 import { IconComponent } from "../../../../shared/ui/icon/icon.component";
@@ -25,13 +26,24 @@ export class BottomNavComponent {
   readonly native = inject(CapacitorNativeService);
   readonly isMobile = isMobileVersion();
 
-  readonly items: BottomNavItem[] = [
-    { id: "home", label: "Inicio", icon: "monitor", path: "/home" },
-    { id: "actividad", label: "Actividad", icon: "play", path: "/ejercicios" },
-    { id: "coach", label: "Coach IA", icon: "spark", path: "/coach-ia" },
-    { id: "cuenta", label: "Cuenta", icon: "calendar", path: "/estado-cuenta" },
-    { id: "menu", label: "Más", icon: "menu", isAction: true },
-  ];
+  get items(): BottomNavItem[] {
+    if (isPureReceptionUser(readGymUser())) {
+      return [
+        { id: "home", label: "Inicio", icon: "monitor", path: "/home" },
+        { id: "qr", label: "QR Puerta", icon: "check", path: "/scanner" },
+        { id: "asistencia", label: "Asistencias", icon: "calendar", path: "/editar2" },
+        { id: "cuenta", label: "Clave", icon: "user", path: "/change" },
+        { id: "menu", label: "Más", icon: "menu", isAction: true },
+      ];
+    }
+    return [
+      { id: "home", label: "Inicio", icon: "monitor", path: "/home" },
+      { id: "qr", label: "Acceso QR", icon: "check", path: "/f3" },
+      { id: "coach", label: "Coach IA", icon: "spark", path: "/coach-ia" },
+      { id: "cuenta", label: "Cuenta", icon: "calendar", path: "/estado-cuenta" },
+      { id: "menu", label: "Más", icon: "menu", isAction: true },
+    ];
+  }
 
   isActive(path?: string): boolean {
     if (!path) return false;
