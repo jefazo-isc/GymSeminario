@@ -5,7 +5,7 @@
       <strong>Catálogo por validar.</strong> Los precios originales se
       conservan; Gymshark Whey Protein figura con un importe de prueba de $1
       MXN. El sitio no tiene confirmación propia de inventario ni un sistema
-      persistente de pedidos. Revisa los importes antes de continuar a PayPal.
+      persistente de pedidos. Revisa los importes antes de continuar con Stripe.
     </p>
   </div>
   <div class="filters">
@@ -211,14 +211,23 @@
         }
       </div>
       <div class="cart-total">
-        <span>Total MXN</span
-        ><strong>{{
-          total | currency: "MXN" : "symbol-narrow" : "1.2-2"
-        }}</strong>
+        <span>Total MXN</span>
+        @if (activeCoupon) {
+          <div class="cart-total__discounted">
+            <del>{{ total | currency: "MXN" : "symbol-narrow" : "1.2-2" }}</del>
+            <strong>{{
+              finalTotal | currency: "MXN" : "symbol-narrow" : "1.2-2"
+            }}</strong>
+          </div>
+        } @else {
+          <strong>{{
+            total | currency: "MXN" : "symbol-narrow" : "1.2-2"
+          }}</strong>
+        }
       </div>
       <p class="help">
-        La suma conserva los importes del catálogo. No se añaden cargos desde
-        esta interfaz.
+        La suma conserva los importes del catálogo. Puedes aplicar un cupón
+        institucional antes de confirmar en Stripe.
       </p>
       <label class="checkout-review"
         ><input
@@ -227,28 +236,170 @@
           (ngModelChange)="reviewCheckout()"
           [disabled]="checkoutPending || paymentState === 'pending'"
         /><span
-          >He revisado los productos y el total antes de continuar a
-          PayPal.</span
+          >He revisado los productos y el total antes de continuar con
+          Stripe.</span
         ></label
       >
       @if (reviewed) {
-        @if (paymentState === "loading") {
-          <p class="help" role="status">Cargando PayPal…</p>
-        }
-        <div id="paypal-button-container"></div>
-        @if (paymentState === "unavailable") {
-          <button
-            appButton="secondary"
-            type="button"
-            (click)="renderPayPalButton()"
-          >
-            Reintentar PayPal
-          </button>
-        }
+        <section
+          id="stripe-checkout-container"
+          class="stripe-checkout"
+          aria-label="Pasarela de pago Stripe"
+        >
+          <div class="stripe-checkout__header">
+            <span class="eyebrow">Pasarela Stripe</span>
+            <span class="status status--accent">Stripe Live · 256-bit</span>
+          </div>
+
+          <div class="stripe-coupon">
+            <label for="product-coupon">Cupón de descuento o cortesía</label>
+            <div class="coupon-row">
+              <input
+                id="product-coupon"
+                class="control"
+                type="text"
+                [(ngModel)]="couponCode"
+                (keydown.enter)="$event.preventDefault(); applyCoupon()"
+                placeholder="Ej. UAACOMITE"
+                [disabled]="checkoutPending"
+              />
+              <button
+                appButton="secondary"
+                type="button"
+                (click)="applyCoupon()"
+                [disabled]="checkoutPending"
+              >
+                Aplicar
+              </button>
+              @if (activeCoupon) {
+                <button
+                  appButton="ghost"
+                  type="button"
+                  (click)="removeCoupon()"
+                  [disabled]="checkoutPending"
+                >
+                  Quitar
+                </button>
+              }
+            </div>
+            @if (activeCoupon) {
+              <p class="coupon-status coupon-status--valid" role="status">
+                {{ activeCoupon.descripcion }} (-{{ activeCoupon.porcentaje }}%
+                · -{{
+                  activeCoupon.descuento
+                    | currency: "MXN" : "symbol-narrow" : "1.2-2"
+                }})
+              </p>
+            } @else if (couponError) {
+              <p class="coupon-status coupon-status--invalid" role="alert">
+                {{ couponError }}
+              </p>
+            }
+          </div>
+
+          @if (isCourtesyBypass) {
+            <div class="stripe-courtesy" role="status">
+              <strong>Cortesía institucional aprobada (100%).</strong>
+              <p>
+                Tu pedido se registrará sin cobro a tarjeta bancaria y generará
+                tu folio Stripe de inmediato.
+              </p>
+            </div>
+          } @else {
+            <div class="stripe-card-form">
+              <div class="field">
+                <label for="stripe-card-holder">Nombre en la tarjeta</label>
+                <input
+                  id="stripe-card-holder"
+                  class="control"
+                  type="text"
+                  [(ngModel)]="cardHolder"
+                  placeholder="Titular de la tarjeta"
+                  autocomplete="cc-name"
+                  [disabled]="checkoutPending"
+                />
+              </div>
+              <div class="field">
+                <label for="stripe-card-number">Número de tarjeta</label>
+                <input
+                  id="stripe-card-number"
+                  class="control"
+                  type="text"
+                  maxlength="19"
+                  inputmode="numeric"
+                  autocomplete="cc-number"
+                  [ngModel]="cardNumber"
+                  (ngModelChange)="onCardNumberInput($event)"
+                  placeholder="4242 4242 4242 4242"
+                  [disabled]="checkoutPending"
+                />
+              </div>
+              <div class="stripe-card-row">
+                <div class="field">
+                  <label for="stripe-card-expiry">Expiración</label>
+                  <input
+                    id="stripe-card-expiry"
+                    class="control"
+                    type="text"
+                    maxlength="5"
+                    inputmode="numeric"
+                    autocomplete="cc-exp"
+                    [ngModel]="cardExpiry"
+                    (ngModelChange)="onCardExpiryInput($event)"
+                    placeholder="MM/AA"
+                    [disabled]="checkoutPending"
+                  />
+                </div>
+                <div class="field">
+                  <label for="stripe-card-cvc">CVC</label>
+                  <input
+                    id="stripe-card-cvc"
+                    class="control"
+                    type="password"
+                    maxlength="4"
+                    inputmode="numeric"
+                    autocomplete="cc-csc"
+                    [(ngModel)]="cardCvc"
+                    placeholder="123"
+                    [disabled]="checkoutPending"
+                  />
+                </div>
+              </div>
+            </div>
+          }
+
+          <div class="stripe-actions">
+            <button
+              id="stripe-submit-btn"
+              appButton="primary"
+              type="button"
+              (click)="submitStripePayment()"
+              [disabled]="checkoutPending"
+            >
+              @if (checkoutPending) {
+                Procesando con Stripe…
+              } @else if (isCourtesyBypass) {
+                Confirmar cortesía ($0.00 MXN)
+              } @else {
+                Pagar
+                {{ finalTotal | currency: "MXN" : "symbol-narrow" : "1.2-2" }}
+                MXN con Stripe
+              }
+            </button>
+            <button
+              appButton="ghost"
+              type="button"
+              (click)="cancelStripeCheckout()"
+              [disabled]="checkoutPending"
+            >
+              Cancelar
+            </button>
+          </div>
+        </section>
       }
       @if (checkoutPending) {
         <p class="notice" role="status">
-          La operación está en curso en PayPal. Espera a conocer su resultado.
+          La operación está en curso en Stripe. Espera a conocer su resultado.
         </p>
       }
     } @else {
@@ -258,8 +409,29 @@
         <p class="help">Añade un artículo para revisar cantidades e importe.</p>
       </div>
     }
-    @if (paymentMessage) {
-      <p class="notice" role="status">{{ paymentMessage }}</p>
+    @if (lastReceipt; as receipt) {
+      <div class="notice notice--success stripe-receipt" role="status">
+        <app-icon name="check" />
+        <div>
+          <strong>Compra confirmada con Stripe</strong>
+          <p>
+            Folio: <code>{{ receipt.folio }}</code> · Total:
+            {{
+              receipt.totalPagado | currency: "MXN" : "symbol-narrow" : "1.2-2"
+            }}
+            MXN
+          </p>
+        </div>
+      </div>
+    }
+    @if (paymentMessage && paymentState !== "complete") {
+      <p
+        class="notice"
+        [class.notice--error]="paymentState === 'error'"
+        role="status"
+      >
+        {{ paymentMessage }}
+      </p>
     }
   </div></ng-template
 >

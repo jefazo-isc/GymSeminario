@@ -1,13 +1,18 @@
-import { NgZone } from "@angular/core";
+import { provideHttpClient } from "@angular/common/http";
+import {
+  HttpTestingController,
+  provideHttpClientTesting,
+} from "@angular/common/http/testing";
 import { TestBed } from "@angular/core/testing";
 import { provideRouter } from "@angular/router";
+import { of } from "rxjs";
 import Swal from "sweetalert2";
+import { BILLING } from "../../features/billing/data-access/billing.repository";
 import { MembresiaService } from "../../features/memberships/data-access/membresia.service";
 import {
   MembresiasComponent,
   demoPrice,
 } from "../../features/memberships/pages/membresias/membresias.component";
-import { PayPalSdkLoader } from "../../features/products/data-access/paypal-sdk.loader";
 import {
   ProductosComponent,
   cartTotal,
@@ -59,22 +64,43 @@ describe("Membership review", () => {
 });
 
 describe("Product cart", () => {
-  let oldPayPal: any;
+  let http: HttpTestingController;
+  let registrarPagoSpy: jasmine.Spy;
+
   beforeEach(() => {
-    oldPayPal = (window as any).paypal;
+    registrarPagoSpy = jasmine
+      .createSpy("registrarPago")
+      .and.callFake((concepto, monto, metodo, descripcion, customFolio) => ({
+        id: "tx-unit",
+        folio: customFolio || "STR-000001",
+        concepto,
+        monto,
+        fecha: "2026-11-22",
+        metodo,
+        estado: "Pagado",
+        descripcion,
+      }));
     TestBed.configureTestingModule({
       imports: [ProductosComponent],
-      providers: [provideRouter([])],
-    }).overrideComponent(ProductosComponent, {
-      set: {
-        template:
-          '<div id="paypal-button-container"></div><span class="sdk-feedback">{{paymentMessage}}</span>',
-        imports: [],
-      },
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        {
+          provide: BILLING,
+          useValue: {
+            pagos$: of([]),
+            registrarPago: registrarPagoSpy,
+            marcarComoPagado: () => {},
+            cancelarPago: () => {},
+          },
+        },
+      ],
     });
+    http = TestBed.inject(HttpTestingController);
   });
   afterEach(() => {
-    (window as any).paypal = oldPayPal;
+    http.verify();
   });
   it("preserves all forty prices, groups units and computes an exact total", () => {
     const fixture = TestBed.createComponent(ProductosComponent);
@@ -104,87 +130,120 @@ describe("Product cart", () => {
     component.query = "no-existe";
     expect(component.filtered.length).toBe(0);
   });
-  it("renders cancellation feedback from a provider callback outside the Angular zone", async () => {
-    let callbacks: any;
-    (window as any).paypal = {
-      Buttons: (options: any) => {
-        callbacks = options;
-        return {
-          render: () => Promise.resolve(),
-          close: () => Promise.resolve(),
-        };
-      },
-    };
+  it("applies institutional 100% bypass coupons and percentage promo codes", () => {
     const fixture = TestBed.createComponent(ProductosComponent);
-    fixture.autoDetectChanges();
+    fixture.detectChanges();
     const component = fixture.componentInstance;
-    component.agregarAlCarrito(component.productos[0]);
-    component.reviewed = true;
-    await component.renderPayPalButton();
-    TestBed.inject(NgZone).runOutsideAngular(() => callbacks.onCancel());
-    await fixture.whenStable();
-    expect(
-      fixture.nativeElement.querySelector(".sdk-feedback").textContent,
-    ).toContain("se canceló");
-    expect(component.carrito.length).toBe(1);
+    component.agregarAlCarrito(component.productos[1]); // $1400
+    for (const code of ["UAACOMITE", "COMITE", "WACOMYT", "WACOM", "UAA"]) {
+      component.couponCode = code;
+      component.applyCoupon();
+      expect(component.activeCoupon?.porcentaje).toBe(100);
+      expect(component.finalTotal).toBe(0);
+      expect(component.isCourtesyBypass).toBeTrue();
+    }
+    component.couponCode = "PROMO50";
+    component.applyCoupon();
+    expect(component.finalTotal).toBe(700);
+    expect(component.isCourtesyBypass).toBeFalse();
+
+    component.couponCode = "PROMO20";
+    component.applyCoupon();
+    expect(component.finalTotal).toBe(1120);
+
+    component.couponCode = "NO_EXISTE";
+    component.applyCoupon();
+    expect(component.activeCoupon).toBeNull();
+    expect(component.couponError).toContain("Cupón no válido");
   });
-  it("shows unavailable instead of throwing when the payment SDK is missing", async () => {
-    (window as any).paypal = undefined;
-    spyOn(TestBed.inject(PayPalSdkLoader), "load").and.rejectWith(
-      new Error("Mock unavailable"),
-    );
+  it("retains the cart on cancellation or invalid card details", async () => {
     const fixture = TestBed.createComponent(ProductosComponent);
     fixture.detectChanges();
     const component = fixture.componentInstance;
     component.agregarAlCarrito(component.productos[0]);
     component.reviewed = true;
-    await component.renderPayPalButton();
-    expect(component.paymentState).toBe("unavailable");
+    await component.submitStripePayment();
+    expect(component.paymentState).toBe("error");
     expect(component.carrito.length).toBe(1);
+
+    component.cancelStripeCheckout();
+    fixture.detectChanges();
+    expect(component.paymentMessage).toContain("se canceló");
+    expect(component.carrito.length).toBe(1);
+    expect(component.reviewed).toBeFalse();
   });
-  it("keeps the amount contract and retains the cart until PayPal reports COMPLETED", async () => {
-    let callbacks: any;
-    const render = jasmine.createSpy().and.resolveTo();
-    (window as any).paypal = {
-      Buttons: (options: any) => {
-        callbacks = options;
-        return { render, close: () => Promise.resolve() };
-      },
-    };
+  it("keeps the amount contract, calls /api/stripe/confirm-payment with type 'product', and registers in BILLING with folio STR-XXXXXX", async () => {
     const fixture = TestBed.createComponent(ProductosComponent);
     fixture.detectChanges();
     const component = fixture.componentInstance;
     component.agregarAlCarrito(component.productos[0]);
     component.changeQuantity(component.productos[0], 1);
     component.reviewed = true;
-    await component.renderPayPalButton();
-    const create = jasmine.createSpy().and.resolveTo({ id: "UNIT-ORDER" });
-    await callbacks.createOrder({}, { order: { create } });
-    expect(create).toHaveBeenCalledWith({
-      purchase_units: [{ amount: { value: "2.00" } }],
-    });
-    await callbacks.onApprove(
-      {},
-      {
-        order: {
-          capture: () =>
-            Promise.resolve({ status: "PENDING", id: "UNIT-ORDER" }),
-        },
-      },
+    component.reviewCheckout();
+    component.cardHolder = "Socio Prueba";
+    component.cardNumber = "4242 4242 4242 4242";
+    component.cardExpiry = "12/28";
+    component.cardCvc = "123";
+
+    const pending = component.submitStripePayment();
+    const req = http.expectOne((r) =>
+      r.url.endsWith("/api/stripe/confirm-payment"),
     );
+    expect(req.request.method).toBe("POST");
+    expect(req.request.body.type).toBe("product");
+    expect(req.request.body.precio).toBe(2);
+    expect(req.request.body.finalPrice).toBe(2);
     expect(component.carrito.length).toBe(2);
-    expect(component.paymentState).toBe("pending");
-    await callbacks.onApprove(
-      {},
-      {
-        order: {
-          capture: () =>
-            Promise.resolve({ status: "COMPLETED", id: "UNIT-ORDER" }),
-        },
-      },
+    expect(component.checkoutPending).toBeTrue();
+
+    req.flush({
+      ok: true,
+      folio: "STR-908172",
+      paymentIntentId: "pi_live_prod_1",
+    });
+    await pending;
+
+    expect(registrarPagoSpy).toHaveBeenCalledWith(
+      "Suplementos",
+      2,
+      "Tarjeta de crédito",
+      jasmine.stringMatching(/Stripe ID: pi_live_prod_1/),
+      "STR-908172",
     );
     expect(component.carrito.length).toBe(0);
     expect(component.total).toBe(0);
+    expect(component.paymentState).toBe("complete");
+    expect(component.lastReceipt?.folio).toBe("STR-908172");
+  });
+  it("supports 100% coupon bypass (UAACOMITE) without card details and registers $0.00 in BILLING", async () => {
+    const fixture = TestBed.createComponent(ProductosComponent);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    component.agregarAlCarrito(component.productos[1]); // $1400
+    component.reviewed = true;
+    component.couponCode = "UAACOMITE";
+    component.applyCoupon();
+    expect(component.isCourtesyBypass).toBeTrue();
+
+    const pending = component.submitStripePayment();
+    const req = http.expectOne((r) =>
+      r.url.endsWith("/api/stripe/confirm-payment"),
+    );
+    expect(req.request.body.type).toBe("product");
+    expect(req.request.body.finalPrice).toBe(0);
+    expect(req.request.body.cupon).toBe("UAACOMITE");
+    req.flush({ ok: true });
+    await pending;
+
+    expect(registrarPagoSpy).toHaveBeenCalledWith(
+      "Suplementos",
+      0,
+      "Tarjeta de crédito",
+      jasmine.stringMatching(/Cupón: UAACOMITE/),
+      jasmine.stringMatching(/^STR-\d{6}$/),
+    );
+    expect(component.carrito.length).toBe(0);
+    expect(component.paymentState).toBe("complete");
   });
 });
 

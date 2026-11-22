@@ -13,7 +13,7 @@ export type MetodoPago =
   | "Tarjeta de crédito"
   | "Transferencia"
   | "QR / App"
-  | "PayPal";
+  | "Stripe";
 
 export type EstadoPago = "Pagado" | "Pendiente" | "Cancelado";
 

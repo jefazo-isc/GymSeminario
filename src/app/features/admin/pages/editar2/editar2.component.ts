@@ -8,8 +8,13 @@ import {
   TemplateRef,
 } from "@angular/core";
 import { FormsModule, NgForm } from "@angular/forms";
+import { Router, RouterLink } from "@angular/router";
 import { Subscription } from "rxjs";
 import Swal from "sweetalert2";
+import {
+  isTestEnvironment,
+  resolveReceptionOrAdminAccess,
+} from "../../../../core/auth/route.guards";
 import { ButtonDirective } from "../../../../shared/ui/button.directive";
 import { IconComponent } from "../../../../shared/ui/icon/icon.component";
 import { TRAINING } from "../../../training/data-access/training.repository";
@@ -21,6 +26,7 @@ import { AttendanceRecord } from "../../../training/models/registration.model";
     CommonModule,
     FormsModule,
     DialogModule,
+    RouterLink,
     ButtonDirective,
     IconComponent,
   ],
@@ -30,8 +36,10 @@ import { AttendanceRecord } from "../../../training/models/registration.model";
 export class Editar2Component implements OnInit, OnDestroy {
   private training = inject(TRAINING);
   private dialog = inject(Dialog);
+  private router = inject(Router, { optional: true });
   private stream?: Subscription;
   private editor?: DialogRef;
+  esAdminORecepcion = resolveReceptionOrAdminAccess();
   registros: AttendanceRecord[] = [];
   clases = ["Cardio", "Funcional", "Spinning", "Box", "CrossFit"];
   query = "";
@@ -42,6 +50,21 @@ export class Editar2Component implements OnInit, OnDestroy {
   busyId = "";
   editing: AttendanceRecord | null = null;
   ngOnInit() {
+    this.esAdminORecepcion = resolveReceptionOrAdminAccess();
+    if (!this.esAdminORecepcion) {
+      if (!isTestEnvironment()) {
+        void Swal.fire({
+          icon: "error",
+          title: "Acceso denegado",
+          text: "Solo el personal de recepción o administración tiene acceso a la gestión de asistencias.",
+          confirmButtonText: "Regresar al inicio",
+          confirmButtonColor: "#375d67",
+        }).then(() => {
+          void this.router?.navigate(["/home"]).catch(() => {});
+        });
+      }
+      return;
+    }
     this.load();
   }
   ngOnDestroy() {
@@ -49,6 +72,7 @@ export class Editar2Component implements OnInit, OnDestroy {
     this.editor?.close();
   }
   load() {
+    if (!this.esAdminORecepcion) return;
     this.stream?.unsubscribe();
     this.loading = true;
     this.error = "";
@@ -84,6 +108,7 @@ export class Editar2Component implements OnInit, OnDestroy {
       .sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
   }
   openEditor(item: AttendanceRecord, template: TemplateRef<unknown>) {
+    if (!this.esAdminORecepcion) return;
     this.editing = { ...item };
     this.editor = this.dialog.open(template, {
       width: "640px",
@@ -100,6 +125,7 @@ export class Editar2Component implements OnInit, OnDestroy {
     if (!this.busyId) this.editor?.close();
   }
   async actualizar(item: AttendanceRecord, form?: NgForm) {
+    if (!this.esAdminORecepcion) return;
     if (this.busyId || form?.invalid) {
       form?.form.markAllAsTouched();
       return;
@@ -123,7 +149,7 @@ export class Editar2Component implements OnInit, OnDestroy {
     }
   }
   async borrar(item: AttendanceRecord) {
-    if (this.busyId) return;
+    if (!this.esAdminORecepcion || this.busyId) return;
     const result = await Swal.fire({
       title: "Eliminar registro compartido",
       text:

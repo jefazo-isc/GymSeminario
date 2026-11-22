@@ -142,6 +142,113 @@
   font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
+.cart-total__discounted {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.cart-total__discounted del {
+  font-size: 0.9375rem;
+  color: var(--color-text-secondary);
+}
+.stripe-checkout {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  background: var(--color-surface-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+.stripe-checkout__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.stripe-checkout__header .eyebrow {
+  margin: 0;
+}
+.stripe-coupon {
+  display: grid;
+  gap: 8px;
+}
+.stripe-coupon label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+.coupon-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.coupon-row .control {
+  flex: 1 1 auto;
+  min-height: 40px;
+  padding: 8px 10px;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+}
+.coupon-row .ui-button {
+  min-height: 40px;
+  padding-inline: 12px;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+.coupon-status {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+.coupon-status--valid {
+  color: var(--color-success);
+}
+.coupon-status--invalid {
+  color: var(--color-danger);
+}
+.stripe-courtesy {
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-success-soft);
+  color: var(--color-success);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.stripe-courtesy p {
+  margin: 4px 0 0;
+}
+.stripe-card-form {
+  display: grid;
+  gap: 10px;
+}
+.stripe-card-form .field {
+  gap: 4px;
+}
+.stripe-card-form .field > label {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+.stripe-card-form .control {
+  min-height: 40px;
+  padding: 8px 10px;
+  font-size: 0.875rem;
+}
+.stripe-card-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.stripe-actions {
+  display: grid;
+  gap: 8px;
+}
+.stripe-actions > .ui-button {
+  width: 100%;
+}
+.stripe-receipt code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: 600;
+}
 .checkout-review {
   display: flex;
   gap: 12px;

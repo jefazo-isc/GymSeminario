@@ -32,25 +32,6 @@ db.exec(`
   )
 `);
 
-// Tabla de transacciones y auditoría financiera de PayPal (esquema adaptado de CANACO)
-db.exec(`
-  CREATE TABLE IF NOT EXISTS paypal_transactions (
-    id TEXT PRIMARY KEY,
-    order_id TEXT NOT NULL,
-    capture_id TEXT,
-    user_email TEXT NOT NULL,
-    plan_nombre TEXT NOT NULL,
-    monto_bruto REAL NOT NULL,
-    tarifa_paypal REAL NOT NULL,
-    monto_neto REAL NOT NULL,
-    moneda TEXT NOT NULL DEFAULT 'MXN',
-    estado TEXT NOT NULL DEFAULT 'COMPLETED',
-    payer_name TEXT,
-    payer_email TEXT,
-    created_at TEXT DEFAULT (datetime('now'))
-  )
-`);
-
 // Tabla de transacciones y cupones de Stripe
 db.exec(`
   CREATE TABLE IF NOT EXISTS stripe_transactions (
@@ -491,211 +472,6 @@ app.post('/api/membership/renew', (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════════════════════
-// PASARELA DE PAGOS PAYPAL (Integración REST API v2 + Lógica CANACO)
-// ══════════════════════════════════════════════════════════════════════════
-
-// 1. Crear Orden en PayPal
-app.post('/api/paypal/create-order', async (req, res) => {
-  try {
-    const { planId, planNombre, precio, userEmail } = req.body;
-    if (!precio || !planNombre) {
-      return res.status(400).json({ error: 'Faltan datos de la orden' });
-    }
-
-    const clientId = process.env.PAYPAL_CLIENT_ID;
-    const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
-    const apiBase = process.env.PAYPAL_API_BASE || 'https://api-m.paypal.com';
-
-    if (clientId && clientSecret) {
-      const auth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
-      const tokenResp = await fetch(`${apiBase}/v1/oauth2/token`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Basic ${auth}`,
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: 'grant_type=client_credentials'
-      });
-      const tokenData = await tokenResp.json();
-      const accessToken = tokenData.access_token;
-
-      const orderResp = await fetch(`${apiBase}/v2/checkout/orders`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          intent: 'CAPTURE',
-          purchase_units: [{
-            reference_id: planId || 'plan-espaciogym',
-            description: `Membresía espacioGYM - ${planNombre}`,
-            amount: {
-              currency_code: 'MXN',
-              value: Number(precio).toFixed(2)
-            }
-          }]
-        })
-      });
-      const orderData = await orderResp.json();
-      return res.json({ id: orderData.id, status: orderData.status });
-    }
-
-    // Identificador de orden para procesamiento
-    const demoOrderId = `PAYPAL-ORD-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
-    res.json({
-      id: demoOrderId,
-      status: 'CREATED'
-    });
-  } catch (err) {
-    console.error('Error al crear orden de PayPal:', err);
-    res.status(500).json({ error: 'No se pudo crear la orden de PayPal' });
-  }
-});
-
-// 2. Capturar Orden y Conciliar Membresía en SQLite
-app.post('/api/paypal/capture-order', async (req, res) => {
-  try {
-    const { orderId, planNombre, precio, userEmail, periodo, payerName, payerEmail, beneficios } = req.body;
-    if (!orderId || !planNombre || !precio || !userEmail) {
-      return res.status(400).json({ error: 'Datos de captura incompletos' });
-    }
-
-    const clientId = process.env.PAYPAL_CLIENT_ID;
-    const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
-    const apiBase = process.env.PAYPAL_API_BASE || 'https://api-m.paypal.com';
-    let captureId = `CAP-${Date.now()}`;
-    let estadoCaptura = 'COMPLETED';
-
-    if (clientId && clientSecret && !orderId.startsWith('PAYPAL-ORD-')) {
-      const auth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
-      const tokenResp = await fetch(`${apiBase}/v1/oauth2/token`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Basic ${auth}`,
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: 'grant_type=client_credentials'
-      });
-      const tokenData = await tokenResp.json();
-      const accessToken = tokenData.access_token;
-
-      const captureResp = await fetch(`${apiBase}/v2/checkout/orders/${orderId}/capture`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      const captureData = await captureResp.json();
-      captureId = captureData.id || captureId;
-      estadoCaptura = captureData.status || 'COMPLETED';
-    }
-
-    // Regla Financiera de Liquidaciones (Portado de class-lilith-liquidaciones.php)
-    // Tarifa bancaria pasarela estándar: (monto * 3.6%) + $3.00 MXN + IVA (16%)
-    const tarifaPasarela = Number(((precio * 0.036 + 3.00) * 1.16).toFixed(2));
-    const montoNeto = Number((precio - tarifaPasarela).toFixed(2));
-    const folioPago = `PAY-${Math.floor(100000 + Math.random() * 900000)}`;
-
-    // Registrar transacción contable en SQLite
-    const transId = `TX-${Date.now()}`;
-    db.prepare(`
-      INSERT INTO paypal_transactions (
-        id, order_id, capture_id, user_email, plan_nombre, monto_bruto,
-        tarifa_paypal, monto_neto, moneda, estado, payer_name, payer_email, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'MXN', ?, ?, ?, datetime('now'))
-    `).run(
-      transId,
-      orderId,
-      captureId,
-      userEmail,
-      planNombre,
-      precio,
-      tarifaPasarela,
-      montoNeto,
-      estadoCaptura,
-      payerName || 'Socio espacioGYM',
-      payerEmail || userEmail
-    );
-
-    // Calcular fechas para activación inmediata de la membresía
-    const hoy = new Date();
-    const meses = periodo === 'Anual' ? 12 : periodo === 'Trimestral' ? 3 : 1;
-    const fechaFin = new Date(hoy);
-    fechaFin.setMonth(fechaFin.getMonth() + meses);
-
-    const pad = (n) => String(n).padStart(2, '0');
-    const fInicioStr = `${hoy.getFullYear()}-${pad(hoy.getMonth() + 1)}-${pad(hoy.getDate())}`;
-    const fFinStr = `${fechaFin.getFullYear()}-${pad(fechaFin.getMonth() + 1)}-${pad(fechaFin.getDate())}`;
-
-    const memId = `MEM-${Math.floor(100000 + Math.random() * 900000)}`;
-    const beneficiosJson = JSON.stringify(beneficios || [
-      'Acceso total a gimnasio y vestidores',
-      'Coach Virtual IA ilimitado',
-      'Generación de código QR para asistencia'
-    ]);
-
-    // Actualizar membresía en SQLite
-    db.prepare(`
-      INSERT INTO memberships (
-        id, user_email, plan_nombre, precio, periodo, fecha_inicio, fecha_fin, estado, beneficios, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'Activa', ?, datetime('now'))
-      ON CONFLICT(id) DO UPDATE SET
-        plan_nombre = excluded.plan_nombre,
-        precio = excluded.precio,
-        periodo = excluded.periodo,
-        fecha_inicio = excluded.fecha_inicio,
-        fecha_fin = excluded.fecha_fin,
-        estado = 'Activa',
-        beneficios = excluded.beneficios,
-        updated_at = datetime('now')
-    `).run(memId, userEmail, planNombre, precio, periodo || 'Mensual', fInicioStr, fFinStr, beneficiosJson);
-
-    res.json({
-      ok: true,
-      mensaje: 'Pago con PayPal procesado exitosamente y membresía activada',
-      folio: folioPago,
-      transaccionId: transId,
-      orderId,
-      captureId,
-      montoBruto: precio,
-      tarifaPasarela,
-      montoNeto,
-      membresia: {
-        id: memId,
-        nombrePlan: planNombre,
-        periodo: periodo || 'Mensual',
-        fechaInicio: fInicioStr,
-        fechaFin: fFinStr,
-        estado: 'Activa'
-      }
-    });
-  } catch (err) {
-    console.error('Error al capturar orden de PayPal:', err);
-    res.status(500).json({ error: 'Error al procesar la captura de fondos con PayPal' });
-  }
-});
-
-// 3. Consultar historial contable de transacciones PayPal
-app.get('/api/paypal/transactions', (req, res) => {
-  try {
-    const email = req.query.email;
-    let query = 'SELECT * FROM paypal_transactions ORDER BY datetime(created_at) DESC';
-    let params = [];
-    if (email) {
-      query = 'SELECT * FROM paypal_transactions WHERE user_email = ? ORDER BY datetime(created_at) DESC';
-      params = [email];
-    }
-    const rows = db.prepare(query).all(...params);
-    res.json(rows);
-  } catch (err) {
-    console.error('Error al consultar transacciones de PayPal:', err);
-    res.status(500).json({ error: 'Error al consultar transacciones' });
-  }
-});
-
-// ══════════════════════════════════════════════════════════════════════════
 // PASARELA OFICIAL STRIPE & MOTOR DE CUPONES DE DESCUENTO
 // ══════════════════════════════════════════════════════════════════════════
 
@@ -711,26 +487,74 @@ const CUPONES_VALIDOS = {
   'PROMO10': { porcentaje: 10, descripcion: 'Descuento Especial 10%' }
 };
 
+function applyCouponDiscount(basePrice, couponCode) {
+  const code = String(couponCode || '').trim().toUpperCase();
+  const base = Number(basePrice);
+  const safeBase = Number.isFinite(base) ? Math.max(0, base) : 0;
+  if (!code || !CUPONES_VALIDOS[code]) {
+    return {
+      valid: false,
+      codigo: code,
+      cuponInfo: null,
+      descuento: 0,
+      finalPrice: Number(safeBase.toFixed(2))
+    };
+  }
+  const cuponInfo = CUPONES_VALIDOS[code];
+  const descuento = Number(((safeBase * cuponInfo.porcentaje) / 100).toFixed(2));
+  const finalPrice = Math.max(0, Number((safeBase - descuento).toFixed(2)));
+  return {
+    valid: true,
+    codigo: code,
+    cuponInfo,
+    descuento,
+    finalPrice
+  };
+}
+
+function resolveStripeOrderMeta(body = {}) {
+  const {
+    type,
+    planNombre,
+    description,
+    orderSummary,
+    descripcion,
+    items
+  } = body || {};
+
+  const orderType = String(type || 'membership').toLowerCase().trim() === 'product'
+    ? 'product'
+    : 'membership';
+
+  const itemsSummary = Array.isArray(items) && items.length > 0
+    ? items
+        .map((item) => `${item?.cantidad || item?.qty || item?.quantity || 1}x ${item?.nombre || item?.name || 'Producto'}`)
+        .join(', ')
+    : '';
+
+  const orderDescription = String(
+    planNombre || orderSummary || description || descripcion || itemsSummary || ''
+  ).trim();
+
+  return { orderType, orderDescription };
+}
+
 // 1. Validar Cupón de Descuento
 app.post('/api/stripe/validate-coupon', (req, res) => {
   try {
-    const { couponCode, precio } = req.body;
-    const code = String(couponCode || '').trim().toUpperCase();
-    if (!code || !CUPONES_VALIDOS[code]) {
+    const { couponCode, precio } = req.body || {};
+    const result = applyCouponDiscount(precio || 0, couponCode);
+    if (!result.valid) {
       return res.status(404).json({ ok: false, error: 'Cupón no válido o expirado' });
     }
-    const cupon = CUPONES_VALIDOS[code];
-    const base = Number(precio) || 0;
-    const descuento = Number(((base * cupon.porcentaje) / 100).toFixed(2));
-    const finalPrice = Math.max(0, Number((base - descuento).toFixed(2)));
 
     res.json({
       ok: true,
-      codigo: code,
-      porcentaje: cupon.porcentaje,
-      descripcion: cupon.descripcion,
-      descuento,
-      finalPrice
+      codigo: result.codigo,
+      porcentaje: result.cuponInfo.porcentaje,
+      descripcion: result.cuponInfo.descripcion,
+      descuento: result.descuento,
+      finalPrice: result.finalPrice
     });
   } catch (err) {
     console.error('Error al validar cupón:', err);
@@ -738,28 +562,27 @@ app.post('/api/stripe/validate-coupon', (req, res) => {
   }
 });
 
-// 2. Crear PaymentIntent en Stripe
+// 2. Crear PaymentIntent en Stripe (Membresías y Productos de Tienda)
 app.post('/api/stripe/create-payment-intent', async (req, res) => {
   try {
-    const { planId, planNombre, precio, userEmail, periodo, cupon } = req.body;
-    if (!precio || !planNombre) {
+    const body = req.body || {};
+    const { planId, precio, amount, userEmail, periodo, cupon } = body;
+    const { orderType, orderDescription } = resolveStripeOrderMeta(body);
+    const basePrice = Number(precio !== undefined ? precio : amount);
+
+    if (!Number.isFinite(basePrice) || basePrice <= 0 || !orderDescription) {
       return res.status(400).json({ error: 'Faltan datos de la orden' });
     }
 
-    let finalPrice = Number(precio);
-    if (cupon) {
-      const code = String(cupon).trim().toUpperCase();
-      if (CUPONES_VALIDOS[code]) {
-        const item = CUPONES_VALIDOS[code];
-        const desc = (finalPrice * item.porcentaje) / 100;
-        finalPrice = Math.max(0, Number((finalPrice - desc).toFixed(2)));
-      }
-    }
+    const discountResult = applyCouponDiscount(basePrice, cupon);
+    const finalPrice = discountResult.finalPrice;
+    const cuponAplicado = discountResult.valid ? discountResult.codigo : null;
 
     // Si el cupón es 100%, pase directo de cortesía
     if (finalPrice === 0) {
       return res.json({
         freePass: true,
+        type: orderType,
         finalPrice: 0,
         paymentIntentId: `pi_free_${Date.now()}`,
         clientSecret: null,
@@ -773,12 +596,19 @@ app.post('/api/stripe/create-payment-intent', async (req, res) => {
       const params = new URLSearchParams();
       params.append('amount', String(amountInCents));
       params.append('currency', 'mxn');
-      params.append('description', `Membresía espacioGYM - ${planNombre} (${periodo || 'Mensual'})`);
+      const stripeDescription = orderType === 'product'
+        ? `Tienda espacioGYM - ${orderDescription}`
+        : `Membresía espacioGYM - ${orderDescription} (${periodo || 'Mensual'})`;
+      params.append('description', stripeDescription);
       if (userEmail) params.append('receipt_email', userEmail);
+      params.append('metadata[type]', orderType);
       params.append('metadata[userEmail]', userEmail || '');
-      params.append('metadata[planNombre]', planNombre);
-      params.append('metadata[periodo]', periodo || 'Mensual');
-      if (cupon) params.append('metadata[cupon]', String(cupon));
+      params.append('metadata[planNombre]', orderDescription);
+      if (orderType !== 'product') {
+        params.append('metadata[periodo]', periodo || 'Mensual');
+      }
+      if (planId) params.append('metadata[planId]', String(planId));
+      if (cuponAplicado) params.append('metadata[cupon]', cuponAplicado);
 
       const stripeResp = await fetch('https://api.stripe.com/v1/payment_intents', {
         method: 'POST',
@@ -790,9 +620,9 @@ app.post('/api/stripe/create-payment-intent', async (req, res) => {
       });
 
       const piData = await stripeResp.json();
-      if (piData.error) {
-        console.error('Error Stripe API:', piData.error);
-        return res.status(400).json({ error: piData.error.message });
+      if (!stripeResp.ok || piData.error) {
+        console.error('Error Stripe API:', piData.error || piData);
+        return res.status(400).json({ error: piData.error?.message || 'Error al crear PaymentIntent en Stripe' });
       }
 
       return res.json({
@@ -800,7 +630,8 @@ app.post('/api/stripe/create-payment-intent', async (req, res) => {
         paymentIntentId: piData.id,
         amount: piData.amount,
         currency: piData.currency,
-        finalPrice
+        finalPrice,
+        type: orderType
       });
     }
 
@@ -811,7 +642,8 @@ app.post('/api/stripe/create-payment-intent', async (req, res) => {
       paymentIntentId: mockPi,
       amount: Math.round(finalPrice * 100),
       currency: 'mxn',
-      finalPrice
+      finalPrice,
+      type: orderType
     });
   } catch (err) {
     console.error('Error al crear PaymentIntent con Stripe:', err);
@@ -819,12 +651,12 @@ app.post('/api/stripe/create-payment-intent', async (req, res) => {
   }
 });
 
-// 3. Confirmar Pago y Conciliar Membresía en SQLite
+// 3. Confirmar Pago (Membresías o Productos) y Registrar en SQLite
 app.post('/api/stripe/confirm-payment', async (req, res) => {
   try {
+    const body = req.body || {};
     const {
       paymentIntentId,
-      planNombre,
       precio,
       finalPrice,
       userEmail,
@@ -832,17 +664,69 @@ app.post('/api/stripe/confirm-payment', async (req, res) => {
       cupon,
       payerName,
       payerEmail,
-      beneficios
-    } = req.body;
+      beneficios,
+      items
+    } = body;
 
-    if (!planNombre || !userEmail) {
+    const { orderType, orderDescription } = resolveStripeOrderMeta(body);
+    const rawEmail = (userEmail || payerEmail || '').toString().trim();
+    const resolvedEmail = rawEmail || (orderType === 'product' ? 'cliente@espaciogym.com' : '');
+
+    if (!orderDescription || !resolvedEmail) {
       return res.status(400).json({ error: 'Datos de confirmación incompletos' });
     }
 
-    const montoCobrado = finalPrice !== undefined ? Number(finalPrice) : Number(precio || 0);
+    const basePrecioNum = Number(precio);
+    const hasPrecio = precio !== undefined && Number.isFinite(basePrecioNum);
+    let montoCobrado;
+    let descuento = 0;
+    const cuponAplicado = cupon ? String(cupon).trim().toUpperCase() : null;
+
+    if (finalPrice !== undefined && Number.isFinite(Number(finalPrice))) {
+      montoCobrado = Math.max(0, Number(Number(finalPrice).toFixed(2)));
+      const baseCompare = hasPrecio ? basePrecioNum : montoCobrado;
+      descuento = Math.max(0, Number((baseCompare - montoCobrado).toFixed(2)));
+    } else if (hasPrecio && cuponAplicado) {
+      const discountResult = applyCouponDiscount(basePrecioNum, cuponAplicado);
+      montoCobrado = discountResult.finalPrice;
+      descuento = discountResult.descuento;
+    } else {
+      montoCobrado = hasPrecio ? Math.max(0, Number(basePrecioNum.toFixed(2))) : 0;
+    }
+
     const folioPago = `STR-${Math.floor(100000 + Math.random() * 900000)}`;
-    const transId = `STX-${Date.now()}`;
-    const piId = paymentIntentId || `pi_live_${Date.now()}`;
+    const transId = `STX-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    const piId = paymentIntentId || (montoCobrado === 0 ? `pi_free_${Date.now()}` : `pi_live_${Date.now()}`);
+
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    const isRealStripePi =
+      typeof piId === 'string' &&
+      piId.startsWith('pi_') &&
+      !piId.startsWith('pi_free_') &&
+      !piId.startsWith('pi_live_');
+
+    if (montoCobrado > 0 && stripeSecretKey && isRealStripePi) {
+      const verifyResp = await fetch(
+        `https://api.stripe.com/v1/payment_intents/${encodeURIComponent(piId)}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${stripeSecretKey}`
+          }
+        }
+      );
+      const piVerify = await verifyResp.json();
+      if (!verifyResp.ok || piVerify.error) {
+        return res.status(400).json({
+          error: piVerify?.error?.message || 'Error al verificar PaymentIntent en Stripe'
+        });
+      }
+      if (piVerify.status !== 'succeeded') {
+        return res.status(400).json({
+          error: `El pago en Stripe no está completado (estado: ${piVerify.status || 'desconocido'})`
+        });
+      }
+    }
 
     // Registrar en tabla stripe_transactions
     db.prepare(`
@@ -853,16 +737,32 @@ app.post('/api/stripe/confirm-payment', async (req, res) => {
     `).run(
       transId,
       piId,
-      userEmail,
-      planNombre,
+      resolvedEmail,
+      orderDescription,
       montoCobrado,
-      Number(precio || montoCobrado) - montoCobrado,
-      cupon || null,
+      descuento,
+      cuponAplicado,
       payerName || 'Socio espacioGYM',
-      payerEmail || userEmail
+      payerEmail || resolvedEmail
     );
 
-    // Calcular vigencia
+    if (orderType === 'product') {
+      return res.json({
+        ok: true,
+        type: 'product',
+        mensaje: 'Compra de productos con Stripe procesada exitosamente',
+        folio: folioPago,
+        transaccionId: transId,
+        paymentIntentId: piId,
+        descripcion: orderDescription,
+        montoPagado: montoCobrado,
+        descuento,
+        cupon: cuponAplicado,
+        items: Array.isArray(items) ? items : undefined
+      });
+    }
+
+    // Calcular vigencia y activar/upsert membresía en SQLite
     const hoy = new Date();
     const meses = periodo === 'Anual' ? 12 : periodo === 'Trimestral' ? 3 : 1;
     const fechaFin = new Date(hoy);
@@ -893,19 +793,20 @@ app.post('/api/stripe/confirm-payment', async (req, res) => {
         estado = 'Activa',
         beneficios = excluded.beneficios,
         updated_at = datetime('now')
-    `).run(memId, userEmail, planNombre, montoCobrado, periodo || 'Mensual', fInicioStr, fFinStr, beneficiosJson);
+    `).run(memId, resolvedEmail, orderDescription, montoCobrado, periodo || 'Mensual', fInicioStr, fFinStr, beneficiosJson);
 
-    res.json({
+    return res.json({
       ok: true,
+      type: 'membership',
       mensaje: 'Pago con Stripe procesado exitosamente y membresía activada',
       folio: folioPago,
       transaccionId: transId,
       paymentIntentId: piId,
       montoPagado: montoCobrado,
-      cupon: cupon || null,
+      cupon: cuponAplicado,
       membresia: {
         id: memId,
-        nombrePlan: planNombre,
+        nombrePlan: orderDescription,
         periodo: periodo || 'Mensual',
         fechaInicio: fInicioStr,
         fechaFin: fFinStr,
@@ -925,7 +826,7 @@ app.get('/api/stripe/transactions', (req, res) => {
     let query = 'SELECT * FROM stripe_transactions ORDER BY datetime(created_at) DESC';
     let params = [];
     if (email) {
-      query = 'SELECT * FROM stripe_transactions WHERE user_email = ? ORDER BY datetime(created_at) DESC';
+      query = 'SELECT * FROM stripe_transactions WHERE lower(user_email) = lower(?) ORDER BY datetime(created_at) DESC';
       params = [email];
     }
     const rows = db.prepare(query).all(...params);

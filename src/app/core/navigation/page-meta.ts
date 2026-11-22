@@ -135,7 +135,7 @@ export const PAGE_META: Record<string, PageMeta> = {
     title: "Completa tu entrenamiento.",
     section: "Productos",
     description:
-      "Explora el catálogo y revisa tu carrito antes de continuar a PayPal.",
+      "Explora el catálogo y revisa tu carrito antes de continuar con Stripe.",
   },
   "sign-in": {
     title: "Qué bueno tenerte de vuelta.",

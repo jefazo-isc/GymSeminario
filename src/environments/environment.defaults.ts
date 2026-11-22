@@ -17,11 +17,6 @@ export const environment = {
     messagingSenderId: "963889664175",
     appId: "1:963889664175:web:cd0fc54b0adea5b28a445a",
   },
-  paypal: {
-    clientId:
-      "AQMkAioK3b4Xhh1FtMYMRJbaeAKv--g9yGzot54i-n9KizKios8n-arYhReRG_0tbWpzgFZkOB7VzhPM",
-    currency: "MXN",
-  },
   stripe: {
     publishableKey:
       "pk_live_51TJbqSAXikJUnNBirg3ahcqYKpdObC3zDNfPcRLB85CWT0fVzm9WLIgwUywsqy8CbcyVYBdzMRvv1fRjWcnHQho100V5kYgtUa",

@@ -1,4 +1,10 @@
 import { Routes } from "@angular/router";
+import {
+  adminGuard,
+  authGuard,
+  receptionOrAdminGuard,
+  subscriptionGuard,
+} from "./core/auth/route.guards";
 
 export const routes: Routes = [
   { path: "", redirectTo: "/home", pathMatch: "full" },
@@ -18,6 +24,7 @@ export const routes: Routes = [
   },
   {
     path: "estado-cuenta",
+    canActivate: [authGuard],
     loadComponent: () =>
       import(
         "./features/billing/pages/estado-cuenta/estado-cuenta.component"
@@ -25,6 +32,7 @@ export const routes: Routes = [
   },
   {
     path: "actividad",
+    canActivate: [authGuard, subscriptionGuard],
     loadComponent: () =>
       import("./features/activity/pages/actividad/actividad.component").then(
         (m) => m.ActividadComponent,
@@ -32,6 +40,7 @@ export const routes: Routes = [
   },
   {
     path: "coach-ia",
+    canActivate: [authGuard, subscriptionGuard],
     loadComponent: () =>
       import("./features/coach/pages/coach-ia/coach-ia.component").then(
         (m) => m.CoachIaComponent,
@@ -140,6 +149,7 @@ export const routes: Routes = [
   },
   {
     path: "f2",
+    canActivate: [authGuard, subscriptionGuard],
     loadComponent: () =>
       import(
         "./features/training/pages/formulario2/formulario2.component"
@@ -152,6 +162,7 @@ export const routes: Routes = [
   },
   {
     path: "f3",
+    canActivate: [authGuard, subscriptionGuard],
     loadComponent: () =>
       import(
         "./features/training/pages/formulario3/formulario3.component"
@@ -164,6 +175,7 @@ export const routes: Routes = [
   },
   {
     path: "editar1",
+    canActivate: [receptionOrAdminGuard],
     loadComponent: () =>
       import("./features/admin/pages/editar1/editar1.component").then(
         (m) => m.Editar1Component,
@@ -171,6 +183,7 @@ export const routes: Routes = [
   },
   {
     path: "editar2",
+    canActivate: [receptionOrAdminGuard],
     loadComponent: () =>
       import("./features/admin/pages/editar2/editar2.component").then(
         (m) => m.Editar2Component,
@@ -185,6 +198,7 @@ export const routes: Routes = [
   },
   {
     path: "micuenta",
+    canActivate: [authGuard],
     loadComponent: () =>
       import("./features/profile/pages/micuenta/micuenta.component").then(
         (m) => m.MicuentaComponent,
@@ -200,6 +214,7 @@ export const routes: Routes = [
   { path: "sesion", redirectTo: "/auth/sign-in", pathMatch: "full" },
   {
     path: "graficos",
+    canActivate: [adminGuard],
     loadComponent: () =>
       import("./features/admin/pages/graficos/graficos.component").then(
         (m) => m.GraficosComponent,

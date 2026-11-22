@@ -6,6 +6,12 @@ import Swal from "sweetalert2";
 import { routes } from "../../app.routes";
 import { authErrorMessage } from "../../core/auth/auth-feedback";
 import { CaptchaController } from "../../core/auth/captcha-controller";
+import {
+  adminGuard,
+  authGuard,
+  receptionOrAdminGuard,
+  subscriptionGuard,
+} from "../../core/auth/route.guards";
 import { pageMetaFor } from "../../core/navigation/page-meta";
 import { AuthService } from "../../features/auth/data-access/auth.service";
 import SignInComponent from "../../features/auth/pages/sign-in/sign-in.component";
@@ -155,5 +161,29 @@ describe("Page organization", () => {
     expect(host.querySelector('a[href="/membresias"]')).not.toBeNull();
     expect(host.querySelector('a[href="/carrusel"]')).not.toBeNull();
     expect(host.querySelector("app-video-cards")).toBeNull();
+  });
+  it("protects member, subscriber, reception, and admin routes with route guards", () => {
+    const byPath = new Map(routes.map((route) => [route.path, route]));
+    expect(byPath.get("micuenta")?.canActivate).toEqual([authGuard]);
+    expect(byPath.get("estado-cuenta")?.canActivate).toEqual([authGuard]);
+    expect(byPath.get("f2")?.canActivate).toEqual([
+      authGuard,
+      subscriptionGuard,
+    ]);
+    expect(byPath.get("f3")?.canActivate).toEqual([
+      authGuard,
+      subscriptionGuard,
+    ]);
+    expect(byPath.get("actividad")?.canActivate).toEqual([
+      authGuard,
+      subscriptionGuard,
+    ]);
+    expect(byPath.get("coach-ia")?.canActivate).toEqual([
+      authGuard,
+      subscriptionGuard,
+    ]);
+    expect(byPath.get("editar1")?.canActivate).toEqual([receptionOrAdminGuard]);
+    expect(byPath.get("editar2")?.canActivate).toEqual([receptionOrAdminGuard]);
+    expect(byPath.get("graficos")?.canActivate).toEqual([adminGuard]);
   });
 });

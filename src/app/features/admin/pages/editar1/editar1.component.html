@@ -1,4 +1,15 @@
 <section class="feature-page stack">
+  @if (!esAdminORecepcion) {
+    <div class="empty-state" role="alert">
+      <app-icon name="grid" />
+      <h2>Acceso denegado.</h2>
+      <p>
+        Solo el personal de recepción o administración puede consultar y editar
+        las agendas de entrenamiento.
+      </p>
+      <a appButton="primary" routerLink="/home">Regresar al inicio</a>
+    </div>
+  } @else {
   <div class="notice notice--warning">
     <app-icon name="grid" />
     <p>
@@ -153,86 +164,89 @@
       </div>
     }
   }
+  }
 </section>
 <ng-template #editRecord>
-  @if (editing; as item) {
-    <form
-      class="admin-editor"
-      #editForm="ngForm"
-      (ngSubmit)="actualizar(item, editForm)"
-    >
-      <header class="toolbar">
-        <div>
-          <span class="eyebrow">Editar registro</span>
-          <h2 id="edit-record-title">Revisa los datos de la sesión.</h2>
-        </div>
-        <button
-          class="ui-icon-button"
-          type="button"
-          aria-label="Cerrar edición"
-          [disabled]="!!busyId"
-          (click)="closeEditor()"
-        >
-          <app-icon name="close" />
-        </button>
-      </header>
-      <p class="help">Socio: {{ item.nombre || "Sin nombre" }}</p>
-      <div class="form-grid">
-        <div class="field full-width">
-          <label for="admin-activity">Actividad</label
-          ><select
-            id="admin-activity"
-            name="activity"
-            [(ngModel)]="item.entrenamiento"
-            required
+  @if (esAdminORecepcion) {
+    @if (editing; as item) {
+      <form
+        class="admin-editor"
+        #editForm="ngForm"
+        (ngSubmit)="actualizar(item, editForm)"
+      >
+        <header class="toolbar">
+          <div>
+            <span class="eyebrow">Editar registro</span>
+            <h2 id="edit-record-title">Revisa los datos de la sesión.</h2>
+          </div>
+          <button
+            class="ui-icon-button"
+            type="button"
+            aria-label="Cerrar edición"
+            [disabled]="!!busyId"
+            (click)="closeEditor()"
           >
-            @for (activity of entrenamientos; track activity) {
-              <option [value]="activity">{{ activity }}</option>
-            }
-          </select>
+            <app-icon name="close" />
+          </button>
+        </header>
+        <p class="help">Socio: {{ item.nombre || "Sin nombre" }}</p>
+        <div class="form-grid">
+          <div class="field full-width">
+            <label for="admin-activity">Actividad</label
+            ><select
+              id="admin-activity"
+              name="activity"
+              [(ngModel)]="item.entrenamiento"
+              required
+            >
+              @for (activity of entrenamientos; track activity) {
+                <option [value]="activity">{{ activity }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label for="admin-date">Fecha</label
+            ><input
+              id="admin-date"
+              name="date"
+              type="date"
+              [(ngModel)]="item.fecha"
+              required
+            />
+          </div>
+          <div class="field">
+            <label for="admin-time">Turno</label
+            ><select
+              id="admin-time"
+              name="time"
+              [(ngModel)]="item.turno"
+              required
+            >
+              <option>Mañana</option>
+              <option>Tarde</option>
+              <option>Noche</option>
+            </select>
+          </div>
         </div>
-        <div class="field">
-          <label for="admin-date">Fecha</label
-          ><input
-            id="admin-date"
-            name="date"
-            type="date"
-            [(ngModel)]="item.fecha"
-            required
-          />
-        </div>
-        <div class="field">
-          <label for="admin-time">Turno</label
-          ><select
-            id="admin-time"
-            name="time"
-            [(ngModel)]="item.turno"
-            required
+        @if (editForm.invalid && editForm.submitted) {
+          <p class="field-error" role="alert">Completa todos los campos.</p>
+        }
+        @if (feedback) {
+          <p class="field-error" role="status">{{ feedback }}</p>
+        }
+        <div class="form-actions">
+          <button appButton="primary" type="submit" [disabled]="!!busyId">
+            {{ busyId ? "Guardando…" : "Guardar en Firestore" }}</button
+          ><button
+            appButton="secondary"
+            type="button"
+            [disabled]="!!busyId"
+            (click)="closeEditor()"
           >
-            <option>Mañana</option>
-            <option>Tarde</option>
-            <option>Noche</option>
-          </select>
+            Cancelar edición
+          </button>
         </div>
-      </div>
-      @if (editForm.invalid && editForm.submitted) {
-        <p class="field-error" role="alert">Completa todos los campos.</p>
-      }
-      @if (feedback) {
-        <p class="field-error" role="status">{{ feedback }}</p>
-      }
-      <div class="form-actions">
-        <button appButton="primary" type="submit" [disabled]="!!busyId">
-          {{ busyId ? "Guardando…" : "Guardar en Firestore" }}</button
-        ><button
-          appButton="secondary"
-          type="button"
-          [disabled]="!!busyId"
-          (click)="closeEditor()"
-        >
-          Cancelar edición
-        </button>
-      </div>
-    </form>
+      </form>
+    }
   }
 </ng-template>

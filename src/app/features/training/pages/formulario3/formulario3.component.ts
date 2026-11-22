@@ -3,16 +3,20 @@ import { Component, inject, OnInit, signal } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { RouterLink } from "@angular/router";
+import {
+  GymSessionUser,
+  hasRoleSubscriptionBypass,
+  isMembershipActive,
+  isTestEnvironment,
+  readGymUser,
+} from "../../../../core/auth/route.guards";
 import { ButtonDirective } from "../../../../shared/ui/button.directive";
 import { IconComponent } from "../../../../shared/ui/icon/icon.component";
 import { SESSION } from "../../../auth/data-access/session.repository";
+import { MEMBERSHIPS } from "../../../memberships/data-access/membership.repository";
+import { Membresia } from "../../../memberships/models/membresia.model";
 import { TRAINING } from "../../data-access/training.repository";
 import { QrViewComponent } from "../../ui/qr-view/qr-view.component";
-interface StoredGymUserSession {
-  uid?: string | number;
-  email?: string | null;
-  nombre?: string | null;
-}
 
 @Component({
   selector: "app-formulario3",
@@ -32,6 +36,8 @@ interface StoredGymUserSession {
 export class Formulario3Component implements OnInit {
   private training = inject(TRAINING);
   private auth = inject(SESSION);
+  private memberships = inject(MEMBERSHIPS, { optional: true });
+  private currentMembership: Membresia | null = null;
   nuevo = { clase: "", fecha: "", hora: "", alumno: "" };
   clases = ["Cardio", "Funcional", "Spinning", "Box", "CrossFit"];
   userName: string | null = null;
@@ -45,26 +51,45 @@ export class Formulario3Component implements OnInit {
   notificationError = false;
   authReady = false;
   authenticated = false;
+  tieneSuscripcion = false;
   private user: { email: string | null; phoneNumber: string | null; displayName: string | null } | null = null;
   constructor() {
     this.auth.userName$
-      .pipe(takeUntilDestroyed())
+      ?.pipe(takeUntilDestroyed())
       .subscribe((name) => (this.userName = name));
+    this.memberships?.membresiaActual$
+      ?.pipe(takeUntilDestroyed())
+      .subscribe((mem) => {
+        this.currentMembership = mem;
+        this.tieneSuscripcion = this.hasSubscriptionAccess(readGymUser());
+      });
   }
   ngOnInit() {
-    // Construir usuario desde localStorage (JWT)
-    const raw = localStorage.getItem("gym_user");
-    if (raw) {
-      try {
-        const u = JSON.parse(raw) as StoredGymUserSession;
-        this.user = { email: u.email ?? null, phoneNumber: null, displayName: u.nombre ?? null };
-        this.authenticated = true;
-        if (!this.userName && u.nombre) {
-          this.userName = u.nombre;
-        }
-      } catch { /* noop */ }
+    const u = readGymUser();
+    if (u && (u.email || u.uid)) {
+      this.user = {
+        email: u.email ?? null,
+        phoneNumber: null,
+        displayName: u.nombre ?? null,
+      };
+      this.authenticated = true;
+      if (!this.userName && u.nombre) {
+        this.userName = u.nombre;
+      }
+    } else {
+      this.user = null;
+      this.authenticated = false;
     }
+    this.tieneSuscripcion = this.hasSubscriptionAccess(u);
     this.authReady = true;
+  }
+  private hasSubscriptionAccess(user: GymSessionUser | null): boolean {
+    if (!user || (!user.email && !user.uid)) return false;
+    if (hasRoleSubscriptionBypass(user)) return true;
+    if (isTestEnvironment()) {
+      return this.currentMembership?.id !== "MEM-INACTIVA";
+    }
+    return isMembershipActive(this.currentMembership);
   }
   async guardar() {
     if (this.loading() || this.enviado) return;
@@ -73,16 +98,21 @@ export class Formulario3Component implements OnInit {
       this.error = "Completa clase, fecha y hora.";
       return;
     }
-    const raw = localStorage.getItem("gym_user");
-    let u: StoredGymUserSession | null = null;
-    if (raw) {
-      try {
-        u = JSON.parse(raw) as StoredGymUserSession;
-      } catch {
-        u = null;
-      }
+    const u = readGymUser();
+    if (!u || (!u.email && !u.uid)) {
+      this.authenticated = false;
+      this.tieneSuscripcion = false;
+      this.error = "Inicia sesión para registrar una asistencia.";
+      return;
     }
-    const socioName = this.userName || u?.nombre;
+    this.authenticated = true;
+    if (!this.hasSubscriptionAccess(u)) {
+      this.tieneSuscripcion = false;
+      this.error = "Necesitas una membresía activa para registrar una asistencia.";
+      return;
+    }
+    this.tieneSuscripcion = true;
+    const socioName = this.userName || u.nombre;
     if (!socioName) {
       this.error =
         "No se pudo obtener el nombre del socio. Revisa tu sesión antes de registrar la asistencia.";
@@ -91,10 +121,6 @@ export class Formulario3Component implements OnInit {
     this.nuevo.alumno = socioName;
     this.loading.set(true);
     try {
-      if (!u) {
-        this.error = "Inicia sesión para registrar una asistencia.";
-        return;
-      }
       this.user = { email: u.email ?? null, phoneNumber: null, displayName: u.nombre ?? null };
       const result = await this.training.createAttendance(this.nuevo);
       this.recordId = result.id;

@@ -3,25 +3,23 @@ import { BreakpointObserver } from "@angular/cdk/layout";
 import { Overlay } from "@angular/cdk/overlay";
 import { CommonModule } from "@angular/common";
 import {
-  afterNextRender,
   Component,
   DestroyRef,
   effect,
   inject,
-  Injector,
   TemplateRef,
 } from "@angular/core";
 import { takeUntilDestroyed, toSignal } from "@angular/core/rxjs-interop";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
 import { map } from "rxjs";
-import { ButtonDirective } from "../../../../shared/ui/button.directive";
 import { RequestState } from "../../../../core/data-access/request-state";
-import { RequestStateComponent } from "../../../../shared/ui/request-state/request-state.component";
+import { ButtonDirective } from "../../../../shared/ui/button.directive";
 import { IconComponent } from "../../../../shared/ui/icon/icon.component";
+import { RequestStateComponent } from "../../../../shared/ui/request-state/request-state.component";
 import { CartStore } from "../../data-access/cart.store";
-import { PayPalCheckoutAdapter } from "../../data-access/paypal-checkout.adapter";
 import { PRODUCT_CATALOG } from "../../data-access/product-catalog.repository";
+import { StripeCheckoutAdapter } from "../../data-access/stripe-checkout.adapter";
 import { Producto } from "../../models/producto.model";
 export { cartTotal } from "../../models/cart.model";
 
@@ -41,14 +39,13 @@ export { cartTotal } from "../../models/cart.model";
 })
 export class ProductosComponent {
   private readonly cart = inject(CartStore);
-  private readonly checkout = inject(PayPalCheckoutAdapter);
+  private readonly checkout = inject(StripeCheckoutAdapter);
   private readonly catalog = inject(PRODUCT_CATALOG);
   private readonly destroyRef = inject(DestroyRef);
   productos: Producto[] = [];
   catalogLoading = false;
   catalogError = "";
 
-  private injector = inject(Injector);
   private dialog = inject(Dialog);
   private overlay = inject(Overlay);
   private drawer?: DialogRef;
@@ -64,11 +61,31 @@ export class ProductosComponent {
   get total() {
     return this.cart.total();
   }
+  get finalTotal() {
+    return this.checkout.finalAmount();
+  }
+  get activeCoupon() {
+    return this.checkout.activeCoupon();
+  }
+  get couponError() {
+    return this.checkout.couponError();
+  }
+  get isCourtesyBypass() {
+    return this.checkout.isCourtesyBypass();
+  }
+  get lastReceipt() {
+    return this.checkout.lastReceipt();
+  }
   query = "";
   category = "";
   sort = "featured";
   cartOpen = false;
   reviewed = false;
+  couponCode = "";
+  cardNumber = "";
+  cardExpiry = "";
+  cardCvc = "";
+  cardHolder = "";
   get checkoutPending() {
     return this.checkout.pending();
   }
@@ -96,11 +113,9 @@ export class ProductosComponent {
       });
     effect(() => {
       if (!this.compact() && this.cartOpen) this.drawer?.close();
-      this.schedulePayPal();
     });
     inject(DestroyRef).onDestroy(() => {
       this.drawer?.close();
-      this.closePayPal();
     });
   }
   get catalogState(): RequestState<Producto[]> {
@@ -176,8 +191,6 @@ export class ProductosComponent {
   calcularTotal() {
     this.reviewed = false;
     this.checkout.resetReview();
-    this.closePayPal();
-    this.schedulePayPal();
   }
   imageError(event: Event) {
     const image = event.target as HTMLImageElement;
@@ -200,28 +213,51 @@ export class ProductosComponent {
     });
     this.drawer.closed.subscribe(() => {
       this.cartOpen = false;
-      this.closePayPal();
     });
-    this.schedulePayPal();
   }
   closeCart() {
     if (!this.checkoutPending) this.drawer?.close();
   }
   reviewCheckout() {
-    this.schedulePayPal();
+    if (this.reviewed) {
+      this.checkout.prepareCheckout();
+    } else {
+      this.checkout.resetReview();
+    }
   }
-  private schedulePayPal() {
-    afterNextRender(() => this.renderPayPalButton(), {
-      injector: this.injector,
+  applyCoupon() {
+    this.checkout.applyCoupon(this.couponCode);
+  }
+  removeCoupon() {
+    this.couponCode = "";
+    this.checkout.clearCoupon();
+  }
+  onCardNumberInput(value: string) {
+    const digits = value.replace(/\D/g, "").slice(0, 16);
+    this.cardNumber = digits.replace(/(.{4})/g, "$1 ").trim();
+  }
+  onCardExpiryInput(value: string) {
+    const digits = value.replace(/\D/g, "").slice(0, 4);
+    this.cardExpiry =
+      digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
+  }
+  async submitStripePayment() {
+    const receipt = await this.checkout.processPayment({
+      cardNumber: this.cardNumber,
+      expiry: this.cardExpiry,
+      cvc: this.cardCvc,
+      holderName: this.cardHolder,
     });
+    if (receipt) {
+      this.reviewed = false;
+      this.couponCode = "";
+      this.cardNumber = "";
+      this.cardExpiry = "";
+      this.cardCvc = "";
+    }
   }
-  private closePayPal() {
-    this.checkout.close();
-  }
-  async renderPayPalButton() {
-    const container = document.getElementById("paypal-button-container");
-    if (!container || !this.carrito.length || !this.reviewed) return;
-    await this.checkout.render(container);
-    if (!this.carrito.length) this.reviewed = false;
+  cancelStripeCheckout() {
+    this.reviewed = false;
+    this.checkout.cancelCheckout();
   }
 }

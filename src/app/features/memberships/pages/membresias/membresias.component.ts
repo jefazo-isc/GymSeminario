@@ -9,7 +9,6 @@ import Swal from "sweetalert2";
 import { ButtonDirective } from "../../../../shared/ui/button.directive";
 import { IconComponent } from "../../../../shared/ui/icon/icon.component";
 import { MEMBERSHIPS } from "../../data-access/membership.repository";
-import { MembershipPaypalService } from "../../data-access/membership-paypal.service";
 import { MembershipStripeService } from "../../data-access/membership-stripe.service";
 import { Membresia, PlanCatalogo } from "../../models/membresia.model";
 export type BillingPeriod = "Mensual" | "Trimestral" | "Anual";
@@ -35,7 +34,6 @@ export function demoPrice(base: number, period: BillingPeriod) {
 })
 export class MembresiasComponent {
   private service = inject(MEMBERSHIPS);
-  private paypalService = inject(MembershipPaypalService, { optional: true });
   private stripeService = inject(MembershipStripeService, { optional: true });
   membresiaActual: Membresia | null = null;
   private memberStream?: Subscription;
@@ -289,15 +287,6 @@ export class MembresiasComponent {
           if (res.success) {
             this.loadMembership();
           }
-        } else if (this.paypalService) {
-          const res = await this.paypalService.iniciarFlujoPagoPayPal(
-            plan,
-            this.filtroPeriodo,
-            price,
-          );
-          if (res.success) {
-            this.loadMembership();
-          }
         } else {
           await this.service.adquirirOActualizarPlan(
             { ...plan, precio: price },
@@ -365,15 +354,6 @@ export class MembresiasComponent {
       if (result.isConfirmed) {
         if (this.stripeService) {
           const res = await this.stripeService.iniciarFlujoPagoStripe(
-            planCorrespondiente,
-            mem.periodo as BillingPeriod,
-            price,
-          );
-          if (res.success) {
-            this.loadMembership();
-          }
-        } else if (this.paypalService) {
-          const res = await this.paypalService.iniciarFlujoPagoPayPal(
             planCorrespondiente,
             mem.periodo as BillingPeriod,
             price,

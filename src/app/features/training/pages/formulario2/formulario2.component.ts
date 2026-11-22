@@ -1,5 +1,6 @@
 import { CommonModule } from "@angular/common";
 import { Component, inject, OnInit, signal } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import {
   FormBuilder,
   FormsModule,
@@ -7,16 +8,20 @@ import {
   Validators,
 } from "@angular/forms";
 import { RouterLink } from "@angular/router";
+import {
+  GymSessionUser,
+  hasRoleSubscriptionBypass,
+  isMembershipActive,
+  isTestEnvironment,
+  readGymUser,
+} from "../../../../core/auth/route.guards";
 import { ButtonDirective } from "../../../../shared/ui/button.directive";
 import { IconComponent } from "../../../../shared/ui/icon/icon.component";
 import { SESSION } from "../../../auth/data-access/session.repository";
+import { MEMBERSHIPS } from "../../../memberships/data-access/membership.repository";
+import { Membresia } from "../../../memberships/models/membresia.model";
 import { TRAINING } from "../../data-access/training.repository";
 import { QrViewComponent } from "../../ui/qr-view/qr-view.component";
-interface StoredGymUserSession {
-  uid?: string | number;
-  email?: string | null;
-  nombre?: string | null;
-}
 
 @Component({
   selector: "app-formulario2",
@@ -37,6 +42,8 @@ export class Formulario2Component implements OnInit {
   private fb = inject(FormBuilder);
   private training = inject(TRAINING);
   private auth = inject(SESSION);
+  private memberships = inject(MEMBERSHIPS, { optional: true });
+  private currentMembership: Membresia | null = null;
   formulario = this.fb.nonNullable.group({
     entrenamiento: ["", Validators.required],
     fecha: ["", Validators.required],
@@ -54,24 +61,40 @@ export class Formulario2Component implements OnInit {
   notificationError = false;
   authReady = false;
   authenticated = false;
+  tieneSuscripcion = false;
   private user: { email: string | null; phoneNumber: string | null; displayName: string | null } | null = null;
+  constructor() {
+    this.memberships?.membresiaActual$
+      ?.pipe(takeUntilDestroyed())
+      .subscribe((mem) => {
+        this.currentMembership = mem;
+        this.tieneSuscripcion = this.hasSubscriptionAccess(readGymUser());
+      });
+  }
   ngOnInit() {
     this.minFecha = this.localDate();
-    const u = this.safeGetUser();
-    if (u) {
-      this.user = { email: u.email ?? null, phoneNumber: null, displayName: u.nombre ?? null };
+    const u = readGymUser();
+    if (u && (u.email || u.uid)) {
+      this.user = {
+        email: u.email ?? null,
+        phoneNumber: null,
+        displayName: u.nombre ?? null,
+      };
       this.authenticated = true;
+    } else {
+      this.user = null;
+      this.authenticated = false;
     }
+    this.tieneSuscripcion = this.hasSubscriptionAccess(u);
     this.authReady = true;
   }
-  private safeGetUser(): StoredGymUserSession | null {
-    const raw = localStorage.getItem("gym_user");
-    if (!raw) return null;
-    try {
-      return JSON.parse(raw) as StoredGymUserSession;
-    } catch {
-      return null;
+  private hasSubscriptionAccess(user: GymSessionUser | null): boolean {
+    if (!user || (!user.email && !user.uid)) return false;
+    if (hasRoleSubscriptionBypass(user)) return true;
+    if (isTestEnvironment()) {
+      return this.currentMembership?.id !== "MEM-INACTIVA";
     }
+    return isMembershipActive(this.currentMembership);
   }
   private localDate() {
     const date = new Date();
@@ -100,11 +123,21 @@ export class Formulario2Component implements OnInit {
     }
     this.loading.set(true);
     try {
-      const u = this.safeGetUser();
-      if (!u?.email && !u?.uid) {
+      const u = readGymUser();
+      if (!u || (!u.email && !u.uid)) {
+        this.authenticated = false;
+        this.tieneSuscripcion = false;
         this.error = "Inicia sesión antes de registrar un entrenamiento.";
         return;
       }
+      this.authenticated = true;
+      if (!this.hasSubscriptionAccess(u)) {
+        this.tieneSuscripcion = false;
+        this.error =
+          "Necesitas una membresía activa para agendar un entrenamiento.";
+        return;
+      }
+      this.tieneSuscripcion = true;
       this.user = { email: u.email ?? null, phoneNumber: null, displayName: u.nombre ?? null };
       const record = await this.training.createBooking({
         entrenamiento,

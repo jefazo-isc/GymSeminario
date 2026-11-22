@@ -12,13 +12,6 @@ export const APP_ENDPOINTS = new InjectionToken<ServiceEndpoints>(
   "GROM public service endpoints",
   { providedIn: "root", factory: () => environment.services },
 );
-export const PAYPAL_CONFIG = new InjectionToken<{
-  clientId: string;
-  currency: string;
-}>("PayPal public configuration", {
-  providedIn: "root",
-  factory: () => environment.paypal,
-});
 export const STRIPE_CONFIG = new InjectionToken<{
   publishableKey: string;
   currency: string;

@@ -1,3 +1,8 @@
+import { provideHttpClient } from "@angular/common/http";
+import {
+  HttpTestingController,
+  provideHttpClientTesting,
+} from "@angular/common/http/testing";
 import { TestBed } from "@angular/core/testing";
 import { provideRouter } from "@angular/router";
 import { of } from "rxjs";
@@ -7,12 +12,11 @@ import {
   SESSION,
   SessionRepository,
 } from "../../features/auth/data-access/session.repository";
+import { BILLING } from "../../features/billing/data-access/billing.repository";
 import { COURSES } from "../../features/courses/data-access/course.repository";
 import { BuscarComponent } from "../../features/courses/pages/buscar/buscar.component";
 import { CartStore } from "../../features/products/data-access/cart.store";
-import { PayPalCheckoutAdapter } from "../../features/products/data-access/paypal-checkout.adapter";
-import { PayPalSdkLoader } from "../../features/products/data-access/paypal-sdk.loader";
-import { PayPalButtonOptions } from "../../features/products/models/paypal.model";
+import { StripeCheckoutAdapter } from "../../features/products/data-access/stripe-checkout.adapter";
 import { ProductosComponent } from "../../features/products/pages/productos/productos.component";
 import {
   TRAINING,
@@ -187,44 +191,123 @@ describe("Navigation, state presentation and retained inputs", () => {
   });
 });
 describe("Uncertain payment recovery", () => {
-  it("keeps the cart and prevents a second order after an unconfirmed provider capture", async () => {
-    let callbacks!: PayPalButtonOptions;
-    const loader = {
-      load: () =>
-        Promise.resolve({
-          Buttons: (options: PayPalButtonOptions) => {
-            callbacks = options;
-            return {
-              render: () => Promise.resolve(),
-              close: () => Promise.resolve(),
-            };
-          },
-        }),
-    };
+  it("keeps the cart and prevents a second charge while Stripe confirmation is pending or unconfirmed", async () => {
+    const registrarPago = jasmine.createSpy("registrarPago");
     TestBed.configureTestingModule({
-      providers: [{ provide: PayPalSdkLoader, useValue: loader }],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        {
+          provide: BILLING,
+          useValue: {
+            pagos$: of([]),
+            registrarPago,
+            marcarComoPagado: () => {},
+            cancelarPago: () => {},
+          },
+        },
+      ],
     });
+    const http = TestBed.inject(HttpTestingController);
     const cart = TestBed.inject(CartStore);
     cart.add({
       id: 1,
       nombre: "Unit",
       descripcion: "Unit",
-      precio: 1,
+      precio: 150,
       imagen: "unit",
       categoria: "proteina",
     });
-    const adapter = TestBed.inject(PayPalCheckoutAdapter);
-    await adapter.render(document.createElement("div"));
-    const create = jasmine.createSpy().and.resolveTo("UNIT");
-    const capture = jasmine
-      .createSpy()
-      .and.resolveTo({ id: "UNIT", status: "PENDING" });
-    const actions = { order: { create, capture } };
-    await callbacks.createOrder({}, actions);
-    await callbacks.onApprove({}, actions);
+    const adapter = TestBed.inject(StripeCheckoutAdapter);
+    const validCard = {
+      cardNumber: "4242 4242 4242 4242",
+      expiry: "12/28",
+      cvc: "123",
+      holderName: "Unit User",
+    };
+
+    const firstAttempt = adapter.processPayment(validCard);
+    expect(adapter.pending()).toBeTrue();
+    expect(await adapter.processPayment(validCard)).toBeNull();
+
+    const req = http.expectOne((r) =>
+      r.url.endsWith("/api/stripe/confirm-payment"),
+    );
+    expect(req.request.body.type).toBe("product");
+    req.flush({ ok: false, status: "PENDING" });
+
+    expect(await firstAttempt).toBeNull();
     expect(cart.items().length).toBe(1);
     expect(adapter.state()).toBe("pending");
-    expect(() => callbacks.createOrder({}, actions)).toThrow();
-    expect(create.calls.count()).toBe(1);
+    expect(registrarPago).not.toHaveBeenCalled();
+
+    // Unconfirmed state blocks subsequent charge attempts on the same adapter.
+    expect(await adapter.processPayment(validCard)).toBeNull();
+    http.expectNone((r) => r.url.endsWith("/api/stripe/confirm-payment"));
+    http.verify();
+  });
+
+  it("retains the cart when Stripe declines a card (402) and allows retrying", async () => {
+    const registrarPago = jasmine.createSpy("registrarPago").and.resolveTo();
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        {
+          provide: BILLING,
+          useValue: {
+            pagos$: of([]),
+            registrarPago,
+            marcarComoPagado: () => {},
+            cancelarPago: () => {},
+          },
+        },
+      ],
+    });
+    const http = TestBed.inject(HttpTestingController);
+    const cart = TestBed.inject(CartStore);
+    cart.add({
+      id: 1,
+      nombre: "Unit",
+      descripcion: "Unit",
+      precio: 150,
+      imagen: "unit",
+      categoria: "proteina",
+    });
+    const adapter = TestBed.inject(StripeCheckoutAdapter);
+    const validCard = {
+      cardNumber: "4242 4242 4242 4242",
+      expiry: "12/28",
+      cvc: "123",
+      holderName: "Unit User",
+    };
+
+    const declined = adapter.processPayment(validCard);
+    const req1 = http.expectOne((r) =>
+      r.url.endsWith("/api/stripe/confirm-payment"),
+    );
+    req1.flush(
+      { error: "Fondos insuficientes" },
+      { status: 402, statusText: "Payment Required" },
+    );
+
+    expect(await declined).toBeNull();
+    expect(cart.items().length).toBe(1);
+    expect(adapter.state()).toBe("error");
+    expect(adapter.message()).toContain("Fondos insuficientes");
+    expect(registrarPago).not.toHaveBeenCalled();
+
+    const retry = adapter.processPayment(validCard);
+    const req2 = http.expectOne((r) =>
+      r.url.endsWith("/api/stripe/confirm-payment"),
+    );
+    req2.flush({ ok: true, folio: "STR-112233", paymentIntentId: "pi_retry_1" });
+    const receipt = await retry;
+
+    expect(receipt?.folio).toBe("STR-112233");
+    expect(cart.items().length).toBe(0);
+    expect(adapter.state()).toBe("complete");
+    expect(registrarPago).toHaveBeenCalledTimes(1);
+    http.verify();
   });
 });
