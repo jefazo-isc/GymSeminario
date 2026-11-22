@@ -12,7 +12,12 @@ export interface PayPalOrderActions {
   };
 }
 export interface PayPalButtonOptions {
-  style: { layout: "vertical"; color: "black"; shape: "rect"; label: "paypal" };
+  style?: {
+    layout?: "vertical" | "horizontal";
+    color?: "gold" | "blue" | "silver" | "white" | "black";
+    shape?: "rect" | "pill";
+    label?: "paypal" | "checkout" | "buynow" | "pay";
+  };
   createOrder(data: unknown, actions: PayPalOrderActions): Promise<string>;
   onApprove(data: unknown, actions: PayPalOrderActions): Promise<void>;
   onCancel(): void;

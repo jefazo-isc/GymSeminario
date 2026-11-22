@@ -125,6 +125,21 @@ export class AuthService implements SessionRepository {
     return localStorage.getItem(this.TOKEN_KEY);
   }
 
+  upgradeToSubscriber(): void {
+    const raw = localStorage.getItem(this.USER_KEY);
+    if (!raw) return;
+    try {
+      const user: JwtUser = JSON.parse(raw);
+      if (user.role !== "admin") {
+        user.role = "subscriber";
+        localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+        this.userRoleSubject.next("subscriber");
+      }
+    } catch {
+      /* noop */
+    }
+  }
+
   // ── Métodos públicos ────────────────────────────────────────────────────────
 
   async signIn(data: LoginData): Promise<unknown> {

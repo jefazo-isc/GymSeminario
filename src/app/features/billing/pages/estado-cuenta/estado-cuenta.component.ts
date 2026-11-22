@@ -66,6 +66,7 @@ export class EstadoCuentaComponent {
     "Tarjeta de crédito",
     "Transferencia",
     "QR / App",
+    "PayPal",
   ];
   constructor() {
     this.loadAccount();
@@ -244,6 +245,10 @@ export class EstadoCuentaComponent {
       return;
     }
     const esc = escapeHtml;
+    const metodoLabel =
+      payment.metodo === "PayPal"
+        ? "PayPal (Pasarela Oficial · Conciliación Bancaria Automática)"
+        : esc(payment.metodo);
     view.document.write(
       '<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Registro local ' +
         esc(payment.folio) +
@@ -258,7 +263,7 @@ export class EstadoCuentaComponent {
         "</td></tr><tr><th>Importe</th><td>$" +
         payment.monto.toFixed(2) +
         " MXN</td></tr><tr><th>Método anotado</th><td>" +
-        esc(payment.metodo) +
+        metodoLabel +
         "</td></tr><tr><th>Estado local</th><td>" +
         esc(payment.estado) +
         "</td></tr><tr><th>Notas</th><td>" +

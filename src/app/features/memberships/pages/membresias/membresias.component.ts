@@ -9,6 +9,7 @@ import Swal from "sweetalert2";
 import { ButtonDirective } from "../../../../shared/ui/button.directive";
 import { IconComponent } from "../../../../shared/ui/icon/icon.component";
 import { MEMBERSHIPS } from "../../data-access/membership.repository";
+import { MembershipPaypalService } from "../../data-access/membership-paypal.service";
 import { Membresia, PlanCatalogo } from "../../models/membresia.model";
 export type BillingPeriod = "Mensual" | "Trimestral" | "Anual";
 export function demoPrice(base: number, period: BillingPeriod) {
@@ -33,6 +34,7 @@ export function demoPrice(base: number, period: BillingPeriod) {
 })
 export class MembresiasComponent {
   private service = inject(MEMBERSHIPS);
+  private paypalService = inject(MembershipPaypalService, { optional: true });
   membresiaActual: Membresia | null = null;
   private memberStream?: Subscription;
   memberLoading = false;
@@ -231,15 +233,20 @@ export class MembresiasComponent {
           this.filtroPeriodo +
           "</p><p>Total a pagar: <strong>$" +
           price.toLocaleString("es-MX") +
-          " MXN</strong></p><p>Tu plan quedará vinculado a tu cuenta y sincronizado en el sistema cloud.</p>" +
+          " MXN</strong></p><p>Selecciona tu modalidad de pago preferida:</p>" +
           (this.hasConflict(plan)
             ? "<p><strong>Tarifa en revisión:</strong> el catálogo indica $1,200 por trimestre, pero el cálculo heredado usa esa cantidad como base mensual. Este total no es una cotización.</p>"
             : "") +
           "</div>",
         icon: this.hasConflict(plan) ? "warning" : "info",
         showCancelButton: true,
-        confirmButtonText: "Confirmar membresía",
+        showDenyButton: true,
+        confirmButtonText: "💳 Pagar con PayPal",
+        denyButtonText: "💵 Registro en Recepción",
         cancelButtonText: "Volver",
+        confirmButtonColor: "#0070ba",
+        denyButtonColor: "#475569",
+        cancelButtonColor: "#94a3b8",
         ...(this.hasConflict(plan)
           ? {
               input: "checkbox" as const,
@@ -252,7 +259,25 @@ export class MembresiasComponent {
             }
           : {}),
       });
+
       if (result.isConfirmed) {
+        if (this.paypalService) {
+          const res = await this.paypalService.iniciarFlujoPagoPayPal(
+            plan,
+            this.filtroPeriodo,
+            price,
+          );
+          if (res.success) {
+            this.loadMembership();
+          }
+        } else {
+          await this.service.adquirirOActualizarPlan(
+            { ...plan, precio: price },
+            this.filtroPeriodo,
+          );
+          this.loadMembership();
+        }
+      } else if (result.isDenied) {
         await this.service.adquirirOActualizarPlan(
           { ...plan, precio: price },
           this.filtroPeriodo,
@@ -262,6 +287,7 @@ export class MembresiasComponent {
           title: "Membresía activada",
           text: "Tu plan se ha actualizado exitosamente y sincronizado en tu cuenta.",
         });
+        this.loadMembership();
       }
     } catch {
       await Swal.fire({
@@ -276,25 +302,60 @@ export class MembresiasComponent {
   async renovarActual() {
     if (this.processing || !this.membresiaActual) return;
     this.processing = true;
+    const mem = this.membresiaActual;
+    const planCorrespondiente: PlanCatalogo = this.planes.find(
+      (p) => p.nombre === mem.nombrePlan,
+    ) || {
+      id: "plan-renovacion",
+      nombre: mem.nombrePlan,
+      precio: mem.precio,
+      periodo: mem.periodo,
+      descripcion: "Renovación de membresía",
+      beneficios: mem.beneficios,
+    };
+    const price = this.getPrecioCalculado(mem.precio);
+
     try {
       const result = await Swal.fire({
         title: "Renovar membresía",
-        text:
-          "Se añadirá un ciclo " +
-          this.membresiaActual.periodo.toLowerCase() +
-          " a la vigencia de tu plan en el sistema.",
+        html: `
+          <p>Se añadirá un ciclo <strong>${mem.periodo.toLowerCase()}</strong> a tu membresía.</p>
+          <p>Total a cubrir: <strong>$${price.toLocaleString("es-MX")} MXN</strong></p>
+          <p>Selecciona tu método de renovación:</p>
+        `,
         icon: "info",
         showCancelButton: true,
-        confirmButtonText: "Confirmar renovación",
+        showDenyButton: true,
+        confirmButtonText: "💳 Renovar con PayPal",
+        denyButtonText: "💵 Renovar en Recepción",
         cancelButtonText: "Volver",
+        confirmButtonColor: "#0070ba",
+        denyButtonColor: "#475569",
+        cancelButtonColor: "#94a3b8",
       });
+
       if (result.isConfirmed) {
+        if (this.paypalService) {
+          const res = await this.paypalService.iniciarFlujoPagoPayPal(
+            planCorrespondiente,
+            mem.periodo as BillingPeriod,
+            price,
+          );
+          if (res.success) {
+            this.loadMembership();
+          }
+        } else {
+          await this.service.renovarMembresia();
+          this.loadMembership();
+        }
+      } else if (result.isDenied) {
         await this.service.renovarMembresia();
         await Swal.fire({
           icon: "success",
           title: "Vigencia actualizada",
           text: "La renovación de tu membresía ha sido registrada y sincronizada exitosamente.",
         });
+        this.loadMembership();
       }
     } catch {
       await Swal.fire({

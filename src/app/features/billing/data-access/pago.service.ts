@@ -40,11 +40,12 @@ export class PagoService implements BillingRepository {
     monto: number,
     metodo: MetodoPago,
     descripcion?: string,
+    customFolio?: string,
   ): Pago {
     const hoy = new Date();
     const nuevo: Pago = {
       id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
-      folio: "GYM-" + Math.floor(100000 + Math.random() * 900000),
+      folio: customFolio || ("GYM-" + Math.floor(100000 + Math.random() * 900000)),
       concepto,
       monto,
       metodo,

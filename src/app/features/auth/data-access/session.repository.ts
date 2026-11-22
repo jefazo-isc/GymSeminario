@@ -21,6 +21,7 @@ export interface SessionRepository {
   verifyPhoneCode(phone: string, code: string): Promise<unknown>;
   signInWithGoogleCredential(credential: string): Promise<unknown>;
   lookupPhone(phone: string): Promise<void>;
+  upgradeToSubscriber?(): void;
 }
 
 export const SESSION = new InjectionToken<SessionRepository>(

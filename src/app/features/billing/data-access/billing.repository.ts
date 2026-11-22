@@ -13,6 +13,7 @@ export interface BillingRepository {
     monto: number,
     metodo: MetodoPago,
     descripcion?: string,
+    customFolio?: string,
   ): Pago | Promise<Pago>;
   marcarComoPagado(id: string, metodo: MetodoPago): void | Promise<void>;
   cancelarPago(id: string): void | Promise<void>;

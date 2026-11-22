@@ -130,6 +130,9 @@
           }}</strong
           ><span>MXN / {{ filtroPeriodo.toLowerCase() }}</span>
         </div>
+        <div style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: #0284c7; margin-top: 4px; font-weight: 500;">
+          <app-icon name="spark" /><span>Acepta PayPal y Tarjetas</span>
+        </div>
         @if (hasConflict(plan)) {
           <p class="tariff-note">
             <strong>Tarifa en revisión.</strong> Catálogo: $1,200/trimestre. El
