@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 260" width="520" height="260">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a192f"/>
+      <stop offset="100%" stop-color="#0f294a"/>
+    </linearGradient>
+    <linearGradient id="neonCyan" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#00e5ff"/>
+    </linearGradient>
+    <linearGradient id="neonOrange" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ff7b00"/>
+      <stop offset="100%" stop-color="#ffa726"/>
+    </linearGradient>
+    <filter id="glowCyan" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3.5" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Card background -->
+  <rect width="520" height="260" rx="24" fill="url(#bgGrad)" stroke="#38bdf8" stroke-width="3" stroke-opacity="0.8"/>
+
+  <!-- Hexagonal dumbbell emblem -->
+  <g transform="translate(35, 45)">
+    <!-- Hexagon frame -->
+    <polygon points="85,15 150,52 150,128 85,165 20,128 20,52" fill="#081426" stroke="url(#neonCyan)" stroke-width="4.5" filter="url(#glowCyan)"/>
+    
+    <!-- Dumbbell icon -->
+    <rect x="48" y="83" width="74" height="14" rx="7" fill="#ffffff"/>
+    <rect x="36" y="62" width="16" height="56" rx="4" fill="url(#neonOrange)"/>
+    <rect x="118" y="62" width="16" height="56" rx="4" fill="url(#neonOrange)"/>
+    <rect x="26" y="71" width="10" height="38" rx="3" fill="#38bdf8"/>
+    <rect x="134" y="71" width="10" height="38" rx="3" fill="#38bdf8"/>
+  </g>
+
+  <!-- Brand Typography -->
+  <text x="215" y="115" font-family="'Segoe UI', -apple-system, sans-serif" font-weight="900" font-size="56" fill="#ffffff" letter-spacing="-1">
+    espacio<tspan fill="url(#neonOrange)">GYM</tspan>
+  </text>
+
+  <!-- Subtitle badge -->
+  <rect x="215" y="138" width="275" height="36" rx="8" fill="#13365c" stroke="#38bdf8" stroke-width="1.5"/>
+  <text x="227" y="162" font-family="'Segoe UI', sans-serif" font-weight="800" font-size="16" fill="#38bdf8" letter-spacing="2">
+    GROM 21 &bull; FITNESS CLOUD
+  </text>
+
+  <!-- Tagline -->
+  <text x="215" y="205" font-family="'Segoe UI', sans-serif" font-weight="600" font-size="14" fill="#94a3b8" letter-spacing="0.5">
+    Angular 19 &bull; Node.js &bull; SQLite WAL &bull; CI/CD
+  </text>
+</svg>

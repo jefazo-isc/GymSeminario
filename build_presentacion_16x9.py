@@ -1,0 +1,2059 @@
+import os
+import subprocess
+
+html_content = """<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>espacioGYM (GROM 21) — Presentación Oficial al Comité Evaluador (CCB · UAA)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface-sec: #f1f5f9;
+      --surface-elevated: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --text-light: #94a3b8;
+      --primary: #0f766e;
+      --primary-hover: #115e59;
+      --primary-light: #ccfbf1;
+      --accent: #10b981;
+      --accent-hover: #059669;
+      --accent-light: #d1fae5;
+      --warning: #f59e0b;
+      --warning-light: #fef3c7;
+      --danger: #ef4444;
+      --border: #e2e8f0;
+      --border-focus: #0f766e;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.06);
+      --shadow-lg: 0 12px 30px rgba(15, 23, 42, 0.1);
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-full: 9999px;
+    }
+
+    [data-theme="dark"] {
+      --bg: #090d16;
+      --surface: #111827;
+      --surface-sec: #1e293b;
+      --surface-elevated: #1f293d;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-light: #64748b;
+      --primary: #14b8a6;
+      --primary-hover: #2dd4bf;
+      --primary-light: rgba(20, 184, 166, 0.15);
+      --accent: #34d399;
+      --accent-hover: #10b981;
+      --accent-light: rgba(52, 211, 153, 0.15);
+      --border: #334155;
+      --border-focus: #14b8a6;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+      --shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.6);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* Barra Superior de Control */
+    header.deck-header {
+      height: 52px;
+      padding: 0 24px;
+      background-color: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 100;
+      flex-shrink: 0;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .badge-uaa {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      background: var(--surface-sec);
+      color: var(--primary);
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+
+    .header-title {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header-title span.tag {
+      font-size: 0.72rem;
+      background: var(--accent-light);
+      color: var(--accent-hover);
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      font-weight: 800;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Cronómetro y temporizador de 10 min */
+    .timer-widget {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface-sec);
+      padding: 4px 12px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .timer-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse-dot 1.5s infinite;
+    }
+
+    .timer-controls {
+      display: flex;
+      gap: 4px;
+      margin-left: 4px;
+    }
+
+    .btn-timer {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+    .btn-timer:hover {
+      color: var(--text);
+      background: var(--border);
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    .btn-action {
+      background: var(--surface-sec);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-action:hover {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    .btn-technical {
+      background: var(--primary-light);
+      color: var(--primary);
+      border-color: var(--primary);
+      font-weight: 700;
+    }
+    .btn-technical:hover {
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    /* Contenedor Principal de Diapositivas (16:9 Panorámico) */
+    main.deck-stage {
+      flex: 1;
+      width: 100%;
+      height: calc(100vh - 108px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 16px;
+    }
+
+    .slide-canvas {
+      width: 100%;
+      max-width: 1680px;
+      height: 100%;
+      aspect-ratio: 16 / 9;
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Diapositivas */
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      padding: 44px 56px;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.97) translateY(12px);
+      transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      overflow-y: auto;
+    }
+
+    .slide.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: scale(1) translateY(0);
+      z-index: 10;
+    }
+
+    /* Encabezado interno de Diapositiva */
+    .slide-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 22px;
+      border-bottom: 2px solid var(--surface-sec);
+      padding-bottom: 14px;
+      flex-shrink: 0;
+    }
+
+    .slide-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--primary);
+    }
+
+    .slide-block-tag {
+      font-size: 0.72rem;
+      font-weight: 700;
+      background: var(--surface-sec);
+      color: var(--text-muted);
+      padding: 3px 10px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--border);
+    }
+
+    .slide-title-group h2 {
+      font-size: 2.1rem;
+      font-weight: 800;
+      line-height: 1.15;
+      color: var(--text);
+      letter-spacing: -0.02em;
+    }
+
+    .slide-title-group p.slide-sub {
+      font-size: 1.05rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .slide-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    /* Grid Layouts para Diapositivas */
+    .grid-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      height: 100%;
+      align-items: center;
+    }
+
+    .grid-3col {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      height: 100%;
+      align-items: stretch;
+    }
+
+    .grid-4col {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      height: 100%;
+      align-items: stretch;
+    }
+
+    /* Tarjetas Ejecutivas */
+    .card-feature {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 24px 22px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    }
+
+    .card-feature:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary);
+    }
+
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-sm);
+      background: var(--primary-light);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 16px;
+      flex-shrink: 0;
+    }
+
+    .card-title {
+      font-size: 1.18rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+      line-height: 1.3;
+    }
+
+    .card-desc {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .card-metric-callout {
+      margin-top: auto;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .metric-value {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: var(--primary);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .metric-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    /* Tarjetas de Problema */
+    .card-problem {
+      border-left: 4px solid var(--danger);
+      background: var(--surface-sec);
+    }
+    .card-problem .card-icon {
+      background: #fee2e2;
+      color: var(--danger);
+    }
+
+    /* Tarjetas de Solución */
+    .card-solution {
+      border-left: 4px solid var(--accent);
+      background: var(--surface);
+    }
+    .card-solution .card-icon {
+      background: var(--accent-light);
+      color: var(--accent-hover);
+    }
+
+    /* Banner / Pill High Impact */
+    .pill-stat {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      font-size: 0.85rem;
+      font-weight: 700;
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    /* Portada Específica */
+    .slide-portada {
+      justify-content: space-between;
+      padding: 50px 64px;
+    }
+
+    .portada-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .portada-logos {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .portada-hero {
+      margin: auto 0;
+    }
+
+    .portada-hero h1 {
+      font-size: 3.1rem;
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      color: var(--text);
+      max-width: 950px;
+    }
+
+    .portada-hero h1 span.gradient-text {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .portada-hero p.lead {
+      font-size: 1.35rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-top: 14px;
+      max-width: 880px;
+      line-height: 1.45;
+    }
+
+    .portada-meta {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      background: var(--surface-sec);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px 24px;
+    }
+
+    .meta-item .meta-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .meta-item .meta-val {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-top: 3px;
+    }
+
+    .team-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .team-chip {
+      font-size: 0.76rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+    }
+
+    /* Mockups e Imágenes */
+    .mockup-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: var(--surface-sec);
+      box-shadow: var(--shadow-md);
+    }
+
+    .mockup-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .live-demo-box {
+      background: linear-gradient(135deg, #042f2e 0%, #0f172a 100%);
+      color: #ffffff;
+      border-radius: var(--radius-lg);
+      padding: 36px 44px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .live-demo-box h3 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+      line-height: 1.15;
+    }
+
+    .live-demo-box p {
+      font-size: 1.1rem;
+      color: #94a3b8;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+
+    .demo-url-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      padding: 10px 18px;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #5eead4;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .demo-url-badge:hover {
+      background: rgba(94, 234, 212, 0.2);
+      border-color: #5eead4;
+    }
+
+    /* Barra Inferior de Navegación */
+    footer.deck-footer {
+      height: 56px;
+      padding: 0 24px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 100;
+      flex-shrink: 0;
+    }
+
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .slide-counter {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text);
+      cursor: pointer;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-sec);
+      border: 1px solid var(--border);
+    }
+    .slide-counter:hover {
+      border-color: var(--primary);
+    }
+
+    .progress-bar-container {
+      width: 240px;
+      height: 6px;
+      background: var(--surface-sec);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
+      width: 6.66%;
+      transition: width 0.3s ease;
+    }
+
+    .footer-center {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-arrow {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-sec);
+      border: 1px solid var(--border);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+
+    .nav-arrow:hover:not(:disabled) {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    .nav-arrow:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .footer-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .keyboard-hint {
+      font-size: 0.72rem;
+      color: var(--text-light);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .key-badge {
+      background: var(--surface-sec);
+      border: 1px solid var(--border);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    /* Modal de Lista de Diapositivas */
+    .modal-slides-list {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 680px;
+      max-width: 90vw;
+      max-height: 80vh;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+      z-index: 1000;
+      overflow-y: auto;
+      padding: 24px;
+    }
+
+    .modal-slides-list.open {
+      display: block;
+    }
+
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 999;
+    }
+    .modal-backdrop.open {
+      display: block;
+    }
+
+    .slide-item-btn {
+      width: 100%;
+      text-align: left;
+      padding: 10px 14px;
+      margin-bottom: 6px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--surface-sec);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: inherit;
+      color: var(--text);
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+    .slide-item-btn:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .slide-item-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    /* Media print para exportación a PDF */
+    @media print {
+      body {
+        overflow: visible !important;
+        height: auto !important;
+        background: #ffffff !important;
+      }
+      header.deck-header, footer.deck-footer, .modal-slides-list, .modal-backdrop {
+        display: none !important;
+      }
+      main.deck-stage {
+        padding: 0 !important;
+        height: auto !important;
+        display: block !important;
+      }
+      .slide-canvas {
+        max-width: none !important;
+        aspect-ratio: auto !important;
+        height: auto !important;
+        border: none !important;
+        box-shadow: none !important;
+      }
+      .slide {
+        position: relative !important;
+        opacity: 1 !important;
+        transform: none !important;
+        page-break-after: always !important;
+        width: 100vw !important;
+        height: 56.25vw !important; /* 16:9 ratio */
+        max-height: 100vh !important;
+        padding: 40px 50px !important;
+        overflow: hidden !important;
+      }
+      @page {
+        size: 16in 9in;
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Barra Superior -->
+  <header class="deck-header">
+    <div class="header-left">
+      <span class="badge-uaa">UAA · CCB · 9° B</span>
+      <div class="header-title">
+        <strong>espacioGYM (GROM 21)</strong>
+        <span class="tag">SUSTENTACIÓN 100%</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <!-- Widget de Cronómetro de 10 minutos -->
+      <div class="timer-widget" title="Cronómetro oficial de exposición">
+        <div class="timer-dot" id="timerDot"></div>
+        <span id="timerDisplay">10:00</span>
+        <div class="timer-controls">
+          <button class="btn-timer" id="btnTimerToggle" title="Iniciar / Pausar">▶</button>
+          <button class="btn-timer" id="btnTimerReset" title="Reiniciar a 10:00">↺</button>
+        </div>
+      </div>
+
+      <!-- Botón de Salto Rápido a Respaldo Técnico -->
+      <button class="btn-action btn-technical" id="btnJumpTechnical" title="Ir a diapositivas de respaldo técnico (Tecla T)">
+        🛡️ Anexo Técnico [T]
+      </button>
+
+      <!-- Toggle Tema Claro/Oscuro -->
+      <button class="btn-action" id="btnThemeToggle" title="Alternar modo claro / oscuro">
+        🌓 Tema
+      </button>
+
+      <!-- Pantalla Completa -->
+      <button class="btn-action" id="btnFullscreen" title="Pantalla completa (Tecla F)">
+        ⛶ Pantalla Completa [F]
+      </button>
+    </div>
+  </header>
+
+  <!-- Escenario de Diapositivas (16:9) -->
+  <main class="deck-stage">
+    <div class="slide-canvas">
+
+      <!-- ========================================== -->
+      <!-- DIAPOSITIVA 1: PORTADA OFICIAL            -->
+      <!-- ========================================== -->
+      <section class="slide slide-portada active" data-slide="1" data-block="Bloque 1: Apertura (Min 0:00 - 1:30)">
+        <div class="portada-header">
+          <div class="portada-logos">
+            <img src="cartel_presentacion/assets/logo_uaa.png" alt="Logo UAA" style="height: 52px; object-fit: contain;">
+            <div style="width: 2px; height: 38px; background: var(--border);"></div>
+            <img src="cartel_presentacion/assets/logo_espaciogym.svg" alt="Logo espacioGYM" style="height: 48px; object-fit: contain;">
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 0.76rem; font-weight: 700; color: var(--primary); text-transform: uppercase;">Seminario de Sistemas Computacionales II</div>
+            <div style="font-size: 0.85rem; font-weight: 800; color: var(--text);">Centro de Ciencias Básicas · 2026</div>
+          </div>
+        </div>
+
+        <div class="portada-hero">
+          <div class="pill-stat" style="margin-bottom: 14px;">
+            <span>🚀 Proyecto de Titulación / Tesina de Software</span>
+          </div>
+          <h1>
+            espacioGYM <span class="gradient-text">(GROM 21)</span>
+          </h1>
+          <p class="lead">
+            Plataforma Web Progresiva y Microservicios Cloud con Inteligencia Artificial para la Gestión Integral, Control de Accesos y Retención de Socios en Centros Deportivos.
+          </p>
+        </div>
+
+        <div class="portada-meta">
+          <div class="meta-item">
+            <div class="meta-label">Profesor Titular</div>
+            <div class="meta-val">M. en C. Arturo Elías Ramírez</div>
+          </div>
+          <div class="meta-item" style="grid-column: span 2;">
+            <div class="meta-label">Equipo de Desarrollo (GROM 21 — 6 Integrantes)</div>
+            <div class="team-pills">
+              <span class="team-chip">Jose Alberto Vazquez Guerrero</span>
+              <span class="team-chip">Luis Antonio García Gómez</span>
+              <span class="team-chip" style="background: var(--primary-light); color: var(--primary); font-weight: 700;">Yahir Guevara Cardona</span>
+              <span class="team-chip">Martin Alfonso Romo Martínez</span>
+              <span class="team-chip">Ricardo Padilla Hernández</span>
+              <span class="team-chip">Jesus Eduardo Tapia Avalos</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- DIAPOSITIVA 2: EL PROBLEMA REAL EN GIMNASIOS -->
+      <!-- ========================================== -->
+      <section class="slide" data-slide="2" data-block="Bloque 1: Problema (Min 1:30 - 3:00)">
+        <div class="slide-topbar">
+          <div class="slide-title-group">
+            <span class="slide-kicker">01 · Diagnóstico de Mercado</span>
+            <h2>La Realidad Operativa de los Gimnasios PyME</h2>
+            <p class="slide-sub">El 80% de los centros deportivos independientes en Aguascalientes enfrentan un severo rezago digital.</p>
+          </div>
+          <span class="slide-block-tag">El Problema</span>
+        </div>
+
+        <div class="slide-body">
+          <div class="grid-4col">
+            <div class="card-feature card-problem">
+              <div class="card-icon">📉</div>
+              <div class="card-title">Fuga de Cobros y Descontrol</div>
+              <div class="card-desc">Uso de libretas de papel y hojas de cálculo desfasadas. No hay alertas automáticas de corte ni cálculo exacto de días naturales vs hábiles.</div>
+              <div class="card-metric-callout">
+                <span class="metric-value">18-25%</span>
+                <span class="metric-label">Ingresos perdidos / mes</span>
+              </div>
+            </div>
+
+            <div class="card-feature card-problem">
+              <div class="card-icon">⏱️</div>
+              <div class="card-title">Cuellos de Botella en Entrada</div>
+              <div class="card-desc">Búsqueda manual de nombres en listas en recepción. Provoca filas de hasta 10 minutos en horarios pico y permite accesos con mensualidades vencidas.</div>
+              <div class="card-metric-callout">
+                <span class="metric-value">&gt; 8 min</span>
+                <span class="metric-label">Espera en recepción</span>
+              </div>
+            </div>
+
+            <div class="card-feature card-problem">
+              <div class="card-icon">🏃</div>
+              <div class="card-title">Alta Deserción de Socios</div>
+              <div class="card-desc">Rutinas de entrenamiento impresas genéricas y desatención por falta de entrenadores suficientes. El usuario se desmotiva y abandona el gimnasio.</div>
+              <div class="card-metric-callout">
+                <span class="metric-value">42%</span>
+                <span class="metric-label">Deserción en 90 días</span>
+              </div>
+            </div>
+
+            <div class="card-feature card-problem">
+              <div class="card-icon">💸</div>
+              <div class="card-title">Software Privativo Inaccesible</div>
+              <div class="card-desc">Sistemas comerciales en la nube imponen rentas en dólares ($150 - $400 USD/mes), comisiones por socio y hardware propietario obligatorio.</div>
+              <div class="card-metric-callout">
+                <span class="metric-value">$350+ USD</span>
+                <span class="metric-label">Renta mensual típica</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- DIAPOSITIVA 3: LA SOLUCIÓN ESPACIOGYM      -->
+      <!-- ========================================== -->
+      <section class="slide" data-slide="3" data-block="Bloque 1: Solución (Min 3:00 - 4:00)">
+        <div class="slide-topbar">
+          <div class="slide-title-group">
+            <span class="slide-kicker">02 · Propuesta de Valor</span>
+            <h2>La Solución: espacioGYM (GROM 21)</h2>
+            <p class="slide-sub">Un ecosistema digital sin costo de licenciamiento que democratiza la tecnología para gimnasios locales.</p>
+          </div>
+          <span class="slide-block-tag">La Solución</span>
+        </div>
+
+        <div class="slide-body">
+          <div class="grid-2col">
+            <div style="display: flex; flex-direction: column; gap: 18px;">
+              <div class="card-feature card-solution">
+                <div class="card-icon">📱</div>
+                <div class="card-title">Plataforma Web Progresiva (PWA Multidispositivo)</div>
+                <div class="card-desc">El socio accede instantáneamente desde su navegador móvil o de escritorio sin necesidad de descargar una app pesada de tiendas oficiales. Funciona con o sin conexión a internet.</div>
+              </div>
+
+              <div class="card-feature card-solution">
+                <div class="card-icon">⚡</div>
+                <div class="card-title">Microservicios Cloud Ligeros y Persistencia Local</div>
+                <div class="card-desc">Arquitectura optimizada en contenedores que opera de forma autónoma con latencias ultra-bajas, eliminando gastos de infraestructura y servidores costosos.</div>
+              </div>
+
+              <div class="card-feature card-solution">
+                <div class="card-icon">🧠</div>
+                <div class="card-title">Inteligencia Artificial Accesible para Cada Socio</div>
+                <div class="card-desc">Integración directa con modelos generativos (Gemini API) para prescribir rutinas hiper-personalizadas y adaptativas según objetivos individuales y limitaciones físicas.</div>
+              </div>
+            </div>
+
+            <div class="mockup-container">
+              <img src="cartel_presentacion/assets/shot_large_02_planes.png" alt="Catálogo y Planes espacioGYM">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- DIAPOSITIVA 4: LOS 3 PILARES DEL SISTEMA  -->
+      <!-- ========================================== -->
+      <section class="slide" data-slide="4" data-block="Bloque 2: Pilares (Min 4:00 - 5:30)">
+        <div class="slide-topbar">
+          <div class="slide-title-group">
+            <span class="slide-kicker">03 · Módulos Centrales</span>
+            <h2>Los 3 Pilares del Ecosistema espacioGYM</h2>
+            <p class="slide-sub">Resolviendo las tres áreas críticas del negocio deportivo con software de clase mundial.</p>
+          </div>
+          <span class="slide-block-tag">Funcionalidad</span>
+        </div>
+
+        <div class="slide-body">
+          <div class="grid-3col">
+            <div class="card-feature" style="border-top: 4px solid var(--primary);">
+              <div class="card-icon" style="background: var(--primary-light); color: var(--primary);">📋</div>
+              <div class="card-title">Pilar 1: Gestión de Membresías y Finanzas</div>
+              <div class="card-desc">
+                • Catálogo flexible de planes (básico, semestral, premium, estudiantil).<br>
+                • Corte automático de vigencias en días naturales.<br>
+                • Historial transaccional y prevención total de fuga de cuotas.<br>
+                • Notificaciones transaccionales vía correo electrónico.
+              </div>
+              <div class="card-metric-callout">
+                <span class="metric-value">100%</span>
+                <span class="metric-label">Cálculo automatizado</span>
+              </div>
+            </div>
+
+            <div class="card-feature" style="border-top: 4px solid var(--accent);">
+              <div class="card-icon" style="background: var(--accent-light); color: var(--accent-hover);">📲</div>
+              <div class="card-title">Pilar 2: Check-in por Código QR Dinámico</div>
+              <div class="card-desc">
+                • Pase digital generado en el celular del socio.<br>
+                • Validación instantánea sin contacto en recepción.<br>
+                • Registro inmediato en bitácora de asistencias.<br>
+                • Control de aforo en tiempo real para evitar aglomeraciones.
+              </div>
+              <div class="card-metric-callout">
+                <span class="metric-value">&lt; 120 ms</span>
+                <span class="metric-label">Tiempo de validación</span>
+              </div>
+            </div>
+
+            <div class="card-feature" style="border-top: 4px solid #8b5cf6;">
+              <div class="card-icon" style="background: #ede9fe; color: #8b5cf6;">🤖</div>
+              <div class="card-title">Pilar 3: Coach Virtual con Inteligencia Artificial</div>
+              <div class="card-desc">
+                • Rutinas adaptativas generadas con Google Gemini API.<br>
+                • Personalización por nivel (principiante a avanzado) y objetivo.<br>
+                • Contingencia heurística local ante caídas de internet.<br>
+                • Explicación de series, repeticiones y tiempos de descanso.
+              </div>
+              <div class="card-metric-callout">
+                <span class="metric-value">1.8 s</span>
+                <span class="metric-label">Generación de rutina IA</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- DIAPOSITIVA 5: EXPERIENCIA DUAL (SOCIO VS ADMIN) -->
+      <!-- ========================================== -->
+      <section class="slide" data-slide="5" data-block="Bloque 2: Experiencia (Min 5:30 - 6:30)">
+        <div class="slide-topbar">
+          <div class="slide-title-group">
+            <span class="slide-kicker">04 · Interfaces de Usuario</span>
+            <h2>Experiencia Dual: El Socio y el Administrador</h2>
+            <p class="slide-sub">Diseñado tanto para la comodidad del usuario móvil como para la productividad del dueño del negocio.</p>
+          </div>
+          <span class="slide-block-tag">Experiencia de Usuario</span>
+        </div>
+
+        <div class="slide-body">
+          <div class="grid-2col">
+            <!-- Lado Socio -->
+            <div class="card-feature" style="background: var(--surface-sec); border: 2px solid var(--border);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <span class="pill-stat" style="background: var(--primary-light); color: var(--primary);">📱 Vista del Socio (Móvil PWA)</span>
+                <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">Autoservicio 24/7</span>
+              </div>
+              <div class="mockup-container" style="height: 260px; margin-bottom: 14px;">
+                <img src="cartel_presentacion/assets/shot_large_04_qr.png" alt="Pase QR del Socio">
+              </div>
+              <ul style="font-size: 0.92rem; color: var(--text); padding-left: 20px; line-height: 1.6;">
+                <li>Pase de acceso con <strong>Código QR dinámico</strong> en la pantalla de su teléfono.</li>
+                <li>Consulta de vigencia de su membresía y días restantes.</li>
+                <li>Chat con el <strong>Coach IA</strong> para prescribir y consultar su rutina diaria.</li>
+              </ul>
+            </div>
+
+            <!-- Lado Administrador -->
+            <div class="card-feature" style="background: var(--surface-sec); border: 2px solid var(--border);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <span class="pill-stat" style="background: var(--accent-light); color: var(--accent-hover);">🖥️ Vista del Administrador (Dashboard)</span>
+                <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">Control y Analítica</span>
+              </div>
+              <div class="mockup-container" style="height: 260px; margin-bottom: 14px;">
+                <img src="cartel_presentacion/assets/shot_large_06_analitica.png" alt="Analítica y Aforo en tiempo real">
+              </div>
+              <ul style="font-size: 0.92rem; color: var(--text); padding-left: 20px; line-height: 1.6;">
+                <li>Monitoreo de <strong>aforo y asistencias en tiempo real</strong>.</li>
+                <li>Alertas tempranas de socios por vencer para cobranza preventiva.</li>
+                <li>Métricas de horas pico para optimización de entrenadores y equipo.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- DIAPOSITIVA 6: DEMOSTRACIÓN EN VIVO        -->
+      <!-- ========================================== -->
+      <section class="slide" data-slide="6" data-block="Bloque 3: Demostración (Min 6:30 - 8:00)">
+        <div class="slide-topbar">
+          <div class="slide-title-group">
+            <span class="slide-kicker">05 · Demostración Práctica</span>
+            <h2>Demostración Funcional del Sistema en Vivo</h2>
+            <p class="slide-sub">El software se encuentra desplegado y 100% operativo en producción.</p>
+          </div>
+          <span class="slide-block-tag" style="background: var(--accent-light); color: var(--accent-hover); font-weight: 800;">EN VIVO</span>
+        </div>
+
+        <div class="slide-body">
+          <div class="grid-2col">
+            <div class="live-demo-box">
+              <div>
+                <div class="pill-stat" style="background: rgba(94, 234, 212, 0.2); color: #5eead4; margin-bottom: 14px;">
+                  <span>🌐 Despliegue en Servidores Cloud</span>
+                </div>
+                <h3>PWA Disponible en Tiempo Real</h3>
+                <p>
+                  Invitamos al comité a observar el flujo completo en vivo: inicio de sesión, escaneo de pase de acceso, consulta de planes y consulta con el Coach IA generativo.
+                </p>
+                <div style="margin-bottom: 24px;">
+                  <a href="https://jefazo-isc.github.io/GymSeminario/" target="_blank" class="demo-url-badge">
+                    <span>🔗 https://jefazo-isc.github.io/GymSeminario/</span>
+                    <span>↗</span>
+                  </a>
+                </div>
+              </div>
+
+              <div style="background: rgba(255, 255, 255, 0.05); border-radius: var(--radius-sm); padding: 14px 18px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                <div style="font-size: 0.8rem; font-weight: 700; color: #5eead4; margin-bottom: 4px;">CASO DE USO A DEMOSTRAR:</div>
+                <div style="font-size: 0.88rem; color: #e2e8f0; line-height: 1.4;">
+                  1. Registro de socio ➔ 2. Selección de membresía ➔ 3. Pase de acceso QR ➔ 4. Prescripción de rutina IA en 1.8 segundos.
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              <div class="mockup-container" style="flex: 1;">
+                <img src="cartel_presentacion/assets/05_asistente_coach_ia.png" alt="Coach IA en vivo">
+              </div>
+              <div style="display: flex; gap: 10px; font-size: 0.82rem; color: var(--text-muted); justify-content: center;">
+                <span>✅ Certificado SSL / HTTPS</span> • 
+                <span>✅ Backend Node.js Activo</span> • 
+                <span>✅ IA Gemini 2.5 Conectada</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- DIAPOSITIVA 7: IA GENERATIVA Y ADAPTATIVA  -->
+      <!-- ========================================== -->
+      <section class="slide" data-slide="7" data-block="Bloque 3: Inteligencia Artificial (Min 8:00 - 9:00)">
+        <div class="slide-topbar">
+          <div class="slide-title-group">
+            <span class="slide-kicker">06 · Innovación Tecnológica</span>
+            <h2>Inteligencia Artificial Aplicada al Acondicionamiento</h2>
+            <p class="slide-sub">Transformando una rutina genérica en un plan personalizado sin costo de contratación extra.</p>
+          </div>
+          <span class="slide-block-tag">Motor de IA</span>
+        </div>
+
+        <div class="slide-body">
+          <div class="grid-3col">
+            <div class="card-feature">
+              <div class="card-icon" style="background: #e0e7ff; color: #4338ca;">🧠</div>
+              <div class="card-title">Prescripción Hiper-Personalizada</div>
+              <div class="card-desc">
+                El motor analiza la frecuencia de asistencia, el tiempo disponible del socio, su nivel actual y sus metas (hipertrofia, definición, fuerza, principiante) para estructurar el plan ideal.
+              </div>
+            </div>
+
+            <div class="card-feature">
+              <div class="card-icon" style="background: var(--accent-light); color: var(--accent-hover);">🛡️</div>
+              <div class="card-title">Arquitectura Dual Resiliente</div>
+              <div class="card-desc">
+                Si la API de Google Gemini presenta agotamiento de cuota o micro-cortes de red, el sistema activa automáticamente un <strong>motor heurístico local</strong> sin dejar al socio sin rutina.
+              </div>
+            </div>
+
+            <div class="card-feature">
+              <div class="card-icon" style="background: var(--primary-light); color: var(--primary);">📈</div>
+              <div class="card-title">Aumento de la Retención</div>
+              <div class="card-desc">
+                El acompañamiento virtual diario elimina la desorientación en el gimnasio, aumentando el apego al ejercicio y reduciendo la deserción temprana en más del 30%.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- DIAPOSITIVA 8: RESULTADOS Y PRESUNCIÓN     -->
+      <!-- ========================================== -->
+      <section class="slide" data-slide="8" data-block="Bloque 4: Métricas y Logros (Min 9:00 - 9:45)">
+        <div class="slide-topbar">
+          <div class="slide-title-group">
+            <span class="slide-kicker">07 · Validación de Resultados</span>
+            <h2>Resultados Tangibles y Logros de Ingeniería</h2>
+            <p class="slide-sub">Métricas cuantitativas que avalan la calidad, estabilidad y eficiencia del software terminado.</p>
+          </div>
+          <span class="slide-block-tag">Presunción de Logros</span>
+        </div>
+
+        <div class="slide-body">
+          <div class="grid-4col">
+            <div class="card-feature" style="border-top: 4px solid var(--accent);">
+              <div class="card-icon" style="background: var(--accent-light); color: var(--accent-hover);">⚡</div>
+              <div class="card-title">Latencia p95</div>
+              <div class="card-desc">Tiempo de respuesta bajo concurrencia de 100 transacciones/min gracias a SQLite en modo WAL.</div>
+              <div class="card-metric-callout">
+                <span class="metric-value">118 ms</span>
+                <span class="metric-label">Latencia p95</span>
+              </div>
+            </div>
+
+            <div class="card-feature" style="border-top: 4px solid var(--primary);">
+              <div class="card-icon" style="background: var(--primary-light); color: var(--primary);">🧪</div>
+              <div class="card-title">Cobertura de Pruebas</div>
+              <div class="card-desc">156 especificaciones unitarias automatizadas ejecutadas en Karma / Jasmine con cero fallos.</div>
+              <div class="card-metric-callout">
+                <span class="metric-value">84.3%</span>
+                <span class="metric-label">156 specs verdes</span>
+              </div>
+            </div>
+
+            <div class="card-feature" style="border-top: 4px solid #3b82f6;">
+              <div class="card-icon" style="background: #dbeafe; color: #2563eb;">🐳</div>
+              <div class="card-title">Eficiencia Docker</div>
+              <div class="card-desc">Imagen multi-stage optimizada sobre Alpine Linux y Nginx, lista para orquestación ligera.</div>
+              <div class="card-metric-callout">
+                <span class="metric-value">198 MB</span>
+                <span class="metric-label">Contenedor final</span>
+              </div>
+            </div>
+
+            <div class="card-feature" style="border-top: 4px solid #10b981;">
+              <div class="card-icon" style="background: #d1fae5; color: #059669;">🔒</div>
+              <div class="card-title">Seguridad SAST</div>
+              <div class="card-desc">Cero secretos filtrados detectados por TruffleHog y Quality Gate Grado A en SonarQube.</div>
+              <div class="card-metric-callout">
+                <span class="metric-value">0 Bugs</span>
+                <span class="metric-label">Grado A Confiabilidad</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- DIAPOSITIVA 9: CONCLUSIONES Y FUTURO       -->
+      <!-- ========================================== -->
+      <section class="slide" data-slide="9" data-block="Bloque 4: Conclusiones (Min 9:45 - 10:30)">
+        <div class="slide-topbar">
+          <div class="slide-title-group">
+            <span class="slide-kicker">08 · Cierre Académico</span>
+            <h2>Conclusiones y Viabilidad de Negocio</h2>
+            <p class="slide-sub">El impacto de la ingeniería de software moderna en la competitividad de las pequeñas empresas.</p>
+          </div>
+          <span class="slide-block-tag">Conclusiones</span>
+        </div>
+
+        <div class="slide-body">
+          <div class="grid-2col">
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+              <div class="card-feature" style="border-left: 4px solid var(--primary);">
+                <div class="card-title">Cumplimiento al 100% de los Objetivos</div>
+                <div class="card-desc">
+                  Se logró transicionar de una gestión manual a un ecosistema automatizado con persistencia ACID, control por QR y prescripción mediante IA, sin generar dependencia de proveedores extranjeros.
+                </div>
+              </div>
+
+              <div class="card-feature" style="border-left: 4px solid var(--accent);">
+                <div class="card-title">Viabilidad Económica para PyMEs</div>
+                <div class="card-desc">
+                  Al basarse en herramientas de código abierto (Angular, SQLite, Docker, Node.js), el costo de mantenimiento del sistema es inferior al 5% del costo de cualquier solución comercial.
+                </div>
+              </div>
+            </div>
+
+            <div class="card-feature" style="background: var(--surface-sec); border: 2px dashed var(--border);">
+              <div class="card-title" style="color: var(--primary);">🚀 Próximos Pasos (Trabajo Futuro)</div>
+              <ul style="font-size: 0.95rem; color: var(--text); padding-left: 20px; line-height: 1.8; margin-top: 10px;">
+                <li><strong>Hardware IoT para Torniquetes:</strong> Integración directa con microcontroladores ESP32 para apertura de rejas físicas al leer el QR.</li>
+                <li><strong>Publicación en Google Play Store:</strong> Generación del paquete AAB nativo mediante Capacitor Android para mayor visibilidad pública.</li>
+                <li><strong>Análisis Biométrico con Visión Artificial:</strong> Detección de técnica de levantamiento mediante cámara web en sala de pesas.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- DIAPOSITIVA 10: AGRADECIMIENTOS Y CIERRE   -->
+      <!-- ========================================== -->
+      <section class="slide" data-slide="10" data-block="Cierre: Preguntas (Min 10:30 en adelante)">
+        <div class="slide-topbar">
+          <div class="slide-title-group">
+            <span class="slide-kicker">09 · Cierre y Preguntas</span>
+            <h2>Agradecimientos y Sesión de Preguntas</h2>
+            <p class="slide-sub">Agradecemos al Comité Evaluador por su atención y retroalimentación.</p>
+          </div>
+          <span class="slide-block-tag" style="background: var(--primary-light); color: var(--primary); font-weight: 800;">Q&A 15 MIN</span>
+        </div>
+
+        <div class="slide-body">
+          <div class="grid-2col" style="align-items: center;">
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+              <h3 style="font-size: 1.8rem; font-weight: 800; color: var(--text);">
+                Estamos listos para sus preguntas.
+              </h3>
+              <p style="font-size: 1.05rem; color: var(--text-muted); line-height: 1.5;">
+                El equipo cuenta con diapositivas de respaldo técnico que abarcan nuestra arquitectura de base de datos, pipeline de integración continua, medidas de seguridad y pruebas de carga.
+              </p>
+              
+              <div style="background: var(--surface-sec); border-radius: var(--radius-md); padding: 14px 18px; border: 1px solid var(--border);">
+                <div style="font-size: 0.8rem; font-weight: 700; color: var(--primary); margin-bottom: 6px;">EQUIPO DE SUSTENTACIÓN GROM 21:</div>
+                <div style="font-size: 0.88rem; color: var(--text); line-height: 1.6;">
+                  • <strong>Jose Alberto Vazquez Guerrero</strong> • <strong>Luis Antonio García Gómez</strong><br>
+                  • <strong>Yahir Guevara Cardona</strong> • <strong>Martin Alfonso Romo Martínez</strong><br>
+                  • <strong>Ricardo Padilla Hernández</strong> • <strong>Jesus Eduardo Tapia Avalos</strong>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 10px;">
+                <button class="btn-action btn-technical" onclick="deck.goToSlide(11)">
+                  🛡️ Abrir Anexo Técnico de Respaldo (5 Slides)
+                </button>
+              </div>
+            </div>
+
+            <!-- Código QR grande para que el comité pruebe la app -->
+            <div class="card-feature" style="text-align: center; align-items: center; justify-content: center; padding: 28px;">
+              <div style="font-size: 1.05rem; font-weight: 800; color: var(--text); margin-bottom: 6px;">
+                ¡Escanee y Pruebe la App Ahora Mismo!
+              </div>
+              <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">
+                Apunte la cámara de su celular al código QR para ingresar a la PWA en producción:
+              </div>
+              <div style="background: #ffffff; padding: 12px; border-radius: 12px; border: 2px solid var(--border); box-shadow: var(--shadow-sm); display: inline-block;">
+                <img src="cartel_presentacion/assets/qr_demo.png" alt="QR Demo espacioGYM" style="width: 170px; height: 170px; display: block;">
+              </div>
+              <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 700; color: var(--primary); margin-top: 12px;">
+                jefazo-isc.github.io/GymSeminario
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- DIAPOSITIVA 11 (B1): ANEXO - ARQUITECTURA   -->
+      <!-- ========================================== -->
+      <section class="slide" data-slide="11" data-block="Anexo Técnico: Arquitectura">
+        <div class="slide-topbar">
+          <div class="slide-title-group">
+            <span class="slide-kicker">🛡️ Respaldo Técnico · B1</span>
+            <h2>Arquitectura de Software de 3 Niveles</h2>
+            <p class="slide-sub">Desacoplamiento limpio entre presentación PWA, lógica de negocio REST y persistencia políglota.</p>
+          </div>
+          <span class="slide-block-tag" style="background: var(--warning-light); color: #b45309; font-weight: 800;">RESPALDO TÉCNICO</span>
+        </div>
+
+        <div class="slide-body">
+          <div class="grid-3col">
+            <div class="card-feature">
+              <div class="card-icon">🅰️</div>
+              <div class="card-title">Capa 1: Cliente Frontend (PWA)</div>
+              <div class="card-desc">
+                • <strong>Angular 19.2 + TypeScript 5.6</strong> con Standalone Components.<br>
+                • Service Worker con caché de activos estáticos para soporte offline.<br>
+                • Capacitor para generación de contenedor nativo Android.<br>
+                • Tailwind CSS y Signals reactivos para actualización instantánea de UI.
+              </div>
+            </div>
+
+            <div class="card-feature">
+              <div class="card-icon">⚙️</div>
+              <div class="card-title">Capa 2: Backend REST & IA Gateway</div>
+              <div class="card-desc">
+                • <strong>Node.js 22 LTS + Express REST API</strong> sobre Render PaaS.<br>
+                • Autenticación JWT con control de acceso basado en roles (RBAC).<br>
+                • Orquestador de IA dual (Gemini API + contingencia heurística).<br>
+                • Rate-limiting perimetral para protección contra abuso de cómputo.
+              </div>
+            </div>
+
+            <div class="card-feature">
+              <div class="card-icon">💾</div>
+              <div class="card-title">Capa 3: Persistencia Híbrida</div>
+              <div class="card-desc">
+                • <strong>SQLite 3 en modo WAL:</strong> Transacciones contables de alta velocidad (ACID) y rate limiting local sin costos.<br>
+                • <strong>Cloud Firestore (NoSQL):</strong> Perfiles dinámicos y sincronización en tiempo real.<br>
+                • LocalStorage / IndexedDB para catálogo de rutinas offline.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- DIAPOSITIVA 12 (B2): ANEXO - PERSISTENCIA WAL -->
+      <!-- ========================================== -->
+      <section class="slide" data-slide="12" data-block="Anexo Técnico: Base de Datos">
+        <div class="slide-topbar">
+          <div class="slide-title-group">
+            <span class="slide-kicker">🛡️ Respaldo Técnico · B2</span>
+            <h2>Persistencia Ligera y Concurrencia SQLite WAL</h2>
+            <p class="slide-sub">Por qué SQLite 3 en modo Write-Ahead Logging es la elección de ingeniería óptima para PyMEs.</p>
+          </div>
+          <span class="slide-block-tag" style="background: var(--warning-light); color: #b45309; font-weight: 800;">RESPALDO TÉCNICO</span>
+        </div>
+
+        <div class="slide-body">
+          <div class="grid-2col">
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+              <div class="card-feature">
+                <div class="card-title">Lectores y Escritores No Bloqueantes</div>
+                <div class="card-desc">
+                  En el modo estándar de SQLite, una escritura bloquea a todos los lectores. Activando <code>PRAGMA journal_mode = WAL;</code>, los lectores consultan la base de datos sin detenerse mientras las transacciones se escriben secuencialmente en el archivo <code>.wal</code>.
+                </div>
+              </div>
+
+              <div class="card-feature">
+                <div class="card-title">Cero Costo de Hosting y Cero Latencia de Red</div>
+                <div class="card-desc">
+                  A diferencia de una base de datos externa tipo RDS/PostgreSQL que añade 50-100 ms por consulta y costos de $25 USD/mes, SQLite corre en memoria/disco local en Render con latencias &lt; 2 ms.
+                </div>
+              </div>
+            </div>
+
+            <div class="card-feature" style="background: var(--surface-sec);">
+              <div style="font-size: 0.85rem; font-weight: 800; color: var(--primary); margin-bottom: 10px;">PRAGMAS Y ESTRUCTURA TRANSACCIONAL:</div>
+              <pre style="background: #0f172a; color: #5eead4; padding: 16px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; overflow-x: auto; line-height: 1.45;">
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;
+PRAGMA busy_timeout = 5000;
+PRAGMA foreign_keys = ON;
+
+-- Tabla Transaccional de Cobros (ACID)
+CREATE TABLE membresias_transacciones (
+  folio TEXT PRIMARY KEY,
+  socio_id TEXT NOT NULL,
+  monto REAL NOT NULL,
+  fecha_pago TEXT NOT NULL,
+  corte_vigencia TEXT NOT NULL,
+  estado TEXT CHECK(estado IN ('ACTIVO','VENCIDO'))
+);</pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- DIAPOSITIVA 13 (B3): ANEXO - PIPELINE CI/CD -->
+      <!-- ========================================== -->
+      <section class="slide" data-slide="13" data-block="Anexo Técnico: CI/CD Pipeline">
+        <div class="slide-topbar">
+          <div class="slide-title-group">
+            <span class="slide-kicker">🛡️ Respaldo Técnico · B3</span>
+            <h2>Pipeline CI/CD Automatizado en GitHub Actions</h2>
+            <p class="slide-sub">5 Compuertas de calidad y despliegue continuo ejecutadas en menos de 3.5 minutos.</p>
+          </div>
+          <span class="slide-block-tag" style="background: var(--warning-light); color: #b45309; font-weight: 800;">RESPALDO TÉCNICO</span>
+        </div>
+
+        <div class="slide-body">
+          <div class="grid-2col">
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              <div class="card-feature" style="padding: 14px 18px;">
+                <div style="font-size: 0.95rem; font-weight: 700; color: var(--text);">1. Build & Lint (Angular AOT)</div>
+                <div style="font-size: 0.84rem; color: var(--text-muted);">Compilación anticipada sin errores de tipado + ESLint estricto.</div>
+              </div>
+              <div class="card-feature" style="padding: 14px 18px;">
+                <div style="font-size: 0.95rem; font-weight: 700; color: var(--text);">2. Pruebas Unitarias Karma (84.3% Cobertura)</div>
+                <div style="font-size: 0.84rem; color: var(--text-muted);">156 specs ejecutadas en Chrome Headless sobre Linux sin fallos.</div>
+              </div>
+              <div class="card-feature" style="padding: 14px 18px;">
+                <div style="font-size: 0.95rem; font-weight: 700; color: var(--text);">3. Pruebas de Integración HTTP</div>
+                <div style="font-size: 0.84rem; color: var(--text-muted);">Mocking riguroso de servicios HTTP para validar contratos de datos.</div>
+              </div>
+              <div class="card-feature" style="padding: 14px 18px;">
+                <div style="font-size: 0.95rem; font-weight: 700; color: var(--text);">4. Seguridad SAST & TruffleHog</div>
+                <div style="font-size: 0.84rem; color: var(--text-muted);">Auditoría de dependencias npm audit y escaneo de credenciales en git.</div>
+              </div>
+              <div class="card-feature" style="padding: 14px 18px;">
+                <div style="font-size: 0.95rem; font-weight: 700; color: var(--text);">5. Empaquetado Docker y Despliegue CD</div>
+                <div style="font-size: 0.84rem; color: var(--text-muted);">Construcción de imagen OCI a GHCR y publicación en GitHub Pages.</div>
+              </div>
+            </div>
+
+            <div class="mockup-container">
+              <img src="cartel_presentacion/assets/real_github_actions.png" alt="GitHub Actions Pipeline en verde">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- DIAPOSITIVA 14 (B4): ANEXO - SEGURIDAD      -->
+      <!-- ========================================== -->
+      <section class="slide" data-slide="14" data-block="Anexo Técnico: Seguridad">
+        <div class="slide-topbar">
+          <div class="slide-title-group">
+            <span class="slide-kicker">🛡️ Respaldo Técnico · B4</span>
+            <h2>Estrategia de Seguridad y Protección de Datos</h2>
+            <p class="slide-sub">Defensa en profundidad y mitigación del OWASP Top 10 aplicada al entorno fitness.</p>
+          </div>
+          <span class="slide-block-tag" style="background: var(--warning-light); color: #b45309; font-weight: 800;">RESPALDO TÉCNICO</span>
+        </div>
+
+        <div class="slide-body">
+          <div class="grid-3col">
+            <div class="card-feature">
+              <div class="card-icon">🔐</div>
+              <div class="card-title">Autenticación y Cifrado</div>
+              <div class="card-desc">
+                • Cifrado TLS 1.3 forzado en tránsito (HTTPS).<br>
+                • Contraseñas hasheadas con <strong>bcrypt (12 rounds)</strong>.<br>
+                • Tokens <strong>JWT con HMAC-SHA256</strong> firmados criptográficamente y expiración de 24 horas.<br>
+                • Control de Acceso Basado en Roles (RBAC).
+              </div>
+            </div>
+
+            <div class="card-feature">
+              <div class="card-icon">🛡️</div>
+              <div class="card-title">Defensa Perimetral y Resiliencia</div>
+              <div class="card-desc">
+                • <code>express-rate-limit</code>: Protección contra ataques de fuerza bruta en login y saturación de API de IA.<br>
+                • Encabezados HTTP de seguridad (CSP, HSTS, X-Frame-Options).<br>
+                • Sanitización de inputs contra Inyecciones SQL y XSS.
+              </div>
+            </div>
+
+            <div class="card-feature">
+              <div class="card-icon">🔍</div>
+              <div class="card-title">DevSecOps en Cada Commit</div>
+              <div class="card-desc">
+                • <strong>TruffleHog:</strong> Análisis estático continuo para impedir filtración accidental de llaves privadas.<br>
+                • <strong>npm audit:</strong> Cero vulnerabilidades críticas o altas en dependencias de producción.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- DIAPOSITIVA 15 (B5): ANEXO - MOVIL & DOCKER -->
+      <!-- ========================================== -->
+      <section class="slide" data-slide="15" data-block="Anexo Técnico: Móvil y Docker">
+        <div class="slide-topbar">
+          <div class="slide-title-group">
+            <span class="slide-kicker">🛡️ Respaldo Técnico · B5</span>
+            <h2>Empaquetado Nativo Capacitor y Docker Multi-Stage</h2>
+            <p class="slide-sub">Distribución ligera y reproducible tanto en dispositivos Android como en servidores de nube.</p>
+          </div>
+          <span class="slide-block-tag" style="background: var(--warning-light); color: #b45309; font-weight: 800;">RESPALDO TÉCNICO</span>
+        </div>
+
+        <div class="slide-body">
+          <div class="grid-2col">
+            <div class="card-feature">
+              <div class="card-icon">📱</div>
+              <div class="card-title">Empaquetado Nativo Android con Capacitor 7</div>
+              <div class="card-desc" style="line-height: 1.6;">
+                • Identificador de aplicación: <code>mx.uaa.espaciogym.grom21</code>.<br>
+                • Target SDK: 35 (Android 15), Min SDK: 23.<br>
+                • Acceso nativo al hardware: Cámara para lector de QR, splash screen nativo y barra de estado con tema dinámico.<br>
+                • Compilación automatizada en pipeline: <code>android-apk.yml</code>.
+              </div>
+            </div>
+
+            <div class="card-feature">
+              <div class="card-icon">🐳</div>
+              <div class="card-title">Contenedor Docker Multi-Stage (198 MB)</div>
+              <div class="card-desc" style="line-height: 1.6;">
+                • <strong>Stage 1 (Build):</strong> Node.js 22 Alpine descarga dependencias y compila Angular en modo producción con AOT.<br>
+                • <strong>Stage 2 (Runtime):</strong> Nginx Alpine ultra-ligero aloja únicamente los bundles finales estáticos con compresión gzip.<br>
+                • Reducción de tamaño del 82% (de 1.1 GB a solo 198 MB).
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Barra Inferior de Navegación -->
+  <footer class="deck-footer">
+    <div class="footer-left">
+      <div class="slide-counter" id="slideCounter" title="Click para ver lista de diapositivas">1 / 15</div>
+      <div class="progress-bar-container">
+        <div class="progress-bar-fill" id="progressBar"></div>
+      </div>
+      <span style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted);" id="currentBlockName">Bloque 1: Apertura</span>
+    </div>
+
+    <div class="footer-center">
+      <button class="nav-arrow" id="btnPrev" title="Anterior (Flecha izquierda)">◀</button>
+      <button class="nav-arrow" id="btnNext" title="Siguiente (Flecha derecha o Espacio)">▶</button>
+    </div>
+
+    <div class="footer-right">
+      <div class="keyboard-hint">
+        <span>Navegar:</span>
+        <span class="key-badge">◀</span>
+        <span class="key-badge">▶</span>
+        <span class="key-badge">Espacio</span>
+        <span>|</span>
+        <span class="key-badge">F</span> Fullscreen
+        <span>|</span>
+        <span class="key-badge">T</span> Anexo
+      </div>
+    </div>
+  </footer>
+
+  <!-- Modal Selector de Diapositivas -->
+  <div class="modal-backdrop" id="modalBackdrop"></div>
+  <div class="modal-slides-list" id="modalSlidesList">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--text);">Índice de Diapositivas</h3>
+      <button style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted);" id="btnModalClose">✕</button>
+    </div>
+    <div id="slidesListContainer"></div>
+  </div>
+
+  <script>
+    class SlideDeck {
+      constructor() {
+        this.currentSlide = 1;
+        this.slides = document.querySelectorAll('.slide');
+        this.totalSlides = this.slides.length;
+        
+        // Elementos UI
+        this.counter = document.getElementById('slideCounter');
+        this.progress = document.getElementById('progressBar');
+        this.blockName = document.getElementById('currentBlockName');
+        this.btnPrev = document.getElementById('btnPrev');
+        this.btnNext = document.getElementById('btnNext');
+        this.btnFullscreen = document.getElementById('btnFullscreen');
+        this.btnThemeToggle = document.getElementById('btnThemeToggle');
+        this.btnJumpTechnical = document.getElementById('btnJumpTechnical');
+
+        // Modal
+        this.modal = document.getElementById('modalSlidesList');
+        this.backdrop = document.getElementById('modalBackdrop');
+        this.btnModalClose = document.getElementById('btnModalClose');
+        this.slidesListContainer = document.getElementById('slidesListContainer');
+
+        // Timer
+        this.timerSeconds = 600; // 10 minutos
+        this.timerInterval = null;
+        this.isTimerRunning = false;
+        this.timerDisplay = document.getElementById('timerDisplay');
+        this.btnTimerToggle = document.getElementById('btnTimerToggle');
+        this.btnTimerReset = document.getElementById('btnTimerReset');
+        this.timerDot = document.getElementById('timerDot');
+
+        this.init();
+      }
+
+      init() {
+        this.buildModalIndex();
+        this.bindEvents();
+        this.updateSlide();
+        this.updateTimerDisplay();
+      }
+
+      bindEvents() {
+        // Flechas navegación
+        this.btnPrev.addEventListener('click', () => this.prevSlide());
+        this.btnNext.addEventListener('click', () => this.nextSlide());
+
+        // Teclado
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+            e.preventDefault();
+            this.nextSlide();
+          } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+            e.preventDefault();
+            this.prevSlide();
+          } else if (e.key.toLowerCase() === 'f') {
+            e.preventDefault();
+            this.toggleFullscreen();
+          } else if (e.key.toLowerCase() === 't') {
+            e.preventDefault();
+            this.goToSlide(11);
+          } else if (e.key === 'Home') {
+            e.preventDefault();
+            this.goToSlide(1);
+          } else if (e.key === 'End') {
+            e.preventDefault();
+            this.goToSlide(this.totalSlides);
+          } else if (e.key === 'Escape') {
+            this.closeModal();
+          }
+        });
+
+        // Pantalla completa
+        this.btnFullscreen.addEventListener('click', () => this.toggleFullscreen());
+
+        // Salto a técnico
+        this.btnJumpTechnical.addEventListener('click', () => this.goToSlide(11));
+
+        // Tema
+        this.btnThemeToggle.addEventListener('click', () => this.toggleTheme());
+
+        // Modal de índice
+        this.counter.addEventListener('click', () => this.openModal());
+        this.backdrop.addEventListener('click', () => this.closeModal());
+        this.btnModalClose.addEventListener('click', () => this.closeModal());
+
+        // Timer
+        this.btnTimerToggle.addEventListener('click', () => this.toggleTimer());
+        this.btnTimerReset.addEventListener('click', () => this.resetTimer());
+      }
+
+      updateSlide() {
+        this.slides.forEach((slide, idx) => {
+          if (idx + 1 === this.currentSlide) {
+            slide.classList.add('active');
+            const block = slide.getAttribute('data-block') || 'Presentación';
+            this.blockName.textContent = block;
+          } else {
+            slide.classList.remove('active');
+          }
+        });
+
+        this.counter.textContent = `${this.currentSlide} / ${this.totalSlides}`;
+        const pct = (this.currentSlide / this.totalSlides) * 100;
+        this.progress.style.width = `${pct}%`;
+
+        this.btnPrev.disabled = this.currentSlide === 1;
+        this.btnNext.disabled = this.currentSlide === this.totalSlides;
+
+        // Actualizar active en modal
+        const itemBtns = this.slidesListContainer.querySelectorAll('.slide-item-btn');
+        itemBtns.forEach((btn, idx) => {
+          if (idx + 1 === this.currentSlide) {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
+        });
+      }
+
+      nextSlide() {
+        if (this.currentSlide < this.totalSlides) {
+          this.currentSlide++;
+          this.updateSlide();
+        }
+      }
+
+      prevSlide() {
+        if (this.currentSlide > 1) {
+          this.currentSlide--;
+          this.updateSlide();
+        }
+      }
+
+      goToSlide(num) {
+        if (num >= 1 && num <= this.totalSlides) {
+          this.currentSlide = num;
+          this.updateSlide();
+          this.closeModal();
+        }
+      }
+
+      toggleFullscreen() {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(err => {
+            console.log("Fullscreen request failed", err);
+          });
+        } else {
+          if (document.exitFullscreen) {
+            document.exitFullscreen();
+          }
+        }
+      }
+
+      toggleTheme() {
+        const current = document.documentElement.getAttribute('data-theme');
+        if (current === 'dark') {
+          document.documentElement.removeAttribute('data-theme');
+        } else {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      }
+
+      buildModalIndex() {
+        this.slidesListContainer.innerHTML = '';
+        this.slides.forEach((slide, idx) => {
+          const num = idx + 1;
+          const titleElem = slide.querySelector('h2') || slide.querySelector('h1');
+          const title = titleElem ? titleElem.textContent.trim().replace(/\\s+/g, ' ') : `Diapositiva ${num}`;
+          const isTech = num >= 11;
+
+          const btn = document.createElement('button');
+          btn.className = `slide-item-btn ${num === this.currentSlide ? 'active' : ''}`;
+          btn.innerHTML = `
+            <span>${num}. ${title}</span>
+            <span style="font-size: 0.7rem; font-weight: 700; opacity: 0.7;">${isTech ? '🛡️ ANEXO' : 'PRESENTACIÓN'}</span>
+          `;
+          btn.addEventListener('click', () => this.goToSlide(num));
+          this.slidesListContainer.appendChild(btn);
+        });
+      }
+
+      openModal() {
+        this.modal.classList.add('open');
+        this.backdrop.classList.add('open');
+      }
+
+      closeModal() {
+        this.modal.classList.remove('open');
+        this.backdrop.classList.remove('open');
+      }
+
+      // Cronómetro
+      toggleTimer() {
+        if (this.isTimerRunning) {
+          clearInterval(this.timerInterval);
+          this.isTimerRunning = false;
+          this.btnTimerToggle.textContent = '▶';
+          this.timerDot.style.animationPlayState = 'paused';
+        } else {
+          this.isTimerRunning = true;
+          this.btnTimerToggle.textContent = '⏸';
+          this.timerDot.style.animationPlayState = 'running';
+          this.timerInterval = setInterval(() => {
+            if (this.timerSeconds > 0) {
+              this.timerSeconds--;
+              this.updateTimerDisplay();
+            } else {
+              clearInterval(this.timerInterval);
+              this.isTimerRunning = false;
+              this.btnTimerToggle.textContent = '▶';
+              this.timerDisplay.style.color = 'var(--danger)';
+            }
+          }, 1000);
+        }
+      }
+
+      resetTimer() {
+        clearInterval(this.timerInterval);
+        this.isTimerRunning = false;
+        this.timerSeconds = 600;
+        this.btnTimerToggle.textContent = '▶';
+        this.timerDot.style.animationPlayState = 'paused';
+        this.timerDisplay.style.color = 'var(--text)';
+        this.updateTimerDisplay();
+      }
+
+      updateTimerDisplay() {
+        const mins = Math.floor(this.timerSeconds / 60);
+        const secs = this.timerSeconds % 60;
+        this.timerDisplay.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+        if (this.timerSeconds <= 120 && this.timerSeconds > 60) {
+          this.timerDisplay.style.color = 'var(--warning)';
+          this.timerDot.style.background = 'var(--warning)';
+        } else if (this.timerSeconds <= 60) {
+          this.timerDisplay.style.color = 'var(--danger)';
+          this.timerDot.style.background = 'var(--danger)';
+        } else {
+          this.timerDisplay.style.color = 'var(--text)';
+          this.timerDot.style.background = 'var(--accent)';
+        }
+      }
+    }
+
+    const deck = new SlideDeck();
+  </script>
+</body>
+</html>
+"""
+
+with open('/home/yahir/3SEMINARIO/presentacion_comite_16x9.html', 'w', encoding='utf-8') as f:
+    f.write(html_content)
+print("Generado: /home/yahir/3SEMINARIO/presentacion_comite_16x9.html")
+
+# Guión de exposición
+guion_content = """# 🎙️ Guion Oficial de Sustentación ante el Comité Evaluador (espacioGYM)
+### Seminario de Sistemas Computacionales II · 9° B · Centro de Ciencias Básicas · UAA
+**Profesor Titular:** M. en C. Arturo Elías Ramírez  
+**Tiempo Total:** 25 Minutos (10 minutos de Exposición + 15 minutos de Preguntas y Respuestas)  
+**Equipo de Desarrollo GROM 21 (6 Integrantes):**
+1. Jose Alberto Vazquez Guerrero
+2. Luis Antonio García Gómez
+3. Yahir Guevara Cardona
+4. Martin Alfonso Romo Martínez
+5. Ricardo Padilla Hernández
+6. Jesus Eduardo Tapia Avalos
+
+---
+
+## 🎯 Reglas de Oro para la Exposición del Equipo
+1. **Despejar el frente:** Solo el orador en turno se coloca al centro del estrado. Los demás permanecen a un costado o sentados en primera fila atentos, listos para su turno.
+2. **Roles en segundo plano:** Mientras el orador expone, el **Piloto de Diapositivas** pasa las diapositivas al ritmo natural de la voz (sin que el orador tenga que decir "siguiente"). En la demostración en vivo, **un integrante narra el caso de uso mientras otro opera la pantalla**.
+3. **Control del tiempo:** Cada bloque dura de 2 a 2.5 minutos. Hay un cronómetro integrado en la esquina superior derecha de la presentación para no pasarse de los 10 minutos.
+4. **Ronda de preguntas (15 minutos):** No se arrebatan la palabra. Cada integrante tiene un dominio asignado para contestar con autoridad y puede apoyarse en el **Anexo Técnico (Tecla T)**.
+
+---
+
+## ⏱️ Minuto a Minuto de la Exposición (10 Minutos)
+
+### 🎙️ BLOQUE 1: Apertura, Problema y Solución (Minuto 0:00 a 2:30)
+* **Orador Principal:** Yahir Guevara Cardona
+* **Rol en Segundo Plano:** Piloto de Diapositivas (Jose Alberto Vazquez)
+* **Diapositivas:** 1, 2 y 3
+
+#### Diapositiva 1: Portada Oficial (0:00 - 0:40)
+> *"Buenos días, estimados miembros del comité evaluador y profesor Arturo Elías. Somos el equipo GROM 21 de noveno semestre de la Licenciatura en Sistemas Computacionales. Hoy nos complace presentarles el resultado final de nuestro proyecto de tesina: **espacioGYM**, una plataforma integral diseñada para transformar digitalmente la operación de los centros deportivos independientes a través de tecnologías abiertas e Inteligencia Artificial."*
+
+#### Diapositiva 2: La Realidad Operativa de los Gimnasios PyME (0:40 - 1:40)
+> *"Al investigar la industria fitness local en Aguascalientes, identificamos que más del 80% de los gimnasios independientes siguen atrapados en el rezago digital. Operan con libretas de papel y hojas de cálculo en Excel desfasadas, lo que provoca una fuga de entre el 18 y el 25% de sus ingresos mensuales por mensualidades no cobradas a tiempo. Además, en horas pico, la búsqueda manual de nombres en recepción genera filas de hasta 10 minutos, y la falta de un seguimiento personalizado causa que más del 40% de los nuevos socios abandonen el gimnasio en sus primeros 90 días. Cuando estos negocios buscan digitalizarse, se topan con una barrera infranqueable: software privativo extranjero con rentas de más de 350 dólares al mes que una PyME no puede sostener."*
+
+#### Diapositiva 3: La Solución espacioGYM (1:40 - 2:30)
+> *"Frente a este escenario, desarrollamos **espacioGYM**: una solución integral, ligera y sin costo de licenciamiento. Concebida como una Plataforma Web Progresiva, permite que el socio acceda desde cualquier celular o computadora sin descargar aplicaciones pesadas de tiendas oficiales. En el backend, opera sobre microservicios en la nube altamente optimizados con persistencia local que elimina costos de infraestructura, e integra un motor generativo con la API de Google Gemini para entregar a cada usuario rutinas adaptativas a su nivel y objetivos."*  
+*(Transición de voz: Yahir cede la palabra a Luis Antonio y Martin Alfonso).*
+
+---
+
+### 🎙️ BLOQUE 2: Funcionalidad, Pilares y Experiencia de Usuario (Minuto 2:30 a 5:00)
+* **Orador A:** Luis Antonio García Gómez (Pilares y Experiencia)
+* **Orador B:** Martin Alfonso Romo Martínez (Experiencia Dual y Beneficios)
+* **Rol en Segundo Plano:** Preparación de la Demo en Vivo (Ricardo Padilla y Jesus Eduardo Tapia)
+* **Diapositivas:** 4 y 5
+
+#### Diapositiva 4: Los 3 Pilares del Sistema (2:30 - 3:45)
+> *(Luis Antonio):*  
+> *"espacioGYM resuelve los dolores del negocio a través de 3 pilares fundamentales:*  
+> *1. **Gestión Administrativa y Membresías:** Automatiza el catálogo de planes y el corte de vigencias en días naturales, emitiendo estados de cuenta y notificaciones por correo para garantizar cero cuotas perdidas.*  
+> *2. **Acceso Ágil por Código QR Dinámico:** Cada socio porta en su teléfono un pase digital único que se valida en recepción en menos de 120 milisegundos, registrando la asistencia y monitoreando el aforo en tiempo real.*  
+> *3. **Coach Virtual con Inteligencia Artificial:** El socio no queda a la deriva; el sistema genera rutinas de ejercicio adaptadas al instante según su nivel, condición y tiempo disponible, con contingencia local en caso de pérdida de conexión a internet."*
+
+#### Diapositiva 5: Experiencia Dual (Socio vs Administrador) (3:45 - 5:00)
+> *(Martin Alfonso):*  
+> *"La gran fortaleza de espacioGYM es que unifica dos mundos en una sola plataforma:*  
+> *A la izquierda vemos la **experiencia del socio**: una interfaz móvil limpia donde consulta su vigencia, abre su código QR en recepción para entrar en un segundo y platica con su Coach IA.*  
+> *A la derecha, la **perspectiva del dueño o administrador**: un panel analítico en tiempo real que le muestra el aforo exacto del gimnasio, quién está dentro, quién tiene mensualidad vencida para cobrarle amablemente al salir, y cuáles son sus horas pico para optimizar entrenadores y aparatos."*  
+*(Transición de voz: Martin cede el turno para la demostración en vivo).*
+
+---
+
+### 🎙️ BLOQUE 3: Demostración en Vivo Dual (Minuto 5:00 a 7:30)
+* **Narrador del Flujo:** Ricardo Padilla Hernández
+* **Operador del Sistema en Pantalla:** Jesus Eduardo Tapia Avalos
+* **Diapositiva:** 6 y 7 (o cambio fluido al navegador con la app en vivo)
+
+#### Diapositiva 6 y 7: Demostración en Vivo y Coach IA (5:00 - 7:30)
+> *(Ricardo narra con voz pausada mientras Jesus opera la pantalla):*  
+> *"Para demostrar que espacioGYM no es solo una maqueta conceptual, pasamos a nuestro sistema real en producción, desplegado en GitHub Pages y Render con certificado SSL activo.*  
+> *Observen la pantalla:*  
+> *1. **Inicio de Sesión y Perfil:** Entramos como socio. La interfaz carga al instante gracias a la arquitectura PWA.*  
+> *2. **Pase QR Dinámico:** Al llegar al gimnasio, el socio presiona 'Mi Pase'. El sistema genera su código QR con su vigencia activa y permite el check-in en menos de 120 milisegundos.*  
+> *3. **Coach IA:** Ahora el socio quiere su plan de hoy. Abre el asistente, indica que busca hipertrofia de pierna y nivel intermedio. En solo 1.8 segundos, el motor conectado con Gemini API estructura los ejercicios, series, repeticiones y descansos recomendados.*  
+> *4. **Panel del Dueño:** Si cambiamos a la vista administrativa, el sistema refleja de inmediato la asistencia registrada y el estado contable.*  
+> *Con esto demostramos un ciclo de software completo, funcional y probado en producción."*  
+*(Transición de voz: Ricardo cede el micrófono a Jose Alberto para el cierre).*
+
+---
+
+### 🎙️ BLOQUE 4: Resultados, Métricas de Ingeniería y Cierre (Minuto 7:30 a 10:00)
+* **Orador de Métricas:** Jose Alberto Vazquez Guerrero
+* **Orador de Cierre:** Yahir Guevara Cardona
+* **Rol en Segundo Plano:** Piloto listo para abrir el Anexo Técnico
+* **Diapositivas:** 8, 9 y 10
+
+#### Diapositiva 8: Resultados Tangibles y Presunción de Logros (7:30 - 8:40)
+> *(Jose Alberto):*  
+> *"Detrás de esta experiencia visual existe una rigurosa ingeniería de software que respaldamos con métricas:*  
+> *• **118 milisegundos de latencia p95** bajo carga concurrente, lograda gracias a una base de datos SQLite en modo WAL que garantiza integridad ACID con cero bloqueos.*  
+> *• **84.3% de cobertura en pruebas unitarias** automatizadas, con 156 especificaciones ejecutadas en Karma y Jasmine con cero errores.*  
+> *• **Contenedor Docker optimizado a 198 MB**, reduciendo en un 82% el peso típico de imágenes web para despliegues instantáneos.*  
+> *• **0 vulnerabilidades de seguridad** y cero credenciales filtradas validadas con herramientas SAST como TruffleHog y SonarQube."*
+
+#### Diapositiva 9 y 10: Conclusiones, QR del Comité y Cierre (8:40 - 10:00)
+> *(Yahir Guevara):*  
+> *"En conclusión, espacioGYM demuestra que la combinación de software libre moderno e Inteligencia Artificial permite construir herramientas de primer nivel para empresas locales sin los costos exorbitantes del software comercial. Hemos cumplido al 100% los requerimientos de la asignatura de Seminario de Sistemas Computacionales.*  
+> *En pantalla dejamos el código QR oficial del proyecto para que los miembros del comité puedan escanearlo con sus teléfonos y probar la aplicación en vivo en este mismo instante.*  
+> *Agradecemos a nuestro profesor titular, el maestro Arturo Elías Ramírez, y a ustedes por su tiempo. Quedamos a su entera disposición para la sesión de preguntas."*
+
+---
+
+## 🛡️ Estrategia de Defensa: Ronda de Preguntas (15 Minutos)
+
+Si el jurado hace preguntas técnicas, el piloto presiona la **tecla `T`** para proyectar de inmediato el **Anexo Técnico** correspondiente.
+
+### Matriz de Especialistas Asignados:
+| Especialista Responsable | Tema de Dominio | Diapositiva de Apoyo |
+| :--- | :--- | :---: |
+| **Yahir Guevara Cardona** | Arquitectura Global, Persistencia Híbrida y SQLite WAL | Diapositiva 11 y 12 |
+| **Jose Alberto Vazquez Guerrero** | Pipeline CI/CD, Pruebas Karma (156 specs) y Métricas | Diapositiva 13 |
+| **Luis Antonio García Gómez** | Seguridad, JWT, Cifrado TLS y Escaneo TruffleHog | Diapositiva 14 |
+| **Martin Alfonso Romo Martínez** | Frontend PWA, Standalone Components y UX | Diapositiva 11 |
+| **Ricardo Padilla Hernández** | Motor de Inteligencia Artificial y Gemini API | Diapositiva 7 |
+| **Jesus Eduardo Tapia Avalos** | Empaquetado Móvil Capacitor Android y Contenedores Docker | Diapositiva 15 |
+
+---
+
+### 💡 4 Respuestas Clave Preparadas ante Preguntas Difíciles del Comité
+
+#### Pregunta 1: *"¿Por qué usaron SQLite si es una aplicación web y no PostgreSQL o MySQL?"*
+* **Responde:** Yahir Guevara *(Apoyo en Slide 12)*.
+* **Argumento:**  
+  *"Excelente pregunta. La arquitectura no usa SQLite en modo tradicional síncrono, sino en modo **WAL (Write-Ahead Logging)** con `PRAGMA synchronous = NORMAL`. Esto permite que múltiples usuarios lean concurrentemente mientras las transacciones de pago se escriben en memoria sin bloquear la base. En pruebas de estrés alcanzó 100 transacciones por minuto con solo 118 ms de latencia p95. Además, elimina el costo de 25 dólares mensuales de una instancia RDS/PostgreSQL en la nube, haciéndolo ideal y autosuficiente para una PyME local."*
+
+#### Pregunta 2: *"¿Qué pasa si el gimnasio se queda sin internet o la API de Gemini falla?"*
+* **Responde:** Ricardo Padilla *(Apoyo en Slide 7)*.
+* **Argumento:**  
+  *"Diseñamos el sistema bajo el principio de alta disponibilidad y degradación elegante. La aplicación móvil es una PWA con Service Worker, por lo que el catálogo de ejercicios y el pase QR abren incluso sin conexión. En el módulo de IA implementamos un **Circuit Breaker con contingencia local**: si la API de Google Gemini no responde en 3 segundos o agota su cuota, el backend conmuta de inmediato a un motor heurístico local que entrega la rutina sin arrojar jamás un error 500 al socio."*
+
+#### Pregunta 3: *"¿Cómo aseguran que no se filtren contraseñas o datos de los socios?"*
+* **Responde:** Luis Antonio García *(Apoyo en Slide 14)*.
+* **Argumento:**  
+  *"Aplicamos el principio de Defensa en Profundidad y OWASP Top 10. Las contraseñas se almacenan con salt y hashing mediante bcrypt a 12 rondas. La sesión se valida con tokens JWT firmados con HMAC-SHA256 y expiración a 24 horas. En el pipeline de CI/CD ejecutamos escaneos estáticos de seguridad (SAST) con **TruffleHog**, garantizando cero llaves privadas o secretos en el código fuente, y forzamos HTTPS con TLS 1.3 en todos los endpoints."*
+
+#### Pregunta 4: *"¿La aplicación es nativa de Android o solo una página web responsive?"*
+* **Responde:** Jesus Eduardo Tapia *(Apoyo en Slide 15)*.
+* **Argumento:**  
+  *"Es un enfoque híbrido de vanguardia. Opera como PWA instalable en iOS y Android directamente desde el navegador, pero además integramos **Capacitor 7** para compilar un APK nativo bajo el paquete `mx.uaa.espaciogym.grom21` apuntando a Android 15 (SDK 35). Esto nos permite acceder al hardware como la cámara para escanear QR y generar el splash screen nativo."*
+"""
+
+with open('/home/yahir/3SEMINARIO/guion_exposicion_comite_6_integrantes.md', 'w', encoding='utf-8') as f:
+    f.write(guion_content)
+print("Generado: /home/yahir/3SEMINARIO/guion_exposicion_comite_6_integrantes.md")
+
+# Convertir guión a ODT para que sea editable
+cmd_odt = "libreoffice -env:UserInstallation=file:///tmp/lo_profile --headless --convert-to odt /home/yahir/3SEMINARIO/guion_exposicion_comite_6_integrantes.md --outdir /home/yahir/3SEMINARIO/"
+subprocess.run(cmd_odt, shell=True, check=True)
+print("Convertido a ODT: /home/yahir/3SEMINARIO/guion_exposicion_comite_6_integrantes.odt")

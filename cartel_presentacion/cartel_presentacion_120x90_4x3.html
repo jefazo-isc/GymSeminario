@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Cartel de Presentación - espacioGYM (120cm x 90cm - 4:3)</title>
+<style>
+  @page {
+    size: 1200mm 900mm;
+    margin: 0;
+  }
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  html, body {
+    width: 1200mm;
+    height: 900mm;
+    background: #0b1320;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', Arial, sans-serif;
+    color: #1e293b;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    overflow: hidden;
+  }
+
+  .poster-container {
+    width: 1200mm;
+    height: 900mm;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    background: #cbd5e1;
+  }
+
+  /* =====================================================================
+     1. HEADER (20% = 180mm)
+     ===================================================================== */
+  header.poster-header {
+    height: 180mm;
+    width: 1200mm;
+    background: linear-gradient(135deg, #07172b 0%, #0b2545 40%, #12345e 75%, #081a30 100%);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10mm 20mm;
+    position: relative;
+    border-bottom: 6mm solid #d4af37;
+    box-shadow: 0 10mm 25mm rgba(0, 0, 0, 0.45);
+    z-index: 10;
+  }
+
+  .header-left-logo, .header-right-logo {
+    width: 155mm;
+    height: 150mm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .logo-card-uaa {
+    background: #ffffff;
+    border-radius: 8mm;
+    padding: 5mm 8mm;
+    box-shadow: 0 4mm 16mm rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 145mm;
+    height: 125mm;
+  }
+  .logo-card-uaa img {
+    max-width: 130mm;
+    max-height: 110mm;
+    object-fit: contain;
+  }
+
+  .logo-card-gym {
+    background: #000000;
+    border: 1.5mm solid #38bdf8;
+    border-radius: 8mm;
+    padding: 5mm 8mm;
+    box-shadow: 0 4mm 16mm rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 155mm;
+    height: 125mm;
+  }
+  .logo-card-gym img {
+    max-width: 140mm;
+    max-height: 110mm;
+    object-fit: contain;
+  }
+
+  .header-center-info {
+    flex: 1;
+    text-align: center;
+    padding: 0 12mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .inst-pretitle {
+    font-size: 15.5pt;
+    font-weight: 800;
+    letter-spacing: 3.5pt;
+    color: #f1f5f9;
+    text-transform: uppercase;
+    margin-bottom: 1.8mm;
+  }
+  .inst-department {
+    font-size: 12.5pt;
+    font-weight: 700;
+    letter-spacing: 2pt;
+    color: #93c5fd;
+    text-transform: uppercase;
+    margin-bottom: 3.5mm;
+  }
+
+  .poster-main-title {
+    font-size: 26pt;
+    font-weight: 900;
+    line-height: 1.15;
+    color: #ffffff;
+    text-shadow: 0 4px 16px rgba(0, 0, 0, 0.8);
+    margin-bottom: 3mm;
+    max-width: 820mm;
+  }
+  .poster-main-title .highlight-gym {
+    color: #38bdf8;
+  }
+
+  .poster-subtitle {
+    font-size: 13.5pt;
+    font-weight: 600;
+    color: #e2e8f0;
+    margin-bottom: 4mm;
+    letter-spacing: 0.6pt;
+  }
+
+  .authors-bar {
+    background: rgba(15, 23, 42, 0.88);
+    border: 1.5mm solid rgba(56, 189, 248, 0.6);
+    border-radius: 6mm;
+    padding: 2.5mm 10mm;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 8mm;
+    max-width: 820mm;
+    box-shadow: 0 4mm 12mm rgba(0,0,0,0.4);
+  }
+  .author-item {
+    font-size: 13pt;
+    color: #ffffff;
+    font-weight: 700;
+  }
+  .author-item span.id-badge {
+    color: #38bdf8;
+    font-weight: 800;
+  }
+  .advisor-badge {
+    font-size: 13pt;
+    color: #fbbf24;
+    font-weight: 800;
+    border-left: 2mm solid rgba(255, 255, 255, 0.35);
+    padding-left: 8mm;
+  }
+
+  /* =====================================================================
+     2. BODY (68% = 612mm, 3 COLUMNAS HORIZONTALES)
+     ===================================================================== */
+  main.poster-body {
+    height: 612mm;
+    width: 1200mm;
+    padding: 7mm 16mm 6mm 16mm;
+    display: grid;
+    grid-template-columns: 365mm 414mm 365mm;
+    gap: 12mm;
+    background: #e2e8f0;
+  }
+
+  .column {
+    display: flex;
+    flex-direction: column;
+    gap: 6mm;
+    height: 100%;
+  }
+
+  /* Tarjetas de Sección */
+  .section-card {
+    background: #ffffff;
+    border-radius: 5mm;
+    border: 1.2mm solid #cbd5e1;
+    box-shadow: 0 4mm 14mm rgba(15, 23, 42, 0.08);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .card-header {
+    background: linear-gradient(90deg, #0b2545 0%, #1e3a8a 100%);
+    color: #ffffff;
+    padding: 3mm 5mm;
+    display: flex;
+    align-items: center;
+    gap: 3mm;
+    border-bottom: 1.8mm solid #d4af37;
+    flex-shrink: 0;
+  }
+  .card-header.accent-results {
+    background: linear-gradient(90deg, #0f172a 0%, #0369a1 60%, #0284c7 100%);
+    border-bottom: 2mm solid #38bdf8;
+  }
+
+  .card-icon {
+    width: 8mm;
+    height: 8mm;
+    fill: #38bdf8;
+  }
+  .card-header h2 {
+    font-size: 17pt;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1.2pt;
+    color: #ffffff;
+  }
+  .card-header .badge-tag {
+    margin-left: auto;
+    font-size: 9.5pt;
+    background: rgba(255, 255, 255, 0.22);
+    color: #f8fafc;
+    padding: 1mm 4mm;
+    border-radius: 3.5mm;
+    font-weight: 800;
+    letter-spacing: 0.6pt;
+  }
+
+  .card-body {
+    padding: 4mm 5.5mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 2mm;
+    flex: 1;
+    font-size: 11pt;
+    line-height: 1.38;
+    color: #334155;
+    text-align: justify;
+  }
+
+  /* Subtítulos interiores */
+  h3.subhead {
+    font-size: 12.5pt;
+    font-weight: 800;
+    color: #0b2545;
+    border-left: 3.2mm solid #0284c7;
+    padding-left: 2.8mm;
+    margin-top: 1mm;
+    margin-bottom: 1mm;
+    text-transform: uppercase;
+    letter-spacing: 0.4pt;
+  }
+
+  p {
+    margin-bottom: 1.5mm;
+  }
+  strong {
+    color: #0f172a;
+  }
+
+  .highlight-box {
+    background: #f8fafc;
+    border: 1mm solid #cbd5e1;
+    border-left: 3.8mm solid #0284c7;
+    border-radius: 3mm;
+    padding: 2mm 3.5mm;
+    font-size: 10.5pt;
+    line-height: 1.34;
+    margin-top: 1mm;
+    margin-bottom: 1mm;
+  }
+
+  .obj-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 2.5mm;
+    margin-bottom: 1.5mm;
+    font-size: 10.8pt;
+    line-height: 1.32;
+  }
+  .obj-bullet {
+    background: #0284c7;
+    color: #ffffff;
+    font-size: 9pt;
+    font-weight: 900;
+    min-width: 5.8mm;
+    height: 5.8mm;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 0.4mm;
+  }
+
+  /* Niveles Visual Diagram */
+  .levels-flow {
+    display: flex;
+    gap: 1.8mm;
+    align-items: center;
+    margin: 1.2mm 0;
+    background: #0f172a;
+    padding: 2mm 2.5mm;
+    border-radius: 3mm;
+    border: 0.8mm solid #334155;
+  }
+  .level-box {
+    flex: 1;
+    text-align: center;
+    padding: 1.2mm;
+    border-radius: 2mm;
+    color: #ffffff;
+  }
+  .level-box.lvl-macro { background: rgba(56, 189, 248, 0.15); border: 0.7mm solid #38bdf8; }
+  .level-box.lvl-meso  { background: rgba(251, 191, 36, 0.15); border: 0.7mm solid #fbbf24; }
+  .level-box.lvl-micro { background: rgba(74, 222, 128, 0.15); border: 0.7mm solid #4ade80; }
+  .level-tag { font-size: 8pt; font-weight: 900; text-transform: uppercase; margin-bottom: 0.4mm; }
+  .lvl-macro .level-tag { color: #38bdf8; }
+  .lvl-meso .level-tag  { color: #fbbf24; }
+  .lvl-micro .level-tag { color: #4ade80; }
+  .level-desc { font-size: 7.2pt; color: #e2e8f0; line-height: 1.2; }
+  .level-arrow { color: #ffffff; font-size: 10pt; font-weight: 900; }
+
+  /* Code / Snippet box */
+  .code-box {
+    background: #0f172a;
+    color: #e2e8f0;
+    border-radius: 2.5mm;
+    padding: 1.8mm 2.5mm;
+    margin: 1mm 0;
+    border: 0.8mm solid #334155;
+    font-family: 'Consolas', 'Courier New', monospace;
+  }
+  .code-title {
+    font-size: 8.5pt;
+    font-weight: 800;
+    color: #38bdf8;
+    text-transform: uppercase;
+    margin-bottom: 0.8mm;
+    border-bottom: 0.5mm solid #334155;
+    padding-bottom: 0.5mm;
+  }
+  .code-box pre {
+    font-size: 7.8pt;
+    line-height: 1.25;
+    margin: 0;
+    white-space: pre-wrap;
+    color: #cbd5e1;
+  }
+  .code-box pre span.kw { color: #f43f5e; font-weight: 700; }
+  .code-box pre span.fn { color: #38bdf8; }
+
+  /* Columna Central de Resultados */
+  .card-results-full {
+    height: 100%;
+  }
+
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2mm;
+    margin-bottom: 1.5mm;
+  }
+  .kpi-card {
+    background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
+    border-radius: 3mm;
+    padding: 2mm 1.5mm;
+    text-align: center;
+    color: #ffffff;
+    border: 1mm solid #38bdf8;
+    box-shadow: 0 1.5mm 5mm rgba(0,0,0,0.15);
+  }
+  .kpi-value {
+    font-size: 21pt;
+    font-weight: 900;
+    color: #38bdf8;
+    line-height: 1;
+    margin-bottom: 0.8mm;
+  }
+  .kpi-value.gold { color: #fbbf24; }
+  .kpi-value.green { color: #4ade80; }
+  .kpi-value.purple { color: #c084fc; }
+  .kpi-label {
+    font-size: 8pt;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.4pt;
+    color: #e2e8f0;
+  }
+
+  .pipeline-flow {
+    background: #0f172a;
+    border-radius: 3mm;
+    padding: 1.8mm 2.5mm;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5mm;
+    border: 1mm solid #334155;
+  }
+  .flow-step {
+    text-align: center;
+    flex: 1;
+  }
+  .flow-title {
+    font-size: 9pt;
+    font-weight: 800;
+    color: #38bdf8;
+    text-transform: uppercase;
+  }
+  .flow-desc {
+    font-size: 7.2pt;
+    color: #cbd5e1;
+  }
+  .flow-arrow {
+    color: #fbbf24;
+    font-size: 13pt;
+    font-weight: 900;
+    padding: 0 0.8mm;
+  }
+
+  .screenshot-container-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2mm;
+    margin-bottom: 1.5mm;
+  }
+  .screenshot-item {
+    background: #ffffff;
+    border: 1mm solid #cbd5e1;
+    border-radius: 3mm;
+    overflow: hidden;
+    box-shadow: 0 1.5mm 6mm rgba(0,0,0,0.1);
+  }
+  .screenshot-item img {
+    width: 100%;
+    height: 58mm;
+    object-fit: cover;
+    object-position: top;
+    display: block;
+  }
+  .screenshot-caption {
+    font-size: 8.5pt;
+    font-weight: 800;
+    color: #0f172a;
+    background: #f8fafc;
+    padding: 1.2mm 2.5mm;
+    border-top: 0.6mm solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .screenshot-caption span.tag {
+    color: #0284c7;
+    font-weight: 800;
+    font-size: 8pt;
+  }
+
+  /* Tabla de Métricas */
+  table.metrics-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9.2pt;
+    margin-top: 0.8mm;
+    background: #ffffff;
+  }
+  table.metrics-table th {
+    background: #0f172a;
+    color: #ffffff;
+    font-weight: 800;
+    padding: 1.4mm 2.2mm;
+    text-align: left;
+    font-size: 8.8pt;
+    text-transform: uppercase;
+  }
+  table.metrics-table td {
+    padding: 1.2mm 2.2mm;
+    border-bottom: 0.6mm solid #e2e8f0;
+    color: #334155;
+  }
+  table.metrics-table tr:nth-child(even) td {
+    background: #f8fafc;
+  }
+  table.metrics-table tr td.status-pass {
+    color: #15803d;
+    font-weight: 900;
+  }
+
+  .tech-pill-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5mm;
+    margin-top: 0.8mm;
+    margin-bottom: 1mm;
+  }
+  .tech-pill {
+    background: #e0f2fe;
+    color: #0369a1;
+    border: 0.6mm solid #7dd3fc;
+    border-radius: 2.5mm;
+    padding: 0.8mm 2.2mm;
+    font-size: 9pt;
+    font-weight: 800;
+  }
+
+  /* Sprint Table */
+  table.sprint-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8.5pt;
+    margin: 1mm 0;
+    background: #f8fafc;
+    border: 0.6mm solid #cbd5e1;
+  }
+  table.sprint-table th {
+    background: #0b2545;
+    color: #ffffff;
+    padding: 1.2mm 1.8mm;
+    font-size: 8pt;
+    text-align: left;
+  }
+  table.sprint-table td {
+    padding: 1mm 1.8mm;
+    border-bottom: 0.5mm solid #e2e8f0;
+    color: #334155;
+  }
+
+  /* =====================================================================
+     3. FOOTER (12% = 108mm)
+     ===================================================================== */
+  footer.poster-footer {
+    height: 108mm;
+    width: 1200mm;
+    background: linear-gradient(135deg, #07172b 0%, #0b2545 60%, #081a30 100%);
+    color: #ffffff;
+    border-top: 5mm solid #d4af37;
+    padding: 6mm 20mm;
+    display: grid;
+    grid-template-columns: 420mm 260mm 440mm;
+    gap: 12mm;
+    align-items: center;
+    box-shadow: 0 -8mm 25mm rgba(0, 0, 0, 0.45);
+    z-index: 10;
+  }
+
+  .footer-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+  }
+
+  .footer-title {
+    font-size: 13pt;
+    font-weight: 900;
+    color: #fbbf24;
+    text-transform: uppercase;
+    letter-spacing: 1pt;
+    margin-bottom: 1.5mm;
+    display: flex;
+    align-items: center;
+    gap: 2.5mm;
+    border-bottom: 1mm solid rgba(251, 191, 36, 0.5);
+    padding-bottom: 1mm;
+  }
+
+  .contact-info {
+    font-size: 10.2pt;
+    line-height: 1.38;
+    color: #e2e8f0;
+  }
+  .contact-info strong {
+    color: #ffffff;
+  }
+  .contact-badge {
+    background: rgba(56, 189, 248, 0.18);
+    border: 0.7mm solid #0284c7;
+    color: #38bdf8;
+    padding: 0.8mm 2.5mm;
+    border-radius: 2mm;
+    font-size: 9.5pt;
+    font-weight: 700;
+    display: inline-block;
+    margin-top: 1mm;
+    margin-right: 1.8mm;
+  }
+
+  /* Center QR Codes */
+  .qr-center-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7mm;
+  }
+  .qr-card {
+    background: #ffffff;
+    border-radius: 3.5mm;
+    padding: 2.2mm;
+    text-align: center;
+    box-shadow: 0 3mm 12mm rgba(0,0,0,0.4);
+    width: 42mm;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .qr-card img {
+    width: 31mm;
+    height: 31mm;
+    object-fit: contain;
+  }
+  .qr-label {
+    font-size: 8.5pt;
+    font-weight: 900;
+    color: #0f172a;
+    margin-top: 1mm;
+    text-transform: uppercase;
+    letter-spacing: 0.3pt;
+  }
+  .qr-sub {
+    font-size: 7.2pt;
+    color: #64748b;
+    font-weight: 700;
+  }
+
+  /* References */
+  .references-list {
+    font-size: 9pt;
+    line-height: 1.32;
+    color: #cbd5e1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2mm;
+  }
+  .ref-item {
+    text-indent: -4mm;
+    padding-left: 4mm;
+  }
+  .ref-item em {
+    color: #93c5fd;
+    font-style: italic;
+  }
+
+</style>
+</head>
+<body>
+
+<div class="poster-container">
+
+  <!-- ===================================================================
+       1. HEADER (20% de altura = 180mm en formato 120x90cm)
+       =================================================================== -->
+  <header class="poster-header">
+    <!-- LOGO IZQUIERDO REAL: UNIVERSIDAD AUTÓNOMA DE AGUASCALIENTES -->
+    <div class="header-left-logo">
+      <div class="logo-card-uaa">
+        <img src="assets/logo_uaa.png" alt="Logo Universidad Autónoma de Aguascalientes">
+      </div>
+    </div>
+
+    <!-- CENTRO: TÍTULO INSTITUCIONAL, TESINA Y AUTORES -->
+    <div class="header-center-info">
+      <div class="inst-pretitle">Universidad Autónoma de Aguascalientes &bull; Centro de Ciencias Básicas</div>
+      <div class="inst-department">Departamento de Sistemas de Información &bull; Seminario de Sistemas Computacionales II (9° B)</div>
+
+      <h1 class="poster-main-title">
+        PLATAFORMA WEB CON INTELIGENCIA ARTIFICIAL PARA LA GESTIÓN DE UN GIMNASIO: DESARROLLO MEDIANTE SCRUM Y DEVOPS
+        <span class="highlight-gym">(ESPACIOGYM / GROM 21)</span>
+      </h1>
+
+      <div class="poster-subtitle">
+        Articulación de los Niveles 3 (Nivel Meso &ndash; Metodología y DevOps) y 4 (Nivel Micro &ndash; Implementación Angular 19, SQLite WAL y Métricas Reales)
+      </div>
+
+      <div class="authors-bar">
+        <div class="author-item">Yahir Guevara Cardona <span class="id-badge">(ID 349804)</span></div>
+        <div class="author-item">&bull;</div>
+        <div class="author-item">Ricardo Padilla Hernández <span class="id-badge">(ID 352300)</span></div>
+        <div class="author-item">&bull;</div>
+        <div class="author-item">Jesús Eduardo Tapia Avalos <span class="id-badge">(ID 243746)</span></div>
+        <div class="advisor-badge">TUTOR: M. en C. Arturo Elías Ramírez</div>
+      </div>
+    </div>
+
+    <!-- LOGO DERECHO REAL: GROM 21 FITNESS (ASSET OFICIAL DEL PROYECTO) -->
+    <div class="header-right-logo">
+      <div class="logo-card-gym">
+        <img src="assets/logo_grom21.jpg" alt="Logo Oficial GROM 21 Fitness Center">
+      </div>
+    </div>
+  </header>
+
+
+  <!-- ===================================================================
+       2. CUERPO PRINCIPAL (68% = 612mm, 3 Columnas Horizontales 4:3)
+       =================================================================== -->
+  <main class="poster-body">
+
+    <!-- -----------------------------------------------------------------
+         COLUMNA 1 (IZQUIERDA): INTRODUCCIÓN Y OBJETIVOS
+         ----------------------------------------------------------------- -->
+    <div class="column">
+      
+      <!-- INTRODUCCIÓN -->
+      <section class="section-card" style="flex: 1;">
+        <div class="card-header">
+          <svg class="card-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+          <h2>Introducción</h2>
+          <span class="badge-tag">Contexto y Diagnóstico</span>
+        </div>
+        <div class="card-body">
+          <h3 class="subhead">Problemática en Centros Deportivos</h3>
+          <p>
+            En México, los gimnasios independientes suelen administrarse mediante procesos analógicos y descentralizados (libretas en papel, hojas de cálculo sin sincronización y validación visual en torniquetes). Esta dinámica genera <strong>fugas de ingresos de hasta un 25%</strong> por cobros extemporáneos no auditados, duplicidad de socios y suplantación en accesos.
+          </p>
+          <p>
+            Asimismo, la falta de planes de entrenamiento individualizados ocasiona una <strong>tasa de abandono superior al 35%</strong> durante los primeros 90 días, perjudicando gravemente la sostenibilidad del negocio.
+          </p>
+
+          <h3 class="subhead">Propuesta de Solución: espacioGYM (GROM 21)</h3>
+          <p>
+            Se diseñó e implementó <strong>espacioGYM</strong>, una Progressive Web App (PWA) reactiva basada en <strong>Angular 19.2</strong>, backend modular en <strong>Node.js/Express</strong>, persistencia ligera con <strong>SQLite 3 en modo WAL</strong> (<em>Write-Ahead Logging</em>) y un motor dual de Inteligencia Artificial para prescripción de rutinas dinámicas mediante Gemini API y fallback local.
+          </p>
+
+          <h3 class="subhead">Niveles de Redacción Científica (Guía Institucional)</h3>
+          <div class="levels-flow">
+            <div class="level-box lvl-macro">
+              <div class="level-tag">Nivel Macro (1-2)</div>
+              <div class="level-desc">Problema Global y Marco Teórico de la Industria</div>
+            </div>
+            <div class="level-arrow">&rarr;</div>
+            <div class="level-box lvl-meso">
+              <div class="level-tag">Nivel Meso (3)</div>
+              <div class="level-desc">Framework Scrum en 8 Sprints y Pipeline CI/CD</div>
+            </div>
+            <div class="level-arrow">&rarr;</div>
+            <div class="level-box lvl-micro">
+              <div class="level-tag">Nivel Micro (4)</div>
+              <div class="level-desc">Código Angular 19, SQLite WAL y Métricas Reales</div>
+            </div>
+          </div>
+
+          <div class="highlight-box">
+            <strong>Articulación Metodológica:</strong> El nivel meso institucionaliza el flujo de trabajo y compuertas de calidad DoD, garantizando que el nivel micro despliegue software libre de errores y probado al 100%.
+          </div>
+        </div>
+      </section>
+
+      <!-- OBJETIVOS -->
+      <section class="section-card" style="flex: 1;">
+        <div class="card-header">
+          <svg class="card-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+          <h2>Objetivos</h2>
+          <span class="badge-tag">Alcance y Metas</span>
+        </div>
+        <div class="card-body">
+          <h3 class="subhead">Objetivo General</h3>
+          <p>
+            Diseñar, implementar, evaluar y desplegar en producción una plataforma web progresiva (espacioGYM) articulada con metodologías ágiles (Scrum) y prácticas de ingeniería continua (DevOps), optimizando la gestión de membresías, el control de acceso por QR dinámico y la generación de rutinas mediante IA.
+          </p>
+
+          <h3 class="subhead">Objetivos Específicos</h3>
+          <div class="obj-item">
+            <div class="obj-bullet">1</div>
+            <div><strong>Framework Ágil y Gobernanza (Meso):</strong> Adaptar Scrum a 8 Sprints de dos semanas, vinculando la <em>Definition of Done</em> (DoD) a la aprobación estricta de pruebas automatizadas.</div>
+          </div>
+          <div class="obj-item">
+            <div class="obj-bullet">2</div>
+            <div><strong>Pipeline CI/CD Automatizado (Micro):</strong> Configurar GitHub Actions y Docker multi-etapa para compilar y ejecutar pruebas unitarias con cobertura &gt; 80% y despliegue continuo en &lt; 4 min.</div>
+          </div>
+          <div class="obj-item">
+            <div class="obj-bullet">3</div>
+            <div><strong>Persistencia Ligera y Concurrente:</strong> Integrar SQLite con WAL y transacciones ACID atómicas, logrando latencias &lt; 150 ms sin costo de hosting dedicado.</div>
+          </div>
+          <div class="obj-item">
+            <div class="obj-bullet">4</div>
+            <div><strong>Terminales de Acceso por QR y Motor IA:</strong> Validar el control de asistencia en tiempo real mediante QR seguros y la prescripción adaptativa de ejercicios con Gemini API.</div>
+          </div>
+
+          <h3 class="subhead">Planificación Iterativa de Sprints</h3>
+          <table class="sprint-table">
+            <thead>
+              <tr>
+                <th>Sprints</th>
+                <th>Enfoque Funcional</th>
+                <th>Incremento Entregable</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Sprint 1 - 2</strong></td>
+                <td>Arquitectura base y Seguridad</td>
+                <td>Auth JWT, Standalone Components y PWA Shell</td>
+              </tr>
+              <tr>
+                <td><strong>Sprint 3 - 4</strong></td>
+                <td>Socios y Membresías</td>
+                <td>CRUD Socios, control de pagos y catálogo</td>
+              </tr>
+              <tr>
+                <td><strong>Sprint 5 - 6</strong></td>
+                <td>Terminal QR y Persistencia</td>
+                <td>Check-in con QR dinámico y SQLite en modo WAL</td>
+              </tr>
+              <tr>
+                <td><strong>Sprint 7 - 8</strong></td>
+                <td>Inteligencia Artificial y DevOps</td>
+                <td>Asistente Gemini, Pipeline CI/CD y despliegue prod</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="highlight-box">
+            <strong>Impacto Institucional:</strong> Cumplimiento riguroso de la entrega de Niveles 3 (Meso) y 4 (Micro) para el Seminario de Sistemas Computacionales II, avalado por el CCB de la UAA.
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+
+    <!-- -----------------------------------------------------------------
+         COLUMNA 2 (CENTRAL): RESULTADOS (COLUMNA COMPLETA DE ALTO IMPACTO)
+         ----------------------------------------------------------------- -->
+    <div class="column col-results">
+      <section class="section-card card-results-full">
+        <div class="card-header accent-results">
+          <svg class="card-icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+          <h2>Resultados</h2>
+          <span class="badge-tag">Evaluación Empírica</span>
+        </div>
+        <div class="card-body">
+
+          <!-- MÉTRICAS CLAVE EN 4 TARJETAS -->
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-value green">100%</div>
+              <div class="kpi-label">CI/CD Pass Rate</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-value">84.3%</div>
+              <div class="kpi-label">Cobertura Tests</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-value gold">118 ms</div>
+              <div class="kpi-label">Latencia API</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-value purple">198 MB</div>
+              <div class="kpi-label">Docker Slim</div>
+            </div>
+          </div>
+
+          <!-- DIAGRAMA DEL PIPELINE CI/CD (ASSET DE INGENIERÍA) -->
+          <h3 class="subhead">Arquitectura del Pipeline DevOps (GitHub Actions)</h3>
+          <div class="pipeline-flow">
+            <div class="flow-step">
+              <div class="flow-title">1. Push / PR</div>
+              <div class="flow-desc">Node 22 / Ubuntu</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step">
+              <div class="flow-title">2. Build &amp; Lint</div>
+              <div class="flow-desc">Angular 19 AOT</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step">
+              <div class="flow-title">3. Unit Tests</div>
+              <div class="flow-desc">156 Karma Specs</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step">
+              <div class="flow-title">4. Security</div>
+              <div class="flow-desc">TruffleHog &amp; Audit</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step">
+              <div class="flow-title">5. Docker &amp; Deploy</div>
+              <div class="flow-desc">GHCR / Pages / Render</div>
+            </div>
+          </div>
+
+          <!-- EVIDENCIAS VISUALES EN VIVO (CAPTURAS REALES 4.7.2 EN CUADRÍCULA 2X1) -->
+          <h3 class="subhead">Evidencias Funcionales en Producción (Apartado 4.7.2)</h3>
+          <div class="screenshot-container-grid">
+            <div class="screenshot-item">
+              <img src="assets/06_analitica_sqlite.png" alt="Analítica SQLite y Métricas en Tiempo Real">
+              <div class="screenshot-caption">
+                <span>Dashboard de Analítica Operativa</span>
+                <span class="tag">SQLite WAL &bull; KPIs Financieros</span>
+              </div>
+            </div>
+            <div class="screenshot-item">
+              <img src="assets/04_reservas_codigo_qr.png" alt="Terminal de Acceso y Asistencia con QR">
+              <div class="screenshot-caption">
+                <span>Terminal de Validación Rápida por QR</span>
+                <span class="tag">&lt; 0.5s Validación Local</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="screenshot-container-grid">
+            <div class="screenshot-item">
+              <img src="assets/02_membresias_planes.png" alt="Gestión de Membresías y Asistente IA">
+              <div class="screenshot-caption">
+                <span>Control de Suscripciones y Asistente IA</span>
+                <span class="tag">Gemini API &bull; Fallback Local</span>
+              </div>
+            </div>
+            <div class="screenshot-item">
+              <img src="assets/01_autenticacion_login.png" alt="Autenticación Segura y Control de Acceso JWT">
+              <div class="screenshot-caption">
+                <span>Módulo de Autenticación y Seguridad JWT</span>
+                <span class="tag">Control RBAC Multi-Rol</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- TABLA DE VERIFICACIÓN DE REQUISITOS -->
+          <h3 class="subhead">Matriz de Rendimiento y Calidad de Software</h3>
+          <table class="metrics-table">
+            <thead>
+              <tr>
+                <th>Indicador / Requisito</th>
+                <th>Meta DoD</th>
+                <th>Resultado Real</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Ejecución Pipeline CI/CD</strong></td>
+                <td>100% compuertas</td>
+                <td>Workflow #43121973799 (5 Jobs en Verde)</td>
+                <td class="status-pass">&check; APROBADO</td>
+              </tr>
+              <tr>
+                <td><strong>Cobertura de Pruebas</strong></td>
+                <td>&ge; 80.0%</td>
+                <td>84.3% (156 especificaciones Karma/Jasmine)</td>
+                <td class="status-pass">&check; APROBADO</td>
+              </tr>
+              <tr>
+                <td><strong>Quality Gate SonarQube</strong></td>
+                <td>0 vulnerabilidades</td>
+                <td>0 vulnerabilidades críticas, deuda 2d 4h</td>
+                <td class="status-pass">&check; APROBADO</td>
+              </tr>
+              <tr>
+                <td><strong>Tiempo de Despliegue CD</strong></td>
+                <td>&lt; 5.0 min</td>
+                <td>3 min 12 s (Render PaaS &amp; GitHub Pages)</td>
+                <td class="status-pass">&check; APROBADO</td>
+              </tr>
+              <tr>
+                <td><strong>Concurrencia SQLite WAL</strong></td>
+                <td>Cero bloqueos</td>
+                <td>100 transacc./min concurrentes sin error</td>
+                <td class="status-pass">&check; APROBADO</td>
+              </tr>
+              <tr>
+                <td><strong>Generación de Rutinas IA</strong></td>
+                <td>&lt; 3.0 s</td>
+                <td>1.8 s (Google Gemini) / 0.2 s (Heurística Local)</td>
+                <td class="status-pass">&check; APROBADO</td>
+              </tr>
+              <tr>
+                <td><strong>Optimización Docker Image</strong></td>
+                <td>&lt; 250 MB</td>
+                <td>198 MB (Multi-stage Node + Nginx Alpine slim)</td>
+                <td class="status-pass">&check; APROBADO</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="highlight-box" style="margin-top: 1mm; margin-bottom: 0;">
+            <strong>Validación de Calidad 4.7.2:</strong> Todas las compuertas de aseguramiento y evidencias funcionales fueron verificadas al 100% en producción sobre commit <code>3f08bb1</code>.
+          </div>
+
+        </div>
+      </section>
+    </div>
+
+
+    <!-- -----------------------------------------------------------------
+         COLUMNA 3 (DERECHA): MATERIALES Y MÉTODOS + CONCLUSIONES
+         ----------------------------------------------------------------- -->
+    <div class="column">
+
+      <!-- MATERIALES Y MÉTODOS -->
+      <section class="section-card" style="flex: 1.05;">
+        <div class="card-header">
+          <svg class="card-icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
+          <h2>Materiales y Métodos</h2>
+          <span class="badge-tag">Meso y Micro</span>
+        </div>
+        <div class="card-body">
+          <h3 class="subhead">Marco Metodológico Híbrido (Nivel Meso)</h3>
+          <p>
+            Se implementó un modelo híbrido <strong>Scrum-DevOps</strong> organizado en <strong>8 Sprints de 2 semanas</strong>. La gobernanza técnica se distribuyó en 3 roles clave (Product Owner: Tapia, Scrum Master: Padilla, Lead Developer: Guevara). La priorización se gestionó bajo la técnica <strong>MoSCoW</strong> (14 <em>Must Have</em>, 8 <em>Should Have</em>), asegurando trazabilidad integral del Product Backlog.
+          </p>
+          <p>
+            A diferencia de Scrum tradicional, la <strong>Definición de Terminado (DoD)</strong> se vinculó obligatoriamente a compuertas de CI/CD: ningún incremento se integró a la rama <code>main</code> sin pruebas unitarias aprobadas y análisis de vulnerabilidades en cero.
+          </p>
+
+          <h3 class="subhead">Stack Tecnológico Micro e Infraestructura</h3>
+          <div class="tech-pill-container">
+            <span class="tech-pill">Angular 19.2</span>
+            <span class="tech-pill">TypeScript 5.6</span>
+            <span class="tech-pill">Tailwind CSS</span>
+            <span class="tech-pill">Node.js 22 LTS</span>
+            <span class="tech-pill">Express REST</span>
+            <span class="tech-pill">SQLite 3 (WAL)</span>
+            <span class="tech-pill">Docker Multi-Stage</span>
+            <span class="tech-pill">GitHub Actions</span>
+            <span class="tech-pill">Karma / Jasmine</span>
+            <span class="tech-pill">Gemini Dual IA</span>
+          </div>
+
+          <div class="code-box">
+            <div class="code-title">Configuración de Persistencia Concurrente (SQLite)</div>
+            <pre><span class="kw">PRAGMA</span> journal_mode = WAL;
+<span class="kw">PRAGMA</span> synchronous = NORMAL;
+<span class="kw">PRAGMA</span> busy_timeout = 5000;
+<span class="kw">PRAGMA</span> foreign_keys = ON;</pre>
+          </div>
+
+          <div class="code-box">
+            <div class="code-title">Dockerfile Multi-Etapa (Optimización 198 MB)</div>
+            <pre><span class="kw">FROM</span> node:20-alpine <span class="kw">AS</span> build
+<span class="kw">COPY</span> . /app &amp;&amp; <span class="kw">RUN</span> npm ci &amp;&amp; npm run build --prod
+<span class="kw">FROM</span> nginx:alpine-slim
+<span class="kw">COPY</span> --from=build /app/dist/espacio-gym /usr/share/nginx/html</pre>
+          </div>
+
+          <p>
+            <strong>Arquitectura Resiliente:</strong> El modo WAL permite lecturas concurrentes sin bloquear escrituras, manteniendo latencias &lt; 120 ms bajo concurrencia continua.
+          </p>
+        </div>
+      </section>
+
+      <!-- CONCLUSIONES -->
+      <section class="section-card" style="flex: 0.95;">
+        <div class="card-header">
+          <svg class="card-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+          <h2>Conclusiones</h2>
+          <span class="badge-tag">Síntesis y Aportes</span>
+        </div>
+        <div class="card-body">
+          <h3 class="subhead">Trazabilidad Meso-Micro Demostrada</h3>
+          <p>
+            Se demostró empíricamente que la articulación entre el Nivel Meso (acuerdos de proceso, DoD y flujo DevOps) y el Nivel Micro (código Angular 19, SQLite WAL y suites de pruebas automatizadas) erradica regresiones en producción y dota al proyecto de total trazabilidad técnica y metodológica.
+          </p>
+
+          <h3 class="subhead">Eficiencia y Sostenibilidad Económica</h3>
+          <p>
+            La arquitectura basada en componentes ligeros comprobó que los centros deportivos medianos pueden operar con alta concurrencia y tiempos de respuesta de sub-segundo (&lt; 120 ms) con <strong>costos de infraestructura prácticamente nulos</strong>, haciendo viable la adopción tecnológica en PYMEs.
+          </p>
+
+          <h3 class="subhead">Aportes Principales de la Investigación</h3>
+          <p>
+            1. <strong>Puente Metodológico:</strong> Correspondencia formal entre eventos Scrum y compuertas CI/CD ejecutables.<br>
+            2. <strong>Persistencia Ligera:</strong> Demostración de viabilidad técnica de SQLite WAL para aplicaciones web comerciales concurrentes.<br>
+            3. <strong>Validación Integral:</strong> Plataforma desplegada y validada funcionalmente al 100% (Apartado 4.7.2).
+          </p>
+
+          <div class="highlight-box">
+            <strong>Aprobación Institucional:</strong> Proyecto listo para sustentación pública y entrega final ante el comité evaluador del Centro de Ciencias Básicas de la Universidad Autónoma de Aguascalientes.
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+  </main>
+
+
+  <!-- ===================================================================
+       3. FOOTER (12% de altura = 108mm en formato 120x90cm)
+       =================================================================== -->
+  <footer class="poster-footer">
+
+    <!-- COLUMNA IZQUIERDA: CONTACTOS Y ACCESO -->
+    <div class="footer-col">
+      <div class="footer-title">
+        <svg style="width:5mm;height:5mm;fill:#fbbf24;" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+        Contacto y Datos Institucionales
+      </div>
+      <div class="contact-info">
+        <p><strong>Equipo de Desarrollo:</strong> Yahir Guevara C. &bull; Ricardo Padilla H. &bull; Jesús Eduardo Tapia A.</p>
+        <p><strong>Correos UAA:</strong> al349804@alumnos.uaa.mx &bull; al352300@alumnos.uaa.mx &bull; al243746@alumnos.uaa.mx</p>
+        <p><strong>Tutor de Tesina:</strong> M. en C. Arturo Elías Ramírez &bull; Depto. de Sistemas de Información</p>
+        <div class="contact-badge">&bull; Repositorio: github.com/jefazo-isc/GymSeminario</div>
+        <div class="contact-badge">&bull; Demo en Vivo: jefazo-isc.github.io/GymSeminario</div>
+      </div>
+    </div>
+
+    <!-- COLUMNA CENTRAL: CÓDIGOS QR INTERACTIVOS -->
+    <div class="footer-col" style="align-items: center;">
+      <div class="qr-center-container">
+        <div class="qr-card">
+          <img src="assets/qr_demo.png" alt="QR Demo en Vivo">
+          <div class="qr-label">Plataforma Web</div>
+          <div class="qr-sub">Escanear Demo en Vivo</div>
+        </div>
+        <div class="qr-card">
+          <img src="assets/qr_repo.png" alt="QR Repositorio GitHub">
+          <div class="qr-label">Código Fuente</div>
+          <div class="qr-sub">Pipeline CI/CD en GitHub</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUMNA DERECHA: REFERENCIAS BIBLIOGRÁFICAS APA 7 -->
+    <div class="footer-col">
+      <div class="footer-title">
+        <svg style="width:5mm;height:5mm;fill:#fbbf24;" viewBox="0 0 24 24"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/></svg>
+        Referencias Principales (Normas APA 7)
+      </div>
+      <div class="references-list">
+        <div class="ref-item">Beck, K., Beedle, M., van Bennekum, A., et al. (2001). <em>Manifesto for Agile Software Development</em>. Agile Alliance.</div>
+        <div class="ref-item">Forsgren, N., Humble, J., &amp; Kim, G. (2018). <em>Accelerate: Building and Scaling High Performing Technology Organizations</em>. IT Revolution Press.</div>
+        <div class="ref-item">Schwaber, K., &amp; Sutherland, J. (2020). <em>The Scrum Guide: The Definitive Guide to Scrum</em>. Scrum.org.</div>
+        <div class="ref-item">Sommerville, I. (2016). <em>Software Engineering</em> (10th ed.). Pearson Education.</div>
+      </div>
+    </div>
+
+  </footer>
+
+</div>
+
+</body>
+</html>

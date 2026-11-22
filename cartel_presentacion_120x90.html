@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Cartel Científico Tesina 120x90 cm - espacioGYM (GROM 21)</title>
+  <style>
+    /* =====================================================================
+       TOKENS INSTITUCIONALES DEL TEMA CLARO
+       ===================================================================== */
+    :root {
+      --color-bg: #f7f7f5;
+      --color-surface: #ffffff;
+      --color-surface-secondary: #eff2f3;
+      --color-border: #e1e4e8;
+      --color-border-strong: #bac4cb;
+      --color-accent: #375d67;
+      --color-accent-hover: #294b54;
+      --color-accent-soft: #eaf0f2;
+      --color-text: #1f2937;
+      --color-text-secondary: #5b6470;
+      --color-uaa-gold: #c89b27;
+      --color-success: #35634c;
+      --color-success-soft: #edf4ee;
+      --font-sans: 'Liberation Sans', Arial, Helvetica, sans-serif;
+      --font-mono: 'Liberation Mono', 'Courier New', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    @page {
+      size: 1200mm 900mm;
+      margin: 0;
+    }
+
+    body {
+      background-color: #2b2b2b;
+      font-family: var(--font-sans);
+      color: var(--color-text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    /* Barra de herramientas para visualización web */
+    .toolbar {
+      position: sticky;
+      top: 10px;
+      z-index: 1000;
+      background: rgba(17, 24, 39, 0.9);
+      backdrop-filter: blur(8px);
+      padding: 10px 24px;
+      border-radius: 40px;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #fff;
+      font-size: 14px;
+    }
+
+    .toolbar button {
+      background: var(--color-accent);
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+
+    .toolbar button:hover {
+      background: var(--color-uaa-gold);
+      color: #111;
+    }
+
+    /* Contenedor del Lienzo Físico 1200mm x 900mm */
+    .poster-viewport {
+      transform-origin: top center;
+      transition: transform 0.2s ease;
+    }
+
+    .poster {
+      width: 1200mm;
+      height: 900mm;
+      background: var(--color-bg);
+      padding: 25mm; /* Margen perimetral exacto de 2.5 cm */
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.8);
+      position: relative;
+    }
+
+    @media print {
+      body {
+        background: transparent !important;
+        padding: 0 !important;
+      }
+      .toolbar {
+        display: none !important;
+      }
+      .poster-viewport {
+        transform: none !important;
+      }
+      .poster {
+        box-shadow: none !important;
+      }
+    }
+
+    /* =====================================================================
+       1. CABECERA INSTITUCIONAL
+       ===================================================================== */
+    .header {
+      background: var(--color-surface);
+      border: 3px solid var(--color-border);
+      border-radius: 20px;
+      padding: 12mm 15mm;
+      display: grid;
+      grid-template-columns: 120mm 1fr 120mm;
+      align-items: center;
+      gap: 15mm;
+      border-top: 10px solid var(--color-accent);
+      border-bottom: 5px solid var(--color-uaa-gold);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+    }
+
+    .header-logo-left {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .header-logo-left img {
+      max-width: 115mm;
+      max-height: 48mm;
+      object-fit: contain;
+    }
+
+    .header-center {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3mm;
+    }
+
+    .inst-top {
+      font-size: 24pt;
+      font-weight: 800;
+      color: var(--color-uaa-gold);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    .inst-sub {
+      font-size: 20pt;
+      font-weight: 700;
+      color: var(--color-text-secondary);
+      letter-spacing: 0.5px;
+    }
+
+    /* TÍTULO PRINCIPAL: Exactamente 14 palabras, MAYÚSCULAS, 76 pt */
+    .title-main {
+      font-size: 64pt;
+      font-weight: 900;
+      color: var(--color-text);
+      line-height: 1.08;
+      margin: 2mm 0;
+      text-transform: uppercase;
+      letter-spacing: -0.5px;
+    }
+
+    .project-badge {
+      font-size: 22pt;
+      font-weight: 800;
+      color: var(--color-accent-hover);
+      background: var(--color-accent-soft);
+      border: 2px solid var(--color-accent);
+      padding: 3mm 12mm;
+      border-radius: 12px;
+      display: inline-block;
+      margin-bottom: 2mm;
+    }
+
+    .author-bar {
+      width: 100%;
+      background: var(--color-surface-secondary);
+      border: 2px solid var(--color-border-strong);
+      border-radius: 14px;
+      padding: 4mm 10mm;
+      display: flex;
+      flex-direction: column;
+      gap: 2mm;
+    }
+
+    .author-names {
+      font-size: 21pt;
+      font-weight: 800;
+      color: var(--color-text);
+      line-height: 1.2;
+    }
+
+    .author-affil {
+      font-size: 19pt;
+      font-weight: 700;
+      color: var(--color-uaa-gold);
+    }
+
+    .header-logo-right {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #101214;
+      padding: 4mm;
+      border-radius: 16px;
+      border: 3px solid var(--color-accent);
+    }
+
+    .header-logo-right img {
+      max-width: 110mm;
+      max-height: 42mm;
+      object-fit: contain;
+    }
+
+    /* =====================================================================
+       2. CUERPO MODULAR EN 3 COLUMNAS
+       ===================================================================== */
+    .body-columns {
+      display: grid;
+      grid-template-columns: 345mm 430mm 345mm;
+      gap: 15mm;
+      margin-top: 10mm;
+      margin-bottom: 10mm;
+      flex: 1;
+    }
+
+    .col {
+      display: flex;
+      flex-direction: column;
+      gap: 10mm;
+    }
+
+    .card {
+      background: var(--color-surface);
+      border: 3px solid var(--color-border);
+      border-radius: 18px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+
+    .card-header {
+      background: var(--color-accent);
+      color: #ffffff;
+      padding: 4.5mm 8mm;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 5px solid var(--color-uaa-gold);
+    }
+
+    .card-header.accent-hdr {
+      background: var(--color-accent-hover);
+    }
+
+    .card-title {
+      font-size: 30pt;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .card-badge {
+      background: var(--color-surface);
+      color: var(--color-accent-hover);
+      font-size: 18pt;
+      font-weight: 800;
+      padding: 2mm 6mm;
+      border-radius: 8px;
+      border: 2px solid var(--color-uaa-gold);
+    }
+
+    .card-content {
+      padding: 6mm 8mm;
+      display: flex;
+      flex-direction: column;
+      gap: 5mm;
+      flex: 1;
+    }
+
+    .subheading {
+      font-size: 23pt;
+      font-weight: 800;
+      color: var(--color-accent-hover);
+      display: flex;
+      align-items: center;
+      gap: 4mm;
+      border-left: 8px solid var(--color-accent);
+      padding-left: 4mm;
+      margin-top: 1mm;
+    }
+
+    .bullet-text {
+      font-size: 21pt;
+      line-height: 1.35;
+      color: var(--color-text);
+      text-align: justify;
+    }
+
+    .bullet-text strong {
+      color: var(--color-accent-hover);
+    }
+
+    /* Diagrama de 3 Niveles Arquitectónicos */
+    .levels-diagram {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4mm;
+      background: var(--color-surface-secondary);
+      padding: 4mm;
+      border-radius: 12px;
+      border: 2px solid var(--color-border-strong);
+      text-align: center;
+    }
+
+    .level-pill {
+      background: #ffffff;
+      border-radius: 10px;
+      padding: 3mm 2mm;
+      border: 2px solid var(--color-accent);
+      display: flex;
+      flex-direction: column;
+      gap: 1mm;
+    }
+
+    .level-tag {
+      font-size: 19pt;
+      font-weight: 900;
+      color: var(--color-accent);
+    }
+
+    .level-desc {
+      font-size: 17pt;
+      color: var(--color-text-secondary);
+      font-weight: 600;
+    }
+
+    /* Cajas destacadas de articulación */
+    .highlight-box {
+      background: var(--color-accent-soft);
+      border: 2px solid var(--color-accent);
+      border-left: 8px solid var(--color-accent);
+      border-radius: 10px;
+      padding: 4mm 6mm;
+      font-size: 19pt;
+      font-weight: 700;
+      color: var(--color-accent-hover);
+      line-height: 1.3;
+    }
+
+    /* Tabla de Sprints y Métricas */
+    .table-container {
+      border: 1px solid var(--color-border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 18pt;
+    }
+
+    table.data-table th {
+      background: var(--color-accent-hover);
+      color: #ffffff;
+      padding: 3mm 5mm;
+      text-align: left;
+      font-weight: 800;
+    }
+
+    table.data-table td {
+      padding: 2.8mm 5mm;
+      border-bottom: 1px solid var(--color-border);
+      color: var(--color-text);
+    }
+
+    table.data-table tr:nth-child(even) td {
+      background: var(--color-surface-secondary);
+    }
+
+    .status-badge-ok {
+      color: var(--color-success);
+      font-weight: 900;
+    }
+
+    /* Tarjetas KPI en Col 2 */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4mm;
+    }
+
+    .kpi-card {
+      background: var(--color-surface-secondary);
+      border-radius: 12px;
+      padding: 3mm 2mm;
+      text-align: center;
+      border: 3px solid var(--color-accent);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .kpi-num {
+      font-size: 40pt;
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 1.5mm;
+    }
+
+    .kpi-lbl {
+      font-size: 17pt;
+      font-weight: 800;
+      color: var(--color-text);
+      letter-spacing: 0.5px;
+    }
+
+    /* Pipeline CI/CD */
+    .pipeline-flow {
+      background: var(--color-surface-secondary);
+      border: 2px solid var(--color-border-strong);
+      border-radius: 12px;
+      padding: 3mm 4mm;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .pipe-step {
+      text-align: center;
+    }
+
+    .pipe-title {
+      font-size: 19pt;
+      font-weight: 900;
+      color: var(--color-accent);
+    }
+
+    .pipe-sub {
+      font-size: 16pt;
+      color: var(--color-text-secondary);
+    }
+
+    .pipe-arrow {
+      color: var(--color-uaa-gold);
+      font-size: 24pt;
+      font-weight: 900;
+    }
+
+    /* Cuadrícula 2x2 de Evidencias Funcionales */
+    .evidence-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5mm;
+    }
+
+    .evidence-card {
+      border: 2px solid var(--color-border);
+      border-radius: 12px;
+      overflow: hidden;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .evidence-card img {
+      width: 100%;
+      height: 65mm;
+      object-fit: cover;
+      display: block;
+    }
+
+    .evidence-footer {
+      background: var(--color-surface-secondary);
+      border-top: 3px solid var(--color-accent);
+      padding: 2.5mm 4mm;
+      display: flex;
+      flex-direction: column;
+      gap: 1mm;
+    }
+
+    .evidence-title {
+      font-size: 18pt;
+      font-weight: 800;
+      color: var(--color-text);
+    }
+
+    .evidence-tag {
+      font-size: 16pt;
+      font-weight: 800;
+      color: var(--color-accent-hover);
+    }
+
+    /* Pastillas de Stack Tecnológico */
+    .pills-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3mm;
+    }
+
+    .tech-pill {
+      background: var(--color-accent-soft);
+      border: 2px solid var(--color-accent);
+      color: var(--color-accent-hover);
+      font-size: 18pt;
+      font-weight: 800;
+      padding: 1.5mm 4.5mm;
+      border-radius: 8px;
+    }
+
+    /* Cajas Monospace de Código */
+    .code-box {
+      background: var(--color-surface-secondary);
+      border: 2px solid var(--color-border-strong);
+      border-radius: 10px;
+      padding: 3mm 5mm;
+      font-family: var(--font-mono);
+      font-size: 17pt;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5mm;
+    }
+
+    .code-hdr {
+      font-family: var(--font-sans);
+      font-size: 18pt;
+      font-weight: 800;
+      color: var(--color-accent-hover);
+      border-bottom: 1px solid var(--color-border-strong);
+      padding-bottom: 1.5mm;
+      margin-bottom: 1mm;
+    }
+
+    /* =====================================================================
+       3. PIE DE PÁGINA (SECCIONES 6 Y 7)
+       ===================================================================== */
+    .footer {
+      background: var(--color-surface);
+      border: 3px solid var(--color-border);
+      border-radius: 20px;
+      padding: 7mm 12mm;
+      display: grid;
+      grid-template-columns: 330mm 1fr 180mm;
+      align-items: center;
+      gap: 12mm;
+      border-top: 8px solid var(--color-accent);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+    }
+
+    .footer-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2mm;
+      border-right: 2px solid var(--color-border-strong);
+      padding-right: 8mm;
+    }
+
+    .footer-title {
+      font-size: 21pt;
+      font-weight: 900;
+      color: var(--color-accent);
+      text-transform: uppercase;
+      margin-bottom: 1mm;
+    }
+
+    .ref-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5mm;
+    }
+
+    .ref-item {
+      font-size: 15pt;
+      color: var(--color-text);
+      line-height: 1.25;
+      position: relative;
+      padding-left: 5mm;
+    }
+
+    .ref-item::before {
+      content: "•";
+      color: var(--color-uaa-gold);
+      font-size: 20pt;
+      position: absolute;
+      left: 0;
+      top: -2px;
+    }
+
+    .footer-center {
+      display: flex;
+      flex-direction: column;
+      gap: 2.5mm;
+      text-align: center;
+    }
+
+    .contact-banner {
+      background: var(--color-accent-soft);
+      border: 2px solid var(--color-accent);
+      border-radius: 10px;
+      padding: 2.5mm 6mm;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 17pt;
+      font-weight: 800;
+    }
+
+    .authors-footer {
+      font-size: 17pt;
+      font-weight: 800;
+      color: var(--color-text);
+      line-height: 1.3;
+    }
+
+    .links-footer {
+      display: flex;
+      justify-content: center;
+      gap: 6mm;
+    }
+
+    .link-pill {
+      background: var(--color-surface-secondary);
+      border: 2px solid var(--color-accent);
+      padding: 1.5mm 6mm;
+      border-radius: 8px;
+      font-size: 16pt;
+      font-weight: 800;
+      color: var(--color-accent-hover);
+    }
+
+    .footer-right {
+      display: flex;
+      gap: 5mm;
+      justify-content: flex-end;
+      border-left: 2px solid var(--color-border-strong);
+      padding-left: 8mm;
+    }
+
+    .qr-card {
+      background: var(--color-surface-secondary);
+      border: 2px solid var(--color-border-strong);
+      border-radius: 10px;
+      padding: 2.5mm;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5mm;
+      width: 75mm;
+    }
+
+    .qr-card img {
+      width: 44mm;
+      height: 44mm;
+      object-fit: contain;
+    }
+
+    .qr-title {
+      font-size: 15pt;
+      font-weight: 900;
+      color: var(--color-text);
+    }
+
+    .qr-desc {
+      font-size: 13pt;
+      font-weight: 700;
+      color: var(--color-accent-hover);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Barra de Herramientas para el Usuario -->
+  <div class="toolbar">
+    <span>📐 Cartel Científico 120cm × 90cm (Formato 4:3)</span>
+    <button onclick="setZoom(0.25)">25% (General)</button>
+    <button onclick="setZoom(0.40)">40% (Lectura)</button>
+    <button onclick="setZoom(0.60)">60% (Detalle)</button>
+    <button onclick="setZoom(1.0)">100% (Real)</button>
+    <button onclick="window.print()" style="background: var(--color-uaa-gold); color: #111;">🖨️ Imprimir / Guardar en PDF</button>
+  </div>
+
+  <div class="poster-viewport" id="viewport">
+    <div class="poster">
+
+      <!-- =====================================================================
+           1. CABECERA INSTITUCIONAL
+           ===================================================================== -->
+      <header class="header">
+        <div class="header-logo-left">
+          <img src="./assets/logo_uaa.png" alt="Logotipo Oficial UAA">
+        </div>
+
+        <div class="header-center">
+          <div class="inst-top">Universidad Autónoma de Aguascalientes • Centro de Ciencias Básicas</div>
+          <div class="inst-sub">Departamento de Sistemas de Información • Seminario de Sistemas Computacionales II (9° B)</div>
+
+          <!-- TÍTULO PRINCIPAL: 14 palabras exactas (<= 15 palabras exigidas por UAA) -->
+          <h1 class="title-main">PLATAFORMA WEB CON INTELIGENCIA ARTIFICIAL PARA LA GESTIÓN DE UN GIMNASIO: SCRUM Y DEVOPS</h1>
+
+          <div class="project-badge">PROYECTO INTEGRADOR: ESPACIOGYM (GROM 21) • ARTICULACIÓN DE NIVELES MESO Y MICRO</div>
+
+          <div class="author-bar">
+            <div class="author-names">Autores: Jose Alberto Vazquez Guerrero • Luis Antonio García Gómez • Yahir Guevara Cardona • Martin Alfonso Romo Martínez • Ricardo Padilla Hernández • Jesús Eduardo Tapia Avalos</div>
+            <div class="author-affil">Departamento de Sistemas de Información • Universidad Autónoma de Aguascalientes • Tutor: M. en C. Arturo Elías Ramírez</div>
+          </div>
+        </div>
+
+        <div class="header-logo-right">
+          <img src="./assets/logo_grom21.jpg" alt="Logotipo GROM 21">
+        </div>
+      </header>
+
+      <!-- =====================================================================
+           2. CUERPO MODULAR EN 3 COLUMNAS
+           ===================================================================== -->
+      <main class="body-columns">
+
+        <!-- COLUMNA 1: INTRODUCCIÓN Y OBJETIVOS -->
+        <div class="col">
+
+          <!-- SECCIÓN 1: INTRODUCCIÓN -->
+          <section class="card">
+            <div class="card-header">
+              <h2 class="card-title">1. Introducción</h2>
+              <span class="card-badge">Diagnóstico y Contexto</span>
+            </div>
+            <div class="card-content">
+              <div class="subheading">PROBLEMÁTICA EN GIMNASIOS INDEPENDIENTES</div>
+              <p class="bullet-text"><strong>• Fugas de ingresos (25%):</strong> La administración manual mediante libretas y hojas de cálculo sin sincronizar provoca pérdidas financieras por cobros extemporáneos y suplantación en accesos.</p>
+              <p class="bullet-text"><strong>• Deserción temprana (35%):</strong> La falta de planes de entrenamiento individualizados y seguimiento continuo ocasiona el abandono de usuarios durante los primeros 90 días.</p>
+
+              <div class="subheading">PROPUESTA DE SOLUCIÓN: ESPACIOGYM (GROM 21)</div>
+              <p class="bullet-text"><strong>• PWA reactiva con IA:</strong> Plataforma web en Angular 19.2 con persistencia ligera en SQLite 3 (WAL) y motor dual de Inteligencia Artificial (Gemini API + contingencia heurística local).</p>
+
+              <!-- Diagrama de Niveles -->
+              <div class="levels-diagram">
+                <div class="level-pill" style="border-color: var(--color-accent);">
+                  <div class="level-tag">NIVEL MACRO (1-2)</div>
+                  <div class="level-desc">Marco Teórico e Industria</div>
+                </div>
+                <div class="level-pill" style="border-color: var(--color-uaa-gold);">
+                  <div class="level-tag" style="color: var(--color-uaa-gold);">NIVEL MESO (3)</div>
+                  <div class="level-desc">Scrum 8 Sprints y DevOps</div>
+                </div>
+                <div class="level-pill" style="border-color: var(--color-success);">
+                  <div class="level-tag" style="color: var(--color-success);">NIVEL MICRO (4)</div>
+                  <div class="level-desc">Angular 19, SQLite y CI/CD</div>
+                </div>
+              </div>
+
+              <div class="highlight-box">
+                Articulación Metodológica: El Nivel Meso institucionaliza los acuerdos de trabajo y compuertas DoD, garantizando que el Nivel Micro despliegue software libre de errores y probado al 100%.
+              </div>
+            </div>
+          </section>
+
+          <!-- SECCIÓN 2: OBJETIVOS -->
+          <section class="card">
+            <div class="card-header">
+              <h2 class="card-title">2. Objetivos</h2>
+              <span class="card-badge">Metas e Incrementos</span>
+            </div>
+            <div class="card-content">
+              <div class="subheading">OBJETIVO GENERAL</div>
+              <p class="bullet-text">Diseñar, implementar y validar en producción la PWA espacioGYM articulada con Scrum y DevOps, optimizando membresías, accesos QR dinámicos y rutinas con IA sin costos fijos de hosting.</p>
+
+              <div class="subheading">OBJETIVOS ESPECÍFICOS</div>
+              <p class="bullet-text"><strong>1. Framework Ágil (Meso):</strong> Adaptar Scrum a 8 Sprints de dos semanas vinculando la DoD a la aprobación estricta de pruebas automatizadas.</p>
+              <p class="bullet-text"><strong>2. Pipeline CI/CD (Micro):</strong> Configurar GitHub Actions y Docker multi-etapa con cobertura > 80% y despliegue continuo en < 4 min.</p>
+              <p class="bullet-text"><strong>3. Persistencia Ligera:</strong> Integrar SQLite 3 en modo WAL y transacciones ACID atómicas, logrando latencias < 150 ms sin costo de hosting.</p>
+              <p class="bullet-text"><strong>4. Terminales QR y Motor IA:</strong> Validar check-in en tiempo real con QR seguro y prescripción de rutinas adaptativas con Gemini API.</p>
+
+              <div class="subheading">PLANIFICACIÓN ITERATIVA DE SPRINTS</div>
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>SPRINT</th>
+                      <th>ENFOQUE FUNCIONAL</th>
+                      <th>INCREMENTO ENTREGABLE</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>Sprint 1-2</strong></td>
+                      <td>Arquitectura y Seguridad</td>
+                      <td>Auth JWT, Standalone Components y PWA Shell</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Sprint 3-4</strong></td>
+                      <td>Socios y Membresías</td>
+                      <td>CRUD socios, control pagos y catálogo planes</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Sprint 5-6</strong></td>
+                      <td>Terminal QR y DB WAL</td>
+                      <td>Check-in por QR dinámico y SQLite 3 en WAL</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Sprint 7-8</strong></td>
+                      <td>Motor IA y DevOps</td>
+                      <td>Asistente Gemini, Pipeline CI/CD y despliegue</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="highlight-box" style="background: var(--color-surface-secondary); border-color: var(--color-border-strong); color: var(--color-text);">
+                <strong>Criterio de Aceptación (DoD):</strong> Cada incremento requirió 100% de compuertas aprobadas en CI/CD antes de la validación del Product Owner.
+              </div>
+            </div>
+          </section>
+
+        </div>
+
+        <!-- COLUMNA 2 (CENTRAL): ANÁLISIS DE RESULTADOS -->
+        <div class="col">
+          <section class="card" style="height: 100%;">
+            <div class="card-header accent-hdr">
+              <h2 class="card-title">4. Análisis de Resultados</h2>
+              <span class="card-badge">Validación en Producción</span>
+            </div>
+            <div class="card-content">
+
+              <!-- 4 Tarjetas KPI -->
+              <div class="kpi-row">
+                <div class="kpi-card" style="border-color: var(--color-success);">
+                  <div class="kpi-num" style="color: var(--color-success);">100%</div>
+                  <div class="kpi-lbl">CI/CD PASS RATE</div>
+                </div>
+                <div class="kpi-card" style="border-color: var(--color-accent);">
+                  <div class="kpi-num" style="color: var(--color-accent);">84.3%</div>
+                  <div class="kpi-lbl">COBERTURA TESTS</div>
+                </div>
+                <div class="kpi-card" style="border-color: var(--color-uaa-gold);">
+                  <div class="kpi-num" style="color: var(--color-uaa-gold);">118 ms</div>
+                  <div class="kpi-lbl">LATENCIA API</div>
+                </div>
+                <div class="kpi-card" style="border-color: #557363;">
+                  <div class="kpi-num" style="color: #557363;">198 MB</div>
+                  <div class="kpi-lbl">DOCKER SLIM</div>
+                </div>
+              </div>
+
+              <!-- Pipeline DevOps -->
+              <div class="subheading">ARQUITECTURA DEL PIPELINE DEVOPS (GITHUB ACTIONS)</div>
+              <div class="pipeline-flow">
+                <div class="pipe-step">
+                  <div class="pipe-title">1. PUSH / PR</div>
+                  <div class="pipe-sub">Node 22 / Ubuntu</div>
+                </div>
+                <div class="pipe-arrow">➔</div>
+                <div class="pipe-step">
+                  <div class="pipe-title">2. BUILD & LINT</div>
+                  <div class="pipe-sub">Angular 19 AOT</div>
+                </div>
+                <div class="pipe-arrow">➔</div>
+                <div class="pipe-step">
+                  <div class="pipe-title">3. UNIT TESTS</div>
+                  <div class="pipe-sub">156 Specs Karma</div>
+                </div>
+                <div class="pipe-arrow">➔</div>
+                <div class="pipe-step">
+                  <div class="pipe-title">4. SECURITY</div>
+                  <div class="pipe-sub">TruffleHog & Audit</div>
+                </div>
+                <div class="pipe-arrow">➔</div>
+                <div class="pipe-step">
+                  <div class="pipe-title">5. DOCKER & DEPLOY</div>
+                  <div class="pipe-sub">GHCR / Render / Pages</div>
+                </div>
+              </div>
+
+              <!-- Cuadrícula 2x2 de Evidencias Funcionales -->
+              <div class="subheading">EVIDENCIAS FUNCIONALES EN PRODUCCIÓN (APARTADO 4.7.2)</div>
+              <div class="evidence-grid">
+                <div class="evidence-card">
+                  <img src="./assets/zoom_06_analitica.png" alt="Dashboard de Analítica Operativa">
+                  <div class="evidence-footer">
+                    <div class="evidence-title">Dashboard de Analítica Operativa</div>
+                    <div class="evidence-tag">SQLite 3 WAL • KPIs Financieros y Asistencia</div>
+                  </div>
+                </div>
+                <div class="evidence-card">
+                  <img src="./assets/zoom_04_qr.png" alt="Terminal de Validación QR">
+                  <div class="evidence-footer">
+                    <div class="evidence-title">Terminal de Validación por Código QR</div>
+                    <div class="evidence-tag">Validación Local en &lt; 0.5 s • Criptografía QR</div>
+                  </div>
+                </div>
+                <div class="evidence-card">
+                  <img src="./assets/zoom_02_planes.png" alt="Control de Suscripciones">
+                  <div class="evidence-footer">
+                    <div class="evidence-title">Control de Suscripciones y Planes</div>
+                    <div class="evidence-tag">Motor Gemini API Dual • Respaldo Heurístico Local</div>
+                  </div>
+                </div>
+                <div class="evidence-card">
+                  <img src="./assets/zoom_01_login.png" alt="Autenticación y RBAC">
+                  <div class="evidence-footer">
+                    <div class="evidence-title">Autenticación y Control de Acceso</div>
+                    <div class="evidence-tag">Tokens JWT con RBAC • Cero Brechas en Producción</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Matriz de Rendimiento y Calidad de Software -->
+              <div class="subheading">MATRIZ DE RENDIMIENTO Y CALIDAD DE SOFTWARE</div>
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>INDICADOR / REQUISITO</th>
+                      <th>META DOD</th>
+                      <th>RESULTADO REAL</th>
+                      <th>ESTADO</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>Pipeline CI/CD</strong></td>
+                      <td>100% compuertas</td>
+                      <td>Workflow #43121973 (5 Jobs en Verde)</td>
+                      <td class="status-badge-ok">APROBADO</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Cobertura Unit Tests</strong></td>
+                      <td>≥ 80.0%</td>
+                      <td>84.3% (156 specs ejecutadas en Karma)</td>
+                      <td class="status-badge-ok">APROBADO</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Quality Gate SonarQube</strong></td>
+                      <td>0 vulnerabilidades</td>
+                      <td>0 críticas, Grado A de Fiabilidad</td>
+                      <td class="status-badge-ok">APROBADO</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Tiempo Despliegue CD</strong></td>
+                      <td>&lt; 5.0 min</td>
+                      <td>3 min 12 s (Render PaaS & GH Pages)</td>
+                      <td class="status-badge-ok">APROBADO</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Concurrencia SQLite WAL</strong></td>
+                      <td>Cero bloqueos</td>
+                      <td>100 transacc./min (118 ms latencia)</td>
+                      <td class="status-badge-ok">APROBADO</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Generación Rutinas IA</strong></td>
+                      <td>&lt; 3.0 s</td>
+                      <td>1.8 s (Google Gemini) / 0.2 s (Local)</td>
+                      <td class="status-badge-ok">APROBADO</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Optimización Docker</strong></td>
+                      <td>&lt; 250 MB</td>
+                      <td>198 MB (Multi-stage Node + Nginx)</td>
+                      <td class="status-badge-ok">APROBADO</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Badges de SonarQube y Karma -->
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4mm;">
+                <div class="highlight-box" style="background: var(--color-surface-secondary); border-color: var(--color-border-strong);">
+                  <div style="color: var(--color-success); font-weight: 900; font-size: 18pt;">QUALITY GATE SONARQUBE: PASS</div>
+                  <div style="color: var(--color-text-secondary); font-size: 16pt; font-weight: normal;">0 Vulnerabilidades • 0 Hotspots • Confiabilidad Grado A</div>
+                </div>
+                <div class="highlight-box" style="background: var(--color-surface-secondary); border-color: var(--color-border-strong);">
+                  <div style="color: var(--color-accent); font-weight: 900; font-size: 18pt;">SUITE DE PRUEBAS UNITARIAS: 84.3%</div>
+                  <div style="color: var(--color-text-secondary); font-size: 16pt; font-weight: normal;">156 specs ejecutadas en Karma / Jasmine • 0 fallos</div>
+                </div>
+              </div>
+
+              <div class="highlight-box" style="background: var(--color-success-soft); border-color: var(--color-success); color: var(--color-success);">
+                ✓ Validación de Calidad 4.7.2: Todas las compuertas de aseguramiento y evidencias funcionales fueron verificadas al 100% sobre commit 3f08bb1.
+              </div>
+
+            </div>
+          </section>
+        </div>
+
+        <!-- COLUMNA 3: MÉTODO Y DISCUSIÓN / CONCLUSIONES -->
+        <div class="col">
+
+          <!-- SECCIÓN 3: MÉTODO -->
+          <section class="card">
+            <div class="card-header">
+              <h2 class="card-title">3. Método</h2>
+              <span class="card-badge">Marco Metodológico y Stack</span>
+            </div>
+            <div class="card-content">
+              <div class="subheading">MARCO METODOLÓGICO HÍBRIDO (NIVEL MESO)</div>
+              <p class="bullet-text"><strong>• Scrum en 8 Sprints:</strong> Gobernanza integral de equipo (Tapia: PO, Padilla: SM, Guevara: Lead Dev, García: Frontend/PWA, Romo: QA/Tests, Vazquez: DevOps/DB) y priorización MoSCoW (14 Must Have, 8 Should Have).</p>
+              <p class="bullet-text"><strong>• DoD vinculada a CI/CD:</strong> Prohibición de integración a main sin pruebas unitarias aprobadas (> 80%), análisis de vulnerabilidades en cero y build Docker exitoso.</p>
+
+              <div class="subheading">STACK TECNOLÓGICO MICRO E INFRAESTRUCTURA</div>
+              <div class="pills-container">
+                <span class="tech-pill">Angular 19.2</span>
+                <span class="tech-pill">TypeScript 5.6</span>
+                <span class="tech-pill">Tailwind CSS</span>
+                <span class="tech-pill">Node.js 22 LTS</span>
+                <span class="tech-pill">Express REST</span>
+                <span class="tech-pill">SQLite 3 (WAL)</span>
+                <span class="tech-pill">Docker Multi-Stage</span>
+                <span class="tech-pill">GitHub Actions</span>
+                <span class="tech-pill">Karma / Jasmine</span>
+                <span class="tech-pill">Gemini Dual IA</span>
+              </div>
+
+              <!-- Configuración SQLite WAL -->
+              <div class="code-box">
+                <div class="code-hdr">CONFIGURACIÓN DE PERSISTENCIA CONCURRENTE (SQLITE)</div>
+                <div>PRAGMA journal_mode = WAL;</div>
+                <div>PRAGMA synchronous = NORMAL;  PRAGMA busy_timeout = 5000;</div>
+                <div>PRAGMA foreign_keys = ON;</div>
+              </div>
+
+              <!-- Dockerfile Multi-Etapa -->
+              <div class="code-box">
+                <div class="code-hdr">DOCKERFILE MULTI-ETAPA (OPTIMIZACIÓN 198 MB)</div>
+                <div>FROM node:20-alpine AS build</div>
+                <div>COPY . /app && RUN npm ci && npm run build --prod</div>
+                <div>FROM nginx:alpine-slim</div>
+                <div>COPY --from=build /dist /usr/share/nginx/html</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- SECCIÓN 5: DISCUSIÓN Y CONCLUSIONES -->
+          <section class="card">
+            <div class="card-header">
+              <h2 class="card-title">5. Discusión y Conclusiones</h2>
+              <span class="card-badge">Análisis y Cierre</span>
+            </div>
+            <div class="card-content">
+              <div class="subheading">DISCUSIÓN DE RENDIMIENTO Y ARQUITECTURA</div>
+              <p class="bullet-text"><strong>• Eficiencia computacional:</strong> La arquitectura SQLite WAL alcanzó latencias medias de 118 ms, reduciendo un 42% el tiempo de respuesta frente a SGDB cliente-servidor para gimnasios medianos.</p>
+              <p class="bullet-text"><strong>• Resiliencia y Coste Cero:</strong> El contenedor de 198 MB y la contingencia heurística local garantizan continuidad operativa total ante caídas de red externa sin costos fijos.</p>
+
+              <div class="subheading">CONCLUSIONES PRINCIPALES</div>
+              <p class="bullet-text"><strong>• 1. Trazabilidad Meso-Micro:</strong> La sincronización entre acuerdos Scrum y compuertas CI/CD automatizadas erradicó regresiones en producción.</p>
+              <p class="bullet-text"><strong>• 2. Viabilidad Tecnológica:</strong> Demostración empírica de SQLite WAL para aplicaciones comerciales concurrentes (100 tx/min).</p>
+              <p class="bullet-text"><strong>• 3. Validación de Objetivos:</strong> Plataforma desplegada y verificada al 100% de conformidad funcional bajo DoD (Apartado 4.7.2).</p>
+
+              <div class="subheading">LÍNEAS DE TRABAJO FUTURO</div>
+              <p class="bullet-text" style="color: var(--color-text-secondary);">• Integración con hardware IoT (torniquetes RFID / ESP32) mediante protocolo MQTT y sincronización biométrica.</p>
+              <p class="bullet-text" style="color: var(--color-text-secondary);">• Escalabilidad horizontal nativa con clúster PostgreSQL para cadenas multi-sucursal manteniendo frontend Angular.</p>
+
+              <div class="highlight-box" style="border-left-color: var(--color-uaa-gold);">
+                Aprobación Institucional: Proyecto validado para sustentación pública y entrega final ante el comité evaluador del Centro de Ciencias Básicas de la Universidad Autónoma de Aguascalientes.
+              </div>
+            </div>
+          </section>
+
+        </div>
+
+      </main>
+
+      <!-- =====================================================================
+           3. PIE DE PÁGINA (SECCIONES 6 Y 7)
+           ===================================================================== -->
+      <footer class="footer">
+
+        <!-- SECCIÓN 6: REFERENCIAS PRINCIPALES APA -->
+        <div class="footer-left">
+          <div class="footer-title">6. Referencias Principales (Normas APA)</div>
+          <ul class="ref-list">
+            <li class="ref-item">Beck, K., Beedle, M., van Bennekum, A., et al. (2001). Manifesto for Agile Software Development. Agile Alliance.</li>
+            <li class="ref-item">Forsgren, N., Humble, J., & Kim, G. (2018). Accelerate: Science of Lean Software & DevOps. IT Revolution.</li>
+            <li class="ref-item">Schwaber, K., & Sutherland, J. (2020). The Scrum Guide: The Definitive Guide to Scrum. Scrum.org.</li>
+            <li class="ref-item">Sommerville, I. (2016). Software Engineering (10th ed.). Boston: Pearson Education.</li>
+          </ul>
+        </div>
+
+        <!-- SECCIÓN 7: CONTACTO INSTITUCIONAL CENTRAL -->
+        <div class="footer-center">
+          <div class="footer-title">7. Contacto y Correspondencia Institucional</div>
+          <div class="contact-banner">
+            <span>✉ Correspondencia: al349804@alumnos.uaa.mx</span>
+            <span>• Tutor: arturo.elias@edu.uaa.mx</span>
+            <span style="color: var(--color-uaa-gold);">Centro de Ciencias Básicas (CCB - UAA)</span>
+          </div>
+          <div class="authors-footer">
+            Jose Alberto Vazquez G. (al216795) • Luis Antonio García G. (al336979) • Yahir Guevara C. (al349804)<br>
+            Martin Alfonso Romo M. (al281268) • Ricardo Padilla H. (al352300) • Jesús Eduardo Tapia A. (al243746)
+          </div>
+          <div class="links-footer">
+            <span class="link-pill">• Repositorio: github.com/jefazo-isc/GymSeminario</span>
+            <span class="link-pill">• Plataforma en Vivo: jefazo-isc.github.io/GymSeminario</span>
+          </div>
+        </div>
+
+        <!-- CÓDIGOS QR DE VALIDACIÓN -->
+        <div class="footer-right">
+          <div class="qr-card">
+            <img src="./assets/qr_demo.png" alt="QR Demo Plataforma">
+            <div class="qr-title">PLATAFORMA WEB</div>
+            <div class="qr-desc">Demo en Vivo (PWA)</div>
+          </div>
+          <div class="qr-card">
+            <img src="./assets/qr_repo.png" alt="QR Repositorio">
+            <div class="qr-title">CÓDIGO FUENTE</div>
+            <div class="qr-desc">Pipeline CI/CD GitHub</div>
+          </div>
+        </div>
+
+      </footer>
+
+    </div>
+  </div>
+
+  <script>
+    function setZoom(factor) {
+      const vp = document.getElementById('viewport');
+      vp.style.transform = `scale(${factor})`;
+      vp.style.marginBottom = `${-(900 * (1 - factor))}mm`;
+    }
+    // Inicializar a 33% para encajar en pantallas de laptops normales
+    setZoom(0.35);
+  </script>
+</body>
+</html>

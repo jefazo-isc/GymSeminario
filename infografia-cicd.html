@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Infografía CI/CD — espacioGYM (GROM 21)</title>
+  <style>
+    /* ==========================================================================
+       1. TOKENS OFICIALES DEL TEMA CLARO DE ESPACIOGYM (src/styles/tokens.css)
+       ========================================================================== */
+    :root {
+      color-scheme: light;
+      --color-bg: #f7f7f5;
+      --color-surface: #ffffff;
+      --color-surface-secondary: #eff2f3;
+      --color-surface-raised: #ffffff;
+      --color-text: #1f2937;
+      --color-text-secondary: #4b5563;
+      --color-border: #d5dce2;
+      --color-border-strong: #9aa8b2;
+
+      /* Paleta de marca GROM 21 / espacioGYM */
+      --color-accent: #375d67;
+      --color-accent-dark: #25424a;
+      --color-accent-soft: #eaf0f2;
+      --color-action: #375d67;
+      --color-action-hover: #294b54;
+      --color-on-action: #ffffff;
+
+      --color-sage: #557363;
+      --color-success: #2c5943;
+      --color-success-soft: #e6f2e9;
+
+      --color-slate-blue: #3f5878;
+      --color-slate-soft: #eaeff5;
+
+      --color-warning: #79551d;
+      --color-warning-soft: #faf1de;
+
+      --color-danger: #98434b;
+      --color-danger-soft: #f9ecee;
+
+      /* Colores de gráficas del sistema de diseño */
+      --color-chart-1: #375d67;
+      --color-chart-2: #557363;
+      --color-chart-3: #4a6282;
+      --color-chart-4: #8c6a3d;
+      --color-chart-track: #dfe5e9;
+
+      /* Tipografía sin ligaduras en código para preservar "--" exacto en PDF */
+      --font-sans: "Roboto", "Segoe UI", system-ui, -apple-system, sans-serif;
+      --font-mono: "DejaVu Sans Mono", "Liberation Mono", "Courier New", Consolas, monospace;
+      --radius-sm: 6px;
+      --radius-md: 12px;
+      --radius-lg: 20px;
+      --radius-pill: 999px;
+      --shadow-sm: 0 2px 8px rgba(21, 33, 43, 0.05);
+      --shadow-md: 0 12px 36px rgba(21, 33, 43, 0.07);
+    }
+
+    /* Reset y Configuración para Alta Resolución e Impresión/PDF */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      font-variant-ligatures: none;
+      font-feature-settings: "liga" 0, "calt" 0;
+    }
+
+    body {
+      background-color: var(--color-bg);
+      color: var(--color-text);
+      font-family: var(--font-sans);
+      line-height: 1.5;
+      padding: 2rem 1.25rem;
+      display: flex;
+      justify-content: center;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Contenedor Principal tipo Póster Editorial en Papel Claro (#f7f7f5 / #ffffff) */
+    .infographic-poster {
+      width: 100%;
+      max-width: 1080px;
+      background-color: var(--color-bg);
+      border: 1.5px solid var(--color-border-strong);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      gap: 1.85rem;
+      padding: 2.15rem;
+      position: relative;
+    }
+
+    .infographic-poster > * {
+      flex-shrink: 0;
+    }
+
+    /* ==========================================================================
+       BARRA SUPERIOR CON LOGO OFICIAL GROM 21 Y ESCUDO OFICIAL DE LA UAA
+       ========================================================================== */
+    .brand-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+      padding: 0.75rem 1.15rem;
+      background-color: var(--color-surface);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .brand-logo-group {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .grom-logo-img {
+      height: 42px;
+      width: auto;
+      border-radius: 6px;
+      display: block;
+    }
+
+    .brand-text-block {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.25;
+    }
+
+    .brand-text-block strong {
+      font-size: 0.92rem;
+      color: var(--color-text);
+      font-weight: 800;
+    }
+
+    .brand-text-block span {
+      font-size: 0.76rem;
+      color: var(--color-text-secondary);
+      font-weight: 500;
+    }
+
+    .uaa-logo-group {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      text-align: right;
+    }
+
+    .uaa-crest-img {
+      height: 46px;
+      width: auto;
+      display: block;
+      object-fit: contain;
+    }
+
+    .uaa-wordmark-img {
+      height: 42px;
+      width: auto;
+      display: block;
+      object-fit: contain;
+    }
+
+    /* ==========================================================================
+       2. CABECERA PRINCIPAL (ESTILO HERO DE GROM 21 TEMA CLARO)
+       ========================================================================== */
+    .hero-header {
+      background-color: var(--color-surface);
+      border: 1.5px solid var(--color-border);
+      border-top: 5px solid var(--color-accent);
+      border-radius: var(--radius-lg);
+      padding: 1.95rem 2.15rem;
+      box-shadow: var(--shadow-sm);
+      display: grid;
+      grid-template-columns: 1.38fr 0.62fr;
+      gap: 1.75rem;
+      align-items: center;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background-color: var(--color-accent-soft);
+      border: 1px solid var(--color-border-strong);
+      color: var(--color-accent-dark);
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.11em;
+      padding: 0.35rem 0.85rem;
+      border-radius: var(--radius-pill);
+      margin-bottom: 0.8rem;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--color-sage);
+      flex-shrink: 0;
+    }
+
+    .hero-title {
+      font-size: 2.38rem;
+      font-weight: 800;
+      line-height: 1.12;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.8rem;
+      color: var(--color-text);
+    }
+
+    .hero-title .highlight-title {
+      color: var(--color-accent);
+      display: inline-block;
+      border-bottom: 4px solid var(--color-sage);
+      padding-bottom: 2px;
+    }
+
+    .hero-lead {
+      color: var(--color-text-secondary);
+      font-size: 0.95rem;
+      line-height: 1.58;
+      margin-bottom: 1rem;
+    }
+
+    .hero-lead strong {
+      color: var(--color-text);
+      font-weight: 700;
+    }
+
+    .project-meta-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      padding-top: 0.8rem;
+      border-top: 1px solid var(--color-border);
+    }
+
+    .ui-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      background-color: var(--color-surface-secondary);
+      border: 1px solid var(--color-border);
+      color: var(--color-text);
+      font-size: 0.75rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .ui-chip strong {
+      color: var(--color-accent-dark);
+      font-weight: 700;
+    }
+
+    /* Ilustración Puro CSS: Símbolo Infinito CI/CD en Tema Claro */
+    .infinity-illustration {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--color-surface-secondary);
+      border: 1.5px solid var(--color-border-strong);
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1rem;
+    }
+
+    .infinity-loop {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 0.3rem 0;
+    }
+
+    .loop-circle {
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      border: 10px solid transparent;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      background-color: var(--color-surface);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .loop-ci {
+      border-color: var(--color-accent);
+      border-right-color: var(--color-slate-blue);
+      margin-right: -13px;
+      padding-right: 12px;
+      z-index: 2;
+    }
+
+    .loop-cd {
+      border-color: var(--color-sage);
+      border-left-color: var(--color-slate-blue);
+      margin-left: -13px;
+      padding-left: 12px;
+      z-index: 1;
+    }
+
+    .loop-circle strong {
+      font-family: var(--font-mono);
+      font-size: 1.45rem;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+
+    .loop-ci strong { color: var(--color-accent); }
+    .loop-cd strong { color: var(--color-success); }
+
+    .loop-circle span {
+      font-size: 0.58rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: var(--color-text);
+      font-weight: 700;
+      margin-top: 4px;
+      white-space: nowrap;
+    }
+
+    .infinity-caption {
+      margin-top: 0.75rem;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--color-accent-dark);
+      text-align: center;
+      background-color: var(--color-accent-soft);
+      border: 1px solid var(--color-border-strong);
+      padding: 0.32rem 0.75rem;
+      border-radius: var(--radius-sm);
+      white-space: nowrap;
+    }
+
+    /* ==========================================================================
+       3. ENCABEZADOS DE SECCIÓN (ESTILO .section-heading DE GROM 21)
+       ========================================================================== */
+    .section-block {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid var(--color-border);
+      padding-bottom: 0.55rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .section-title-group {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+    }
+
+    .step-badge {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      font-weight: 800;
+      padding: 0.26rem 0.6rem;
+      border-radius: var(--radius-sm);
+      background-color: var(--color-action);
+      color: var(--color-on-action);
+    }
+
+    .section-title {
+      font-size: 1.32rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--color-text);
+    }
+
+    .section-subtitle {
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: var(--color-accent);
+    }
+
+    /* ==========================================================================
+       4. LAS 6 ETAPAS DEL PIPELINE CI/CD CON LOGOS OFICIALES SVG
+       ========================================================================== */
+    .pipeline-flow {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.1rem;
+      align-items: stretch;
+    }
+
+    .stage-card {
+      background-color: var(--color-surface);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      box-shadow: var(--shadow-sm);
+      display: grid;
+      grid-template-rows: 28px 44px 1fr auto;
+      gap: 0.65rem;
+      position: relative;
+    }
+
+    .stage-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      border-radius: 10px 10px 0 0;
+    }
+
+    .stage-ci::before  { background-color: var(--color-accent); }
+    .stage-qa::before  { background-color: var(--color-slate-blue); }
+    .stage-cd::before  { background-color: var(--color-sage); }
+
+    .stage-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      height: 28px;
+    }
+
+    .stage-phase-tag {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 800;
+      padding: 0.2rem 0.5rem;
+      border-radius: 5px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .tag-ci { background-color: var(--color-accent-soft); color: var(--color-accent-dark); border: 1px solid #b8cdd3; }
+    .tag-qa { background-color: var(--color-slate-soft); color: var(--color-slate-blue); border: 1px solid #bdcadb; }
+    .tag-cd { background-color: var(--color-success-soft); color: var(--color-success); border: 1px solid #b7d4c0; }
+
+    .stage-number {
+      font-family: var(--font-mono);
+      font-size: 1.25rem;
+      font-weight: 900;
+      color: var(--color-accent);
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    /* Contenedor de Logos SVG Oficiales */
+    .stage-title-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      height: 44px;
+    }
+
+    .brand-svg-box {
+      width: 42px;
+      height: 42px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--color-surface-secondary);
+      border: 1.5px solid var(--color-border-strong);
+      flex-shrink: 0;
+      padding: 6px;
+    }
+
+    .brand-svg-box svg {
+      width: 26px;
+      height: 26px;
+      display: block;
+    }
+
+    .stage-card h3 {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--color-text);
+      line-height: 1.2;
+    }
+
+    .stage-card p {
+      font-size: 0.85rem;
+      color: var(--color-text-secondary);
+      line-height: 1.48;
+    }
+
+    .stage-card p strong {
+      color: var(--color-text);
+      font-weight: 700;
+    }
+
+    .stage-tech-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.38rem;
+      padding-top: 0.6rem;
+      border-top: 1px solid var(--color-border);
+    }
+
+    .tech-pill {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--color-accent-dark);
+      background-color: var(--color-surface-secondary);
+      padding: 0.18rem 0.48rem;
+      border-radius: 5px;
+      border: 1px solid var(--color-border-strong);
+      white-space: nowrap;
+    }
+
+    /* ==========================================================================
+       5. SECCIÓN 02: 2 CAPTURAS REALES DEL REPO Y DE LA PWA EN PRODUCCIÓN
+       ========================================================================== */
+    .screenshots-grid {
+      display: grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      gap: 1.2rem;
+      align-items: stretch;
+    }
+
+    .evidence-panel {
+      background-color: var(--color-surface);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 1.2rem;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 0.85rem;
+    }
+
+    .panel-title {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--color-text);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .panel-badge-green {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: var(--color-success);
+      background-color: var(--color-success-soft);
+      border: 1px solid var(--color-sage);
+      padding: 0.2rem 0.55rem;
+      border-radius: 5px;
+      white-space: nowrap;
+    }
+
+    .screenshot-frame {
+      border: 1.5px solid var(--color-border-strong);
+      border-radius: 10px;
+      overflow: hidden;
+      background-color: #0d1117;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 310px;
+      padding: 4px;
+    }
+
+    .screenshot-frame.light-frame {
+      background-color: #f3f4f6;
+    }
+
+    .screenshot-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: center;
+      display: block;
+      border-radius: 6px;
+    }
+
+    .evidence-caption {
+      font-size: 0.8rem;
+      color: var(--color-text-secondary);
+      background-color: var(--color-surface-secondary);
+      padding: 0.55rem 0.8rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border);
+      border-left: 4px solid var(--color-accent);
+      line-height: 1.42;
+    }
+
+    .evidence-caption strong {
+      color: var(--color-text);
+      font-weight: 800;
+    }
+
+    /* ==========================================================================
+       6. TABLA DE TRAZABILIDAD SINTÉTICA (COMANDOS Y ENTREGABLES PUNTUALES)
+       ========================================================================== */
+    .table-wrapper {
+      background-color: var(--color-surface);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.84rem;
+    }
+
+    .comparison-table th,
+    .comparison-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--color-border);
+      color: var(--color-text-secondary);
+      vertical-align: middle;
+    }
+
+    .comparison-table thead th {
+      background-color: var(--color-surface-secondary);
+      font-weight: 800;
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--color-text);
+      border-bottom: 2px solid var(--color-border-strong);
+    }
+
+    .comparison-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .col-dimension {
+      font-weight: 800;
+      color: var(--color-text) !important;
+      background-color: #fafbfa;
+      width: 19%;
+    }
+
+    .cmd-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+
+    .code-inline {
+      font-family: var(--font-mono);
+      font-size: 0.73rem;
+      font-weight: 700;
+      color: var(--color-accent-dark);
+      background-color: var(--color-accent-soft);
+      padding: 0.18rem 0.45rem;
+      border-radius: 4px;
+      border: 1px solid #c2d4d9;
+      white-space: nowrap;
+      display: inline-block;
+    }
+
+    .badge-audit {
+      display: inline-block;
+      padding: 0.18rem 0.5rem;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.71rem;
+      font-weight: 800;
+      background-color: var(--color-accent-soft);
+      color: var(--color-accent-dark);
+      border: 1px solid var(--color-accent);
+      white-space: nowrap;
+    }
+
+    .badge-prod {
+      display: inline-block;
+      padding: 0.18rem 0.5rem;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.71rem;
+      font-weight: 800;
+      background-color: var(--color-success-soft);
+      color: var(--color-success);
+      border: 1px solid var(--color-sage);
+      white-space: nowrap;
+    }
+
+    /* ==========================================================================
+       7. GRÁFICOS DE DATOS Y MÉTRICAS REALES DE ESPACIOGYM (PALETA CHART 1-4)
+       ========================================================================== */
+    .dora-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.1rem;
+    }
+
+    .dora-card {
+      background-color: var(--color-surface);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 1.15rem;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 0.65rem;
+    }
+
+    .donut-chart {
+      width: 84px;
+      height: 84px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      position: relative;
+    }
+
+    .donut-chart::after {
+      content: "";
+      position: absolute;
+      width: 62px;
+      height: 62px;
+      background-color: var(--color-surface);
+      border-radius: 50%;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    .donut-value {
+      position: relative;
+      z-index: 2;
+      font-family: var(--font-mono);
+      font-size: 0.84rem;
+      font-weight: 900;
+      color: var(--color-text);
+      white-space: nowrap;
+    }
+
+    .donut-1 { background: conic-gradient(var(--color-chart-2) 0% 100%, var(--color-chart-track) 100% 100%); }
+    .donut-2 { background: conic-gradient(var(--color-chart-1) 0% 68%, var(--color-chart-track) 68% 100%); }
+    .donut-3 { background: conic-gradient(var(--color-chart-3) 0% 100%, var(--color-chart-track) 100% 100%); }
+    .donut-4 { background: conic-gradient(var(--color-chart-4) 0% 100%, var(--color-chart-track) 100% 100%); }
+
+    .dora-card h4 {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--color-text);
+    }
+
+    .dora-card p {
+      font-size: 0.8rem;
+      color: var(--color-text-secondary);
+      line-height: 1.42;
+    }
+
+    .dora-benchmark {
+      margin-top: auto;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.25rem 0.6rem;
+      border-radius: var(--radius-pill);
+      background-color: var(--color-accent-soft);
+      border: 1px solid var(--color-border-strong);
+      color: var(--color-accent-dark);
+      white-space: nowrap;
+    }
+
+    /* ==========================================================================
+       8. PIE DE PÁGINA: FUENTES DE CONSULTA Y METADATOS ACADÉMICOS
+       ========================================================================== */
+    .references-footer {
+      background-color: var(--color-surface);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1.6rem;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+
+    .references-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1.5px solid var(--color-border);
+      padding-bottom: 0.5rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .references-header h3 {
+      font-size: 0.92rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-accent-dark);
+    }
+
+    .references-header span {
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: var(--color-text-secondary);
+    }
+
+    .references-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.55rem 1.5rem;
+      list-style: none;
+      font-size: 0.79rem;
+      color: var(--color-text-secondary);
+    }
+
+    .references-list li {
+      padding-left: 1rem;
+      position: relative;
+      line-height: 1.42;
+    }
+
+    .references-list li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.45rem;
+      width: 6px;
+      height: 6px;
+      border-radius: 1px;
+      background-color: var(--color-accent);
+    }
+
+    .references-list strong {
+      color: var(--color-text);
+    }
+
+    .references-list em {
+      color: var(--color-accent-dark);
+      font-style: italic;
+      font-weight: 600;
+    }
+
+    /* ==========================================================================
+       9. RESPONSIVE Y OPTIMIZACIÓN DE IMPRESIÓN / EXPORTACIÓN PDF (PÓSTER 1 PÁG)
+       ========================================================================== */
+    @media screen and (max-width: 900px) {
+      .hero-header,
+      .screenshots-grid {
+        grid-template-columns: 1fr;
+      }
+      .pipeline-flow {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .dora-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .references-list {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media screen and (max-width: 600px) {
+      .pipeline-flow,
+      .dora-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @page {
+      size: 1120px 3240px;
+      margin: 0;
+    }
+
+    @media print {
+      html, body {
+        width: 1120px;
+        margin: 0;
+        padding: 0;
+        background: var(--color-bg);
+      }
+      .infographic-poster {
+        width: 1120px;
+        max-width: 1120px;
+        border: none;
+        box-shadow: none;
+        border-radius: 0;
+        padding: 2.1rem;
+        gap: 1.8rem;
+      }
+      .section-block,
+      .stage-card,
+      .evidence-panel,
+      .dora-card,
+      .table-wrapper,
+      .references-footer {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <main class="infographic-poster">
+
+    <!-- ======================================================================
+         ENCABEZADO INSTITUCIONAL CON LOGO GROM 21 Y ESCUDO OFICIAL DE LA UAA
+         ====================================================================== -->
+    <div class="brand-topbar">
+      <div class="brand-logo-group">
+        <img src="assets-infografia/logo-grom21.png" alt="Logo GROM 21" class="grom-logo-img">
+        <div class="brand-text-block">
+          <strong>espacioGYM · GROM 21 Fitness Center</strong>
+          <span>Plataforma Integral de Gestión Deportiva y Acondicionamiento con IA</span>
+        </div>
+      </div>
+
+      <div class="uaa-logo-group">
+        <div class="brand-text-block" style="text-align: right;">
+          <strong>Universidad Autónoma de Aguascalientes</strong>
+          <span>Centro de Ciencias Básicas • Depto. de Sistemas Computacionales</span>
+        </div>
+        <img src="assets-infografia/escudo-uaa.png" alt="Escudo Benemérita UAA" class="uaa-crest-img">
+        <img src="assets-infografia/logo-uaa.png" alt="Logo UAA" class="uaa-wordmark-img">
+      </div>
+    </div>
+
+    <!-- ======================================================================
+         HERO Y TÍTULO LLAMATIVO DEL PROYECTO DE SEMINARIO
+         ====================================================================== -->
+    <header class="hero-header">
+      <div class="hero-content">
+        <div class="hero-eyebrow">
+          <span class="pulse-dot"></span>
+          <span>Seminario de Sistemas Computacionales I • Taller de la Unidad V</span>
+        </div>
+        <h1 class="hero-title">
+          Proceso CI/CD Aplicado:<br>
+          <span class="highlight-title">Proyecto espacioGYM (GROM 21)</span>
+        </h1>
+        <p class="hero-lead">
+          Tubería automatizada de <strong>Integración y Entrega Continua (.github/workflows/ci.yml)</strong> para la plataforma deportiva PWA e IA: compila <strong>Angular 19</strong>, ejecuta <strong>156 pruebas</strong>, audita seguridad, empaqueta en <strong>Docker (GHCR)</strong> y despliega en <strong>GitHub Pages y Render</strong>.
+        </p>
+        <div class="project-meta-bar">
+          <span class="ui-chip"><strong>Alumno:</strong> Yahir Guevara Cardona</span>
+          <span class="ui-chip"><strong>Profesor:</strong> M. en C. Arturo Elías Ramírez</span>
+          <span class="ui-chip"><strong>Repo:</strong> jefazo-isc/GymSeminario</span>
+          <span class="ui-chip"><strong>Stack:</strong> Angular 19 + Node.js 22 LTS + Docker</span>
+        </div>
+      </div>
+
+      <!-- Ilustración Vectorial en Puro CSS: Ciclo Infinito CI/CD -->
+      <div class="infinity-illustration" aria-label="Diagrama del ciclo continuo CI/CD en espacioGYM">
+        <div class="infinity-loop">
+          <div class="loop-circle loop-ci">
+            <strong>CI</strong>
+            <span>Build + 156 Specs</span>
+          </div>
+          <div class="loop-circle loop-cd">
+            <strong>CD</strong>
+            <span>GHCR + Pages</span>
+          </div>
+        </div>
+        <div class="infinity-caption">
+          GitHub Actions • Ubuntu 24.04 Runner
+        </div>
+      </div>
+    </header>
+
+    <!-- ======================================================================
+         SECCIÓN 1: LAS 6 ETAPAS DEL PIPELINE CI/CD CON LOGOS SVG OFICIALES
+         ====================================================================== -->
+    <section class="section-block">
+      <div class="section-header">
+        <div class="section-title-group">
+          <span class="step-badge">01</span>
+          <h2 class="section-title">Las 6 Etapas del Pipeline CI/CD en espacioGYM</h2>
+        </div>
+        <p class="section-subtitle">Flujo automatizado de extremo a extremo desde el commit hasta el despliegue en producción</p>
+      </div>
+
+      <div class="pipeline-flow">
+        <!-- Etapa 01: GitHub Actions SVG Oficial -->
+        <article class="stage-card stage-ci">
+          <div class="stage-top">
+            <span class="stage-phase-tag tag-ci">Fase CI • Aprovisionamiento</span>
+            <span class="stage-number">01</span>
+          </div>
+          <div class="stage-title-row">
+            <div class="brand-svg-box" title="GitHub Actions">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M12 1.5C6.201 1.5 1.5 6.201 1.5 12C1.5 16.642 4.509 20.576 8.682 21.964C9.207 22.061 9.399 21.737 9.399 21.458C9.399 21.209 9.39 20.548 9.385 19.673C6.463 20.308 5.847 18.265 5.847 18.265C5.369 17.052 4.681 16.729 4.681 16.729C3.728 16.078 4.753 16.091 4.753 16.091C5.806 16.165 6.36 17.172 6.36 17.172C7.296 18.775 8.815 18.312 9.413 18.044C9.508 17.366 9.779 16.903 10.079 16.641C7.746 16.376 5.294 15.475 5.294 11.45C5.294 10.303 5.703 9.366 6.375 8.631C6.266 8.366 5.906 7.298 6.478 5.852C6.478 5.852 7.36 5.57 9.368 6.929C10.225 6.696 11.11 6.578 12 6.574C12.893 6.578 13.792 6.695 14.633 6.929C16.64 5.57 17.52 5.852 17.52 5.852C18.094 7.298 17.734 8.366 17.626 8.631C18.299 9.366 18.705 10.303 18.705 11.45C18.705 15.485 16.249 16.373 13.91 16.633C14.287 16.957 14.623 17.599 14.623 18.58C14.623 19.986 14.61 21.119 14.61 21.458C14.61 21.739 14.799 22.066 15.332 21.963C19.493 20.573 22.5 16.641 22.5 12C22.5 6.201 17.799 1.5 12 1.5Z" fill="#24292F"/>
+              </svg>
+            </div>
+            <h3>Checkout y Entorno Node 22</h3>
+          </div>
+          <p>
+            Se dispara en cada <strong>push o pull_request</strong> a <em>main/develop</em>. Descarga el código con historial completo (<strong>fetch-depth: 0</strong>), configura <strong>Node.js 22 LTS</strong> con caché y ejecuta instalación limpia mediante <strong>npm ci</strong>.
+          </p>
+          <div class="stage-tech-list">
+            <span class="tech-pill">actions/checkout@v4</span>
+            <span class="tech-pill">actions/setup-node@v4</span>
+            <span class="tech-pill">npm ci</span>
+          </div>
+        </article>
+
+        <!-- Etapa 02: Escudo Oficial de Angular SVG -->
+        <article class="stage-card stage-ci">
+          <div class="stage-top">
+            <span class="stage-phase-tag tag-ci">Fase CI • Compilación y Calidad</span>
+            <span class="stage-number">02</span>
+          </div>
+          <div class="stage-title-row">
+            <div class="brand-svg-box" title="Angular 19">
+              <svg viewBox="0 0 250 250" xmlns="http://www.w3.org/2000/svg">
+                <polygon fill="#DD0031" points="125,15 125,15 125,15 22.6,51.5 38.2,186.3 125,235 125,235 125,235 211.8,186.3 227.4,51.5"/>
+                <polygon fill="#C3002F" points="125,15 125,39.4 125,39.3 125,153.4 125,153.4 125,235 125,235 211.8,186.3 227.4,51.5"/>
+                <path fill="#FFFFFF" d="M125,39.2L61.1,182.6h23.8l12.8-32h54.3l12.8,32h23.8L125,39.2L125,39.2z M143.6,130.6h-37.2L125,85.7L143.6,130.6z"/>
+              </svg>
+            </div>
+            <h3>Build Angular 19 y Linting</h3>
+          </div>
+          <p>
+            Compila la PWA en producción, resguarda el artefacto <strong>angular-dist</strong> y ejecuta análisis estático de código con <strong>ESLint 8.57 + @angular-eslint</strong> sobre componentes TypeScript y plantillas HTML.
+          </p>
+          <div class="stage-tech-list">
+            <span class="tech-pill">Angular 19 AOT</span>
+            <span class="tech-pill">ESLint 8.57</span>
+            <span class="tech-pill">actions/upload-artifact@v4</span>
+          </div>
+        </article>
+
+        <!-- Etapa 03: Logo Oficial de Karma + Jasmine SVG -->
+        <article class="stage-card stage-qa">
+          <div class="stage-top">
+            <span class="stage-phase-tag tag-qa">Fase CI • Pruebas Unitarias</span>
+            <span class="stage-number">03</span>
+          </div>
+          <div class="stage-title-row">
+            <div class="brand-svg-box" title="Karma & Jasmine">
+              <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="32" cy="32" r="28" fill="#8A4182" opacity="0.14"/>
+                <circle cx="32" cy="32" r="24" fill="none" stroke="#8A4182" stroke-width="4.5"/>
+                <rect x="29" y="10" width="6" height="14" rx="3" fill="#8A4182"/>
+                <rect x="29" y="40" width="6" height="14" rx="3" fill="#8A4182"/>
+                <rect x="10" y="29" width="14" height="6" rx="3" fill="#8A4182"/>
+                <rect x="40" y="29" width="14" height="6" rx="3" fill="#8A4182"/>
+                <circle cx="32" cy="32" r="6" fill="#4298B8"/>
+              </svg>
+            </div>
+            <h3>156 Pruebas Unitarias</h3>
+          </div>
+          <p>
+            El Job <strong>unit-tests</strong> ejecuta <strong>156 especificaciones con Karma y Jasmine</strong> en <strong>ChromeHeadless</strong>, validando Agendamiento (<em>/f2</em>), Coach IA y Membresías con cobertura LCOV superior al 65%.
+          </p>
+          <div class="stage-tech-list">
+            <span class="tech-pill">Karma + Jasmine</span>
+            <span class="tech-pill">ChromeHeadless</span>
+            <span class="tech-pill">156 Specs (0 Fallos)</span>
+          </div>
+        </article>
+
+        <!-- Etapa 04: Logo Oficial de Node.js / HTTP Integration SVG -->
+        <article class="stage-card stage-qa">
+          <div class="stage-top">
+            <span class="stage-phase-tag tag-qa">Fase CI • Pruebas de Integración</span>
+            <span class="stage-number">04</span>
+          </div>
+          <div class="stage-title-row">
+            <div class="brand-svg-box" title="Node.js & HttpClientTesting">
+              <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                <polygon points="32,4 58,19 58,45 32,60 6,45 6,19" fill="#339933"/>
+                <polygon points="32,10 52,22 52,42 32,54 12,42 12,22" fill="#215732"/>
+                <path d="M24,24 L32,19 L40,24 L40,38 L32,43 L24,38 Z" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linejoin="round"/>
+                <circle cx="32" cy="31" r="3.5" fill="#68A063"/>
+              </svg>
+            </div>
+            <h3>Pruebas de Integración HTTP</h3>
+          </div>
+          <p>
+            El Job <strong>integration-tests</strong> verifica de forma hermética con <strong>HttpClientTesting</strong> los 5 servicios críticos: <strong>RutinaService, ApiService, QrService, UsuarioService y CursoService</strong>.
+          </p>
+          <div class="stage-tech-list">
+            <span class="tech-pill">HttpClientTesting</span>
+            <span class="tech-pill">5 Servicios REST</span>
+            <span class="tech-pill">Contratos JSON</span>
+          </div>
+        </article>
+
+        <!-- Etapa 05: Logo Oficial de npm + Escudo DevSecOps SVG -->
+        <article class="stage-card stage-qa">
+          <div class="stage-top">
+            <span class="stage-phase-tag tag-qa">Fase CI • Seguridad DevSecOps</span>
+            <span class="stage-number">05</span>
+          </div>
+          <div class="stage-title-row">
+            <div class="brand-svg-box" title="npm audit & TruffleHog">
+              <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                <path d="M32,5 L54,14 V31 C54,45.5 44.6,55.2 32,59 C19.4,55.2 10,45.5 10,31 V14 L32,5 Z" fill="#CB3837"/>
+                <path d="M32,10 L49,17 V31 C49,42.5 41.5,50.5 32,53.8 V10 Z" fill="#A82423"/>
+                <rect x="20" y="23" width="24" height="16" fill="#FFFFFF" rx="1.5"/>
+                <rect x="24" y="26" width="8" height="10" fill="#CB3837"/>
+                <rect x="28" y="28" width="4" height="8" fill="#FFFFFF"/>
+              </svg>
+            </div>
+            <h3>Auditoría y TruffleHog</h3>
+          </div>
+          <p>
+            El Job <strong>security-audit</strong> evalúa vulnerabilidades CVE con <strong>npm audit</strong> y escanea el historial Git con <strong>TruffleHog</strong> para prevenir fugas de llaves de <strong>Gemini, Mercury, Brevo y Firebase</strong>.
+          </p>
+          <div class="stage-tech-list">
+            <span class="tech-pill">npm audit</span>
+            <span class="tech-pill">TruffleHog Scanner</span>
+            <span class="tech-pill">audit-report.json</span>
+          </div>
+        </article>
+
+        <!-- Etapa 06: Logo Oficial de Docker SVG -->
+        <article class="stage-card stage-cd">
+          <div class="stage-top">
+            <span class="stage-phase-tag tag-cd">Fase CD • Contenedores y Release</span>
+            <span class="stage-number">06</span>
+          </div>
+          <div class="stage-title-row">
+            <div class="brand-svg-box" title="Docker & GHCR">
+              <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                <rect x="13" y="24" width="7" height="6" rx="1" fill="#2496ED"/>
+                <rect x="21" y="24" width="7" height="6" rx="1" fill="#2496ED"/>
+                <rect x="29" y="24" width="7" height="6" rx="1" fill="#2496ED"/>
+                <rect x="37" y="24" width="7" height="6" rx="1" fill="#2496ED"/>
+                <rect x="21" y="17" width="7" height="6" rx="1" fill="#2496ED"/>
+                <rect x="29" y="17" width="7" height="6" rx="1" fill="#2496ED"/>
+                <rect x="29" y="10" width="7" height="6" rx="1" fill="#2496ED"/>
+                <path d="M58,28 C55.5,26.5 52,26.8 50,27.8 C49.5,24.5 47,22 47,22 C47,22 44.5,25 45.2,29.2 C43.8,30 41,30.5 39,30.5 H7 C5.5,38 8,49 23,49 C37.5,49 48.5,42 52.5,33 C55,33.2 58.5,32.5 60,29.5 C59.5,28.8 58.8,28.3 58,28 Z" fill="#2496ED"/>
+                <circle cx="18" cy="39" r="2.2" fill="#FFFFFF"/>
+              </svg>
+            </div>
+            <h3>Docker GHCR y Despliegue</h3>
+          </div>
+          <p>
+            El Job <strong>docker-publish</strong> construye con <strong>Buildx</strong> las 2 imágenes Multi-Stage (<strong>Nginx Alpine</strong> y <strong>Express</strong>), las publica en <strong>GHCR</strong> y despliega en <strong>GitHub Pages y Render</strong>.
+          </p>
+          <div class="stage-tech-list">
+            <span class="tech-pill">docker/build-push-action@v6</span>
+            <span class="tech-pill">actions/deploy-pages@v4</span>
+            <span class="tech-pill">Render PaaS</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         SECCIÓN 2: 2 CAPTURAS REALES DEL REPOSITORIO Y LA PWA EN PRODUCCIÓN
+         ====================================================================== -->
+    <section class="section-block">
+      <div class="section-header">
+        <div class="section-title-group">
+          <span class="step-badge">02</span>
+          <h2 class="section-title">Evidencia Real de Ejecución en GitHub Actions y Despliegue en Vivo</h2>
+        </div>
+        <p class="section-subtitle">Capturas directas del repositorio jefazo-isc/GymSeminario (5 Jobs en verde) y de la PWA desplegada</p>
+      </div>
+
+      <div class="screenshots-grid">
+        <!-- Captura Real 1: GitHub Actions con 5 Jobs en Verde + GHCR -->
+        <div class="evidence-panel">
+          <div class="panel-title">
+            1. Ejecución Real en GitHub Actions (5/5 Jobs en Verde)
+            <span class="panel-badge-green">PASS • GHCR Published</span>
+          </div>
+
+          <div class="screenshot-frame">
+            <img src="assets-infografia/github-actions-green.png" alt="Captura real de GitHub Actions con los 5 Jobs en verde y publicación Docker a GHCR">
+          </div>
+
+          <div class="evidence-caption">
+            <strong>Compuerta de Calidad superada:</strong> Los 5 Jobs (<em>Build, Unit Tests, Integration Tests, Security Audit y Docker → GHCR</em>) finalizan en verde y publican los contenedores en <strong>ghcr.io/jefazo-isc/gymseminario</strong>.
+          </div>
+        </div>
+
+        <!-- Captura Real 2: PWA espacioGYM Corriendo en Producción -->
+        <div class="evidence-panel">
+          <div class="panel-title">
+            2. PWA espacioGYM (GROM 21) Desplegada en Vivo
+            <span class="panel-badge-green">LIVE • Pages + Render</span>
+          </div>
+
+          <div class="screenshot-frame light-frame">
+            <img src="assets-infografia/pwa-produccion-qr.png" alt="Captura real de la PWA espacioGYM corriendo con reserva confirmada y código QR">
+          </div>
+
+          <div class="evidence-caption">
+            <strong>Entrega Continua verificada:</strong> La PWA en <strong>GitHub Pages</strong> se conecta con el backend en <strong>Render PaaS</strong>, registrando reservas (<em>/f2</em>), generando el <strong>Código QR</strong> y enviando confirmación vía <strong>Brevo HTTPS API</strong>.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         SECCIÓN 3: MATRIZ SINTÉTICA DE COMANDOS Y ENTREGABLES (CONCISA Y LIMPIA)
+         ====================================================================== -->
+    <section class="section-block">
+      <div class="section-header">
+        <div class="section-title-group">
+          <span class="step-badge">03</span>
+          <h2 class="section-title">Matriz Sintética de Comandos y Entregables del Pipeline</h2>
+        </div>
+        <p class="section-subtitle">Comandos exactos ejecutados en Ubuntu 24.04, alcance técnico y artefactos generados</p>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>Fase del Pipeline</th>
+              <th style="color: var(--color-accent-dark);">Comandos Clave en ci.yml</th>
+              <th style="color: var(--color-slate-blue);">Alcance en espacioGYM</th>
+              <th style="color: var(--color-success);">Entregable / Artefacto</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="col-dimension">1. Build &amp; Linting (CI)</td>
+              <td>
+                <div class="cmd-group">
+                  <span class="code-inline">npm ci</span>
+                  <span class="code-inline">npm run build -- --configuration production</span>
+                  <span class="code-inline">npx eslint "src/**/*.ts"</span>
+                </div>
+              </td>
+              <td>PWA Angular 19, Service Workers y reglas TypeScript/HTML.</td>
+              <td><span class="code-inline">angular-dist</span> (Build producción)</td>
+            </tr>
+            <tr>
+              <td class="col-dimension">2. Pruebas CI</td>
+              <td>
+                <div class="cmd-group">
+                  <span class="code-inline">npx ng test --no-watch</span>
+                  <span class="code-inline">--browsers=ChromeHeadless --code-coverage</span>
+                </div>
+              </td>
+              <td>156 specs unitarias + 5 servicios HTTP mockeados.</td>
+              <td><span class="code-inline">coverage/</span> (&gt;65% LCOV)</td>
+            </tr>
+            <tr>
+              <td class="col-dimension">3. DevSecOps (CI)</td>
+              <td>
+                <div class="cmd-group">
+                  <span class="code-inline">npm audit --audit-level=moderate</span>
+                  <span class="code-inline">trufflesecurity/trufflehog@main</span>
+                </div>
+              </td>
+              <td>Dependencias NPM y secretos (Gemini, Mercury, Brevo, JWT).</td>
+              <td><span class="badge-audit">0 Secretos</span> <span class="code-inline">audit-report.json</span></td>
+            </tr>
+            <tr>
+              <td class="col-dimension">4. Docker &amp; Despliegue (CD)</td>
+              <td>
+                <div class="cmd-group">
+                  <span class="code-inline">docker/build-push-action@v6</span>
+                  <span class="code-inline">actions/deploy-pages@v4</span>
+                </div>
+              </td>
+              <td>Imágenes <span class="code-inline">node:22-alpine</span> y <span class="code-inline">nginx:alpine</span> (puerto 80).</td>
+              <td><span class="badge-prod">Activo</span> <span class="code-inline">ghcr.io</span> + Pages + Render</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         SECCIÓN 4: GRÁFICOS DE IMPACTO Y MÉTRICAS REALES DE ESPACIOGYM
+         ====================================================================== -->
+    <section class="section-block">
+      <div class="section-header">
+        <div class="section-title-group">
+          <span class="step-badge">04</span>
+          <h2 class="section-title">Indicadores Cuantitativos y Métricas Logradas en espacioGYM</h2>
+        </div>
+        <p class="section-subtitle">Resultados medibles obtenidos tras automatizar el ciclo de vida del proyecto de tesina</p>
+      </div>
+
+      <div class="dora-grid">
+        <!-- Métrica 1 -->
+        <article class="dora-card">
+          <div class="donut-chart donut-1">
+            <span class="donut-value">156/156</span>
+          </div>
+          <h4>Pruebas Aprobadas</h4>
+          <p>100% de éxito en especificaciones unitarias y de integración ejecutadas en cada commit sobre ChromeHeadless.</p>
+          <span class="dora-benchmark">0 Regresiones en Sprints 1-3</span>
+        </article>
+
+        <!-- Métrica 2 -->
+        <article class="dora-card">
+          <div class="donut-chart donut-2">
+            <span class="donut-value">&gt; 65%</span>
+          </div>
+          <h4>Cobertura de Código</h4>
+          <p>Líneas, ramas y funciones verificadas con reportes LCOV/HTML descargables desde GitHub Actions.</p>
+          <span class="dora-benchmark">5 Servicios HTTP Mockeados</span>
+        </article>
+
+        <!-- Métrica 3 -->
+        <article class="dora-card">
+          <div class="donut-chart donut-3">
+            <span class="donut-value">0 Fugas</span>
+          </div>
+          <h4>Seguridad de Secretos</h4>
+          <p>Verificación criptográfica continua con TruffleHog sobre todo el historial Git (fetch-depth: 0).</p>
+          <span class="dora-benchmark">API Keys IA y Brevo Protegidas</span>
+        </article>
+
+        <!-- Métrica 4 -->
+        <article class="dora-card">
+          <div class="donut-chart donut-4">
+            <span class="donut-value">2 Imgs</span>
+          </div>
+          <h4>Contenedores + Multi-Cloud</h4>
+          <p>Empaquetado Docker Multi-Stage (gymseminario y gymseminario-server) con despliegue automático.</p>
+          <span class="dora-benchmark">GHCR + GitHub Pages + Render</span>
+        </article>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         PIE DE PÁGINA: FUENTES DE CONSULTA (FUNDAMENTACIÓN ACADÉMICA)
+         ====================================================================== -->
+    <footer class="references-footer">
+      <div class="references-header">
+        <h3>Fuentes de Consulta y Fundamentación Técnica</h3>
+        <span>UAA • Seminario de Sistemas Computacionales I • espacioGYM (GROM 21)</span>
+      </div>
+      <ul class="references-list">
+        <li>
+          <strong>Humble, J., &amp; Farley, D. (2010).</strong> <em>Continuous Delivery: Reliable Software Releases through Build, Test, and Deployment Automation</em>. Addison-Wesley Professional.
+        </li>
+        <li>
+          <strong>Forsgren, N., Humble, J., &amp; Kim, G. (2018).</strong> <em>Accelerate: The Science of Lean Software and DevOps</em>. IT Revolution Press (Métricas de rendimiento CI/CD).
+        </li>
+        <li>
+          <strong>GitHub Docs. (2025).</strong> <em>Automatización de flujos CI/CD con GitHub Actions y GitHub Container Registry (GHCR)</em>. Disponible en: https://docs.github.com/es/actions
+        </li>
+        <li>
+          <strong>Guevara Cardona, Y. (2026).</strong> <em>Memoria Técnica y Workflow CI/CD de espacioGYM (GROM 21)</em>. Repositorio oficial: https://github.com/jefazo-isc/GymSeminario
+        </li>
+      </ul>
+    </footer>
+
+  </main>
+
+</body>
+</html>
