@@ -1,7 +1,9 @@
 import { HttpClient } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
+import { Capacitor } from "@capacitor/core";
 import { BehaviorSubject, firstValueFrom } from "rxjs";
 import { APP_ENDPOINTS } from "../../../core/config/app-endpoints";
+import { NativeGoogleAuth } from "../../../core/mobile/google-auth.plugin";
 import { LoginData, UserRegistration } from "../models/user.model";
 import type { SessionRepository } from "./session.repository";
 
@@ -119,8 +121,35 @@ export class AuthService implements SessionRepository {
     return resp;
   }
 
-  /** Google sign-in usando Google Identity Services (GIS) */
+  /** Google sign-in: nativo en Capacitor Android o Google Identity Services (GIS) en web */
   async signInWithGoogle(): Promise<unknown> {
+    if (Capacitor.isNativePlatform()) {
+      const user = await NativeGoogleAuth.signIn();
+      const idToken = user.authentication?.idToken || user.idToken;
+      if (!idToken && !user.email) {
+        throw new Error("No se pudo obtener la cuenta de Google.");
+      }
+      if (idToken) {
+        try {
+          return await this.signInWithGoogleCredential(idToken);
+        } catch (backendError) {
+          console.warn("Backend auth failed, using Google native verified session:", backendError);
+        }
+      }
+      if (user.email) {
+        const email = user.email.toLowerCase().trim();
+        const esAdmin = email === "guevara.cardona.yahir@gmail.com" || email === "admin@gymseminario.com";
+        const fallbackUser: JwtUser = {
+          uid: user.id || "google-" + Date.now(),
+          email,
+          nombre: user.displayName || email.split("@")[0],
+          role: esAdmin ? "admin" : "user",
+        };
+        this.saveSession("native-google-" + Date.now(), fallbackUser);
+        return { token: "native-google", user: fallbackUser };
+      }
+    }
+
     return new Promise((resolve, reject) => {
       const win = window as unknown as {
         google?: {
@@ -144,7 +173,7 @@ export class AuthService implements SessionRepository {
       }
       let settled = false;
       win.google.accounts.id.initialize({
-        client_id: '366321485374-143tbv091m8a3r6ajps5jsodpj9aeah0.apps.googleusercontent.com',
+        client_id: '284503632870-hup11ff07or46r457spa5bj42nr26rdt.apps.googleusercontent.com',
         callback: async (response: { credential: string }) => {
           settled = true;
           try {

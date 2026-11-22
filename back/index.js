@@ -10,7 +10,7 @@ import jwt from 'jsonwebtoken';
 import Database from 'better-sqlite3';
 import { OAuth2Client } from 'google-auth-library';
 
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '366321485374-143tbv091m8a3r6ajps5jsodpj9aeah0.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '284503632870-hup11ff07or46r457spa5bj42nr26rdt.apps.googleusercontent.com';
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 import { generarRutinaEntrenamiento } from './services/routineCoach.service.js';
@@ -516,7 +516,7 @@ app.post('/api/auth/set-role', (req, res) => {
     const decoded = jwt.verify(auth.slice(7), JWT_SECRET);
     if (decoded.role !== 'admin') return res.status(403).json({ error: 'Solo administradores.' });
     const { userId, role } = req.body;
-    if (!['admin', 'user'].includes(role)) return res.status(400).json({ error: 'Rol inválido. Usa admin o user.' });
+    if (!['admin', 'recepcionista', 'receptionist', 'user', 'subscriptor'].includes(role)) return res.status(400).json({ error: 'Rol inválido. Usa admin, recepcionista o subscriptor.' });
     db.prepare('UPDATE users SET role = ? WHERE id = ?').run(role, userId);
     res.json({ ok: true, mensaje: `Rol actualizado a ${role}` });
   } catch {

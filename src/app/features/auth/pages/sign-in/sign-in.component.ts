@@ -3,6 +3,8 @@ import { Component, inject, NgZone, OnDestroy, OnInit, AfterViewInit, ElementRef
 import { isPlatformBrowser } from "@angular/common";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import { Router, RouterLink } from "@angular/router";
+import { Capacitor } from "@capacitor/core";
+import Swal from "sweetalert2";
 import { authErrorMessage } from "../../../../core/auth/auth-feedback";
 import { CaptchaController } from "../../../../core/auth/captcha-controller";
 import { PasswordToggleDirective } from "../../../../shared/directives/password-toggle.directive";
@@ -10,7 +12,7 @@ import { ButtonDirective } from "../../../../shared/ui/button.directive";
 import { IconComponent } from "../../../../shared/ui/icon/icon.component";
 import { SESSION } from "../../data-access/session.repository";
 
-const GOOGLE_CLIENT_ID = '366321485374-143tbv091m8a3r6ajps5jsodpj9aeah0.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '284503632870-hup11ff07or46r457spa5bj42nr26rdt.apps.googleusercontent.com';
 
 interface GoogleIdentityServices {
   initialize(config: Record<string, unknown>): void;
@@ -40,6 +42,7 @@ export default class SignInComponent implements OnInit, AfterViewInit, OnDestroy
 
   @ViewChild('googleBtn') googleBtnRef!: ElementRef<HTMLDivElement>;
 
+  readonly isNative = Capacitor.isNativePlatform();
   readonly captcha = new CaptchaController(this.service.auth, "sign-in-recaptcha");
   busy: "email" | "google" | "phone" | null = null;
   message = "";
@@ -62,7 +65,7 @@ export default class SignInComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   private initGoogleAuth() {
-    if (!isPlatformBrowser(this.platformId)) return;
+    if (this.isNative || !isPlatformBrowser(this.platformId)) return;
     const win = window as unknown as { google?: { accounts?: { id?: GoogleIdentityServices } } };
     const checkGIS = () => {
       const g = win.google?.accounts?.id;
@@ -73,6 +76,45 @@ export default class SignInComponent implements OnInit, AfterViewInit, OnDestroy
       }
     };
     checkGIS();
+  }
+
+  async signInWithGoogleNative() {
+    if (this.busy) return;
+    const confirm = await Swal.fire({
+      title: "¿Iniciar sesión con Google?",
+      text: "Se abrirá el selector de cuentas de Google en tu dispositivo.",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Continuar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "var(--color-action, #10b981)",
+      cancelButtonColor: "#6b7280",
+    });
+    if (!confirm.isConfirmed) return;
+
+    this.busy = "google";
+    this.message = "";
+    try {
+      await this.service.signInWithGoogle();
+      await Swal.fire({
+        icon: "success",
+        title: "¡Bienvenido a espacioGYM!",
+        text: "Sesión iniciada correctamente con Google",
+        timer: 1500,
+        timerProgressBar: true,
+        showConfirmButton: false,
+      });
+      await this.router.navigate(["/home"]);
+    } catch (error) {
+      const err = error as { message?: string; code?: string };
+      if (err?.message?.includes("cancelled") || err?.code === "12501") {
+        this.message = "";
+      } else {
+        this.message = err?.message || authErrorMessage(error);
+      }
+    } finally {
+      this.busy = null;
+    }
   }
 
   private renderGoogleButton(g: GoogleIdentityServices) {
@@ -117,11 +159,32 @@ export default class SignInComponent implements OnInit, AfterViewInit, OnDestroy
     if (this.busy) return;
     this.form.markAllAsTouched();
     if (this.form.invalid) return;
+
+    const { email, password } = this.form.getRawValue();
+    const confirm = await Swal.fire({
+      title: "¿Iniciar sesión?",
+      text: `¿Deseas acceder con la cuenta ${email}?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Sí, ingresar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "var(--color-action, #10b981)",
+      cancelButtonColor: "#6b7280",
+    });
+    if (!confirm.isConfirmed) return;
+
     this.busy = "email";
     this.message = "";
     try {
-      const { email, password } = this.form.getRawValue();
       await this.service.signIn({ email: email.trim(), password });
+      await Swal.fire({
+        icon: "success",
+        title: "¡Bienvenido a espacioGYM!",
+        text: "Sesión iniciada correctamente",
+        timer: 1500,
+        timerProgressBar: true,
+        showConfirmButton: false,
+      });
       await this.router.navigate(["/home"]);
     } catch (error) {
       this.message = authErrorMessage(error);
