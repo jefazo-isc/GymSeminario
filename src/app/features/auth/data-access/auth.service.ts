@@ -89,6 +89,28 @@ export class AuthService implements SessionRepository {
     this.userNameSubject.next(user.nombre);
     this.userRoleSubject.next(user.role);
     this.userUidSubject.next(String(user.uid));
+
+    // Si es un usuario que no es administrador, garantizar que no tenga suscripción activa previa
+    const email = (user.email || "").toLowerCase().trim();
+    const esAdmin =
+      email === "guevara.cardona.yahir@gmail.com" ||
+      email === "admin@gymseminario.com" ||
+      user.role === "admin";
+    if (!esAdmin) {
+      const memRaw = localStorage.getItem("espacio_gym_membresia");
+      if (memRaw) {
+        try {
+          const m = JSON.parse(memRaw);
+          if (m.id === "MEM-849201" || m.id === "MEM-ADMIN-01") {
+            m.estado = "Vencida";
+            m.diasRestantes = 0;
+            localStorage.setItem("espacio_gym_membresia", JSON.stringify(m));
+          }
+        } catch {
+          /* noop */
+        }
+      }
+    }
   }
 
   private clearSession() {
@@ -200,11 +222,45 @@ export class AuthService implements SessionRepository {
   }
 
   async signInWithGoogleCredential(credential: string): Promise<unknown> {
-    const resp = await firstValueFrom(
-      this.http.post<AuthResponse>(`${this.backendUrl}/api/auth/google`, { credential })
-    );
-    this.saveSession(resp.token, resp.user);
-    return resp;
+    try {
+      const resp = await firstValueFrom(
+        this.http.post<AuthResponse>(`${this.backendUrl}/api/auth/google`, {
+          credential,
+        }),
+      );
+      const email = resp.user?.email?.toLowerCase().trim();
+      const esAdmin =
+        email === "guevara.cardona.yahir@gmail.com" ||
+        email === "admin@gymseminario.com";
+      if (!esAdmin && resp.user) {
+        resp.user.role = "user";
+      }
+      this.saveSession(resp.token, resp.user);
+      return resp;
+    } catch {
+      // Decodificación directa del token JWT de Google si el backend está en reposo o offline
+      const payload = JSON.parse(
+        decodeURIComponent(
+          atob(credential.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))
+            .split("")
+            .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+            .join(""),
+        ),
+      );
+      const email = (payload.email || "").toLowerCase().trim();
+      const esAdmin =
+        email === "guevara.cardona.yahir@gmail.com" ||
+        email === "admin@gymseminario.com";
+      const fallbackUser: JwtUser = {
+        uid: payload.sub || "google-" + Date.now(),
+        email,
+        nombre: payload.name || email.split("@")[0],
+        role: esAdmin ? "admin" : "user",
+      };
+      const token = "google-web-" + Date.now();
+      this.saveSession(token, fallbackUser);
+      return { token, user: fallbackUser };
+    }
   }
 
   /** Phone sign-in — envía código al backend (demo: usa 123456) */

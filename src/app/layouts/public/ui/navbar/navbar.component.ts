@@ -138,12 +138,42 @@ export class NavbarComponent {
       .toUpperCase();
   }
 
+  get userEmail(): string {
+    try {
+      const raw = localStorage.getItem("gym_user");
+      if (!raw) return "";
+      const u = JSON.parse(raw);
+      return (u?.email || "").toLowerCase().trim();
+    } catch {
+      return "";
+    }
+  }
+
   get effectiveRole(): "admin" | "receptionist" | "subscriber" | "guest" {
     if (!this.userName) return "guest";
+    const email = this.userEmail;
     const r = (this.userRole || "").toLowerCase();
-    if (r === "admin" || this.userName?.toLowerCase().includes("yahir")) return "admin";
-    if (r === "receptionist" || r === "recepcionista" || r === "staff") return "receptionist";
-    return "subscriber";
+
+    // Administrador: Únicamente Yahir (o email admin@gymseminario.com o rol explícito admin)
+    if (
+      email === "guevara.cardona.yahir@gmail.com" ||
+      email === "admin@gymseminario.com" ||
+      r === "admin" ||
+      this.userName.toLowerCase().includes("yahir")
+    ) {
+      return "admin";
+    }
+
+    if (r === "receptionist" || r === "recepcionista" || r === "staff") {
+      return "receptionist";
+    }
+
+    if (r === "subscriber" || r === "subscriptor" || r === "socio") {
+      return "subscriber";
+    }
+
+    // Cualquier otra cuenta de Google o usuario registrado sin suscripción pagada es "guest" (opciones tachadas)
+    return "guest";
   }
 
   get roleBadgeLabel(): string {
@@ -155,7 +185,7 @@ export class NavbarComponent {
       case "subscriber":
         return "⚡ Socio Activo";
       default:
-        return "Visitante";
+        return this.userName ? "👤 Cuenta (Sin suscripción)" : "Visitante";
     }
   }
 

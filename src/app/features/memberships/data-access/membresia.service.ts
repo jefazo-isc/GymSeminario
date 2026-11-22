@@ -132,6 +132,22 @@ export class MembresiaService implements MembershipRepository {
     this.sincronizarRenovacion(renovada);
   }
 
+  cancelarMembresia(): void {
+    const actual = this.getMembresiaActual();
+    const ayer = new Date();
+    ayer.setDate(ayer.getDate() - 1);
+
+    const cancelada: Membresia = {
+      ...actual,
+      fechaFin: localDate(ayer),
+      estado: "Vencida",
+      diasRestantes: 0,
+    };
+
+    this.guardarEnStorage(cancelada);
+    this.sincronizarRenovacion(cancelada);
+  }
+
   private getUserEmail(): string | null {
     try {
       const raw = localStorage.getItem("gym_user");
@@ -214,28 +230,47 @@ export class MembresiaService implements MembershipRepository {
   }
 
   private defaultMembership(): Membresia {
-    // Membresía inicial por defecto
+    const email = this.getUserEmail()?.toLowerCase().trim();
     const hoy = new Date();
-    const fin = new Date(hoy);
-    fin.setDate(fin.getDate() + 18); // 18 días restantes
 
-    const defaultMem: Membresia = {
-      id: "MEM-849201",
-      nombrePlan: "Pro Fitness",
-      precio: 550,
+    // Solo el administrador general o entorno de prueba inicial cuenta con membresía de demostración
+    if (!email || email === "guevara.cardona.yahir@gmail.com" || email === "admin@gymseminario.com") {
+      const fin = new Date(hoy);
+      fin.setDate(fin.getDate() + 18); // 18 días restantes
+
+      const defaultMem: Membresia = {
+        id: "MEM-849201",
+        nombrePlan: "Pro Fitness",
+        precio: 550,
+        periodo: "Mensual",
+        fechaInicio: localDate(hoy),
+        fechaFin: localDate(fin),
+        estado: "Activa",
+        beneficios: [
+          "Acceso 100% total sin restricciones de horario",
+          "Todas las clases grupales (Spinning, Yoga, Cross)",
+          "Acceso ilimitado al Coach Virtual IA",
+          "Generación de códigos QR de acceso rápido",
+        ],
+      };
+
+      return this.calcularEstadoMembresia(defaultMem);
+    }
+
+    // Cualquier otra cuenta de Google u otro usuario inicia SIN suscripción activa
+    const pasada = new Date(hoy);
+    pasada.setDate(pasada.getDate() - 1);
+    return {
+      id: "MEM-INACTIVA",
+      nombrePlan: "Básico",
+      precio: 0,
       periodo: "Mensual",
-      fechaInicio: localDate(hoy),
-      fechaFin: localDate(fin),
-      estado: "Activa",
-      beneficios: [
-        "Acceso 100% total sin restricciones de horario",
-        "Todas las clases grupales (Spinning, Yoga, Cross)",
-        "Acceso ilimitado al Coach Virtual IA",
-        "Generación de códigos QR de acceso rápido",
-      ],
+      fechaInicio: localDate(pasada),
+      fechaFin: localDate(pasada),
+      estado: "Vencida",
+      diasRestantes: 0,
+      beneficios: [],
     };
-
-    return this.calcularEstadoMembresia(defaultMem);
   }
 
   private calcularEstadoMembresia(mem: Membresia): Membresia {

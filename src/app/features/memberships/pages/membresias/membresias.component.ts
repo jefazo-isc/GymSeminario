@@ -43,7 +43,25 @@ export class MembresiasComponent {
   plansError = "";
   filtroPeriodo: BillingPeriod = "Mensual";
   processing = false;
+  descuentoAdmin = 0;
   readonly periods: BillingPeriod[] = ["Mensual", "Trimestral", "Anual"];
+
+  get isAdmin(): boolean {
+    try {
+      const raw = localStorage.getItem("gym_user");
+      if (!raw) return false;
+      const u = JSON.parse(raw);
+      const email = (u?.email || "").toLowerCase().trim();
+      const role = (u?.role || "").toLowerCase().trim();
+      return (
+        email === "guevara.cardona.yahir@gmail.com" ||
+        email === "admin@gymseminario.com" ||
+        role === "admin"
+      );
+    } catch {
+      return false;
+    }
+  }
   constructor() {
     this.loadMembership();
     this.destroyRef.onDestroy(() => this.memberStream?.unsubscribe());
@@ -110,7 +128,82 @@ export class MembresiasComponent {
     this.filtroPeriodo = value;
   }
   getPrecioCalculado(base: number) {
-    return demoPrice(base, this.filtroPeriodo);
+    let price = demoPrice(base, this.filtroPeriodo);
+    if (this.descuentoAdmin > 0) {
+      price = Math.round(price * (1 - this.descuentoAdmin / 100));
+    }
+    return price;
+  }
+
+  async aplicarDescuentoAdmin() {
+    if (!this.isAdmin) {
+      void Swal.fire(
+        "Acceso denegado",
+        "Solo el administrador general (guevara.cardona.yahir@gmail.com) puede otorgar descuentos especiales.",
+        "error",
+      );
+      return;
+    }
+    const { value: descuento } = await Swal.fire({
+      title: "Otorgar Descuento Especial (Admin)",
+      text: "Selecciona el descuento aplicable a los planes:",
+      input: "select",
+      inputOptions: {
+        "10": "10% Descuento Especial",
+        "20": "20% Descuento Convenio UAA",
+        "30": "30% Descuento Lealtad",
+        "50": "50% Beca Deportiva",
+      },
+      inputPlaceholder: "Selecciona el porcentaje",
+      showCancelButton: true,
+      confirmButtonText: "Aplicar descuento",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#f59e0b",
+    });
+    if (descuento) {
+      this.descuentoAdmin = Number(descuento);
+      void Swal.fire({
+        icon: "success",
+        title: "Descuento aplicado",
+        text: `Se aplicará ${descuento}% de descuento en todos los planes.`,
+        timer: 1800,
+        showConfirmButton: false,
+      });
+    }
+  }
+
+  async cancelarMembresia() {
+    if (!this.isAdmin) {
+      void Swal.fire(
+        "Acceso denegado",
+        "Solo el administrador general (guevara.cardona.yahir@gmail.com) puede cancelar suscripciones de usuarios.",
+        "error",
+      );
+      return;
+    }
+    const result = await Swal.fire({
+      title: "¿Cancelar membresía?",
+      text: "Esta acción cambiará el estado de la membresía a Vencida y el usuario perderá acceso a funciones exclusivas.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, cancelar membresía",
+      cancelButtonText: "Volver",
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#6b7280",
+    });
+    if (result.isConfirmed) {
+      if (typeof this.service.cancelarMembresia === "function") {
+        await this.service.cancelarMembresia();
+      }
+      void Swal.fire({
+        icon: "success",
+        title: "Membresía cancelada",
+        text: "La membresía ha quedado registrada como Vencida.",
+        timer: 1800,
+        showConfirmButton: false,
+      });
+      this.loadMembership();
+    }
   }
   hasConflict(plan: PlanCatalogo) {
     return plan.periodo !== "Mensual";

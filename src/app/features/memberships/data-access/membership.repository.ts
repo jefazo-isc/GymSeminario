@@ -10,6 +10,7 @@ export interface MembershipRepository {
     periodo?: "Mensual" | "Trimestral" | "Anual",
   ): void | Promise<void>;
   renovarMembresia(): void | Promise<void>;
+  cancelarMembresia?(): void | Promise<void>;
 }
 export const MEMBERSHIPS = new InjectionToken<MembershipRepository>(
   "MembershipRepository",

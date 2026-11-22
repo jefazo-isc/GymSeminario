@@ -56,7 +56,30 @@
         ><a appButton="secondary" routerLink="/agendar"
           ><app-icon name="calendar" />Agendar entrenamiento</a
         >
+        @if (isAdmin) {
+          <button
+            appButton="secondary"
+            type="button"
+            style="color: #ef4444; border-color: #ef4444;"
+            (click)="cancelarMembresia()"
+          >
+            <app-icon name="close" />Cancelar suscripción (Admin)
+          </button>
+        }
       </div>
+      @if (isAdmin) {
+        <div class="admin-membership-controls" style="margin-top: 14px; padding: 12px 16px; background: rgba(245, 158, 11, 0.08); border: 1px dashed #f59e0b; border-radius: 8px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+          <span style="font-weight: 600; color: #b45309; font-size: 0.8125rem;">👑 Opciones exclusivas de Administrador:</span>
+          <button appButton="secondary" type="button" (click)="aplicarDescuentoAdmin()">
+            <app-icon name="spark" />Otorgar descuento especial
+          </button>
+          @if (descuentoAdmin > 0) {
+            <span style="background: #10b981; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">
+              {{ descuentoAdmin }}% Descuento activo
+            </span>
+          }
+        </div>
+      }
     </article>
   }
   <app-request-state

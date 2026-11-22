@@ -139,11 +139,24 @@ export class MicuentaComponent implements OnInit {
       this.saving = false;
     }
   }
-  get effectiveRole(): "admin" | "receptionist" | "subscriber" {
+  get effectiveRole(): "admin" | "receptionist" | "subscriber" | "guest" {
+    const email = (this.email || "").toLowerCase().trim();
     const r = (this.role || "").toLowerCase();
-    if (r === "admin" || this.nombre?.toLowerCase().includes("yahir")) return "admin";
-    if (r === "receptionist" || r === "recepcionista" || r === "staff") return "receptionist";
-    return "subscriber";
+    if (
+      email === "guevara.cardona.yahir@gmail.com" ||
+      email === "admin@gymseminario.com" ||
+      r === "admin" ||
+      this.nombre?.toLowerCase().includes("yahir")
+    ) {
+      return "admin";
+    }
+    if (r === "receptionist" || r === "recepcionista" || r === "staff") {
+      return "receptionist";
+    }
+    if (r === "subscriber" || r === "subscriptor" || r === "socio") {
+      return "subscriber";
+    }
+    return "guest";
   }
 
   get roleBadgeLabel(): string {
@@ -154,6 +167,8 @@ export class MicuentaComponent implements OnInit {
         return "📋 Recepcionista / Staff";
       case "subscriber":
         return "⚡ Socio Activo / Suscriptor";
+      default:
+        return "👤 Cuenta (Sin suscripción activa)";
     }
   }
 
@@ -165,6 +180,8 @@ export class MicuentaComponent implements OnInit {
         return "badge-role--reception";
       case "subscriber":
         return "badge-role--subscriber";
+      default:
+        return "badge-role--guest";
     }
   }
 

@@ -135,7 +135,13 @@
   }
   <a mat-menu-item routerLink="/productos"><app-icon name="external" />Productos</a>
   <hr />
-  <a mat-menu-item href="downloads/espaciogym.apk" download="espacioGYM-v1.0.apk">
+  <a
+    mat-menu-item
+    href="https://github.com/jefazo-isc/GymSeminario/raw/main/public/downloads/espaciogym.apk"
+    download="espacioGYM-v1.0.apk"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
     <app-icon name="external" />📲 Descargar App Android (APK)
   </a>
 </mat-menu>
@@ -212,7 +218,13 @@
       <a class="mobile-primary" routerLink="/membresias" (click)="closeMobile()"
         >Membresías<app-icon name="arrow"
       /></a>
-      <a class="mobile-primary" href="downloads/espaciogym.apk" download="espacioGYM-v1.0.apk" (click)="closeMobile()"
+      <a
+        class="mobile-primary"
+        href="https://github.com/jefazo-isc/GymSeminario/raw/main/public/downloads/espaciogym.apk"
+        download="espacioGYM-v1.0.apk"
+        target="_blank"
+        rel="noopener noreferrer"
+        (click)="closeMobile()"
         >📲 Descargar App Android<app-icon name="arrow"
       /></a>
       <p class="ui-eyebrow">El gimnasio</p>
