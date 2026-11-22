@@ -391,10 +391,16 @@ describe("Role and subscription view hardening", () => {
     const fixture2 = TestBed.createComponent(Formulario2Component);
     fixture2.detectChanges();
     expect(fixture2.componentInstance.authenticated).toBeFalse();
+    fixture2.componentInstance.enviado = true;
+    fixture2.detectChanges();
+    expect(fixture2.nativeElement.querySelector("app-qr-view")).toBeNull();
 
     const fixture3 = TestBed.createComponent(Formulario3Component);
     fixture3.detectChanges();
     expect(fixture3.componentInstance.authenticated).toBeFalse();
+    fixture3.componentInstance.enviado = true;
+    fixture3.detectChanges();
+    expect(fixture3.nativeElement.querySelector("app-qr-view")).toBeNull();
   });
 
   it("blocks pure receptionists in Formulario3Component and allows active subscribers to scan kiosk QR check-in", async () => {

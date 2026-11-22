@@ -20,7 +20,6 @@ import { SESSION } from "../../../auth/data-access/session.repository";
 import { MEMBERSHIPS } from "../../../memberships/data-access/membership.repository";
 import { Membresia } from "../../../memberships/models/membresia.model";
 import { TRAINING } from "../../data-access/training.repository";
-import { QrViewComponent } from "../../ui/qr-view/qr-view.component";
 
 @Component({
   selector: "app-formulario2",
@@ -29,7 +28,6 @@ import { QrViewComponent } from "../../ui/qr-view/qr-view.component";
     CommonModule,
     ReactiveFormsModule,
     RouterLink,
-    QrViewComponent,
     ButtonDirective,
     IconComponent,
   ],

@@ -2,8 +2,8 @@
   <div class="notice">
     <app-icon name="calendar" />
     <p>
-      <strong>Registro de asistencia.</strong> Escanea el código QR dinámico de
-      recepción con tu cámara o confirma manualmente tu llegada a clase.
+      <strong>Registro de asistencia.</strong> Escanea con tu cámara el código QR
+      que te muestra el recepcionista para registrar tu asistencia al instante.
     </p>
   </div>
   @if (esRecepcionOAdmin) {
@@ -181,10 +181,6 @@
             Registrar otra sesión</button
           ><a appButton="secondary" routerLink="/micuenta">Ir a mi cuenta</a>
         </div>
-      </div>
-      <div class="surface">
-        <h3>Código de acceso personal</h3>
-        <app-qr-view [clase]="clase" [fecha]="fecha" />
       </div>
     </div>
   } @else {

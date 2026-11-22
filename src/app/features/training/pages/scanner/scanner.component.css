@@ -1,3 +1,21 @@
+:host .feature-page.stack {
+  display: flex;
+  flex-direction: column;
+}
+
+:host .feature-page.stack > .notice {
+  order: -3;
+}
+
+:host .feature-page.stack > .toolbar {
+  order: -2;
+}
+
+:host .feature-page.stack > .kiosk-section {
+  order: -1;
+  border: 2px solid var(--color-accent);
+}
+
 .scanner-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

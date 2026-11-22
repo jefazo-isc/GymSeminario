@@ -35,7 +35,6 @@ import {
   decodeQrFromVideo,
 } from "../../data-access/qr.service";
 import { TRAINING } from "../../data-access/training.repository";
-import { QrViewComponent } from "../../ui/qr-view/qr-view.component";
 
 @Component({
   selector: "app-formulario3",
@@ -44,7 +43,6 @@ import { QrViewComponent } from "../../ui/qr-view/qr-view.component";
     CommonModule,
     FormsModule,
     RouterLink,
-    QrViewComponent,
     ButtonDirective,
     IconComponent,
   ],
