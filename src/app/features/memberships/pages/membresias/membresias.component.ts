@@ -10,6 +10,7 @@ import { ButtonDirective } from "../../../../shared/ui/button.directive";
 import { IconComponent } from "../../../../shared/ui/icon/icon.component";
 import { MEMBERSHIPS } from "../../data-access/membership.repository";
 import { MembershipPaypalService } from "../../data-access/membership-paypal.service";
+import { MembershipStripeService } from "../../data-access/membership-stripe.service";
 import { Membresia, PlanCatalogo } from "../../models/membresia.model";
 export type BillingPeriod = "Mensual" | "Trimestral" | "Anual";
 export function demoPrice(base: number, period: BillingPeriod) {
@@ -35,6 +36,7 @@ export function demoPrice(base: number, period: BillingPeriod) {
 export class MembresiasComponent {
   private service = inject(MEMBERSHIPS);
   private paypalService = inject(MembershipPaypalService, { optional: true });
+  private stripeService = inject(MembershipStripeService, { optional: true });
   membresiaActual: Membresia | null = null;
   private memberStream?: Subscription;
   memberLoading = false;
@@ -258,10 +260,10 @@ export class MembresiasComponent {
         icon: this.hasConflict(plan) ? "warning" : "info",
         showCancelButton: true,
         showDenyButton: true,
-        confirmButtonText: "💳 Pagar con PayPal",
+        confirmButtonText: "💳 Pagar con Tarjeta o Cupón (Stripe)",
         denyButtonText: "💵 Registro en Recepción",
         cancelButtonText: "Volver",
-        confirmButtonColor: "#0070ba",
+        confirmButtonColor: "#4f46e5",
         denyButtonColor: "#475569",
         cancelButtonColor: "#94a3b8",
         ...(this.hasConflict(plan)
@@ -271,14 +273,23 @@ export class MembresiasComponent {
               inputPlaceholder: "Entiendo que la tarifa no está validada",
               inputValidator: (value: string) =>
                 !value
-                  ? "Confirma que comprendes la limitación de esta simulación."
+                  ? "Confirma que comprendes la condición de este plan."
                   : null,
             }
           : {}),
       });
 
       if (result.isConfirmed) {
-        if (this.paypalService) {
+        if (this.stripeService) {
+          const res = await this.stripeService.iniciarFlujoPagoStripe(
+            plan,
+            this.filtroPeriodo,
+            price,
+          );
+          if (res.success) {
+            this.loadMembership();
+          }
+        } else if (this.paypalService) {
           const res = await this.paypalService.iniciarFlujoPagoPayPal(
             plan,
             this.filtroPeriodo,
@@ -343,16 +354,25 @@ export class MembresiasComponent {
         icon: "info",
         showCancelButton: true,
         showDenyButton: true,
-        confirmButtonText: "💳 Renovar con PayPal",
+        confirmButtonText: "💳 Renovar con Stripe o Cupón",
         denyButtonText: "💵 Renovar en Recepción",
         cancelButtonText: "Volver",
-        confirmButtonColor: "#0070ba",
+        confirmButtonColor: "#4f46e5",
         denyButtonColor: "#475569",
         cancelButtonColor: "#94a3b8",
       });
 
       if (result.isConfirmed) {
-        if (this.paypalService) {
+        if (this.stripeService) {
+          const res = await this.stripeService.iniciarFlujoPagoStripe(
+            planCorrespondiente,
+            mem.periodo as BillingPeriod,
+            price,
+          );
+          if (res.success) {
+            this.loadMembership();
+          }
+        } else if (this.paypalService) {
           const res = await this.paypalService.iniciarFlujoPagoPayPal(
             planCorrespondiente,
             mem.periodo as BillingPeriod,

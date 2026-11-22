@@ -19,3 +19,10 @@ export const PAYPAL_CONFIG = new InjectionToken<{
   providedIn: "root",
   factory: () => environment.paypal,
 });
+export const STRIPE_CONFIG = new InjectionToken<{
+  publishableKey: string;
+  currency: string;
+}>("Stripe public configuration", {
+  providedIn: "root",
+  factory: () => environment.stripe,
+});

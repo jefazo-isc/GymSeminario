@@ -22,4 +22,9 @@ export const environment = {
       "AQMkAioK3b4Xhh1FtMYMRJbaeAKv--g9yGzot54i-n9KizKios8n-arYhReRG_0tbWpzgFZkOB7VzhPM",
     currency: "MXN",
   },
+  stripe: {
+    publishableKey:
+      "pk_live_51TJbqSAXikJUnNBirg3ahcqYKpdObC3zDNfPcRLB85CWT0fVzm9WLIgwUywsqy8CbcyVYBdzMRvv1fRjWcnHQho100V5kYgtUa",
+    currency: "MXN",
+  },
 } as const;

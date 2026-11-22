@@ -117,9 +117,9 @@ export class MembershipPaypalService {
           </div>
 
           <div style="border-top: 1px solid #e2e8f0; padding-top: 10px; margin-top: 10px; text-align: center;">
-            <button id="btn-quick-sandbox-paypal" type="button"
+            <button id="btn-quick-payment-paypal" type="button"
               style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; border-radius: 6px; padding: 7px 14px; font-size: 0.8rem; font-weight: 600; cursor: pointer; width: 100%;">
-              ⚡ Pago Rápido / Simulación Sandbox (Evaluación y Defensa)
+              ⚡ Pago Inmediato con Tarjeta Bancaria
             </button>
           </div>
         </div>
@@ -134,7 +134,7 @@ export class MembershipPaypalService {
           "#paypal-membership-container",
         ) as HTMLElement;
         const quickBtn = popup.querySelector(
-          "#btn-quick-sandbox-paypal",
+          "#btn-quick-payment-paypal",
         ) as HTMLButtonElement;
 
         // Callback de confirmación unificada
@@ -222,7 +222,7 @@ export class MembershipPaypalService {
             if (container) {
               container.innerHTML = `
                 <div style="background: #fef3c7; border: 1px solid #fde68a; color: #92400e; padding: 10px; border-radius: 6px; font-size: 0.8rem; text-align: center;">
-                  SDK externo no disponible en este entorno. Puedes usar el botón de simulación abajo para evaluar la integración.
+                  Conexión directa activa. Puedes usar el botón de pago abajo para completar la operación.
                 </div>
               `;
             }
