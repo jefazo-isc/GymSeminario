@@ -2,6 +2,7 @@ import { Component } from "@angular/core";
 import { TestBed } from "@angular/core/testing";
 import { provideRouter, Router } from "@angular/router";
 import { of } from "rxjs";
+import Swal from "sweetalert2";
 import { routes } from "../../app.routes";
 import { authErrorMessage } from "../../core/auth/auth-feedback";
 import { CaptchaController } from "../../core/auth/captcha-controller";
@@ -56,6 +57,10 @@ describe("Authentication feedback and submission", () => {
     TestBed.configureTestingModule({
       providers: [provideRouter([]), { provide: AuthService, useValue: auth }],
     });
+  });
+  afterEach(() => {
+    Swal.close();
+    document.querySelectorAll(".swal2-container").forEach((el) => el.remove());
   });
   it("submits directly (CAPTCHA is always pre-approved) and uses persistent labels", async () => {
     const fixture = TestBed.createComponent(SignInComponent);

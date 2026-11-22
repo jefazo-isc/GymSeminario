@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { provideNoopAnimations } from "@angular/platform-browser/animations";
 import { provideRouter } from "@angular/router";
 import { BehaviorSubject } from "rxjs";
+import Swal from "sweetalert2";
 import { AuthService } from "../../../../features/auth/data-access/auth.service";
 import { SearchPanelComponent } from "../../../../shared/ui/search-panel/search-panel.component";
 import { NavbarComponent } from "./navbar.component";
@@ -33,7 +34,11 @@ describe("NavbarComponent", () => {
     fixture.detectChanges();
   });
 
-  afterEach(() => TestBed.inject(Dialog).closeAll());
+  afterEach(() => {
+    TestBed.inject(Dialog).closeAll();
+    Swal.close();
+    document.querySelectorAll(".swal2-container").forEach((el) => el.remove());
+  });
 
   it("switches from sign-in to the member menu when the existing auth stream changes", () => {
     const host: HTMLElement = fixture.nativeElement;
@@ -67,7 +72,9 @@ describe("NavbarComponent", () => {
   it("opens an accessible appearance dialog and shares the live theme", () => {
     fixture.componentInstance.openPreferences();
     fixture.detectChanges();
-    const dialog = document.querySelector('[role="dialog"]');
+    const dialog =
+      document.querySelector('.grom-dialog[role="dialog"]') ||
+      document.querySelector('[role="dialog"]:not(.swal2-modal)');
     expect(dialog?.getAttribute("aria-labelledby")).toBe("appearance-title");
     expect(document.querySelectorAll('input[name="theme"]').length).toBe(3);
   });

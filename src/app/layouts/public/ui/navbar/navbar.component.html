@@ -118,16 +118,16 @@
   <a mat-menu-item routerLink="/ejercicios"><app-icon name="grid" />Explorar ejercicios</a>
   <a mat-menu-item routerLink="/videos"><app-icon name="play" />Guías de entrenamiento</a>
   @if (effectiveRole === 'guest') {
-    <button
+    <a
       mat-menu-item
-      type="button"
+      routerLink="/coach-ia"
       class="role-link--locked"
       (click)="promptLockedFeature($event, 'Coach virtual IA')"
     >
       <app-icon name="spark" />
       <span class="locked-text">Coach virtual IA</span>
       <span class="lock-tag">🔒 Requiere suscripción</span>
-    </button>
+    </a>
   } @else {
     <a mat-menu-item routerLink="/coach-ia" class="role-link--subscriber">
       <app-icon name="spark" />Coach virtual IA
@@ -221,6 +221,20 @@
       <a class="mobile-link" routerLink="/videos" (click)="closeMobile()"
         >Guías de entrenamiento<app-icon name="external"
       /></a>
+      @if (effectiveRole === 'guest') {
+        <a
+          class="mobile-link role-mobile-link--locked"
+          routerLink="/coach-ia"
+          (click)="promptLockedFeature($event, 'Coach virtual IA')"
+        >
+          <span class="locked-title">Coach virtual IA</span>
+          <span class="lock-tag">🔒 Bloqueado</span>
+        </a>
+      } @else {
+        <a class="mobile-link role-mobile-link--subscriber" routerLink="/coach-ia" (click)="closeMobile()"
+          >Coach virtual IA<app-icon name="spark"
+        /></a>
+      }
       <a class="mobile-link" routerLink="/productos" (click)="closeMobile()"
         >Productos<app-icon name="external"
       /></a>

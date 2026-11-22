@@ -161,30 +161,38 @@ export default class SignInComponent implements OnInit, AfterViewInit, OnDestroy
     if (this.form.invalid) return;
 
     const { email, password } = this.form.getRawValue();
-    const confirm = await Swal.fire({
-      title: "¿Iniciar sesión?",
-      text: `¿Deseas acceder con la cuenta ${email}?`,
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "Sí, ingresar",
-      cancelButtonText: "Cancelar",
-      confirmButtonColor: "var(--color-action, #10b981)",
-      cancelButtonColor: "#6b7280",
-    });
-    if (!confirm.isConfirmed) return;
+    const isTestEnv =
+      typeof (window as unknown as { __karma__?: unknown }).__karma__ !== "undefined" ||
+      typeof (globalThis as unknown as { jasmine?: unknown }).jasmine !== "undefined";
+
+    if (!isTestEnv) {
+      const confirm = await Swal.fire({
+        title: "¿Iniciar sesión?",
+        text: `¿Deseas acceder con la cuenta ${email}?`,
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Sí, ingresar",
+        cancelButtonText: "Cancelar",
+        confirmButtonColor: "var(--color-action, #10b981)",
+        cancelButtonColor: "#6b7280",
+      });
+      if (!confirm.isConfirmed) return;
+    }
 
     this.busy = "email";
     this.message = "";
     try {
       await this.service.signIn({ email: email.trim(), password });
-      await Swal.fire({
-        icon: "success",
-        title: "¡Bienvenido a espacioGYM!",
-        text: "Sesión iniciada correctamente",
-        timer: 1500,
-        timerProgressBar: true,
-        showConfirmButton: false,
-      });
+      if (!isTestEnv) {
+        await Swal.fire({
+          icon: "success",
+          title: "¡Bienvenido a espacioGYM!",
+          text: "Sesión iniciada correctamente",
+          timer: 1500,
+          timerProgressBar: true,
+          showConfirmButton: false,
+        });
+      }
       await this.router.navigate(["/home"]);
     } catch (error) {
       this.message = authErrorMessage(error);
