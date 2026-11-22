@@ -201,13 +201,6 @@ export const routes: Routes = [
       ),
   },
   {
-    path: "phone",
-    loadComponent: () =>
-      import("./features/auth/pages/phone/phone.component").then(
-        (m) => m.PhoneComponent,
-      ),
-  },
-  {
     path: "micuenta",
     canActivate: [authGuard],
     loadComponent: () =>

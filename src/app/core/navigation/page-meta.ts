@@ -154,12 +154,6 @@ export const PAGE_META: Record<string, PageMeta> = {
       "Verifica tus credenciales actuales antes de elegir una nueva contraseña.",
     parent: member,
   },
-  phone: {
-    title: "Tu acceso, por teléfono.",
-    section: "Ingresar con SMS",
-    description:
-      "Verifica tu número para acceder mediante un código de un solo uso.",
-  },
   sesion: {
     title: "Entra a tu espacio.",
     section: "Acceso alternativo",

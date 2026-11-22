@@ -288,13 +288,6 @@ export class FirestoreTrainingAdapter implements TrainingRepository {
       });
       return "email";
     }
-    if (user.phoneNumber) {
-      await this.send("/enviar-sms", {
-        telefono: user.phoneNumber,
-        mensaje: `Gracias por enviar tu formulario.\nEntrenamiento: ${data.entrenamiento}\nFecha: ${data.fecha}\nTurno: ${data.turno}\n¡Nos vemos pronto!`,
-      });
-      return "sms";
-    }
     return "no-contact";
   }
 
@@ -312,13 +305,6 @@ export class FirestoreTrainingAdapter implements TrainingRepository {
         hora: data.hora,
       });
       return "email";
-    }
-    if (user.phoneNumber) {
-      await this.send("/enviar-sms", {
-        telefono: user.phoneNumber,
-        mensaje: `Gracias por registrar tu asistencia.\nClase: ${data.clase}\nFecha: ${data.fecha}\nHora: ${data.hora}`,
-      });
-      return "sms";
     }
     return "no-contact";
   }

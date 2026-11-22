@@ -157,7 +157,7 @@ describe("Navigation, state presentation and retained inputs", () => {
     const concrete = routes.filter(
       (route) => route.path && route.path !== "auth" && !route.redirectTo,
     );
-    expect(concrete.length).toBe(27);
+    expect(concrete.length).toBe(26);
     expect(
       concrete.every((route) => !!route.loadComponent && !route.component),
     ).toBeTrue();

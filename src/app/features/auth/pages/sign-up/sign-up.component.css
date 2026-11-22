@@ -49,14 +49,6 @@
 .google-btn-wrapper :deep(iframe) { width: 100% !important; }
 .social-loading { font-size: 0.875rem; color: var(--color-text-muted, #666); }
 
-.btn-phone {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  justify-content: center;
-  width: 100%;
-}
-
 .auth-alternatives {
   display: flex;
   flex-direction: column;

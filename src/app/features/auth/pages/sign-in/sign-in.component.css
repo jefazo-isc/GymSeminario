@@ -64,15 +64,6 @@
   color: var(--color-text-muted, #666);
 }
 
-/* Botón de teléfono */
-.btn-phone {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  justify-content: center;
-  width: 100%;
-}
-
 .auth-alternatives {
   display: flex;
   flex-direction: column;

@@ -26,7 +26,6 @@ const __filename = fileURLToPath(import.meta.url);
 export function createApp({
   getStripe,
   verifyGoogleToken,
-  twilioClientOverride,
   enableRateLimit = process.env.NODE_ENV !== 'test',
 } = {}) {
   const app = express();
@@ -150,7 +149,7 @@ export function createApp({
     }
   });
 
-  app.use(createAuthRouter({ verifyGoogleToken, twilioClientOverride }));
+  app.use(createAuthRouter({ verifyGoogleToken }));
   app.use(createStripeRouter({ getStripe }));
   app.use(createMembershipRouter());
   app.use(createQrRouter());

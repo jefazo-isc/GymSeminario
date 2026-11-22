@@ -161,17 +161,6 @@ test('Auth, cryptographic JWT enforcement, password change, OTP production safet
   assert.equal(googleRes.status, 200);
   assert.equal(googleRes.data.user.email, 'google.socio@espaciogym.mx');
 
-  // Phone OTP hides code in production
-  const prevEnv = process.env.NODE_ENV;
-  process.env.NODE_ENV = 'production';
-  const otpProd = await api('/api/auth/phone', {
-    method: 'POST',
-    body: { phone: '4491234567' },
-  });
-  process.env.NODE_ENV = prevEnv;
-  assert.equal(otpProd.status, 200);
-  assert.equal(otpProd.data.devCode, undefined);
-
   // Admin login and RBAC role assignment
   const adminLogin = await api('/api/auth/login', {
     method: 'POST',

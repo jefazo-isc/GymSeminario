@@ -33,8 +33,4 @@ export class ApiService {
   }): Observable<unknown> {
     return this.http.post<unknown>(`${this.baseUrl}/enviar-asistencia`, data);
   }
-
-  enviarSms(data: { telefono: string; mensaje: string }): Observable<unknown> {
-    return this.http.post<unknown>(`${this.baseUrl}/enviar-sms`, data);
-  }
 }

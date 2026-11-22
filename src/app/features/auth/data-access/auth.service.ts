@@ -298,22 +298,6 @@ export class AuthService implements SessionRepository {
     }
   }
 
-  /** Phone sign-in — envía código al backend (demo: usa 123456) */
-  async sendPhoneCode(phone: string, ..._unused: unknown[]): Promise<unknown> {
-    void _unused;
-    return firstValueFrom(
-      this.http.post<{ ok: boolean; mensaje: string }>(`${this.backendUrl}/api/auth/phone`, { phone })
-    );
-  }
-
-  async verifyPhoneCode(phone: string, code: string): Promise<unknown> {
-    const resp = await firstValueFrom(
-      this.http.post<AuthResponse>(`${this.backendUrl}/api/auth/phone`, { phone, code })
-    );
-    this.saveSession(resp.token, resp.user);
-    return resp;
-  }
-
   async cerrarSesion(): Promise<void> {
     this.clearSession();
   }
@@ -349,11 +333,6 @@ export class AuthService implements SessionRepository {
         },
       ),
     );
-  }
-
-  /** No aplica en JWT — se reemplazó por verifyPhoneCode */
-  async lookupPhone(..._args: unknown[]): Promise<void> {
-    void _args;
   }
 
   // ── Admin helpers ───────────────────────────────────────────────────────────

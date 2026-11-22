@@ -1,7 +1,6 @@
 import crypto from 'node:crypto';
 import express from 'express';
 import bcrypt from 'bcryptjs';
-import twilio from 'twilio';
 import { OAuth2Client } from 'google-auth-library';
 import db, { ADMIN_EMAILS } from '../services/db.js';
 import {
@@ -28,16 +27,7 @@ const ALLOWED_ROLES = new Set([
   'user',
 ]);
 
-function getTwilioClient() {
-  const sid = (process.env.TWILIO_ACCOUNT_SID || '').trim();
-  const token = (process.env.TWILIO_AUTH_TOKEN || '').trim();
-  if (sid.startsWith('AC') && token) {
-    return twilio(sid, token);
-  }
-  return null;
-}
-
-export function createAuthRouter({ verifyGoogleToken, twilioClientOverride } = {}) {
+export function createAuthRouter({ verifyGoogleToken } = {}) {
   const router = express.Router();
   const googleClientId = process.env.GOOGLE_CLIENT_ID || DEFAULT_GOOGLE_CLIENT_ID;
   const googleClient = new OAuth2Client(googleClientId);
@@ -179,83 +169,6 @@ export function createAuthRouter({ verifyGoogleToken, twilioClientOverride } = {
     }
   });
 
-  router.post('/api/auth/phone', async (req, res) => {
-    const { phone, code } = req.body || {};
-    if (!phone || !String(phone).trim()) {
-      return res.status(400).json({ error: 'Número requerido.' });
-    }
-    const cleanPhone = String(phone).trim();
-    const digits = cleanPhone.replace(/\D/g, '');
-    if (digits.length < 7) {
-      return res.status(400).json({ error: 'Número telefónico inválido.' });
-    }
-
-    if (!code) {
-      const otp = String(crypto.randomInt(100000, 999999));
-      const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-      db.prepare(`
-        INSERT INTO phone_otps (phone, code, expires_at, attempts, created_at)
-        VALUES (?, ?, ?, 0, datetime('now'))
-        ON CONFLICT(phone) DO UPDATE SET
-          code = excluded.code,
-          expires_at = excluded.expires_at,
-          attempts = 0,
-          created_at = datetime('now')
-      `).run(digits, otp, expiresAt);
-
-      const twilioClient = twilioClientOverride ?? getTwilioClient();
-      if (twilioClient) {
-        try {
-          await twilioClient.messages.create({
-            body: `Tu código de acceso espacioGYM es: ${otp}. Válido por 10 minutos.`,
-            from: process.env.TWILIO_PHONE_NUMBER || '+15077095977',
-            to: cleanPhone,
-          });
-        } catch (err) {
-          console.error('Error enviando OTP vía Twilio:', err.message);
-          return res.status(502).json({ error: 'No se pudo enviar el código SMS.' });
-        }
-      }
-
-      const payload = { ok: true, mensaje: 'Código de verificación enviado por SMS.' };
-      if (process.env.NODE_ENV !== 'production' && !twilioClient) {
-        payload.devCode = otp;
-      }
-      return res.json(payload);
-    }
-
-    const row = db.prepare('SELECT * FROM phone_otps WHERE phone = ?').get(digits);
-    if (!row) {
-      return res.status(401).json({ error: 'No hay código pendiente para este número.' });
-    }
-    if (new Date(row.expires_at).getTime() < Date.now()) {
-      db.prepare('DELETE FROM phone_otps WHERE phone = ?').run(digits);
-      return res.status(401).json({ error: 'El código OTP ha expirado.' });
-    }
-    if (row.attempts >= 5) {
-      return res.status(429).json({ error: 'Demasiados intentos fallidos. Solicita un nuevo código.' });
-    }
-    if (String(code).trim() !== row.code) {
-      db.prepare('UPDATE phone_otps SET attempts = attempts + 1 WHERE phone = ?').run(digits);
-      return res.status(401).json({ error: 'Código incorrecto.' });
-    }
-
-    db.prepare('DELETE FROM phone_otps WHERE phone = ?').run(digits);
-
-    const email = `phone_${digits}@espaciogym.mx`;
-    let user = db.prepare('SELECT * FROM users WHERE lower(email) = ?').get(email);
-    if (!user) {
-      const info = db
-        .prepare("INSERT INTO users (email, password, nombre, role, provider) VALUES (?, '', ?, 'user', 'phone')")
-        .run(email, cleanPhone);
-      user = { id: info.lastInsertRowid, email, nombre: cleanPhone, role: 'user' };
-    }
-
-    const tokenPayload = { uid: user.id, email: user.email, nombre: user.nombre, role: user.role };
-    const token = signAuthToken(tokenPayload);
-    return res.json({ token, user: tokenPayload });
-  });
-
   router.get('/api/auth/users', authGuard, requireRole('admin'), (_req, res) => {
     try {
       const users = db
@@ -311,28 +224,6 @@ export function createAuthRouter({ verifyGoogleToken, twilioClientOverride } = {
 
     db.prepare('UPDATE users SET role = ? WHERE id = ?').run(rawRole, target.id);
     return res.json({ ok: true, role: rawRole, mensaje: `Rol actualizado a ${rawRole}` });
-  });
-
-  router.post(['/enviar-sms', '/api/enviar-sms'], authGuard, async (req, res) => {
-    const { telefono, mensaje } = req.body || {};
-    if (!telefono || !mensaje) {
-      return res.status(400).json({ success: false, error: 'Teléfono y mensaje requeridos.' });
-    }
-    const twilioClient = twilioClientOverride ?? getTwilioClient();
-    if (!twilioClient) {
-      return res.status(503).json({ success: false, error: 'Servicio Twilio no configurado.' });
-    }
-    try {
-      const response = await twilioClient.messages.create({
-        body: String(mensaje),
-        from: process.env.TWILIO_PHONE_NUMBER || '+15077095977',
-        to: String(telefono),
-      });
-      return res.status(200).json({ success: true, sid: response.sid });
-    } catch (err) {
-      console.error('Error al enviar SMS:', err);
-      return res.status(500).json({ success: false, error: err.message });
-    }
   });
 
   return router;
