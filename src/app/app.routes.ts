@@ -18,6 +18,7 @@ export const routes: Routes = [
   },
   {
     path: "membresias",
+    canActivate: [noReceptionExerciseGuard],
     loadComponent: () =>
       import(
         "./features/memberships/pages/membresias/membresias.component"
@@ -202,6 +203,7 @@ export const routes: Routes = [
   },
   {
     path: "productos",
+    canActivate: [noReceptionExerciseGuard],
     loadComponent: () =>
       import("./features/products/pages/productos/productos.component").then(
         (m) => m.ProductosComponent,

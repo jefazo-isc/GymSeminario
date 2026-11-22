@@ -8,7 +8,7 @@ import {
   inject,
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { RouterLink } from "@angular/router";
+import { ActivatedRoute, RouterLink } from "@angular/router";
 import { QRCodeComponent } from "angularx-qrcode";
 import { take } from "rxjs";
 import {
@@ -22,6 +22,7 @@ import { IconComponent } from "../../../../shared/ui/icon/icon.component";
 import {
   QR_CODES,
   QrValidationResult,
+  ReceptionSubscriberSummary,
 } from "../../data-access/qr.repository";
 import {
   decodeQrFromImageFile,
@@ -45,12 +46,20 @@ import {
 })
 export class ScannerComponent implements OnInit, OnDestroy {
   private readonly qr = inject(QR_CODES);
+  private readonly route = inject(ActivatedRoute, { optional: true });
 
   @ViewChild("videoPreview") videoRef?: ElementRef<HTMLVideoElement>;
   @ViewChild("scanCanvas") canvasRef?: ElementRef<HTMLCanvasElement>;
 
   esRecepcionOAdmin = resolveReceptionOrAdminAccess();
   esAdmin = isAdminUser(readGymUser());
+  activeTab: "qr" | "socios" | "validador" = "qr";
+
+  subscribers: ReceptionSubscriberSummary[] = [];
+  loadingSubscribers = false;
+  subscriberSearch = "";
+  subscriberFilter: "todos" | "Activa" | "Por vencer" | "Vencida" = "todos";
+
   manualToken = "";
   scanningCamera = false;
   validating = false;
@@ -74,9 +83,100 @@ export class ScannerComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.esRecepcionOAdmin = resolveReceptionOrAdminAccess();
     this.esAdmin = isAdminUser(readGymUser());
+    this.route?.queryParams?.subscribe((params) => {
+      const t = params?.["tab"];
+      if (t === "socios" || t === "validador") {
+        this.activeTab = t;
+        if (t === "socios" && this.subscribers.length === 0) {
+          this.loadSubscribers();
+        }
+      } else {
+        this.activeTab = "qr";
+      }
+    });
     if (this.esRecepcionOAdmin && this.qr.issueKioskQr) {
       this.rotateKioskQr();
     }
+    if (this.esRecepcionOAdmin) {
+      this.loadSubscribers();
+    }
+  }
+
+  setTab(tab: "qr" | "socios" | "validador"): void {
+    this.activeTab = tab;
+    if (tab === "socios" && this.subscribers.length === 0) {
+      this.loadSubscribers();
+    }
+    if (tab !== "validador" && this.scanningCamera) {
+      this.stopCamera();
+    }
+  }
+
+  loadSubscribers(): void {
+    if (!this.esRecepcionOAdmin) return;
+    if (!this.qr.listSubscribers) {
+      this.subscribers = [
+        {
+          id: "MEM-BLACK-ELITE-01",
+          nombre: "Socio Black Elite",
+          email: "socio@gymseminario.com",
+          nombrePlan: "Black Elite",
+          precio: 1200,
+          periodo: "Trimestral",
+          fechaInicio: "2026-11-22",
+          fechaFin: "2027-02-20",
+          diasRestantes: 90,
+          estado: "Activa",
+        },
+      ];
+      return;
+    }
+    this.loadingSubscribers = true;
+    this.qr
+      .listSubscribers()
+      .pipe(take(1))
+      .subscribe({
+        next: (rows) => {
+          this.loadingSubscribers = false;
+          this.subscribers = rows;
+        },
+        error: () => {
+          this.loadingSubscribers = false;
+        },
+      });
+  }
+
+  get filteredSubscribers(): ReceptionSubscriberSummary[] {
+    const q = this.subscriberSearch.trim().toLowerCase();
+    return this.subscribers.filter((s) => {
+      const matchesFilter =
+        this.subscriberFilter === "todos" || s.estado === this.subscriberFilter;
+      if (!matchesFilter) return false;
+      if (!q) return true;
+      return (
+        s.nombre.toLowerCase().includes(q) ||
+        s.email.toLowerCase().includes(q) ||
+        s.nombrePlan.toLowerCase().includes(q) ||
+        s.id.toLowerCase().includes(q)
+      );
+    });
+  }
+
+  get activeSubscribersCount(): number {
+    return this.subscribers.filter((s) => s.estado === "Activa").length;
+  }
+
+  get eliteSubscribersCount(): number {
+    return this.subscribers.filter(
+      (s) =>
+        s.estado !== "Vencida" &&
+        (s.nombrePlan.toLowerCase().includes("black") ||
+          s.nombrePlan.toLowerCase().includes("pro")),
+    ).length;
+  }
+
+  get expiringSubscribersCount(): number {
+    return this.subscribers.filter((s) => s.estado === "Por vencer").length;
   }
 
   ngOnDestroy(): void {

@@ -97,8 +97,9 @@ export class NavbarComponent {
 
   // 2. Opciones de Recepcionista (Azul Cyan #0ea5e9)
   readonly receptionLinks = [
-    { path: "/scanner", label: "Escáner y QR en puerta", icon: "check" },
+    { path: "/scanner", label: "Mostrar QR · Escáner y QR en puerta", icon: "check" },
     { path: "/editar2", label: "Registro de asistencias", icon: "calendar" },
+    { path: "/editar1", label: "Reservas de clases", icon: "clock" },
   ];
 
   // 3. Opciones de Subscriptor / Socio Activo (Verde Esmeralda #10b981)
@@ -215,8 +216,11 @@ export class NavbarComponent {
       return "admin";
     }
     const r = (this.userRole || "").toLowerCase().trim();
+    const email = this.userEmail;
 
     if (
+      email === "recepcionista@gymseminario.com" ||
+      email === "recepcion@gymseminario.com" ||
       r === "reception" ||
       r === "receptionist" ||
       r === "recepcionista" ||

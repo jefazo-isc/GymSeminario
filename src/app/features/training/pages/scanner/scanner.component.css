@@ -4,16 +4,129 @@
 }
 
 :host .feature-page.stack > .notice {
-  order: -3;
+  order: -5;
 }
 
 :host .feature-page.stack > .toolbar {
-  order: -2;
+  order: -4;
+}
+
+:host .feature-page.stack > .reception-tabs {
+  order: -3;
 }
 
 :host .feature-page.stack > .kiosk-section {
-  order: -1;
+  order: -2;
   border: 2px solid var(--color-accent);
+}
+
+:host .feature-page.stack > .subscribers-section {
+  order: -1;
+}
+
+.reception-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 8px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-secondary);
+  border: 1px solid var(--color-border);
+}
+
+.reception-tab {
+  flex: 1 1 200px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm, 8px);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.reception-tab--active {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-color: var(--color-accent);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.reception-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.reception-kpi {
+  padding: 16px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-secondary);
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.reception-kpi strong {
+  font-size: 1.75rem;
+  line-height: 1.1;
+  color: var(--color-text);
+}
+
+.subscribers-filters {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.subscribers-filters .field {
+  flex: 1 1 280px;
+}
+
+.filter-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filter-pill {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-secondary);
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.filter-pill--active {
+  background: var(--color-accent);
+  color: #fff;
+  border-color: var(--color-accent);
+}
+
+.plan-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--color-surface-secondary);
+  border: 1px solid var(--color-border);
+}
+
+.plan-badge--elite {
+  border-color: var(--color-accent);
+  font-weight: 700;
 }
 
 .scanner-grid {

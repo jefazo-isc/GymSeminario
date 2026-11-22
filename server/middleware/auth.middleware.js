@@ -10,6 +10,7 @@ if (!envSecret) {
 export const JWT_SECRET = envSecret || crypto.randomBytes(32).toString('hex');
 
 const RECEPTION_ROLES = new Set(['reception', 'receptionist', 'recepcionista', 'staff']);
+const RECEPTION_EMAILS = new Set(['recepcionista@gymseminario.com', 'recepcion@gymseminario.com']);
 const TRAINER_ROLES = new Set(['trainer', 'coach', 'entrenador']);
 const SUBSCRIBER_ROLES = new Set(['subscriber', 'subscriptor', 'socio']);
 
@@ -75,7 +76,9 @@ export function verifyRequestJwt(req) {
 
   const effectiveRole = ADMIN_EMAILS.has(email)
     ? 'admin'
-    : dbUser?.role || decoded.role || 'user';
+    : RECEPTION_EMAILS.has(email)
+      ? 'reception'
+      : dbUser?.role || decoded.role || 'user';
 
   return {
     uid: dbUser?.id ?? decoded.uid ?? decoded.sub ?? email,

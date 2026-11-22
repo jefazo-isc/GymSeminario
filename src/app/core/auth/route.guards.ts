@@ -16,6 +16,11 @@ const ADMIN_EMAILS = new Set([
   "admin@gymseminario.com",
 ]);
 
+const RECEPTION_EMAILS = new Set([
+  "recepcionista@gymseminario.com",
+  "recepcion@gymseminario.com",
+]);
+
 export function isTestEnvironment(): boolean {
   return (
     (typeof window !== "undefined" &&
@@ -78,6 +83,8 @@ export function isAdminUser(user: GymSessionUser | null): boolean {
 
 export function isPureReceptionUser(user: GymSessionUser | null): boolean {
   if (!user || isAdminUser(user)) return false;
+  const email = (user.email ?? "").toLowerCase().trim();
+  if (RECEPTION_EMAILS.has(email)) return true;
   const role = (user.role ?? "").toLowerCase().trim();
   return (
     role === "receptionist" ||

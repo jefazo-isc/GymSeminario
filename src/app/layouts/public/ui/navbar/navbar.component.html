@@ -29,7 +29,15 @@
           routerLink="/scanner"
           routerLinkActive="is-active"
           ariaCurrentWhenActive="page"
-          >Escáner y QR en puerta</a
+          >Mostrar QR</a
+        >
+        <a
+          class="navigation-link"
+          routerLink="/scanner"
+          [queryParams]="{ tab: 'socios' }"
+          routerLinkActive="is-active"
+          ariaCurrentWhenActive="page"
+          >Socios con suscripción</a
         >
         <a
           class="navigation-link"
@@ -37,6 +45,13 @@
           routerLinkActive="is-active"
           ariaCurrentWhenActive="page"
           >Registro de asistencias</a
+        >
+        <a
+          class="navigation-link"
+          routerLink="/editar1"
+          routerLinkActive="is-active"
+          ariaCurrentWhenActive="page"
+          >Reservas de clases</a
         >
       } @else {
         <button

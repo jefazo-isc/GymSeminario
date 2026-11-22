@@ -13,26 +13,194 @@
     <div class="notice">
       <app-icon name="check" />
       <p>
-        <strong>QR exclusivo de recepción.</strong> Muestra este código QR dinámico
-        en mostrador para que el socio lo escanee desde su app y registre su
-        asistencia al instante.
+        <strong>Centro Operativo de Recepción · Personal GROM 21.</strong> Como
+        trabajador del gimnasio no necesitas suscripción. Aquí tienes tu pestaña
+        para mostrar el código QR de asistencia, el padrón de socios con
+        suscripción y el control del turno.
       </p>
     </div>
 
     <div class="toolbar">
       <div>
-        <span class="eyebrow">Recepción · Código dinámico de mostrador</span>
-        <h2>QR de asistencia en recepción</h2>
+        <span class="eyebrow">Mostrador de Recepción · Acceso de Personal</span>
+        <h2>Panel de Recepcionista</h2>
       </div>
       <div class="form-actions">
         <a appButton="secondary" routerLink="/editar2">Registro de asistencias</a>
+        <a appButton="secondary" routerLink="/editar1">Reservas de clases</a>
         @if (esAdmin) {
           <a appButton="ghost" routerLink="/graficos">Estadísticas y métricas</a>
         }
       </div>
     </div>
 
-    <div class="scanner-grid">
+    <div class="reception-tabs" role="tablist" aria-label="Herramientas de recepcionista">
+      <button
+        type="button"
+        role="tab"
+        class="reception-tab"
+        [class.reception-tab--active]="activeTab === 'qr'"
+        [attr.aria-selected]="activeTab === 'qr'"
+        (click)="setTab('qr')"
+      >
+        <app-icon name="check" />
+        <span>1. Mostrar QR de Asistencia</span>
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="reception-tab"
+        [class.reception-tab--active]="activeTab === 'socios'"
+        [attr.aria-selected]="activeTab === 'socios'"
+        (click)="setTab('socios')"
+      >
+        <app-icon name="user" />
+        <span>2. Socios con Suscripción ({{ subscribers.length }})</span>
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="reception-tab"
+        [class.reception-tab--active]="activeTab === 'validador'"
+        [attr.aria-selected]="activeTab === 'validador'"
+        (click)="setTab('validador')"
+      >
+        <app-icon name="search" />
+        <span>3. Validar Código Manual</span>
+      </button>
+    </div>
+
+    <article class="surface stack subscribers-section" [hidden]="activeTab !== 'socios'">
+      <div class="toolbar">
+        <div>
+          <span class="eyebrow">Padrón en vivo · SQLite</span>
+          <h3>Socios que cuentan con una suscripción</h3>
+          <p class="help">
+            Consulta qué socios tienen membresía activa, su nivel de plan (Black
+            Elite, Pro Fitness, Básico) y días restantes de vigencia.
+          </p>
+        </div>
+        <button
+          appButton="secondary"
+          type="button"
+          [disabled]="loadingSubscribers"
+          (click)="loadSubscribers()"
+        >
+          {{ loadingSubscribers ? "Actualizando…" : "Actualizar lista" }}
+        </button>
+      </div>
+
+      <div class="reception-kpis">
+        <div class="reception-kpi">
+          <span class="eyebrow">Suscripciones activas</span>
+          <strong>{{ activeSubscribersCount }}</strong>
+          <small>Socios con acceso permitido hoy</small>
+        </div>
+        <div class="reception-kpi">
+          <span class="eyebrow">Planes Black Elite / Pro</span>
+          <strong>{{ eliteSubscribersCount }}</strong>
+          <small>Membresías con clases y beneficios VIP</small>
+        </div>
+        <div class="reception-kpi">
+          <span class="eyebrow">Próximas a vencer</span>
+          <strong>{{ expiringSubscribersCount }}</strong>
+          <small>5 días o menos de vigencia</small>
+        </div>
+      </div>
+
+      <div class="subscribers-filters">
+        <div class="field">
+          <label for="reception-sub-search">Buscar socio por nombre, correo o plan</label>
+          <input
+            id="reception-sub-search"
+            type="search"
+            name="subscriberSearch"
+            [(ngModel)]="subscriberSearch"
+            placeholder="Ej. Socio Black Elite, socio@gymseminario.com, Black Elite…"
+          />
+        </div>
+        <div class="filter-pills" role="group" aria-label="Filtrar por estado de suscripción">
+          <button
+            type="button"
+            class="filter-pill"
+            [class.filter-pill--active]="subscriberFilter === 'todos'"
+            (click)="subscriberFilter = 'todos'"
+          >
+            Todos ({{ subscribers.length }})
+          </button>
+          <button
+            type="button"
+            class="filter-pill"
+            [class.filter-pill--active]="subscriberFilter === 'Activa'"
+            (click)="subscriberFilter = 'Activa'"
+          >
+            Activas ({{ activeSubscribersCount }})
+          </button>
+          <button
+            type="button"
+            class="filter-pill"
+            [class.filter-pill--active]="subscriberFilter === 'Por vencer'"
+            (click)="subscriberFilter = 'Por vencer'"
+          >
+            Por vencer ({{ expiringSubscribersCount }})
+          </button>
+          <button
+            type="button"
+            class="filter-pill"
+            [class.filter-pill--active]="subscriberFilter === 'Vencida'"
+            (click)="subscriberFilter = 'Vencida'"
+          >
+            Vencidas
+          </button>
+        </div>
+      </div>
+
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th scope="col">Socio</th>
+              <th scope="col">Correo</th>
+              <th scope="col">Plan contratado</th>
+              <th scope="col">Periodo</th>
+              <th scope="col">Vigencia</th>
+              <th scope="col">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (sub of filteredSubscribers; track sub.id) {
+              <tr>
+                <td><strong>{{ sub.nombre }}</strong></td>
+                <td><code>{{ sub.email }}</code></td>
+                <td>
+                  <span class="plan-badge" [class.plan-badge--elite]="sub.nombrePlan.toLowerCase().includes('black')">
+                    {{ sub.nombrePlan }}
+                  </span>
+                </td>
+                <td>{{ sub.periodo }}</td>
+                <td>{{ sub.fechaFin }} ({{ sub.diasRestantes }} días)</td>
+                <td>
+                  <span
+                    class="status"
+                    [class.status--success]="sub.estado === 'Activa'"
+                    [class.status--warning]="sub.estado === 'Por vencer'"
+                    [class.status--danger]="sub.estado === 'Vencida'"
+                  >
+                    {{ sub.estado }}
+                  </span>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6">No se encontraron socios con suscripción para ese filtro.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </article>
+
+    <div class="scanner-grid" [hidden]="activeTab !== 'validador'">
       <article class="surface stack">
         <span class="eyebrow">1. Escaneo por cámara o fotografía</span>
         <div class="camera-box" [class.camera-box--active]="scanningCamera">
@@ -168,7 +336,7 @@
       </article>
     </div>
 
-    <article class="surface stack kiosk-section">
+    <article class="surface stack kiosk-section" [hidden]="activeTab !== 'qr'">
       <div class="toolbar">
         <div>
           <span class="eyebrow">QR Rotativo de Mostrador</span>

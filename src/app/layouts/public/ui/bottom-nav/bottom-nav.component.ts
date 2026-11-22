@@ -29,9 +29,9 @@ export class BottomNavComponent {
   get items(): BottomNavItem[] {
     if (isPureReceptionUser(readGymUser())) {
       return [
-        { id: "home", label: "Inicio", icon: "monitor", path: "/home" },
-        { id: "qr", label: "QR Puerta", icon: "check", path: "/scanner" },
+        { id: "qr", label: "Mostrar QR", icon: "check", path: "/scanner" },
         { id: "asistencia", label: "Asistencias", icon: "calendar", path: "/editar2" },
+        { id: "reservas", label: "Reservas", icon: "clock", path: "/editar1" },
         { id: "cuenta", label: "Clave", icon: "user", path: "/change" },
         { id: "menu", label: "Más", icon: "menu", isAction: true },
       ];

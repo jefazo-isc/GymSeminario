@@ -6,6 +6,7 @@ import { Capacitor } from "@capacitor/core";
 import Swal from "sweetalert2";
 import { authErrorMessage } from "../../../../core/auth/auth-feedback";
 import { CaptchaController } from "../../../../core/auth/captcha-controller";
+import { isPureReceptionUser, readGymUser } from "../../../../core/auth/route.guards";
 import { PasswordToggleDirective } from "../../../../shared/directives/password-toggle.directive";
 import { ButtonDirective } from "../../../../shared/ui/button.directive";
 import { IconComponent } from "../../../../shared/ui/icon/icon.component";
@@ -119,7 +120,8 @@ export default class SignInComponent implements OnInit, AfterViewInit, OnDestroy
         timerProgressBar: true,
         showConfirmButton: false,
       });
-      await this.router.navigate(["/home"]);
+      const dest = isPureReceptionUser(readGymUser()) ? "/scanner" : "/home";
+      await this.router.navigate([dest]);
     } catch (error) {
       const err = error as { message?: string; code?: string };
       if (err?.message?.includes("cancelled") || err?.code === "12501") {
@@ -208,7 +210,8 @@ export default class SignInComponent implements OnInit, AfterViewInit, OnDestroy
           showConfirmButton: false,
         });
       }
-      await this.router.navigate(["/home"]);
+      const dest = isPureReceptionUser(readGymUser()) ? "/scanner" : "/home";
+      await this.router.navigate([dest]);
     } catch (error) {
       this.message = authErrorMessage(error);
     } finally {

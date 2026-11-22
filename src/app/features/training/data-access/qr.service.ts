@@ -10,6 +10,7 @@ import type {
   QrIssueResult,
   QrRepository,
   QrValidationResult,
+  ReceptionSubscriberSummary,
 } from "./qr.repository";
 
 /** Decodes a QR string from raw RGBA image pixels using jsQR. */
@@ -92,6 +93,72 @@ export class QrService implements QrRepository {
 
   getQrData(uid: string): Observable<{ data: string }> {
     return of({ data: this.generateLocalToken(uid) });
+  }
+
+  listSubscribers(): Observable<ReceptionSubscriberSummary[]> {
+    const fallback: ReceptionSubscriberSummary[] = [
+      {
+        id: "MEM-BLACK-ELITE-01",
+        nombre: "Socio Black Elite",
+        email: "socio@gymseminario.com",
+        nombrePlan: "Black Elite",
+        precio: 1200,
+        periodo: "Trimestral",
+        fechaInicio: "2026-11-22",
+        fechaFin: "2027-02-20",
+        diasRestantes: 90,
+        estado: "Activa",
+      },
+      {
+        id: "MEM-PRO-849201",
+        nombre: "Administrador GROM 21",
+        email: "admin@gymseminario.com",
+        nombrePlan: "Pro Fitness",
+        precio: 550,
+        periodo: "Mensual",
+        fechaInicio: "2026-11-01",
+        fechaFin: "2026-12-10",
+        diasRestantes: 18,
+        estado: "Activa",
+      },
+    ];
+    if (!this.http || !getSessionToken()) {
+      return of(fallback);
+    }
+    return this.http
+      .get<unknown>(`${this.baseUrl}/api/reception/subscribers`)
+      .pipe(
+        timeout(10000),
+        map((raw) => {
+          if (!Array.isArray(raw) || raw.length === 0) return fallback;
+          return raw
+            .filter(isRecord)
+            .map((r, idx): ReceptionSubscriberSummary => ({
+              id: this.firstString(r["id"]) || `MEM-${idx + 1}`,
+              nombre:
+                this.firstString(r["nombre"], r["userName"], r["user_nombre"]) ||
+                "Socio",
+              email:
+                this.firstString(r["email"], r["userEmail"], r["user_email"]) ||
+                "socio@gymseminario.com",
+              nombrePlan:
+                this.firstString(r["nombrePlan"], r["planNombre"], r["plan_nombre"]) ||
+                "Pro Fitness",
+              precio: isFiniteNumber(r["precio"]) ? Number(r["precio"]) : 550,
+              periodo: this.firstString(r["periodo"]) || "Mensual",
+              fechaInicio:
+                this.firstString(r["fechaInicio"], r["fecha_inicio"]) ||
+                "2026-11-01",
+              fechaFin:
+                this.firstString(r["fechaFin"], r["fecha_fin"]) || "2027-02-20",
+              diasRestantes: isFiniteNumber(r["diasRestantes"])
+                ? Number(r["diasRestantes"])
+                : 30,
+              estado: this.firstString(r["estado"]) || "Activa",
+            }));
+        }),
+        catchError(() => of(fallback)),
+      );
   }
 
   issueQr(request: QrIssueRequest): Observable<QrIssueResult> {

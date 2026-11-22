@@ -13,11 +13,19 @@
         y constancia para dar tu siguiente paso.
       </p>
       <div class="hero-actions">
-        <a appButton="primary" routerLink="/membresias"
-          >Explorar membresías<app-icon name="arrow" /></a
-        ><a class="text-link" routerLink="/servicio"
-          >Conoce el gimnasio<app-icon name="external"
-        /></a>
+        @if (isReceptionist) {
+          <a appButton="primary" routerLink="/scanner" [queryParams]="{ tab: 'qr' }"
+            >Mostrar QR en mostrador<app-icon name="arrow" /></a
+          ><a class="text-link" routerLink="/scanner" [queryParams]="{ tab: 'socios' }"
+            >Ver socios con suscripción<app-icon name="external"
+          /></a>
+        } @else {
+          <a appButton="primary" routerLink="/membresias"
+            >Explorar membresías<app-icon name="arrow" /></a
+          ><a class="text-link" routerLink="/servicio"
+            >Conoce el gimnasio<app-icon name="external"
+          /></a>
+        }
       </div>
       <div class="hero-note">
         <app-icon name="pin" /><span

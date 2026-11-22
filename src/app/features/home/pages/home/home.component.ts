@@ -1,5 +1,6 @@
 import { Component } from "@angular/core";
 import { RouterLink } from "@angular/router";
+import { isPureReceptionUser, readGymUser } from "../../../../core/auth/route.guards";
 import { ButtonDirective } from "../../../../shared/ui/button.directive";
 import { IconComponent } from "../../../../shared/ui/icon/icon.component";
 import { isMobileVersion } from "../../../../core/mobile/is-mobile";
@@ -12,6 +13,9 @@ import { isMobileVersion } from "../../../../core/mobile/is-mobile";
 })
 export class HomeComponent {
   readonly isMobile = isMobileVersion();
+  get isReceptionist(): boolean {
+    return isPureReceptionUser(readGymUser());
+  }
   readonly services = [
     {
       number: "01",

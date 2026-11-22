@@ -32,12 +32,26 @@ export interface QrValidationResult {
   checkedInAt?: string;
 }
 
+export interface ReceptionSubscriberSummary {
+  id: string;
+  nombre: string;
+  email: string;
+  nombrePlan: string;
+  precio: number;
+  periodo: string;
+  fechaInicio: string;
+  fechaFin: string;
+  diasRestantes: number;
+  estado: "Activa" | "Por vencer" | "Vencida" | string;
+}
+
 export interface QrRepository {
   getQrData(uid: string): Observable<{ data: string }>;
   issueQr?(request: QrIssueRequest): Observable<QrIssueResult>;
   issueKioskQr?(ttlSeconds?: number): Observable<QrIssueResult>;
   validateQr?(token: string): Observable<QrValidationResult>;
   kioskCheckin?(token: string, clase?: string): Observable<QrValidationResult>;
+  listSubscribers?(): Observable<ReceptionSubscriberSummary[]>;
 }
 
 export const QR_CODES = new InjectionToken<QrRepository>("QrRepository", {

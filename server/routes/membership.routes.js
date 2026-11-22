@@ -382,6 +382,57 @@ export function createMembershipRouter() {
     }
   });
 
+  router.get('/api/reception/subscribers', authGuard, requireRole('admin', 'reception'), (_req, res) => {
+    try {
+      const hoyStr = todayIso();
+      const rows = db
+        .prepare(
+          `SELECT m.*, u.nombre as user_nombre, u.role as user_role
+           FROM memberships m
+           LEFT JOIN users u ON lower(u.email) = lower(m.user_email)
+           ORDER BY datetime(m.updated_at) DESC`,
+        )
+        .all();
+
+      const seen = new Set();
+      const list = [];
+      for (const r of rows) {
+        const key = String(r.user_email || '').toLowerCase().trim();
+        if (!key || seen.has(key)) continue;
+        seen.add(key);
+
+        const diffMs = new Date(r.fecha_fin + 'T00:00:00').getTime() - new Date(hoyStr + 'T00:00:00').getTime();
+        const diasRestantes = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+        let estado = r.estado || 'Activa';
+        if (String(estado).toLowerCase() === 'cancelada' || diasRestantes <= 0) {
+          estado = 'Vencida';
+        } else if (diasRestantes <= 5) {
+          estado = 'Por vencer';
+        } else {
+          estado = 'Activa';
+        }
+
+        list.push({
+          id: r.id,
+          nombre: r.user_nombre || key.split('@')[0],
+          email: r.user_email,
+          nombrePlan: r.plan_nombre,
+          precio: Number(r.precio || 0),
+          periodo: r.periodo || 'Mensual',
+          fechaInicio: r.fecha_inicio,
+          fechaFin: r.fecha_fin,
+          diasRestantes,
+          estado,
+        });
+      }
+
+      return res.json(list);
+    } catch (err) {
+      console.error('Error en /api/reception/subscribers:', err);
+      return res.status(500).json({ error: 'Error al consultar socios con suscripción' });
+    }
+  });
+
   router.get('/api/admin/expiring-memberships', authGuard, requireRole('admin'), (req, res) => {
     try {
       const days = Math.max(1, Math.min(90, Number(req.query.days || 7)));
