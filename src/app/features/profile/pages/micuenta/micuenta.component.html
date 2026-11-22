@@ -16,7 +16,7 @@
           <p class="help identity-email">
             {{ email || "Acceso con teléfono o proveedor externo" }}
           </p>
-          <span class="status">{{ role || "Rol no disponible" }}</span>
+          <span class="badge-role" [ngClass]="roleBadgeClass">{{ roleBadgeLabel }}</span>
           <div class="form-actions">
             <button appButton="ghost" type="button" (click)="cerrarSesion()">
               Cerrar sesión

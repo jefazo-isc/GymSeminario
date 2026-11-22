@@ -287,3 +287,350 @@
     width: 38px;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SISTEMA VISUAL MULTI-ROL (3 ROLES + VISITANTE BLOQUEADO)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Tarjeta y Badges de Rol */
+.user-role-card {
+  padding: 10px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.user-role-name {
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mobile-user-card {
+  margin: 20px 0 10px;
+  padding: 12px 14px;
+  background: var(--color-surface-secondary);
+  border-radius: var(--radius-sm, 6px);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.mobile-user-name {
+  font-weight: 600;
+  font-size: 0.9375rem;
+  margin: 0;
+  color: var(--color-text);
+}
+.badge-role {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  width: fit-content;
+}
+.badge-role--admin {
+  background: rgba(245, 158, 11, 0.16);
+  color: #b45309;
+  border: 1px solid #f59e0b;
+}
+:host-context(.dark) .badge-role--admin {
+  background: rgba(245, 158, 11, 0.25);
+  color: #fbbf24;
+  border: 1px solid #f59e0b;
+}
+
+.badge-role--reception {
+  background: rgba(14, 165, 233, 0.16);
+  color: #0369a1;
+  border: 1px solid #0ea5e9;
+}
+:host-context(.dark) .badge-role--reception {
+  background: rgba(14, 165, 233, 0.25);
+  color: #38bdf8;
+  border: 1px solid #0ea5e9;
+}
+
+.badge-role--subscriber {
+  background: rgba(16, 185, 129, 0.16);
+  color: #047857;
+  border: 1px solid #10b981;
+}
+:host-context(.dark) .badge-role--subscriber {
+  background: rgba(16, 185, 129, 0.25);
+  color: #34d399;
+  border: 1px solid #10b981;
+}
+
+.badge-role--guest {
+  background: rgba(156, 163, 175, 0.16);
+  color: #4b5563;
+  border: 1px solid #9ca3af;
+}
+
+/* 1. ROL: ADMINISTRADOR (Dorado / Ámbar #f59e0b) */
+.role-label--admin {
+  color: #d97706 !important;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+:host-context(.dark) .role-label--admin {
+  color: #fbbf24 !important;
+}
+.role-eyebrow--admin {
+  color: #d97706 !important;
+  font-weight: 700 !important;
+  margin: 20px 0 8px !important;
+}
+:host-context(.dark) .role-eyebrow--admin {
+  color: #fbbf24 !important;
+}
+.role-link--admin {
+  border-left: 3.5px solid #f59e0b !important;
+  color: #b45309 !important;
+  font-weight: 500;
+  padding-left: 12px !important;
+}
+:host-context(.dark) .role-link--admin {
+  color: #fde68a !important;
+}
+.role-link--admin:hover {
+  background: rgba(245, 158, 11, 0.12) !important;
+}
+.role-link--admin app-icon {
+  color: #f59e0b !important;
+}
+.role-mobile-link--admin {
+  border-left: 3.5px solid #f59e0b !important;
+  color: #b45309 !important;
+  padding-left: 14px !important;
+  font-weight: 500;
+}
+:host-context(.dark) .role-mobile-link--admin {
+  color: #fde68a !important;
+}
+.role-mobile-link--admin app-icon {
+  color: #f59e0b !important;
+}
+
+/* 2. ROL: RECEPCIONISTA (Azul Cyan Eléctrico #0ea5e9) */
+.role-label--reception {
+  color: #0284c7 !important;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+:host-context(.dark) .role-label--reception {
+  color: #38bdf8 !important;
+}
+.role-eyebrow--reception {
+  color: #0284c7 !important;
+  font-weight: 700 !important;
+  margin: 20px 0 8px !important;
+}
+:host-context(.dark) .role-eyebrow--reception {
+  color: #38bdf8 !important;
+}
+.role-link--reception {
+  border-left: 3.5px solid #0ea5e9 !important;
+  color: #0369a1 !important;
+  font-weight: 500;
+  padding-left: 12px !important;
+}
+:host-context(.dark) .role-link--reception {
+  color: #bae6fd !important;
+}
+.role-link--reception:hover {
+  background: rgba(14, 165, 233, 0.12) !important;
+}
+.role-link--reception app-icon {
+  color: #0ea5e9 !important;
+}
+.role-mobile-link--reception {
+  border-left: 3.5px solid #0ea5e9 !important;
+  color: #0369a1 !important;
+  padding-left: 14px !important;
+  font-weight: 500;
+}
+:host-context(.dark) .role-mobile-link--reception {
+  color: #bae6fd !important;
+}
+.role-mobile-link--reception app-icon {
+  color: #0ea5e9 !important;
+}
+
+/* 3. ROL: SUBSCRIPTOR / SOCIO (Verde Esmeralda #10b981) */
+.role-label--subscriber {
+  color: #059669 !important;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+:host-context(.dark) .role-label--subscriber {
+  color: #34d399 !important;
+}
+.role-eyebrow--subscriber {
+  color: #059669 !important;
+  font-weight: 700 !important;
+  margin: 20px 0 8px !important;
+}
+:host-context(.dark) .role-eyebrow--subscriber {
+  color: #34d399 !important;
+}
+.role-link--subscriber {
+  border-left: 3.5px solid #10b981 !important;
+  color: #047857 !important;
+  font-weight: 500;
+  padding-left: 12px !important;
+}
+:host-context(.dark) .role-link--subscriber {
+  color: #a7f3d0 !important;
+}
+.role-link--subscriber:hover {
+  background: rgba(16, 185, 129, 0.12) !important;
+}
+.role-link--subscriber app-icon {
+  color: #10b981 !important;
+}
+.role-mobile-link--subscriber {
+  border-left: 3.5px solid #10b981 !important;
+  color: #047857 !important;
+  padding-left: 14px !important;
+  font-weight: 500;
+}
+:host-context(.dark) .role-mobile-link--subscriber {
+  color: #a7f3d0 !important;
+}
+.role-mobile-link--subscriber app-icon {
+  color: #10b981 !important;
+}
+
+/* 4. SIN REGISTRO NI SUBSCRIPCIÓN (Gris tachado con candado) */
+.role-eyebrow--locked {
+  color: #6b7280 !important;
+  font-weight: 700 !important;
+  margin: 22px 0 8px !important;
+}
+.role-link--locked {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  border-left: 3.5px dashed #9ca3af !important;
+  background: rgba(156, 163, 175, 0.06) !important;
+  cursor: pointer !important;
+  padding: 8px 12px !important;
+  opacity: 0.72;
+}
+.role-link--locked .locked-text {
+  text-decoration: line-through !important;
+  color: #9ca3af !important;
+  font-weight: 500;
+}
+.role-link--locked app-icon {
+  color: #9ca3af !important;
+}
+.role-link--locked:hover {
+  background: rgba(239, 68, 68, 0.08) !important;
+  opacity: 0.95;
+}
+.role-mobile-link--locked {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  min-height: 44px;
+  padding: 10px 14px !important;
+  border-left: 3.5px dashed #9ca3af !important;
+  background: rgba(156, 163, 175, 0.06) !important;
+  border-radius: var(--radius-sm, 6px);
+  margin-bottom: 6px;
+  cursor: pointer !important;
+  opacity: 0.75;
+}
+.role-mobile-link--locked:hover {
+  background: rgba(239, 68, 68, 0.08) !important;
+  opacity: 1;
+}
+.role-mobile-link--locked .locked-title {
+  text-decoration: line-through !important;
+  color: #9ca3af !important;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+.lock-tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.65625rem;
+  font-weight: 600;
+  color: #6b7280;
+  background: rgba(156, 163, 175, 0.18);
+  padding: 2px 8px;
+  border-radius: 9999px;
+  border: 1px solid rgba(156, 163, 175, 0.35);
+  white-space: nowrap;
+}
+
+/* Selector de Roles para Demostración al Comité */
+.demo-label {
+  font-size: 0.6875rem !important;
+  color: var(--color-text-secondary) !important;
+}
+.demo-role-buttons {
+  display: flex;
+  gap: 6px;
+  padding: 4px 14px 8px;
+}
+.demo-role-buttons--mobile {
+  padding: 6px 0 14px;
+}
+.btn-demo-role {
+  flex: 1;
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: transform var(--motion-fast);
+}
+.btn-demo-role:active {
+  transform: scale(0.96);
+}
+.btn-demo--admin {
+  background: rgba(245, 158, 11, 0.15);
+  color: #d97706;
+  border-color: #f59e0b;
+}
+.btn-demo--reception {
+  background: rgba(14, 165, 233, 0.15);
+  color: #0284c7;
+  border-color: #0ea5e9;
+}
+.btn-demo--subscriber {
+  background: rgba(16, 185, 129, 0.15);
+  color: #059669;
+  border-color: #10b981;
+}
+
+/* Cerrar sesión */
+.logout-item {
+  color: #ef4444 !important;
+}
+.logout-item app-icon {
+  color: #ef4444 !important;
+}
+.logout-item-mobile {
+  color: #ef4444 !important;
+  font-weight: 600 !important;
+  margin-top: 18px !important;
+  padding-top: 14px !important;
+  border-top: 1px solid var(--color-border) !important;
+}
+.logout-item-mobile app-icon {
+  color: #ef4444 !important;
+}

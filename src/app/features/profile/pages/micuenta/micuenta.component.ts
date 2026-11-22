@@ -1,6 +1,7 @@
 import { createProfileDraft } from "../../models/profile.model";
 import { DestroyRef } from "@angular/core";
 import { take } from "rxjs";
+import Swal from "sweetalert2";
 import { RequestState } from "../../../../core/data-access/request-state";
 import { RequestStateComponent } from "../../../../shared/ui/request-state/request-state.component";
 import { Dialog, DialogModule } from "@angular/cdk/dialog";
@@ -138,8 +139,57 @@ export class MicuentaComponent implements OnInit {
       this.saving = false;
     }
   }
-  cerrarSesion() {
-    void this.auth.cerrarSesion();
+  get effectiveRole(): "admin" | "receptionist" | "subscriber" {
+    const r = (this.role || "").toLowerCase();
+    if (r === "admin" || this.nombre?.toLowerCase().includes("yahir")) return "admin";
+    if (r === "receptionist" || r === "recepcionista" || r === "staff") return "receptionist";
+    return "subscriber";
+  }
+
+  get roleBadgeLabel(): string {
+    switch (this.effectiveRole) {
+      case "admin":
+        return "👑 Administrador / Gerente";
+      case "receptionist":
+        return "📋 Recepcionista / Staff";
+      case "subscriber":
+        return "⚡ Socio Activo / Suscriptor";
+    }
+  }
+
+  get roleBadgeClass(): string {
+    switch (this.effectiveRole) {
+      case "admin":
+        return "badge-role--admin";
+      case "receptionist":
+        return "badge-role--reception";
+      case "subscriber":
+        return "badge-role--subscriber";
+    }
+  }
+
+  async cerrarSesion() {
+    const result = await Swal.fire({
+      title: "¿Cerrar sesión?",
+      text: "¿Estás seguro de que deseas salir de tu cuenta?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Sí, cerrar sesión",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#6b7280",
+    });
+    if (!result.isConfirmed) return;
+    await this.auth.cerrarSesion();
+    await Swal.fire({
+      icon: "success",
+      title: "Sesión cerrada",
+      text: "Has salido de tu cuenta correctamente.",
+      timer: 1500,
+      timerProgressBar: true,
+      showConfirmButton: false,
+    });
+    window.location.href = "/home";
   }
   openPreferences() {
     this.dialog.open(AppearancePanelComponent, {

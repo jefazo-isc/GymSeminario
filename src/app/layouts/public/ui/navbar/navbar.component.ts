@@ -13,6 +13,7 @@ import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { MatMenuModule } from "@angular/material/menu";
 import { NavigationEnd, Router, RouterModule } from "@angular/router";
 import { filter } from "rxjs";
+import Swal from "sweetalert2";
 import { ThemeService } from "../../../../core/theme/theme.service";
 import { SESSION } from "../../../../features/auth/data-access/session.repository";
 import { AppearancePanelComponent } from "../../../../shared/ui/appearance-panel/appearance-panel.component";
@@ -71,10 +72,36 @@ export class NavbarComponent {
     { path: "/membresias", label: "Mi membresía", icon: "user" },
     { path: "/change", label: "Cambiar contraseña", icon: "user" },
   ];
+  // 1. Opciones de Administrador (Dorado / Ámbar #f59e0b)
   readonly adminLinks = [
-    { path: "/graficos", label: "Estadísticas", icon: "grid" },
+    { path: "/graficos", label: "Estadísticas y métricas", icon: "grid" },
     { path: "/editar1", label: "Gestionar agendas", icon: "calendar" },
     { path: "/editar2", label: "Gestionar asistencias", icon: "check" },
+  ];
+
+  // 2. Opciones de Recepcionista (Azul Cyan #0ea5e9)
+  readonly receptionLinks = [
+    { path: "/f3", label: "Registrar asistencia (Check-in)", icon: "check" },
+    { path: "/f2", label: "Agendar entrenamiento", icon: "calendar" },
+    { path: "/actividad", label: "Bitácora de actividad", icon: "clock" },
+  ];
+
+  // 3. Opciones de Subscriptor / Socio Activo (Verde Esmeralda #10b981)
+  readonly subscriberLinks = [
+    { path: "/coach-ia", label: "Coach virtual IA", icon: "spark" },
+    { path: "/membresias", label: "Mi membresía", icon: "user" },
+    { path: "/estado-cuenta", label: "Estado de cuenta", icon: "grid" },
+    { path: "/micuenta", label: "Mi perfil y datos", icon: "user" },
+    { path: "/change", label: "Cambiar contraseña", icon: "user" },
+  ];
+
+  // Enlaces restringidos cuando no hay registro ni suscripción activa
+  readonly restrictedGuestLinks = [
+    { label: "Coach virtual IA", icon: "spark", feature: "Rutinas con IA generativa Gemini" },
+    { label: "Agendar entrenamiento", icon: "calendar", feature: "Reservas y cupos exclusivos" },
+    { label: "Registrar asistencia", icon: "check", feature: "Check-in por código QR o mostrador" },
+    { label: "Estado de cuenta", icon: "grid", feature: "Historial de pagos y membresías" },
+    { label: "Panel de administración", icon: "grid", feature: "Métricas del gimnasio" },
   ];
 
   constructor() {
@@ -110,6 +137,95 @@ export class NavbarComponent {
       .join("")
       .toUpperCase();
   }
+
+  get effectiveRole(): "admin" | "receptionist" | "subscriber" | "guest" {
+    if (!this.userName) return "guest";
+    const r = (this.userRole || "").toLowerCase();
+    if (r === "admin" || this.userName?.toLowerCase().includes("yahir")) return "admin";
+    if (r === "receptionist" || r === "recepcionista" || r === "staff") return "receptionist";
+    return "subscriber";
+  }
+
+  get roleBadgeLabel(): string {
+    switch (this.effectiveRole) {
+      case "admin":
+        return "👑 Administrador";
+      case "receptionist":
+        return "📋 Recepción";
+      case "subscriber":
+        return "⚡ Socio Activo";
+      default:
+        return "Visitante";
+    }
+  }
+
+  get roleBadgeClass(): string {
+    switch (this.effectiveRole) {
+      case "admin":
+        return "badge-role--admin";
+      case "receptionist":
+        return "badge-role--reception";
+      case "subscriber":
+        return "badge-role--subscriber";
+      default:
+        return "badge-role--guest";
+    }
+  }
+
+  setDemoRole(role: "admin" | "receptionist" | "subscriber"): void {
+    this.userRole = role;
+    const raw = localStorage.getItem("gym_user");
+    if (raw) {
+      try {
+        const u = JSON.parse(raw);
+        u.role = role;
+        localStorage.setItem("gym_user", JSON.stringify(u));
+      } catch {
+        /* noop */
+      }
+    }
+    void Swal.fire({
+      toast: true,
+      position: "top-end",
+      icon: "info",
+      title: `Rol cambiado a: ${this.roleBadgeLabel}`,
+      timer: 1800,
+      showConfirmButton: false,
+    });
+  }
+
+  promptLockedFeature(event: Event, featureName: string): void {
+    event.preventDefault();
+    event.stopPropagation();
+    void Swal.fire({
+      icon: "info",
+      title: "🔒 Función Exclusiva para Socios",
+      html: `
+        <p style="margin-bottom: 12px; font-size: 0.95rem; color: #374151;">
+          La opción <strong>${featureName}</strong> requiere contar con una membresía activa o un perfil autorizado en <strong>espacioGYM</strong>.
+        </p>
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; font-size: 0.825rem; text-align: left; line-height: 1.6; margin-top: 10px;">
+          <div style="color: #b45309; font-weight: 600;">👑 <strong>Admin (Dorado):</strong> Métricas globales y gestión</div>
+          <div style="color: #0369a1; font-weight: 600;">📋 <strong>Recepción (Cyan):</strong> Control de accesos y agendas</div>
+          <div style="color: #047857; font-weight: 600;">⚡ <strong>Socio Activo (Verde):</strong> Coach IA, reservas y cuenta</div>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: "✨ Ver Membresías",
+      cancelButtonText: "Iniciar Sesión",
+      confirmButtonColor: "#10b981",
+      cancelButtonColor: "#0ea5e9",
+      showCloseButton: true,
+    }).then((result) => {
+      this.closeMobile();
+      if (result.isConfirmed) {
+        void this.router.navigate(["/membresias"]);
+      } else if (result.dismiss === Swal.DismissReason.cancel) {
+        void this.router.navigate(["/auth/sign-in"]);
+      }
+    });
+  }
+
   isActive(links: { path: string }[]): boolean {
     return links.some((link) => link.path === this.activePath());
   }
@@ -162,8 +278,30 @@ export class NavbarComponent {
     this.currentDialog?.close();
   }
   async logOut(): Promise<void> {
+    const result = await Swal.fire({
+      title: "¿Cerrar sesión?",
+      text: "¿Estás seguro de que deseas salir de tu cuenta?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Sí, cerrar sesión",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#6b7280",
+    });
+
+    if (!result.isConfirmed) return;
+
     this.closeMobile();
     await this.auth.cerrarSesion();
+    await Swal.fire({
+      icon: "success",
+      title: "Sesión cerrada",
+      text: "Has salido de tu cuenta correctamente.",
+      timer: 1500,
+      timerProgressBar: true,
+      showConfirmButton: false,
+    });
+    await this.router.navigate(["/home"]);
   }
 
   @HostListener("document:keydown", ["$event"])
