@@ -12,6 +12,7 @@
     "test:design": "ng test --configuration design --watch=false --browsers=ChromeHeadless",
     "test:frontend": "ng test --configuration frontend --watch=false --browsers=ChromeHeadless",
     "check:architecture": "node scripts/check-architecture.cjs",
+    "check:secrets": "node scripts/check-secrets.cjs",
     "typecheck": "tsc --noEmit --project tsconfig.app.json && tsc --noEmit --project tsconfig.spec.json",
     "build:mobile": "ng build --configuration production --base-href / && rm -rf dist/libreria1/browser/downloads",
     "cap:sync": "npm run build:mobile && npx cap sync android",
