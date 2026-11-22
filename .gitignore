@@ -37,6 +37,7 @@ Thumbs.db
 # Archives
 *.zip
 *.tar.gz
+*.apk
 
 server/edge_gym.db*
 
