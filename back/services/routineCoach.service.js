@@ -1,6 +1,8 @@
+import crypto from 'node:crypto';
 import { executeAiQuery } from './aiProvider.service.js';
+import { getIaCache, setIaCache } from './quota.service.js';
 
-// Cache en memoria (TTL: 12 horas)
+// Cache en memoria + respaldo persistente SQLite (TTL: 12 horas)
 const cacheRutinas = new Map();
 const TTL_CACHE_MS = 12 * 60 * 60 * 1000;
 
@@ -19,17 +21,17 @@ function normalizarRutina(raw, perfil) {
           dia: String(d.dia || `Día ${i + 1}`),
           grupoMuscular: String(d.grupoMuscular || 'General'),
           ejercicios: Array.isArray(d.ejercicios) && d.ejercicios.length > 0
-            ? d.ejercicios.map(e => ({
+            ? d.ejercicios.map((e) => ({
                 nombre: String(e.nombre || 'Ejercicio'),
                 series: Number(e.series) > 0 ? Number(e.series) : 3,
                 repeticiones: String(e.repeticiones || '10-12'),
                 descansoSegundos: Number(e.descansoSegundos) >= 0 ? Number(e.descansoSegundos) : 60,
-                notasCoach: String(e.notasCoach || 'Mantener postura controlada.')
+                notasCoach: String(e.notasCoach || 'Mantener postura controlada.'),
               }))
             : [
                 { nombre: 'Sentadillas', series: 4, repeticiones: '10-12', descansoSegundos: 90, notasCoach: 'Espalda recta' },
-                { nombre: 'Flexiones / Press', series: 4, repeticiones: '8-10', descansoSegundos: 90, notasCoach: 'Control de bajada' }
-              ]
+                { nombre: 'Flexiones / Press', series: 4, repeticiones: '8-10', descansoSegundos: 90, notasCoach: 'Control de bajada' },
+              ],
         }))
       : [
           {
@@ -38,15 +40,15 @@ function normalizarRutina(raw, perfil) {
             ejercicios: [
               { nombre: 'Sentadilla libre', series: 4, repeticiones: '10-12', descansoSegundos: 90, notasCoach: 'Mantener la espalda recta.' },
               { nombre: 'Press de banca', series: 4, repeticiones: '8-10', descansoSegundos: 90, notasCoach: 'Control en el descenso.' },
-              { nombre: 'Jalón al pecho', series: 3, repeticiones: '10-12', descansoSegundos: 60, notasCoach: 'Escápulas atrás y abajo.' }
-            ]
-          }
-        ]
+              { nombre: 'Jalón al pecho', series: 3, repeticiones: '10-12', descansoSegundos: 60, notasCoach: 'Escápulas atrás y abajo.' },
+            ],
+          },
+        ],
   };
 }
 
 /**
- * Genera rutina de entrenamiento personalizada
+ * Genera rutina de entrenamiento personalizada con cache en memoria + SQLite ia_cache
  */
 export async function generarRutinaEntrenamiento(perfilSocio) {
   const {
@@ -58,13 +60,25 @@ export async function generarRutinaEntrenamiento(perfilSocio) {
     objetivo = 'Ganancia muscular',
     diasDisponibles = 4,
     nivel = 'Intermedio',
-    restriccionesMedicas = 'Ninguna'
+    restriccionesMedicas = 'Ninguna',
   } = perfilSocio || {};
 
-  const claveCache = `${String(nombre).trim().toLowerCase()}_${peso}_${altura}_${String(objetivo).trim().toLowerCase()}_${diasDisponibles}_${String(nivel).trim().toLowerCase()}`;
-  const enCache = cacheRutinas.get(claveCache);
+  const claveTexto = `${String(nombre).trim().toLowerCase()}_${peso}_${altura}_${String(objetivo).trim().toLowerCase()}_${diasDisponibles}_${String(nivel).trim().toLowerCase()}_${String(restriccionesMedicas).trim().toLowerCase()}`;
+  const claveHash = crypto.createHash('sha256').update(claveTexto).digest('hex');
+
+  const enCache = cacheRutinas.get(claveHash);
   if (enCache && Date.now() - enCache.timestamp < TTL_CACHE_MS) {
     return { exito: true, origen: 'cache', data: enCache.data };
+  }
+
+  try {
+    const dbCached = getIaCache(claveHash, TTL_CACHE_MS);
+    if (dbCached) {
+      cacheRutinas.set(claveHash, { data: dbCached, timestamp: Date.now() });
+      return { exito: true, origen: 'sqlite-cache', data: dbCached };
+    }
+  } catch {
+    /* continuar si cache aún no disponible */
   }
 
   const prompt = `Eres un entrenador físico profesional de alto nivel. Diseña una rutina de entrenamiento personalizada y devuelve ÚNICAMENTE un objeto JSON válido con exactamente esta estructura (sin texto adicional ni markdown):
@@ -104,17 +118,21 @@ Perfil del socio:
   try {
     const { text: raw, origen } = await executeAiQuery(
       [{ role: 'user', content: prompt }],
-      { temperature: 0.3, maxTokens: 8192, jsonMode: true }
+      { temperature: 0.3, maxTokens: 8192, jsonMode: true },
     );
 
-    // Extraer JSON limpio
     const match = raw.match(/\{[\s\S]*\}/);
     if (!match) throw new Error('No se encontró JSON en la respuesta de la IA');
 
     const datosCrudos = JSON.parse(match[0]);
     const datosNormalizados = normalizarRutina(datosCrudos, perfilSocio);
 
-    cacheRutinas.set(claveCache, { data: datosNormalizados, timestamp: Date.now() });
+    cacheRutinas.set(claveHash, { data: datosNormalizados, timestamp: Date.now() });
+    try {
+      setIaCache(claveHash, datosNormalizados);
+    } catch {
+      /* noop */
+    }
 
     return { exito: true, origen, data: datosNormalizados };
   } catch (error) {
@@ -134,12 +152,12 @@ Perfil del socio:
             ejercicios: [
               { nombre: 'Sentadilla libre', series: 4, repeticiones: '10-12', descansoSegundos: 90, notasCoach: 'Mantener la espalda recta.' },
               { nombre: 'Press de banca', series: 4, repeticiones: '8-10', descansoSegundos: 90, notasCoach: 'Control en el descenso.' },
-              { nombre: 'Jalón al pecho', series: 3, repeticiones: '10-12', descansoSegundos: 60, notasCoach: 'Escápulas atrás y abajo.' }
-            ]
-          }
+              { nombre: 'Jalón al pecho', series: 3, repeticiones: '10-12', descansoSegundos: 60, notasCoach: 'Escápulas atrás y abajo.' },
+            ],
+          },
         ],
-        recomendacionesGenerales: 'Mantén buena hidratación y consulta con un entrenador si necesitas ajustes.'
-      }
+        recomendacionesGenerales: 'Mantén buena hidratación y consulta con un entrenador si necesitas ajustes.',
+      },
     };
   }
 }

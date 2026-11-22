@@ -5,8 +5,10 @@ import {
 } from "@angular/common/http/testing";
 import { TestBed } from "@angular/core/testing";
 import { provideRouter } from "@angular/router";
+import type { Stripe, StripeCardElement } from "@stripe/stripe-js";
 import { of } from "rxjs";
 import { routes } from "../../app.routes";
+import { STRIPE_LOADER } from "../../core/config/app-endpoints";
 import { ThemeService } from "../../core/theme/theme.service";
 import {
   SESSION,
@@ -25,14 +27,53 @@ import {
 import { Formulario2Component } from "../../features/training/pages/formulario2/formulario2.component";
 import { RequestStateComponent } from "../../shared/ui/request-state/request-state.component";
 
+function buildStripeMock(confirmCardPayment: jasmine.Spy) {
+  let changeCb:
+    | ((ev: { complete: boolean; error?: { message: string } }) => void)
+    | undefined;
+  const card = {
+    mount: jasmine.createSpy("mount"),
+    unmount: jasmine.createSpy("unmount"),
+    destroy: jasmine.createSpy("destroy"),
+    blur: jasmine.createSpy("blur"),
+    clear: jasmine.createSpy("clear"),
+    focus: jasmine.createSpy("focus"),
+    update: jasmine.createSpy("update"),
+    on: jasmine.createSpy("on").and.callFake(
+      (
+        event: string,
+        handler: (ev: { complete: boolean; error?: { message: string } }) => void,
+      ) => {
+        if (event === "change") changeCb = handler;
+        return card;
+      },
+    ),
+    once: jasmine.createSpy("once"),
+    off: jasmine.createSpy("off"),
+  } as unknown as StripeCardElement;
+  const stripe = {
+    elements: () => ({ create: () => card }),
+    confirmCardPayment,
+  } as unknown as Stripe;
+  return {
+    stripe,
+    markComplete: () => changeCb?.({ complete: true }),
+  };
+}
+
 describe("Confirmed record and independent notification", () => {
   let repository: jasmine.SpyObj<TrainingRepository>;
   afterEach(() => localStorage.removeItem("gym_user"));
   beforeEach(() => {
-    // Simular usuario en localStorage (reemplaza getCurrentUser de Firebase)
-    localStorage.setItem("gym_user", JSON.stringify({
-      uid: "unit", nombre: "Unit", email: "unit@example.test", role: "user"
-    }));
+    localStorage.setItem(
+      "gym_user",
+      JSON.stringify({
+        uid: "unit",
+        nombre: "Unit",
+        email: "unit@example.test",
+        role: "user",
+      }),
+    );
     repository = jasmine.createSpyObj<TrainingRepository>("training", [
       "createBooking",
       "notifyBooking",
@@ -108,17 +149,21 @@ describe("Confirmed record and independent notification", () => {
     await pending;
   });
 });
+
 describe("Navigation, state presentation and retained inputs", () => {
+  afterEach(() => localStorage.removeItem("espacio_gym_carrito"));
+
   it("keeps every concrete URL and defers feature component loading", () => {
     const concrete = routes.filter(
       (route) => route.path && route.path !== "auth" && !route.redirectTo,
     );
-    expect(concrete.length).toBe(26);
+    expect(concrete.length).toBe(27);
     expect(
       concrete.every((route) => !!route.loadComponent && !route.component),
     ).toBeTrue();
     expect(routes.find((r) => r.path === "auth")?.loadChildren).toBeDefined();
   });
+
   it("uses a replaceable course catalog with the existing query route", () => {
     const find = jasmine.createSpy().and.returnValue(
       of([
@@ -143,7 +188,9 @@ describe("Navigation, state presentation and retained inputs", () => {
     expect(component.resultados[0].id).toBe(900);
     expect(find).toHaveBeenCalledWith();
   });
-  it("keeps cart and filters when the theme changes and cart when the page is recreated", () => {
+
+  it("keeps cart and filters when the theme changes and persists cart in BrowserStorage when recreated", () => {
+    localStorage.removeItem("espacio_gym_carrito");
     TestBed.configureTestingModule({
       imports: [ProductosComponent],
       providers: [provideRouter([])],
@@ -164,6 +211,7 @@ describe("Navigation, state presentation and retained inputs", () => {
     expect(next.componentInstance.carrito.length).toBe(1);
     theme.setPreference(previous);
   });
+
   it("renders distinct loading, empty, recoverable error and data states with explicit retry", () => {
     const fixture = TestBed.createComponent(RequestStateComponent);
     const retry = spyOn(fixture.componentInstance.retry, "emit");
@@ -190,13 +238,24 @@ describe("Navigation, state presentation and retained inputs", () => {
     expect(fixture.nativeElement.querySelector("button")).toBeNull();
   });
 });
+
 describe("Uncertain payment recovery", () => {
+  beforeEach(() => localStorage.removeItem("espacio_gym_carrito"));
+  afterEach(() => localStorage.removeItem("espacio_gym_carrito"));
+
   it("keeps the cart and prevents a second charge while Stripe confirmation is pending or unconfirmed", async () => {
+    const confirmCardPayment = jasmine
+      .createSpy("confirmCardPayment")
+      .and.resolveTo({
+        paymentIntent: { id: "pi_unit_1", status: "succeeded" },
+      });
+    const stripeMock = buildStripeMock(confirmCardPayment);
     const registrarPago = jasmine.createSpy("registrarPago");
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
+        { provide: STRIPE_LOADER, useValue: () => Promise.resolve(stripeMock.stripe) },
         {
           provide: BILLING,
           useValue: {
@@ -219,40 +278,57 @@ describe("Uncertain payment recovery", () => {
       categoria: "proteina",
     });
     const adapter = TestBed.inject(StripeCheckoutAdapter);
-    const validCard = {
-      cardNumber: "4242 4242 4242 4242",
-      expiry: "12/28",
-      cvc: "123",
-      holderName: "Unit User",
-    };
+    await adapter.mountCardElement(document.createElement("div"));
+    stripeMock.markComplete();
 
-    const firstAttempt = adapter.processPayment(validCard);
+    const firstAttempt = adapter.processPayment({ holderName: "Unit User" });
     expect(adapter.pending()).toBeTrue();
-    expect(await adapter.processPayment(validCard)).toBeNull();
+    expect(await adapter.processPayment({ holderName: "Unit User" })).toBeNull();
 
-    const req = http.expectOne((r) =>
+    const intentReq = http.expectOne((r) =>
+      r.url.endsWith("/api/stripe/create-payment-intent"),
+    );
+    intentReq.flush({
+      exito: true,
+      clientSecret: "pi_sec_1",
+      paymentIntentId: "pi_unit_1",
+      precioFinal: 150,
+    });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const confirmReq = http.expectOne((r) =>
       r.url.endsWith("/api/stripe/confirm-payment"),
     );
-    expect(req.request.body.type).toBe("product");
-    req.flush({ ok: false, status: "PENDING" });
+    expect(confirmReq.request.body.type).toBe("product");
+    confirmReq.flush({ ok: false, status: "PENDING" });
 
     expect(await firstAttempt).toBeNull();
     expect(cart.items().length).toBe(1);
     expect(adapter.state()).toBe("pending");
     expect(registrarPago).not.toHaveBeenCalled();
 
-    // Unconfirmed state blocks subsequent charge attempts on the same adapter.
-    expect(await adapter.processPayment(validCard)).toBeNull();
-    http.expectNone((r) => r.url.endsWith("/api/stripe/confirm-payment"));
+    expect(await adapter.processPayment({ holderName: "Unit User" })).toBeNull();
+    http.expectNone((r) => r.url.endsWith("/api/stripe/create-payment-intent"));
     http.verify();
   });
 
-  it("retains the cart when Stripe declines a card (402) and allows retrying", async () => {
+  it("retains the cart when Stripe declines a card and allows retrying", async () => {
+    const confirmCardPayment = jasmine
+      .createSpy("confirmCardPayment")
+      .and.returnValues(
+        Promise.resolve({ error: { message: "Fondos insuficientes" } }),
+        Promise.resolve({
+          paymentIntent: { id: "pi_retry_1", status: "succeeded" },
+        }),
+      );
+    const stripeMock = buildStripeMock(confirmCardPayment);
     const registrarPago = jasmine.createSpy("registrarPago").and.resolveTo();
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
+        { provide: STRIPE_LOADER, useValue: () => Promise.resolve(stripeMock.stripe) },
         {
           provide: BILLING,
           useValue: {
@@ -275,21 +351,18 @@ describe("Uncertain payment recovery", () => {
       categoria: "proteina",
     });
     const adapter = TestBed.inject(StripeCheckoutAdapter);
-    const validCard = {
-      cardNumber: "4242 4242 4242 4242",
-      expiry: "12/28",
-      cvc: "123",
-      holderName: "Unit User",
-    };
+    await adapter.mountCardElement(document.createElement("div"));
+    stripeMock.markComplete();
 
-    const declined = adapter.processPayment(validCard);
-    const req1 = http.expectOne((r) =>
-      r.url.endsWith("/api/stripe/confirm-payment"),
-    );
-    req1.flush(
-      { error: "Fondos insuficientes" },
-      { status: 402, statusText: "Payment Required" },
-    );
+    const declined = adapter.processPayment({ holderName: "Unit User" });
+    http
+      .expectOne((r) => r.url.endsWith("/api/stripe/create-payment-intent"))
+      .flush({
+        exito: true,
+        clientSecret: "pi_sec_declined",
+        paymentIntentId: "pi_declined",
+        precioFinal: 150,
+      });
 
     expect(await declined).toBeNull();
     expect(cart.items().length).toBe(1);
@@ -297,11 +370,21 @@ describe("Uncertain payment recovery", () => {
     expect(adapter.message()).toContain("Fondos insuficientes");
     expect(registrarPago).not.toHaveBeenCalled();
 
-    const retry = adapter.processPayment(validCard);
-    const req2 = http.expectOne((r) =>
-      r.url.endsWith("/api/stripe/confirm-payment"),
-    );
-    req2.flush({ ok: true, folio: "STR-112233", paymentIntentId: "pi_retry_1" });
+    const retry = adapter.processPayment({ holderName: "Unit User" });
+    http
+      .expectOne((r) => r.url.endsWith("/api/stripe/create-payment-intent"))
+      .flush({
+        exito: true,
+        clientSecret: "pi_sec_retry",
+        paymentIntentId: "pi_retry_1",
+        precioFinal: 150,
+      });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    http
+      .expectOne((r) => r.url.endsWith("/api/stripe/confirm-payment"))
+      .flush({ ok: true, folio: "STR-112233", paymentIntentId: "pi_retry_1" });
     const receipt = await retry;
 
     expect(receipt?.folio).toBe("STR-112233");

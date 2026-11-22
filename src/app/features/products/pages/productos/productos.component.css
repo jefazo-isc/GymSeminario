@@ -233,10 +233,22 @@
   padding: 8px 10px;
   font-size: 0.875rem;
 }
-.stripe-card-row {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.stripe-card-element {
+  padding: 12px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  min-height: 44px;
+}
+.product-admin-actions {
+  display: flex;
   gap: 8px;
+  width: 100%;
+}
+.product-admin-actions > .ui-button {
+  flex: 1;
+  min-height: 36px;
+  font-size: 0.75rem;
 }
 .stripe-actions {
   display: grid;

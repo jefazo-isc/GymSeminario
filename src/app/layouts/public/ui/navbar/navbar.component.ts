@@ -25,6 +25,11 @@ import { ButtonDirective } from "../../../../shared/ui/button.directive";
 import { IconComponent } from "../../../../shared/ui/icon/icon.component";
 import { SearchPanelComponent } from "../../../../shared/ui/search-panel/search-panel.component";
 
+const ADMIN_EMAILS = new Set([
+  "guevara.cardona.yahir@gmail.com",
+  "admin@gymseminario.com",
+]);
+
 @Component({
   selector: "app-navbar",
   standalone: true,
@@ -59,6 +64,7 @@ export class NavbarComponent {
   readonly mobileOpen = signal(false);
   userName: string | null = null;
   userRole: string | null = null;
+  demoRoleOverride: "admin" | "receptionist" | "subscriber" | null = null;
   readonly gymLinks = [
     { path: "/nosotros", label: "Nuestra historia", icon: "user" },
     { path: "/servicio", label: "Servicios", icon: "grid" },
@@ -72,13 +78,15 @@ export class NavbarComponent {
     { path: "/coach-ia", label: "Coach virtual IA", icon: "spark" },
     { path: "/productos", label: "Productos", icon: "external" },
   ];
-  readonly memberLinks = [
-    { path: "/micuenta", label: "Mi cuenta", icon: "user" },
-    { path: "/f2", label: "Agendar entrenamiento", icon: "calendar" },
-    { path: "/f3", label: "Registrar asistencia", icon: "check" },
-    { path: "/actividad", label: "Mi actividad", icon: "clock" },
-    { path: "/estado-cuenta", label: "Estado de cuenta", icon: "grid" },
+  readonly guestTrainingLinks = [
+    { path: "/ejercicios", label: "Explorar ejercicios", icon: "grid" },
+    { path: "/videos", label: "Guías de entrenamiento", icon: "play" },
+    { path: "/productos", label: "Productos", icon: "external" },
+  ];
+  readonly guestAccountLinks = [
+    { path: "/micuenta", label: "Mi perfil y datos", icon: "user" },
     { path: "/membresias", label: "Mi membresía", icon: "user" },
+    { path: "/estado-cuenta", label: "Estado de cuenta", icon: "grid" },
     { path: "/change", label: "Cambiar contraseña", icon: "user" },
   ];
   // 1. Opciones de Administrador (Dorado / Ámbar #f59e0b)
@@ -90,33 +98,29 @@ export class NavbarComponent {
 
   // 2. Opciones de Recepcionista (Azul Cyan #0ea5e9)
   readonly receptionLinks = [
-    { path: "/f3", label: "Registrar asistencia (Check-in)", icon: "check" },
-    { path: "/f2", label: "Agendar entrenamiento", icon: "calendar" },
-    { path: "/actividad", label: "Bitácora de actividad", icon: "clock" },
+    { path: "/scanner", label: "Escáner y QR en puerta", icon: "check" },
+    { path: "/editar2", label: "Registro de asistencias", icon: "calendar" },
   ];
 
   // 3. Opciones de Subscriptor / Socio Activo (Verde Esmeralda #10b981)
   readonly subscriberLinks = [
     { path: "/coach-ia", label: "Coach virtual IA", icon: "spark" },
+    { path: "/f3", label: "Registrar asistencia QR / Cámara", icon: "check" },
+    { path: "/f2", label: "Agendar entrenamiento", icon: "calendar" },
+    { path: "/actividad", label: "Mi actividad", icon: "clock" },
     { path: "/membresias", label: "Mi membresía", icon: "user" },
     { path: "/estado-cuenta", label: "Estado de cuenta", icon: "grid" },
     { path: "/micuenta", label: "Mi perfil y datos", icon: "user" },
     { path: "/change", label: "Cambiar contraseña", icon: "user" },
   ];
 
-  // Enlaces restringidos cuando no hay registro ni suscripción activa
-  readonly restrictedGuestLinks = [
-    { label: "Coach virtual IA", icon: "spark", feature: "Rutinas con IA generativa Gemini" },
-    { label: "Agendar entrenamiento", icon: "calendar", feature: "Reservas y cupos exclusivos" },
-    { label: "Registrar asistencia", icon: "check", feature: "Check-in por código QR o mostrador" },
-    { label: "Estado de cuenta", icon: "grid", feature: "Historial de pagos y membresías" },
-    { label: "Panel de administración", icon: "grid", feature: "Métricas del gimnasio" },
-  ];
-
   constructor() {
     this.auth.userName$
       .pipe(takeUntilDestroyed())
-      .subscribe((name) => (this.userName = name));
+      .subscribe((name) => {
+        this.userName = name;
+        if (!name) this.demoRoleOverride = null;
+      });
     this.auth.userRole$
       .pipe(takeUntilDestroyed())
       .subscribe((role) => (this.userRole = role));
@@ -166,41 +170,72 @@ export class NavbarComponent {
       .toUpperCase();
   }
 
+  get visibleTrainingLinks() {
+    return this.effectiveRole === "admin" || this.effectiveRole === "subscriber"
+      ? this.trainingLinks
+      : this.guestTrainingLinks;
+  }
+
   get userEmail(): string {
     try {
       const raw = localStorage.getItem("gym_user");
       if (!raw) return "";
-      const u = JSON.parse(raw);
-      return (u?.email || "").toLowerCase().trim();
+      const u = JSON.parse(raw) as Record<string, unknown>;
+      return typeof u["email"] === "string"
+        ? u["email"].toLowerCase().trim()
+        : "";
     } catch {
       return "";
     }
   }
 
+  get isRealAdmin(): boolean {
+    if (!this.userName) return false;
+    const rawRole = (this.userRole || "").toLowerCase().trim();
+    if (ADMIN_EMAILS.has(this.userEmail) || rawRole === "admin") {
+      return true;
+    }
+    try {
+      const raw = localStorage.getItem("gym_user");
+      if (!raw) return false;
+      const u = JSON.parse(raw) as Record<string, unknown>;
+      const storedRole =
+        typeof u["role"] === "string" ? u["role"].toLowerCase().trim() : "";
+      return storedRole === "admin";
+    } catch {
+      return false;
+    }
+  }
+
   get effectiveRole(): "admin" | "receptionist" | "subscriber" | "guest" {
     if (!this.userName) return "guest";
-    const email = this.userEmail;
-    const r = (this.userRole || "").toLowerCase();
-
-    // Administrador: Únicamente Yahir (o email admin@gymseminario.com o rol explícito admin)
-    if (
-      email === "guevara.cardona.yahir@gmail.com" ||
-      email === "admin@gymseminario.com" ||
-      r === "admin" ||
-      this.userName.toLowerCase().includes("yahir")
-    ) {
+    if (this.isRealAdmin && this.demoRoleOverride) {
+      return this.demoRoleOverride;
+    }
+    if (this.isRealAdmin) {
       return "admin";
     }
+    const r = (this.userRole || "").toLowerCase().trim();
 
-    if (r === "receptionist" || r === "recepcionista" || r === "staff") {
+    if (
+      r === "reception" ||
+      r === "receptionist" ||
+      r === "recepcionista" ||
+      r === "staff"
+    ) {
       return "receptionist";
     }
 
-    if (r === "subscriber" || r === "subscriptor" || r === "socio") {
+    if (
+      r === "subscriber" ||
+      r === "subscriptor" ||
+      r === "socio" ||
+      r === "trainer" ||
+      r === "entrenador"
+    ) {
       return "subscriber";
     }
 
-    // Cualquier otra cuenta de Google o usuario registrado sin suscripción pagada es "guest" (opciones tachadas)
     return "guest";
   }
 
@@ -231,56 +266,15 @@ export class NavbarComponent {
   }
 
   setDemoRole(role: "admin" | "receptionist" | "subscriber"): void {
-    this.userRole = role;
-    const raw = localStorage.getItem("gym_user");
-    if (raw) {
-      try {
-        const u = JSON.parse(raw);
-        u.role = role;
-        localStorage.setItem("gym_user", JSON.stringify(u));
-      } catch {
-        /* noop */
-      }
-    }
+    if (!this.isRealAdmin) return;
+    this.demoRoleOverride = role === "admin" ? null : role;
     void Swal.fire({
       toast: true,
       position: "top-end",
       icon: "info",
-      title: `Rol cambiado a: ${this.roleBadgeLabel}`,
+      title: `Vista previa de rol: ${this.roleBadgeLabel}`,
       timer: 1800,
       showConfirmButton: false,
-    });
-  }
-
-  promptLockedFeature(event: Event, featureName: string): void {
-    event.preventDefault();
-    event.stopPropagation();
-    void Swal.fire({
-      icon: "info",
-      title: "🔒 Función Exclusiva para Socios",
-      html: `
-        <p style="margin-bottom: 12px; font-size: 0.95rem; color: #374151;">
-          La opción <strong>${featureName}</strong> requiere contar con una membresía activa o un perfil autorizado en <strong>espacioGYM</strong>.
-        </p>
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; font-size: 0.825rem; text-align: left; line-height: 1.6; margin-top: 10px;">
-          <div style="color: #b45309; font-weight: 600;">👑 <strong>Admin (Dorado):</strong> Métricas globales y gestión</div>
-          <div style="color: #0369a1; font-weight: 600;">📋 <strong>Recepción (Cyan):</strong> Control de accesos y agendas</div>
-          <div style="color: #047857; font-weight: 600;">⚡ <strong>Socio Activo (Verde):</strong> Coach IA, reservas y cuenta</div>
-        </div>
-      `,
-      showCancelButton: true,
-      confirmButtonText: "✨ Ver Membresías",
-      cancelButtonText: "Iniciar Sesión",
-      confirmButtonColor: "#10b981",
-      cancelButtonColor: "#0ea5e9",
-      showCloseButton: true,
-    }).then((result) => {
-      this.closeMobile();
-      if (result.isConfirmed) {
-        void this.router.navigate(["/membresias"]);
-      } else if (result.dismiss === Swal.DismissReason.cancel) {
-        void this.router.navigate(["/auth/sign-in"]);
-      }
     });
   }
 
@@ -350,6 +344,7 @@ export class NavbarComponent {
     if (!result.isConfirmed) return;
 
     this.closeMobile();
+    this.demoRoleOverride = null;
     await this.auth.cerrarSesion();
     await Swal.fire({
       icon: "success",
@@ -364,6 +359,7 @@ export class NavbarComponent {
 
   @HostListener("document:keydown", ["$event"])
   handleShortcut(event: KeyboardEvent): void {
+    if (this.effectiveRole === "receptionist") return;
     if (
       (event.ctrlKey || event.metaKey) &&
       event.key.toLowerCase() === "k" &&

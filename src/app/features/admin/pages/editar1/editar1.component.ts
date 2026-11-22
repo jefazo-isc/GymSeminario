@@ -139,7 +139,7 @@ export class Editar1Component implements OnInit, OnDestroy {
         turno: item.turno,
         nombre: item.nombre,
       });
-      this.feedback = "Registro actualizado en Firestore.";
+      this.feedback = "Registro actualizado en SQLite en tiempo real.";
       this.editor?.close();
     } catch {
       this.feedback =
@@ -157,7 +157,7 @@ export class Editar1Component implements OnInit, OnDestroy {
         (item.nombre || "este socio") +
         " del " +
         item.fecha +
-        ". Esta acción modifica Firestore y no se puede deshacer desde esta interfaz.",
+        ". Esta acción modifica SQLite en tiempo real y no se puede deshacer desde esta interfaz.",
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Eliminar registro",
@@ -168,7 +168,7 @@ export class Editar1Component implements OnInit, OnDestroy {
     try {
       await this.training.deleteBooking(item.id);
       this.registros = this.registros.filter((r) => r.id !== item.id);
-      this.feedback = "Registro eliminado de Firestore.";
+      this.feedback = "Registro eliminado de SQLite en tiempo real.";
     } catch {
       this.feedback =
         "No se pudo eliminar el registro. Revisa permisos y conexión.";

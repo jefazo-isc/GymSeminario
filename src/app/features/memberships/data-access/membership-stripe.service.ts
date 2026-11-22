@@ -1,10 +1,18 @@
-import { HttpClient } from "@angular/common/http";
+import { DOCUMENT } from "@angular/common";
+import { HttpClient, HttpErrorResponse } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
+import type { Stripe, StripeCardElement } from "@stripe/stripe-js";
 import { firstValueFrom, Observable, of } from "rxjs";
 import Swal from "sweetalert2";
-import { APP_ENDPOINTS } from "../../../core/config/app-endpoints";
-import { BILLING } from "../../billing/data-access/billing.repository";
+import {
+  APP_ENDPOINTS,
+  backendBaseUrl,
+  STRIPE_CONFIG,
+  STRIPE_LOADER,
+} from "../../../core/config/app-endpoints";
+import { escapeHtml } from "../../../shared/ui/escape-html";
 import { SESSION } from "../../auth/data-access/session.repository";
+import { BILLING } from "../../billing/data-access/billing.repository";
 import { PlanCatalogo } from "../models/membresia.model";
 import { MEMBERSHIPS } from "./membership.repository";
 
@@ -24,6 +32,25 @@ export interface ResultadoPagoStripe {
   error?: string;
   cupon?: string;
   monto?: number;
+}
+
+interface CreateIntentResponse {
+  exito?: boolean;
+  freeCoupon?: boolean;
+  freePass?: boolean;
+  clientSecret?: string | null;
+  paymentIntentId?: string;
+  precioFinal?: number;
+  finalPrice?: number;
+  error?: string;
+}
+
+interface ConfirmPaymentResponse {
+  ok?: boolean;
+  folio?: string;
+  paymentIntentId?: string;
+  montoPagado?: number;
+  error?: string;
 }
 
 export const CUPONES_SISTEMA: Record<
@@ -72,23 +99,20 @@ export const CUPONES_SISTEMA: Record<
   providedIn: "root",
 })
 export class MembershipStripeService {
-  private http = inject(HttpClient, { optional: true });
-  private endpoints = inject(APP_ENDPOINTS, { optional: true });
-  private membershipRepo = inject(MEMBERSHIPS, { optional: true });
-  private billingRepo = inject(BILLING, { optional: true });
-  private session = this.http ? inject(SESSION, { optional: true }) : null;
-
-  private getBackendBaseUrl(): string {
-    const notif =
-      this.endpoints?.notifications || "https://gymseminario.onrender.com";
-    return notif.replace(/\/api$/, "");
-  }
+  private readonly http = inject(HttpClient, { optional: true });
+  private readonly endpoints = inject(APP_ENDPOINTS, { optional: true });
+  private readonly stripeConfig = inject(STRIPE_CONFIG, { optional: true });
+  private readonly stripeLoader = inject(STRIPE_LOADER, { optional: true });
+  private readonly membershipRepo = inject(MEMBERSHIPS, { optional: true });
+  private readonly billingRepo = inject(BILLING, { optional: true });
+  private readonly session = this.http ? inject(SESSION, { optional: true }) : null;
+  private readonly doc = inject(DOCUMENT, { optional: true });
 
   private getUserSessionInfo(): { email: string; nombre: string } {
     try {
-      const raw = localStorage.getItem("gym_user");
+      const raw = this.doc?.defaultView?.localStorage?.getItem("gym_user");
       if (raw) {
-        const u = JSON.parse(raw);
+        const u = JSON.parse(raw) as { email?: string; nombre?: string };
         return {
           email: (u?.email || "socio@espaciogym.com").toLowerCase().trim(),
           nombre: u?.nombre || "Socio espacioGYM",
@@ -122,7 +146,7 @@ export class MembershipStripeService {
   }
 
   /**
-   * Inicia el flujo oficial de pagos con Stripe y Motor de Cupones.
+   * Inicia el flujo oficial de pagos con Stripe Elements y Motor de Cupones.
    */
   async iniciarFlujoPagoStripe(
     plan: PlanCatalogo,
@@ -134,24 +158,26 @@ export class MembershipStripeService {
     let precioActual = precio;
     let resolvedSuccess = false;
     let finalFolio = "";
+    let lastError = "";
+    let stripeInstance: Stripe | null = null;
+    let cardElement: StripeCardElement | null = null;
+    let cardComplete = false;
 
     await Swal.fire({
       title: "Pasarela Oficial Stripe · espacioGYM",
       html: `
         <div style="text-align: left; font-size: 0.9rem; line-height: 1.5;">
-          <!-- Tarjeta de encabezado Stripe -->
           <div style="background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); color: white; padding: 14px 16px; border-radius: 10px; margin-bottom: 14px; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-              <span style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.9; font-weight: 700;">Pasarela de Pago Segura</span>
-              <span style="background: rgba(255,255,255,0.22); font-size: 0.7rem; padding: 2px 8px; border-radius: 9999px; font-weight: 600;">🔒 Stripe Live 256-bit</span>
+              <span style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.9; font-weight: 700;">Stripe Elements Seguro</span>
+              <span style="background: rgba(255,255,255,0.22); font-size: 0.7rem; padding: 2px 8px; border-radius: 9999px; font-weight: 600;">PCI-DSS Level 1</span>
             </div>
-            <div style="font-size: 1.2rem; font-weight: 800;">${plan.nombre} · Ciclo ${periodo}</div>
+            <div style="font-size: 1.2rem; font-weight: 800;">${escapeHtml(plan.nombre)} · Ciclo ${escapeHtml(periodo)}</div>
             <div id="stripe-display-price" style="font-size: 1.35rem; font-weight: 900; margin-top: 4px;">
               $${precio.toLocaleString("es-MX", { minimumFractionDigits: 2 })} MXN
             </div>
           </div>
 
-          <!-- Sección de Cupón de Descuento -->
           <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; margin-bottom: 14px;">
             <label for="stripe-coupon-input" style="display: block; font-size: 0.75rem; font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em;">
               ¿Tienes un cupón de descuento o beca?
@@ -167,42 +193,31 @@ export class MembershipStripeService {
             <div id="stripe-coupon-msg" style="margin-top: 6px; font-size: 0.8rem; display: none;"></div>
           </div>
 
-          <!-- Banner de Cortesía Institucional (100% Descuento) -->
           <div id="stripe-free-banner" style="display: none; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; text-align: left;">
             <div style="font-weight: 700; color: #065f46; font-size: 0.875rem; margin-bottom: 2px;">
-              🎓 Cortesía Institucional Comité Evaluador Aprobada
+              🎓 Cortesía Institucional Aprobada (100%)
             </div>
             <div style="color: #047857; font-size: 0.8rem; line-height: 1.4;">
-              100% de descuento acreditado. Tu membresía, casillero y acceso al Coach IA se activarán de forma inmediata sin cobro a tarjeta bancaria.
+              Tu membresía y acceso al Coach IA se activarán sin cobro a tarjeta bancaria.
             </div>
           </div>
 
-          <!-- Formulario de Tarjeta Bancaria Stripe -->
           <div id="stripe-card-form" style="margin-bottom: 14px;">
             <div style="font-size: 0.75rem; font-weight: 700; color: #475569; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.04em;">
-              Datos de Tarjeta Bancaria (Débito o Crédito)
+              Tarjeta Bancaria (Stripe Elements)
             </div>
             <div style="margin-bottom: 8px;">
-              <input id="stripe-card-number" type="text" maxlength="19" placeholder="4242 •••• •••• 4242"
-                style="width: 100%; box-sizing: border-box; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.875rem; font-family: monospace;" />
-            </div>
-            <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-              <input id="stripe-card-expiry" type="text" maxlength="5" placeholder="MM/AA"
-                style="flex: 1; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.875rem; font-family: monospace;" />
-              <input id="stripe-card-cvc" type="password" maxlength="4" placeholder="CVC"
-                style="flex: 1; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.875rem; font-family: monospace;" />
-            </div>
-            <div>
-              <input id="stripe-card-holder" type="text" placeholder="Nombre en la tarjeta" value="${userName}"
+              <input id="stripe-card-holder" type="text" placeholder="Nombre en la tarjeta" value="${escapeHtml(userName)}"
                 style="width: 100%; box-sizing: border-box; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.875rem;" />
             </div>
+            <div id="stripe-membership-card-element" style="padding: 11px 12px; border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff; min-height: 42px;"></div>
+            <div id="stripe-membership-card-errors" style="margin-top: 6px; font-size: 0.8rem; color: #dc2626; min-height: 18px;"></div>
           </div>
 
-          <!-- Botón Principal de Pago -->
           <div style="text-align: center; margin-top: 14px;">
             <button id="stripe-btn-submit-payment" type="button"
               style="width: 100%; background: #4f46e5; color: white; border: none; border-radius: 8px; padding: 12px 18px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: background 0.2s;">
-              🔒 Pagar $${precio.toFixed(2)} MXN con Stripe
+              Pagar $${precio.toFixed(2)} MXN con Stripe
             </button>
           </div>
         </div>
@@ -234,36 +249,62 @@ export class MembershipStripeService {
         const submitBtn = popup.querySelector(
           "#stripe-btn-submit-payment",
         ) as HTMLButtonElement;
-        const cardNumberInput = popup.querySelector(
-          "#stripe-card-number",
+        const holderInput = popup.querySelector(
+          "#stripe-card-holder",
         ) as HTMLInputElement;
-        const cardExpiryInput = popup.querySelector(
-          "#stripe-card-expiry",
-        ) as HTMLInputElement;
+        const cardMount = popup.querySelector(
+          "#stripe-membership-card-element",
+        ) as HTMLElement;
+        const cardErrors = popup.querySelector(
+          "#stripe-membership-card-errors",
+        ) as HTMLElement;
 
-        // Formateo dinámico de número de tarjeta con espacios
-        if (cardNumberInput) {
-          cardNumberInput.addEventListener("input", (e: Event) => {
-            const target = e.target as HTMLInputElement;
-            let val = target.value.replace(/\D/g, "");
-            val = val.substring(0, 16);
-            target.value = val.replace(/(.{4})/g, "$1 ").trim();
-          });
-        }
-
-        // Formateo dinámico de expiración MM/AA
-        if (cardExpiryInput) {
-          cardExpiryInput.addEventListener("input", (e: Event) => {
-            const target = e.target as HTMLInputElement;
-            let val = target.value.replace(/\D/g, "");
-            if (val.length >= 2) {
-              val = val.substring(0, 2) + "/" + val.substring(2, 4);
+        const mountStripeCard = async () => {
+          if (!cardMount || !this.stripeLoader) return;
+          const pubKey = this.stripeConfig?.publishableKey || "";
+          if (!pubKey) {
+            if (cardErrors) {
+              cardErrors.textContent = "Clave pública de Stripe no configurada.";
             }
-            target.value = val.substring(0, 5);
-          });
-        }
+            return;
+          }
+          try {
+            stripeInstance = await this.stripeLoader(pubKey);
+            if (!stripeInstance) {
+              if (cardErrors) {
+                cardErrors.textContent =
+                  "No se pudo inicializar Stripe Elements. Revisa tu conexión.";
+              }
+              return;
+            }
+            const elements = stripeInstance.elements();
+            cardElement = elements.create("card", {
+              hidePostalCode: true,
+              style: {
+                base: {
+                  fontSize: "15px",
+                  color: "#1e293b",
+                  "::placeholder": { color: "#94a3b8" },
+                },
+                invalid: { color: "#dc2626" },
+              },
+            });
+            cardElement.mount(cardMount);
+            cardElement.on("change", (ev) => {
+              cardComplete = ev.complete;
+              if (cardErrors) {
+                cardErrors.textContent = ev.error?.message || "";
+              }
+            });
+          } catch {
+            if (cardErrors) {
+              cardErrors.textContent =
+                "Stripe Elements no disponible temporalmente.";
+            }
+          }
+        };
+        void mountStripeCard();
 
-        // Aplicar cupón de descuento
         const aplicarCupon = () => {
           const rawCode = couponInput.value.trim().toUpperCase();
           const info = this.validarCupon(rawCode, precio);
@@ -272,10 +313,9 @@ export class MembershipStripeService {
             precioActual = info.precioFinal;
             couponMsg.style.display = "block";
             couponMsg.style.color = "#16a34a";
-            couponMsg.innerHTML = `✓ ${info.descripcion} (${info.porcentaje}% de descuento aplicado)`;
+            couponMsg.textContent = `✓ ${info.descripcion} (${info.porcentaje}% de descuento aplicado)`;
 
             if (info.precioFinal === 0) {
-              // Cupón 100% de descuento (UAACOMITE / COMITE)
               displayPrice.innerHTML = `
                 <span style="text-decoration: line-through; opacity: 0.6; font-size: 1.1rem; margin-right: 8px;">
                   $${precio.toFixed(2)} MXN
@@ -286,7 +326,8 @@ export class MembershipStripeService {
               if (freeBanner) freeBanner.style.display = "block";
               if (submitBtn) {
                 submitBtn.style.background = "#059669";
-                submitBtn.innerText = "✨ Activar Membresía (Cortesía Institucional)";
+                submitBtn.innerText =
+                  "✨ Activar Membresía (Cortesía Institucional)";
               }
             } else {
               displayPrice.innerHTML = `
@@ -299,19 +340,20 @@ export class MembershipStripeService {
               if (freeBanner) freeBanner.style.display = "none";
               if (submitBtn) {
                 submitBtn.style.background = "#4f46e5";
-                submitBtn.innerText = `🔒 Pagar $${info.precioFinal.toFixed(2)} MXN con Stripe`;
+                submitBtn.innerText = `Pagar $${info.precioFinal.toFixed(2)} MXN con Stripe`;
               }
             }
           } else {
+            cuponActivo = null;
+            precioActual = precio;
             couponMsg.style.display = "block";
             couponMsg.style.color = "#dc2626";
-            couponMsg.innerText = "✗ Cupón no válido. Intenta con UAACOMITE o PROMO50.";
+            couponMsg.innerText =
+              "✗ Cupón no válido. Intenta con UAACOMITE o PROMO50.";
           }
         };
 
-        if (btnApplyCoupon) {
-          btnApplyCoupon.onclick = aplicarCupon;
-        }
+        if (btnApplyCoupon) btnApplyCoupon.onclick = aplicarCupon;
         if (couponInput) {
           couponInput.addEventListener("keydown", (ev) => {
             if (ev.key === "Enter") {
@@ -321,15 +363,18 @@ export class MembershipStripeService {
           });
         }
 
-        // Ejecutar procesamiento del pago
         if (submitBtn) {
           submitBtn.onclick = async () => {
-            // Validar tarjeta si no es cortesía del 100%
-            if (precioActual > 0 && cardNumberInput) {
-              const digits = cardNumberInput.value.replace(/\s/g, "");
-              if (digits.length < 15) {
+            if (precioActual > 0) {
+              if (!stripeInstance || !cardElement) {
                 void Swal.showValidationMessage(
-                  "Por favor introduce un número de tarjeta válido (16 dígitos) o aplica el cupón UAACOMITE.",
+                  "Stripe Elements aún se está cargando o no está disponible.",
+                );
+                return;
+              }
+              if (!cardComplete) {
+                void Swal.showValidationMessage(
+                  "Completa los datos de tu tarjeta en Stripe o aplica el cupón UAACOMITE.",
                 );
                 return;
               }
@@ -337,6 +382,7 @@ export class MembershipStripeService {
 
             Swal.showLoading();
             try {
+              const payerName = holderInput?.value?.trim() || userName;
               const res = await this.procesarPagoYActivacion({
                 plan,
                 periodo,
@@ -344,33 +390,49 @@ export class MembershipStripeService {
                 precioFinal: precioActual,
                 cupon: cuponActivo?.codigo,
                 userEmail,
-                userName,
+                userName: payerName,
+                stripe: stripeInstance,
+                cardElement,
               });
               resolvedSuccess = true;
               finalFolio = res.folio;
             } catch (err) {
-              console.error("Error al procesar con Stripe:", err);
+              lastError =
+                err instanceof Error
+                  ? err.message
+                  : "No se pudo completar el cobro con Stripe.";
               void Swal.fire(
-                "Error en la transacción",
-                "No se pudo completar el procesamiento del pago. Intenta de nuevo.",
+                "No se completó el pago",
+                lastError,
                 "error",
               );
             }
           };
         }
       },
+      willClose: () => {
+        try {
+          cardElement?.unmount();
+          cardElement?.destroy();
+        } catch {
+          /* noop */
+        }
+        cardElement = null;
+      },
     });
 
     return {
       success: resolvedSuccess,
-      folio: finalFolio,
+      folio: finalFolio || undefined,
+      error: lastError || undefined,
       cupon: cuponActivo?.codigo,
       monto: precioActual,
     };
   }
 
   /**
-   * Procesa la orden en backend y activa inmediatamente la membresía y facturación.
+   * Crea el PaymentIntent en el backend, confirma con Stripe Elements cuando monto > 0,
+   * y confirma en /api/stripe/confirm-payment. Nunca activa membresías si el servidor falla.
    */
   async procesarPagoYActivacion(params: {
     plan: PlanCatalogo;
@@ -380,54 +442,128 @@ export class MembershipStripeService {
     cupon?: string;
     userEmail: string;
     userName: string;
+    stripe?: Stripe | null;
+    cardElement?: StripeCardElement | null;
   }): Promise<{ ok: boolean; folio: string; paymentIntentId: string }> {
-    const backendBase = this.getBackendBaseUrl();
-    let folio = `STR-${Math.floor(100000 + Math.random() * 900000)}`;
-    let paymentIntentId = `pi_live_${Date.now()}`;
+    if (!this.http) {
+      throw new Error("Cliente HTTP no disponible para confirmar el pago con Stripe.");
+    }
 
-    // 1. Llamar al backend Edge para registrar en SQLite y Stripe
-    if (this.http) {
-      try {
-        const resp = await firstValueFrom(
-          this.http.post<{
-            ok: boolean;
-            folio?: string;
-            paymentIntentId?: string;
-            montoPagado?: number;
-          }>(`${backendBase}/api/stripe/confirm-payment`, {
+    const backendBase = backendBaseUrl(this.endpoints);
+    let intentResp: CreateIntentResponse;
+    try {
+      intentResp = await firstValueFrom(
+        this.http.post<CreateIntentResponse>(
+          `${backendBase}/api/stripe/create-payment-intent`,
+          {
+            planId: params.plan.id,
+            planNombre: params.plan.nombre,
+            precio: params.precioOriginal,
+            userEmail: params.userEmail,
+            periodo: params.periodo,
+            cupon: params.cupon,
+          },
+        ),
+      );
+    } catch (err) {
+      throw new Error(
+        this.extractErrorMessage(
+          err,
+          "No se pudo iniciar la intención de pago en Stripe.",
+        ),
+      );
+    }
+
+    const serverFinal = Number(
+      intentResp.precioFinal ?? intentResp.finalPrice ?? params.precioFinal,
+    );
+    let paymentIntentId =
+      intentResp.paymentIntentId || `pi_free_${Date.now()}`;
+
+    if (serverFinal > 0) {
+      if (!intentResp.clientSecret) {
+        throw new Error(
+          "El servidor no devolvió clientSecret válido de Stripe.",
+        );
+      }
+      if (!params.stripe || !params.cardElement) {
+        throw new Error(
+          "Stripe Elements no está montado para confirmar el cargo con tarjeta.",
+        );
+      }
+
+      const confirmResult = await params.stripe.confirmCardPayment(
+        intentResp.clientSecret,
+        {
+          payment_method: {
+            card: params.cardElement,
+            billing_details: {
+              name: params.userName,
+              email: params.userEmail,
+            },
+          },
+        },
+      );
+
+      if (confirmResult.error) {
+        throw new Error(
+          confirmResult.error.message ||
+            "La tarjeta fue rechazada por Stripe.",
+        );
+      }
+      if (confirmResult.paymentIntent?.status !== "succeeded") {
+        throw new Error(
+          `El pago quedó en estado ${confirmResult.paymentIntent?.status || "pendiente"}. No se activó la membresía.`,
+        );
+      }
+      paymentIntentId = confirmResult.paymentIntent.id;
+    }
+
+    let confirmResp: ConfirmPaymentResponse;
+    try {
+      confirmResp = await firstValueFrom(
+        this.http.post<ConfirmPaymentResponse>(
+          `${backendBase}/api/stripe/confirm-payment`,
+          {
             paymentIntentId,
             planNombre: params.plan.nombre,
             precio: params.precioOriginal,
-            finalPrice: params.precioFinal,
+            finalPrice: serverFinal,
             userEmail: params.userEmail,
             periodo: params.periodo,
             cupon: params.cupon,
             payerName: params.userName,
             payerEmail: params.userEmail,
             beneficios: params.plan.beneficios,
-          }),
-        );
-        if (resp && resp.folio) {
-          folio = resp.folio;
-          paymentIntentId = resp.paymentIntentId || paymentIntentId;
-        }
-      } catch (err) {
-        console.warn(
-          "Backend Stripe confirm endpoint unreachable, proceeding with local persistence:",
+          },
+        ),
+      );
+    } catch (err) {
+      throw new Error(
+        this.extractErrorMessage(
           err,
-        );
-      }
+          "El servidor no pudo confirmar el pago. No se registró como pagado.",
+        ),
+      );
     }
 
-    // 2. Activar la membresía en el repositorio (localStorage + sincronización)
+    if (confirmResp?.ok === false || !confirmResp?.folio) {
+      throw new Error(
+        confirmResp?.error ||
+          "La confirmación de pago en el servidor no fue exitosa.",
+      );
+    }
+
+    const folio = confirmResp.folio;
+    paymentIntentId = confirmResp.paymentIntentId || paymentIntentId;
+
     if (this.membershipRepo) {
       await this.membershipRepo.adquirirOActualizarPlan(
-        { ...params.plan, precio: params.precioFinal },
+        { ...params.plan, precio: serverFinal },
         params.periodo,
       );
     }
 
-    // 3. Registrar el pago en el estado de cuenta y facturación
     if (this.billingRepo) {
       const descPago = params.cupon
         ? `Membresía ${params.plan.nombre} (${params.periodo}) · Cupón: ${params.cupon} · Stripe ID: ${paymentIntentId}`
@@ -435,39 +571,38 @@ export class MembershipStripeService {
 
       await this.billingRepo.registrarPago(
         "Mensualidad",
-        params.precioFinal,
+        serverFinal,
         "Tarjeta de crédito",
         descPago,
         folio,
       );
     }
 
-    // 4. Elevar permisos a Socio Activo (subscriber) para desbloquear navegación y Coach IA
     if (this.session && typeof this.session.upgradeToSubscriber === "function") {
       this.session.upgradeToSubscriber();
     }
     try {
-      const raw = localStorage.getItem("gym_user");
+      const storage = this.doc?.defaultView?.localStorage;
+      const raw = storage?.getItem("gym_user");
       if (raw) {
-        const u = JSON.parse(raw);
+        const u = JSON.parse(raw) as { role?: string };
         if (u.role !== "admin") {
           u.role = "subscriber";
-          localStorage.setItem("gym_user", JSON.stringify(u));
+          storage?.setItem("gym_user", JSON.stringify(u));
         }
       }
     } catch {
       /* noop */
     }
 
-    // 5. Mostrar recibo oficial de Stripe
     await Swal.fire({
       icon: "success",
       title: "¡Pago Confirmado con Stripe!",
       html: `
         <div style="text-align: left; font-size: 0.92rem; line-height: 1.6;">
-          <p style="margin-bottom: 6px;"><strong>Membresía:</strong> ${params.plan.nombre} (${params.periodo})</p>
-          <p style="margin-bottom: 6px;"><strong>Folio de Recibo:</strong> <span style="font-family: monospace; font-weight: bold; color: #4f46e5;">${folio}</span></p>
-          <p style="margin-bottom: 8px;"><strong>Referencia Stripe:</strong> <span style="font-family: monospace; color: #475569;">${paymentIntentId}</span></p>
+          <p style="margin-bottom: 6px;"><strong>Membresía:</strong> ${escapeHtml(params.plan.nombre)} (${escapeHtml(params.periodo)})</p>
+          <p style="margin-bottom: 6px;"><strong>Folio de Recibo:</strong> <span style="font-family: monospace; font-weight: bold; color: #4f46e5;">${escapeHtml(folio)}</span></p>
+          <p style="margin-bottom: 8px;"><strong>Referencia Stripe:</strong> <span style="font-family: monospace; color: #475569;">${escapeHtml(paymentIntentId)}</span></p>
 
           <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; margin: 10px 0;">
             <div style="font-weight: 600; font-size: 0.75rem; color: #64748b; margin-bottom: 4px; text-transform: uppercase;">
@@ -479,18 +614,18 @@ export class MembershipStripeService {
             ${
               params.cupon
                 ? `<div style="display: flex; justify-content: space-between; color: #16a34a; font-size: 0.82rem;">
-                     <span>Cupón Aplicado (${params.cupon}):</span>
-                     <span>-$${(params.precioOriginal - params.precioFinal).toFixed(2)} MXN</span>
+                     <span>Cupón Aplicado (${escapeHtml(params.cupon)}):</span>
+                     <span>-$${(params.precioOriginal - serverFinal).toFixed(2)} MXN</span>
                    </div>`
                 : ""
             }
             <div style="display: flex; justify-content: space-between; font-weight: bold; border-top: 1px dashed #cbd5e1; margin-top: 4px; padding-top: 4px; color: #16a34a;">
-              <span>Total Pagado:</span> <span>$${params.precioFinal.toFixed(2)} MXN</span>
+              <span>Total Pagado:</span> <span>$${serverFinal.toFixed(2)} MXN</span>
             </div>
           </div>
 
           <p style="color: #15803d; font-weight: 600; margin-top: 10px; text-align: center;">
-            ⚡ ¡Tu cuenta ahora es Socio Activo! Acceso total a instalaciones, casilleros y Coach IA.
+            ⚡ ¡Tu cuenta ahora es Socio Activo! Acceso total a instalaciones y Coach IA.
           </p>
         </div>
       `,
@@ -506,10 +641,20 @@ export class MembershipStripeService {
    */
   consultarTransacciones(email?: string): Observable<unknown[]> {
     if (!this.http) return of([]);
-    const base = this.getBackendBaseUrl();
+    const base = backendBaseUrl(this.endpoints);
     const url = email
       ? `${base}/api/stripe/transactions?email=${encodeURIComponent(email)}`
       : `${base}/api/stripe/transactions`;
     return this.http.get<unknown[]>(url);
+  }
+
+  private extractErrorMessage(err: unknown, fallback: string): string {
+    if (err instanceof HttpErrorResponse && err.error && typeof err.error === "object") {
+      const body = err.error as { error?: unknown; mensaje?: unknown };
+      if (typeof body.error === "string" && body.error) return body.error;
+      if (typeof body.mensaje === "string" && body.mensaje) return body.mensaje;
+    }
+    if (err instanceof Error && err.message) return err.message;
+    return fallback;
   }
 }

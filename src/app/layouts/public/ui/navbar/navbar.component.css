@@ -297,7 +297,7 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   SISTEMA VISUAL MULTI-ROL (3 ROLES + VISITANTE BLOQUEADO)
+   SISTEMA VISUAL MULTI-ROL (ADMIN / RECEPCIÓN / SOCIO ACTIVO)
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* Tarjeta y Badges de Rol */
@@ -515,72 +515,6 @@
 }
 .role-mobile-link--subscriber app-icon {
   color: #10b981 !important;
-}
-
-/* 4. SIN REGISTRO NI SUBSCRIPCIÓN (Gris tachado con candado) */
-.role-eyebrow--locked {
-  color: #6b7280 !important;
-  font-weight: 700 !important;
-  margin: 22px 0 8px !important;
-}
-.role-link--locked {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  width: 100% !important;
-  border-left: 3.5px dashed #9ca3af !important;
-  background: rgba(156, 163, 175, 0.06) !important;
-  cursor: pointer !important;
-  padding: 8px 12px !important;
-  opacity: 0.72;
-}
-.role-link--locked .locked-text {
-  text-decoration: line-through !important;
-  color: #9ca3af !important;
-  font-weight: 500;
-}
-.role-link--locked app-icon {
-  color: #9ca3af !important;
-}
-.role-link--locked:hover {
-  background: rgba(239, 68, 68, 0.08) !important;
-  opacity: 0.95;
-}
-.role-mobile-link--locked {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  width: 100% !important;
-  min-height: 44px;
-  padding: 10px 14px !important;
-  border-left: 3.5px dashed #9ca3af !important;
-  background: rgba(156, 163, 175, 0.06) !important;
-  border-radius: var(--radius-sm, 6px);
-  margin-bottom: 6px;
-  cursor: pointer !important;
-  opacity: 0.75;
-}
-.role-mobile-link--locked:hover {
-  background: rgba(239, 68, 68, 0.08) !important;
-  opacity: 1;
-}
-.role-mobile-link--locked .locked-title {
-  text-decoration: line-through !important;
-  color: #9ca3af !important;
-  font-weight: 500;
-  font-size: 0.875rem;
-}
-.lock-tag {
-  display: inline-flex;
-  align-items: center;
-  font-size: 0.65625rem;
-  font-weight: 600;
-  color: #6b7280;
-  background: rgba(156, 163, 175, 0.18);
-  padding: 2px 8px;
-  border-radius: 9999px;
-  border: 1px solid rgba(156, 163, 175, 0.35);
-  white-space: nowrap;
 }
 
 /* Selector de Roles para Demostración al Comité */

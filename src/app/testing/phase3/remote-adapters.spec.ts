@@ -11,6 +11,7 @@ import {
   ServiceEndpoints,
 } from "../../core/config/app-endpoints";
 import { STATISTICS } from "../../features/admin/data-access/statistics.repository";
+import { SesionService } from "../../features/activity/data-access/sesion.service";
 import { COACH } from "../../features/coach/data-access/coach.repository";
 import { PerfilSocio } from "../../features/profile/models/profile.model";
 import { EXERCISES } from "../../features/training/data-access/exercise.repository";
@@ -133,5 +134,174 @@ describe("Replaceable HTTP boundaries", () => {
       ),
     ).toBe("no-contact");
     http.expectNone((r) => r.url.startsWith(endpoints.notifications));
+  });
+
+  it("executes SQLite bookings and attendances GET, PUT, and DELETE through TRAINING", async () => {
+    const training = TestBed.inject(TRAINING);
+
+    let loadedBookings: unknown[] = [];
+    training.bookings().subscribe((rows) => (loadedBookings = rows));
+    const getBk = http.expectOne(endpoints.notifications + "/api/bookings");
+    expect(getBk.request.method).toBe("GET");
+    getBk.flush([
+      {
+        id: "bk-1",
+        entrenamiento: "Yoga",
+        fecha: "2026-11-22",
+        turno: "Mañana",
+        nombre: "Ana",
+      },
+    ]);
+    expect(loadedBookings.length).toBe(1);
+
+    const putOp = training.updateBooking("bk-1", {
+      entrenamiento: "Crossfit",
+      fecha: "2026-11-23",
+      turno: "Tarde",
+      nombre: "Ana",
+    });
+    const putBk = http.expectOne(endpoints.notifications + "/api/bookings/bk-1");
+    expect(putBk.request.method).toBe("PUT");
+    putBk.flush({ ok: true });
+    await putOp;
+
+    const delOp = training.deleteBooking("bk-1");
+    const delBk = http.expectOne(endpoints.notifications + "/api/bookings/bk-1");
+    expect(delBk.request.method).toBe("DELETE");
+    delBk.flush({ ok: true });
+    await delOp;
+  });
+
+  it("persists workout logs and syncs session availability in SesionService", async () => {
+    localStorage.removeItem("gym_user");
+    const activity = TestBed.inject(SesionService);
+    const syncOp = activity.syncFromServer();
+
+    http
+      .expectOne(endpoints.notifications + "/api/sessions/availability")
+      .flush({
+        fecha: "2026-11-22",
+        capacidadPorTurno: 20,
+        slots: [
+          {
+            disciplina: "Boxeo",
+            turno: "Matutino",
+            capacidad: 20,
+            reservados: 5,
+          },
+          {
+            disciplina: "Yoga",
+            turno: "Vespertino",
+            capacidad: 20,
+            reservados: 7,
+          },
+          {
+            disciplina: "Pesas",
+            turno: "Nocturno",
+            capacidad: 20,
+            reservados: 2,
+          },
+        ],
+      });
+    http.expectOne(endpoints.notifications + "/api/bookings").flush([]);
+    http.expectOne(endpoints.notifications + "/api/attendances").flush([]);
+    for (let i = 0; i < 4; i++) {
+      await Promise.resolve();
+    }
+    http.expectOne(endpoints.notifications + "/api/workout-logs").flush([]);
+    await syncOp;
+
+    let latestShifts: string[] = [];
+    activity.ocupacion$?.subscribe((list) => {
+      latestShifts = list.map((s) => `${s.turno}:${s.inscritos}`);
+    });
+    expect(latestShifts).toEqual(["Mañana:5", "Tarde:7", "Noche:2"]);
+
+    const addOp = activity.addWorkoutLog({
+      ejercicio: "Sentadilla",
+      grupoMuscular: "Pierna",
+      series: 4,
+      repeticiones: 10,
+      pesoKg: 80,
+      fecha: "2026-11-22",
+    });
+    const postLog = http.expectOne(endpoints.notifications + "/api/workout-logs");
+    expect(postLog.request.method).toBe("POST");
+    postLog.flush({
+      ok: true,
+      log: {
+        id: "wl-99",
+        ejercicio: "Sentadilla",
+        grupo_muscular: "Pierna",
+        series: 4,
+        repeticiones: "10",
+        peso_kg: 80,
+        fecha: "2026-11-22",
+      },
+    });
+    const saved = await addOp;
+    expect(saved.id).toBe("wl-99");
+  });
+
+  it("loads and persists assigned routines through COACH /routines endpoints", () => {
+    const coach = TestBed.inject(COACH);
+    const sampleRoutine = {
+      tituloRutina: "Fuerza Base",
+      objetivo: "Fuerza",
+      nivelRecomendado: "Intermedio",
+      diasSemana: [
+        {
+          dia: "Día 1",
+          grupoMuscular: "Pecho",
+          ejercicios: [
+            {
+              nombre: "Press banca",
+              series: 4,
+              repeticiones: "8",
+              descansoSegundos: 90,
+            },
+          ],
+        },
+      ],
+      recomendacionesGenerales: "Calentar 10 minutos",
+    };
+
+    coach.getRoutines?.("cliente@example.com").subscribe((rows) => {
+      expect(rows.length).toBe(1);
+      expect(rows[0].rutina.tituloRutina).toBe("Fuerza Base");
+    });
+    const getReq = http.expectOne(
+      endpoints.coach + "/routines?email=cliente%40example.com",
+    );
+    expect(getReq.request.method).toBe("GET");
+    getReq.flush([
+      {
+        id: "rt-1",
+        userEmail: "cliente@example.com",
+        rutina: sampleRoutine,
+      },
+    ]);
+
+    coach
+      .saveRoutine?.({
+        rutina: sampleRoutine,
+        targetEmail: "cliente@example.com",
+      })
+      .subscribe((saved) => {
+        expect(saved.id).toBe("rt-2");
+      });
+    const postReq = http.expectOne(endpoints.coach + "/routines");
+    expect(postReq.request.method).toBe("POST");
+    expect((postReq.request.body as { userEmail?: string }).userEmail).toBe(
+      "cliente@example.com",
+    );
+    postReq.flush({
+      ok: true,
+      routine: {
+        id: "rt-2",
+        userEmail: "cliente@example.com",
+        rutina: sampleRoutine,
+      },
+    });
   });
 });

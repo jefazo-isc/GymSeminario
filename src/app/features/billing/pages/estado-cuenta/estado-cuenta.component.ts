@@ -84,10 +84,15 @@ export class EstadoCuentaComponent {
       };
     return { status: "data", data: this.resumen };
   }
+  get syncedFromServer(): boolean {
+    return this.service.isSyncedFromServer?.() ?? false;
+  }
+
   loadAccount() {
     this.accountStream?.unsubscribe();
     this.accountLoading = true;
     this.accountError = "";
+    void this.service.refreshFromBackend?.();
     this.accountStream = this.service.pagos$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({

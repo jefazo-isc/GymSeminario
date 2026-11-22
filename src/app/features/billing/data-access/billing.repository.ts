@@ -6,6 +6,7 @@ import {
   Pago,
 } from "../models/pago.model";
 import { PagoService } from "./pago.service";
+
 export interface BillingRepository {
   pagos$: Observable<Pago[]>;
   registrarPago(
@@ -17,7 +18,10 @@ export interface BillingRepository {
   ): Pago | Promise<Pago>;
   marcarComoPagado(id: string, metodo: MetodoPago): void | Promise<void>;
   cancelarPago(id: string): void | Promise<void>;
+  refreshFromBackend?(email?: string): Promise<void>;
+  isSyncedFromServer?(): boolean;
 }
+
 export const BILLING = new InjectionToken<BillingRepository>(
   "BillingRepository",
   { providedIn: "root", factory: () => inject(PagoService) },

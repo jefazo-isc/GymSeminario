@@ -289,6 +289,9 @@ jobs:
       - name: 📦 Dependencias — Instalar paquetes
         run: npm ci
 
+      - name: 🔒 Auditoría de Secretos — Escaneo completo del repositorio
+        run: node scripts/check-secrets.cjs --all
+
       # ─────────────────────────────────────────────────────────────────────
       # CRITERIO 6 (15%): Análisis de vulnerabilidades con npm audit
       # ─────────────────────────────────────────────────────────────────────
@@ -321,12 +324,37 @@ jobs:
           retention-days: 14
 
   # ══════════════════════════════════════════════════════════════════════════
+  #  JOB 4B ── Pruebas Backend (Node --test + SQLite + Auth/Stripe)
+  # ══════════════════════════════════════════════════════════════════════════
+  backend-tests:
+    name: 🛡️ Pruebas Backend (Node Test Runner)
+    runs-on: ubuntu-24.04
+    needs: build-and-verify
+
+    steps:
+      - name: 📥 Checkout — Descargar código fuente
+        uses: actions/checkout@v7
+
+      - name: ⚙️ Setup — Configurar Node.js 22 LTS
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: server/package-lock.json
+
+      - name: 📦 Dependencias — Instalar paquetes del servidor
+        run: npm --prefix server ci --no-audit --no-fund
+
+      - name: 🧪 Pruebas Backend — Ejecutar node --test
+        run: node --test server/test/*.test.js
+
+  # ══════════════════════════════════════════════════════════════════════════
   #  JOB 5A ── Empaquetado Docker Frontend (Prebuilt → GHCR, paralelo)
   # ══════════════════════════════════════════════════════════════════════════
   docker-frontend:
     name: 🐳 Docker Frontend → GHCR (Prebuilt)
     runs-on: ubuntu-24.04
-    needs: [unit-tests, integration-tests, security-audit]
+    needs: [unit-tests, integration-tests, security-audit, backend-tests]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
@@ -378,7 +406,7 @@ jobs:
   docker-server:
     name: 🐳 Docker Server → GHCR (Slim)
     runs-on: ubuntu-24.04
-    needs: [unit-tests, integration-tests, security-audit]
+    needs: [unit-tests, integration-tests, security-audit, backend-tests]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
@@ -428,7 +456,7 @@ jobs:
   deploy-pages:
     name: 🌐 Despliegue → GitHub Pages
     runs-on: ubuntu-24.04
-    needs: [unit-tests, integration-tests, security-audit]
+    needs: [unit-tests, integration-tests, security-audit, backend-tests]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     concurrency:
       group: "pages"

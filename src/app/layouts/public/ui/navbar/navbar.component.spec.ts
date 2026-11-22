@@ -35,6 +35,7 @@ describe("NavbarComponent", () => {
   });
 
   afterEach(() => {
+    localStorage.removeItem("gym_user");
     TestBed.inject(Dialog).closeAll();
     Swal.close();
     document.querySelectorAll(".swal2-container").forEach((el) => el.remove());
@@ -55,8 +56,10 @@ describe("NavbarComponent", () => {
   });
 
   it("exposes administrative links only for the explicit admin role", () => {
-    name.next("Socio");
+    name.next("Yahir Demo");
+    role.next("user");
     fixture.detectChanges();
+    expect(fixture.componentInstance.effectiveRole).toBe("guest");
     (
       fixture.nativeElement.querySelector(
         ".account-trigger",
@@ -96,7 +99,7 @@ describe("NavbarComponent", () => {
     ).toBeTrue();
   });
 
-  it("opens and closes the mobile navigation with the same public routes", () => {
+  it("opens and closes the mobile navigation without lock badges or coach links for guests", () => {
     (
       fixture.nativeElement.querySelector(
         ".mobile-menu-trigger",
@@ -104,11 +107,76 @@ describe("NavbarComponent", () => {
     ).click();
     fixture.detectChanges();
     expect(fixture.componentInstance.mobileOpen()).toBeTrue();
+    const drawerText = document.querySelector(".mobile-navigation")?.textContent || "";
+    expect(drawerText).not.toContain("🔒");
+    expect(drawerText).not.toContain("Bloqueado");
+    expect(
+      document.querySelector('.mobile-navigation a[href="/ejercicios"]'),
+    ).not.toBeNull();
     expect(
       document.querySelector('.mobile-navigation a[href="/coach-ia"]'),
-    ).not.toBeNull();
+    ).toBeNull();
     fixture.componentInstance.closeMobile();
     fixture.detectChanges();
     expect(fixture.componentInstance.mobileOpen()).toBeFalse();
+  });
+
+  it("isolates receptionist navigation to door scanner and attendance tracking with zero exercises", () => {
+    name.next("Recepción Turno");
+    role.next("reception");
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.effectiveRole).toBe("receptionist");
+    const host: HTMLElement = fixture.nativeElement;
+    expect(host.querySelector('a[href="/scanner"]')).not.toBeNull();
+    expect(host.querySelector('a[href="/editar2"]')).not.toBeNull();
+    expect(host.querySelector('a[href="/membresias"]')).toBeNull();
+    expect(host.querySelector(".search-trigger")).toBeNull();
+    expect(host.textContent).not.toContain("Entrenar");
+    expect(host.textContent).not.toContain("🔒");
+
+    (host.querySelector(".account-trigger") as HTMLButtonElement).click();
+    fixture.detectChanges();
+    const menuText = document.querySelector(".grom-menu")?.textContent || "";
+    expect(menuText).toContain("Escáner y QR en puerta");
+    expect(menuText).toContain("Registro de asistencias");
+    expect(menuText).not.toContain("Coach virtual IA");
+    expect(menuText).not.toContain("Estadísticas y métricas");
+  });
+
+  it("shows subscriber tools only for subscribers and full controls with role preview for admin", () => {
+    name.next("Socio Activo");
+    role.next("subscriber");
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector(".account-trigger") as HTMLButtonElement).click();
+    fixture.detectChanges();
+    let menuText = document.querySelector(".grom-menu")?.textContent || "";
+    expect(menuText).toContain("Coach virtual IA");
+    expect(menuText).toContain("Registrar asistencia QR / Cámara");
+    expect(menuText).not.toContain("Escáner y QR en puerta");
+    expect(menuText).not.toContain("Estadísticas y métricas");
+    TestBed.inject(Dialog).closeAll();
+
+    localStorage.setItem(
+      "gym_user",
+      JSON.stringify({
+        uid: "adm-1",
+        nombre: "Yahir",
+        email: "guevara.cardona.yahir@gmail.com",
+        role: "admin",
+      }),
+    );
+    name.next("Yahir");
+    role.next("admin");
+    fixture.detectChanges();
+    expect(fixture.componentInstance.isRealAdmin).toBeTrue();
+    expect(fixture.componentInstance.effectiveRole).toBe("admin");
+
+    fixture.componentInstance.setDemoRole("receptionist");
+    expect(fixture.componentInstance.effectiveRole).toBe("receptionist");
+    expect(fixture.componentInstance.isRealAdmin).toBeTrue();
+
+    fixture.componentInstance.setDemoRole("admin");
+    expect(fixture.componentInstance.effectiveRole).toBe("admin");
   });
 });

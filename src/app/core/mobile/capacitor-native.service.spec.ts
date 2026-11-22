@@ -32,6 +32,7 @@ describe("CapacitorNativeService", () => {
     });
 
     expect(typeof unregister).toBe("function");
+    expect(closed).toBeFalse();
     unregister();
   });
 

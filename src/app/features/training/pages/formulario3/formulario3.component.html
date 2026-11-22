@@ -2,9 +2,18 @@
   <div class="notice">
     <app-icon name="calendar" />
     <p>
-      <strong>Registro de asistencia.</strong> Confirma tu llegada a clase para registrar tu entrada y generar tu código de acceso.
+      <strong>Registro de asistencia.</strong> Escanea el código QR dinámico de
+      recepción con tu cámara o confirma manualmente tu llegada a clase.
     </p>
   </div>
+  @if (esRecepcionOAdmin) {
+    <div class="toolbar">
+      <span class="help"
+        >Herramienta de recepción para validar códigos QR en puerta</span
+      >
+      <a appButton="secondary" routerLink="/scanner">Abrir escáner QR</a>
+    </div>
+  }
   @if (!authReady) {
     <p class="help" role="status">Consultando tu sesión…</p>
   } @else if (!authenticated) {
@@ -15,6 +24,125 @@
       </p>
     </div>
   }
+
+  <article class="surface stack kiosk-checkin-card">
+    <div class="toolbar">
+      <div>
+        <span class="eyebrow">Check-in rápido en mostrador</span>
+        <h2>Escanear QR rotativo con cámara o foto</h2>
+        <p class="help">
+          Abre tu cámara o toma una fotografía al código QR dinámico de recepción
+          para registrar tu entrada en SQLite sin filas.
+        </p>
+      </div>
+    </div>
+
+    <div class="kiosk-checkin-grid">
+      <div class="stack">
+        <div class="camera-box" [class.camera-box--active]="kioskScanning">
+          <video #kioskVideo playsinline muted></video>
+          @if (!kioskScanning) {
+            <div class="camera-placeholder">
+              <app-icon name="search" />
+              <p class="help">
+                Apunta al código QR de recepción <code>GROM-K-...</code>.
+              </p>
+            </div>
+          }
+          <canvas
+            #kioskCanvas
+            class="hidden-canvas"
+            aria-hidden="true"
+          ></canvas>
+        </div>
+
+        <div class="form-actions">
+          @if (!kioskScanning) {
+            <button
+              appButton="primary"
+              type="button"
+              [disabled]="!authenticated"
+              (click)="startKioskCamera()"
+            >
+              Abrir cámara
+            </button>
+          } @else {
+            <button
+              appButton="secondary"
+              type="button"
+              (click)="stopKioskCamera()"
+            >
+              Detener cámara
+            </button>
+          }
+          <label class="ui-button ui-button--secondary file-upload-btn">
+            Tomar foto / Subir imagen
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              (change)="onKioskFileSelected($event)"
+            />
+          </label>
+        </div>
+
+        @if (kioskCameraError) {
+          <p class="notice notice--warning" role="alert">
+            {{ kioskCameraError }}
+          </p>
+        }
+      </div>
+
+      <form class="stack" (ngSubmit)="checkInWithKioskToken()">
+        <div class="field">
+          <label for="kiosk-token-input">Código QR de mostrador</label>
+          <input
+            id="kiosk-token-input"
+            name="kioskToken"
+            class="control"
+            [(ngModel)]="kioskToken"
+            placeholder="Ej. GROM-K-A1B2C3..."
+            autocomplete="off"
+          />
+        </div>
+        <button
+          appButton="primary"
+          type="submit"
+          [disabled]="kioskBusy || !kioskToken.trim() || !authenticated"
+        >
+          {{ kioskBusy ? "Registrando…" : "Confirmar asistencia con QR" }}
+        </button>
+
+        @if (kioskResult; as result) {
+          <div
+            class="scan-result"
+            [class.scan-result--pass]="result.valid"
+            [class.scan-result--reject]="!result.valid"
+            [attr.role]="result.valid ? 'status' : 'alert'"
+          >
+            <span
+              class="status"
+              [class.status--success]="result.valid"
+              [class.status--danger]="!result.valid"
+            >
+              {{ result.valid ? "ASISTENCIA REGISTRADA" : "CHECK-IN RECHAZADO" }}
+            </span>
+            <p>{{ result.message }}</p>
+            @if (result.valid) {
+              <p class="help">
+                {{ result.memberName || userName }} ·
+                {{ result.plan || "Suscripción activa" }}
+                @if (result.clase) {
+                  · {{ result.clase }}
+                }
+              </p>
+            }
+          </div>
+        }
+      </form>
+    </div>
+  </article>
+
   @if (enviado) {
     <div class="registration-result stack">
       <div class="surface">
@@ -55,7 +183,7 @@
         </div>
       </div>
       <div class="surface">
-        <h3>Código de acceso</h3>
+        <h3>Código de acceso personal</h3>
         <app-qr-view [clase]="clase" [fecha]="fecha" />
       </div>
     </div>
@@ -131,7 +259,8 @@
           </div>
         </dl>
         <p class="help">
-          Se registrará tu asistencia en el sistema y se generará tu comprobante de acceso.
+          Se registrará tu asistencia en el sistema y se generará tu comprobante
+          de acceso.
         </p>
         @if (error) {
           <p class="field-error" role="alert">{{ error }}</p>

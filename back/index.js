@@ -1,679 +1,173 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import bodyParser from 'body-parser';
-import nodemailer from 'nodemailer';
-import twilio from 'twilio';
 import rateLimit from 'express-rate-limit';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import Database from 'better-sqlite3';
-import { OAuth2Client } from 'google-auth-library';
-
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '284503632870-hup11ff07or46r457spa5bj42nr26rdt.apps.googleusercontent.com';
-const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
-
+import path from 'path';
+import { fileURLToPath } from 'url';
+import './services/db.js';
 import { generarRutinaEntrenamiento } from './services/routineCoach.service.js';
 import { COACHES, chatearConCoach } from './services/coachChat.service.js';
 import { sendBookingNotification, sendAttendanceNotification } from './services/email.service.js';
 import { AI_STATUS } from './services/aiProvider.service.js';
+import {
+  verificarMembresiaBackend,
+  hasActiveMembership,
+} from './middleware/auth.middleware.js';
+import { createAuthRouter } from './routes/auth.routes.js';
+import { createStripeRouter } from './routes/stripe.routes.js';
+import { createMembershipRouter } from './routes/membership.routes.js';
+import { createQrRouter } from './routes/qr.routes.js';
+import { createProfileRouter } from './routes/profile.routes.js';
+import { createTrainingRouter } from './routes/training.routes.js';
+import { createProductsRouter } from './routes/products.routes.js';
 
-const db = new Database('./gym.db');
-const JWT_SECRET = process.env.JWT_SECRET || 'gym-seminario-secret-2026';
+const __filename = fileURLToPath(import.meta.url);
 
-// Crear tabla de usuarios (compatible con schema antiguo y nuevo)
-db.exec(`
-  CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL DEFAULT '',
-    nombre TEXT NOT NULL,
-    role TEXT NOT NULL DEFAULT 'user',
-    provider TEXT NOT NULL DEFAULT 'email',
-    created_at TEXT DEFAULT (datetime('now'))
-  )
-`);
+export function createApp({
+  getStripe,
+  verifyGoogleToken,
+  twilioClientOverride,
+  enableRateLimit = process.env.NODE_ENV !== 'test',
+} = {}) {
+  const app = express();
 
-// Crear tabla de membresías
-db.exec(`
-  CREATE TABLE IF NOT EXISTS memberships (
-    id TEXT PRIMARY KEY,
-    user_email TEXT NOT NULL,
-    plan_nombre TEXT NOT NULL,
-    precio REAL NOT NULL,
-    periodo TEXT NOT NULL,
-    fecha_inicio TEXT NOT NULL,
-    fecha_fin TEXT NOT NULL,
-    estado TEXT NOT NULL DEFAULT 'Activa',
-    beneficios TEXT NOT NULL DEFAULT '[]',
-    updated_at TEXT DEFAULT (datetime('now'))
-  )
-`);
-
-// Crear tabla de reservas de clases (Sincronización real en SQLite)
-db.exec(`
-  CREATE TABLE IF NOT EXISTS bookings (
-    id TEXT PRIMARY KEY,
-    usuario TEXT,
-    email TEXT,
-    nombre TEXT,
-    entrenamiento TEXT NOT NULL,
-    fecha TEXT NOT NULL,
-    turno TEXT NOT NULL,
-    telefono TEXT,
-    created_at TEXT DEFAULT (datetime('now'))
-  )
-`);
-
-// Crear tabla de asistencias físicas registradas
-db.exec(`
-  CREATE TABLE IF NOT EXISTS attendances (
-    id TEXT PRIMARY KEY,
-    usuario TEXT,
-    email TEXT,
-    nombre TEXT,
-    clase TEXT NOT NULL,
-    fecha TEXT NOT NULL,
-    hora TEXT NOT NULL,
-    created_at TEXT DEFAULT (datetime('now'))
-  )
-`);
-
-// Semilla inicial si no hay reservas (para mantener los 4 registros históricos de Boxeo)
-try {
-  const countRow = db.prepare('SELECT COUNT(*) as count FROM bookings').get();
-  if (!countRow || countRow.count === 0) {
-    const seed = db.prepare(`
-      INSERT INTO bookings (id, usuario, email, nombre, entrenamiento, fecha, turno)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `);
-    seed.run('seed-box-1', '1', 'socio1@espaciogym.mx', 'Socio Box 1', 'Boxeo', '2026-11-01', 'Matutino');
-    seed.run('seed-box-2', '2', 'socio2@espaciogym.mx', 'Socio Box 2', 'Boxeo', '2026-11-02', 'Vespertino');
-    seed.run('seed-box-3', '3', 'socio3@espaciogym.mx', 'Socio Box 3', 'Boxeo', '2026-11-03', 'Matutino');
-    seed.run('seed-box-4', '4', 'socio4@espaciogym.mx', 'Socio Box 4', 'Boxeo', '2026-11-04', 'Vespertino');
-    console.log('✅ Semilla inicial de bookings cargada con 4 sesiones de Boxeo');
-  }
-} catch (e) {
-  console.warn('Advertencia al verificar semilla de bookings:', e.message);
-}
-
-// Migración: agregar columna provider si no existe (para DBs antiguas)
-try {
-  db.exec(`ALTER TABLE users ADD COLUMN provider TEXT NOT NULL DEFAULT 'email'`);
-  console.log('✅ Migración: columna provider agregada');
-} catch { /* ya existe, ignorar */ }
-
-// Migración: hacer password opcional (DEFAULT '') si era NOT NULL sin default
-try {
-  // SQLite no soporta ALTER COLUMN, pero con DEFAULT '' los inserts sin password jalán
-  console.log('✅ Schema usuarios listo');
-} catch { /* noop */ }
-
-// Crear usuario admin por defecto si no existe
-const adminExists = db.prepare('SELECT id FROM users WHERE email = ?').get('admin@gymseminario.com');
-if (!adminExists) {
-  const hash = bcrypt.hashSync('Admin1234!', 10);
-  db.prepare("INSERT INTO users (email, password, nombre, role) VALUES (?, ?, ?, ?)").run('admin@gymseminario.com', hash, 'Administrador', 'admin');
-  console.log('✅ Usuario admin creado: admin@gymseminario.com / Admin1234!');
-}
-
-// Configurar a Yahir como Administrador y Gerente
-const yahirEmail = 'guevara.cardona.yahir@gmail.com';
-const yahirUser = db.prepare('SELECT id, role FROM users WHERE email = ?').get(yahirEmail);
-if (yahirUser) {
-  if (yahirUser.role !== 'admin') {
-    db.prepare('UPDATE users SET role = ? WHERE email = ?').run('admin', yahirEmail);
-    console.log(`✅ Yahir (${yahirEmail}) actualizado con rol de Administrador/Gerente.`);
-  }
-} else {
-  const hashYahir = bcrypt.hashSync('Admin1234!', 10);
-  db.prepare("INSERT INTO users (email, password, nombre, role, provider) VALUES (?, ?, ?, ?, ?)").run(
-    yahirEmail,
-    hashYahir,
-    'Yahir Guevara Cardona',
-    'admin',
-    'google'
+  app.use(
+    cors({
+      origin: '*',
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-User-Email'],
+    }),
   );
-  console.log(`✅ Yahir (${yahirEmail}) creado automáticamente con rol de Administrador/Gerente.`);
-}
+  app.use(express.json());
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+  if (enableRateLimit) {
+    const limiter = rateLimit({
+      windowMs: 60 * 1000,
+      max: 120,
+      message: { error: 'Demasiadas solicitudes, intente más tarde.' },
+    });
+    app.use(limiter);
+  }
 
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-app.use(bodyParser.json());
+  const limiterIA = enableRateLimit
+    ? rateLimit({
+        windowMs: 60 * 1000,
+        max: 20,
+        message: { exito: false, error: 'Protección de cuota activa: por favor espera unos segundos.' },
+      })
+    : (_req, _res, next) => next();
 
-// Logger visible en Render para monitorear cada solicitud
-app.use((req, res, next) => {
-  const start = Date.now();
-  res.on('finish', () => {
-    const duration = Date.now() - start;
-    console.log(`[HTTP] ${req.method} ${req.originalUrl} -> ${res.statusCode} (${duration}ms)`);
+  app.get('/', (_req, res) => {
+    res.json({ status: 'ok', mensaje: 'API espacioGYM Backend unificado en línea' });
   });
-  next();
-});
 
-// Rate limiter general
-const limiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 60,
-  message: { error: 'Demasiadas solicitudes, intente más tarde.' }
-});
-app.use(limiter);
-
-// Rate limiter para IA
-const limiterIA = rateLimit({
-  windowMs: 60 * 1000,
-  max: 15,
-  message: { exito: false, error: 'Protección de cuota activa: por favor espera unos segundos.' }
-});
-
-// Endpoint raíz y comprobación de estado
-app.get('/', (req, res) => {
-  res.json({ status: 'ok', mensaje: 'API GROM Backend + Coach IA en línea 🚀' });
-});
-
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    servicio: 'GROM Backend Full',
-    geminiConfigured: !!(process.env.GEMINI_LLAVE || process.env.GEMINI_API_KEY),
-    timestamp: new Date().toISOString()
-  });
-});
-
-app.get('/api/ai/status', (req, res) => {
-  res.json({
-    timestamp: new Date().toISOString(),
-    aiTracker: AI_STATUS
-  });
-});
-
-// ══════════════════════════════════════════════════════════════════════════════
-//  ENDPOINTS DE COACH IA (GEMINI)
-// ══════════════════════════════════════════════════════════════════════════════
-
-// Lista de Coaches
-app.get('/api/coaches', (req, res) => {
-  const lista = Object.values(COACHES).map(({ id, nombre, titulo, emoji, frase }) => ({
-    id, nombre, titulo, emoji, frase
-  }));
-  res.json(lista);
-});
-
-// Helper para verificar acceso a los modelos de IA (habilitado para sesiones activas y socios)
-function validarAccesoIA(req) {
-  const auth = req.headers.authorization;
-  if (auth?.startsWith('Bearer ')) {
-    try {
-      const decoded = jwt.verify(auth.slice(7), JWT_SECRET);
-      return { permitido: true, user: decoded };
-    } catch {
-      // Si el token expiró o cambió, permitir uso de Coach IA con sesión local
-    }
-  }
-  return { permitido: true, user: { email: 'socio@espaciogym.mx', role: 'user' } };
-}
-
-// Chat con Coach IA
-app.post('/api/coach/chat', limiterIA, async (req, res) => {
-  const acceso = validarAccesoIA(req);
-  if (!acceso.permitido) {
-    return res.status(403).json({
-      exito: false,
-      coach: 'Sistema',
-      respuesta: `⚠️ ${acceso.motivo}`
-    });
-  }
-  try {
-    const { coachId, mensaje, historial, contextoRutina, perfilUsuario } = req.body;
-    if (!mensaje || !mensaje.trim()) {
-      return res.status(400).json({ error: 'Mensaje requerido' });
-    }
-    const respuesta = await chatearConCoach({ coachId, mensaje, historial, contextoRutina, perfilUsuario });
-    res.json(respuesta);
-  } catch (err) {
-    console.error('Error en /api/coach/chat:', err);
-    res.status(500).json({ error: 'Error procesando el chat.' });
-  }
-});
-
-// Generar rutina de entrenamiento
-app.post('/api/rutina', limiterIA, async (req, res) => {
-  const acceso = validarAccesoIA(req);
-  if (!acceso.permitido) {
-    return res.status(403).json({
-      exito: false,
-      error: acceso.motivo
-    });
-  }
-  try {
-    const perfil = req.body;
-    const resultado = await generarRutinaEntrenamiento(perfil);
-    res.json(resultado);
-  } catch (err) {
-    console.error('Error en /api/rutina:', err);
-    res.status(500).json({ error: 'Error interno del servidor.' });
-  }
-});
-
-// ══════════════════════════════════════════════════════════════════════════════
-//  ENDPOINTS DE NOTIFICACIONES Y ASISTENCIA (NODEMAILER & TWILIO)
-// ══════════════════════════════════════════════════════════════════════════════
-
-app.post(['/enviar-correo', '/api/enviar-correo'], async (req, res) => {
-  const { correo, nombre, entrenamiento, fecha, turno } = req.body;
-
-  if (!correo || !nombre || !entrenamiento || !fecha || !turno) {
-    return res.status(400).json({ error: 'Faltan datos' });
-  }
-
-  try {
-    const resultado = await sendBookingNotification({ correo, nombre, entrenamiento, fecha, turno });
-    res.json({ mensaje: 'Correo enviado', resultado });
-  } catch (error) {
-    console.error('Error al enviar el correo:', error);
-    res.status(500).json({ error: 'Error al enviar el correo' });
-  }
-});
-
-app.post(['/enviar-asistencia', '/api/enviar-asistencia'], async (req, res) => {
-  const { correo, nombre, clase, fecha, hora } = req.body;
-
-  if (!correo || !nombre || !clase || !fecha || !hora) {
-    return res.status(400).json({ mensaje: 'Faltan campos requeridos.' });
-  }
-
-  try {
-    const resultado = await sendAttendanceNotification({ correo, nombre, clase, fecha, hora });
-    res.status(200).json({ mensaje: 'Correo enviado', resultado });
-  } catch (error) {
-    console.error('Error al enviar el correo:', error);
-    res.status(500).json({ mensaje: 'Error al enviar el correo.' });
-  }
-});
-
-// ══════════════════════════════════════════════════════════════════════════════
-//  ENDPOINTS DE RESERVAS, ASISTENCIAS Y ESTADÍSTICAS (SQLITE CENTRALIZADO)
-// ══════════════════════════════════════════════════════════════════════════════
-
-// Crear nueva reserva en la base de datos SQLite
-app.post(['/api/bookings', '/bookings'], (req, res) => {
-  try {
-    const { id, entrenamiento, fecha, turno, usuario, email, nombre, telefono } = req.body;
-    if (!entrenamiento || !fecha || !turno) {
-      return res.status(400).json({ error: 'Faltan campos obligatorios: entrenamiento, fecha, turno' });
-    }
-    const bookingId = id || `bk-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-    db.prepare(`
-      INSERT INTO bookings (id, usuario, email, nombre, entrenamiento, fecha, turno, telefono)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      bookingId,
-      usuario ? String(usuario) : null,
-      email || null,
-      nombre || null,
-      entrenamiento.trim(),
-      fecha.trim(),
-      turno.trim(),
-      telefono || null
-    );
-    res.status(201).json({ id: bookingId, mensaje: 'Reserva registrada exitosamente en SQLite' });
-  } catch (err) {
-    console.error('Error al registrar reserva:', err);
-    res.status(500).json({ error: 'Error al registrar la reserva en base de datos' });
-  }
-});
-
-// Listar todas las reservas registradas
-app.get(['/api/bookings', '/bookings'], (req, res) => {
-  try {
-    const rows = db.prepare('SELECT * FROM bookings ORDER BY created_at DESC').all();
-    res.json(rows);
-  } catch (err) {
-    console.error('Error al listar reservas:', err);
-    res.status(500).json({ error: 'Error al obtener reservas' });
-  }
-});
-
-// Registrar asistencia física en SQLite
-app.post(['/api/attendances', '/attendances'], (req, res) => {
-  try {
-    const { id, clase, fecha, hora, usuario, email, nombre } = req.body;
-    if (!clase || !fecha || !hora) {
-      return res.status(400).json({ error: 'Faltan campos obligatorios: clase, fecha, hora' });
-    }
-    const attId = id || `att-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-    db.prepare(`
-      INSERT INTO attendances (id, usuario, email, nombre, clase, fecha, hora)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      attId,
-      usuario ? String(usuario) : null,
-      email || null,
-      nombre || null,
-      clase.trim(),
-      fecha.trim(),
-      hora.trim()
-    );
-    res.status(201).json({ id: attId, mensaje: 'Asistencia registrada exitosamente en SQLite' });
-  } catch (err) {
-    console.error('Error al registrar asistencia:', err);
-    res.status(500).json({ error: 'Error al registrar asistencia' });
-  }
-});
-
-// Listar asistencias registradas
-app.get(['/api/attendances', '/attendances'], (req, res) => {
-  try {
-    const rows = db.prepare('SELECT * FROM attendances ORDER BY created_at DESC').all();
-    res.json(rows);
-  } catch (err) {
-    console.error('Error al listar asistencias:', err);
-    res.status(500).json({ error: 'Error al obtener asistencias' });
-  }
-});
-
-// Estadísticas en tiempo real calculadas directamente de SQLite
-app.get(['/api/sessions/stats', '/sessions/stats'], (req, res) => {
-  try {
-    const rows = db.prepare(`
-      SELECT entrenamiento, COUNT(*) as total
-      FROM bookings
-      GROUP BY entrenamiento
-    `).all();
-
-    const stats = {
-      Boxeo: 0,
-      Crossfit: 0,
-      Spinning: 0,
-      Yoga: 0,
-      Pesas: 0
-    };
-
-    for (const row of rows) {
-      const match = Object.keys(stats).find(
-        k => k.toLowerCase() === (row.entrenamiento || '').toLowerCase()
-      );
-      if (match) {
-        stats[match] = row.total;
-      } else if (row.entrenamiento) {
-        stats[row.entrenamiento] = row.total;
-      }
-    }
-
-    res.json(stats);
-  } catch (err) {
-    console.error('Error al calcular estadísticas en /api/sessions/stats:', err);
-    res.status(500).json({ error: 'Error al obtener estadísticas del servidor' });
-  }
-});
-
-// Configuración Twilio
-const accountSid = process.env.TWILIO_ACCOUNT_SID || 'TU_TWILIO_ACCOUNT_SID';
-const authToken = process.env.TWILIO_AUTH_TOKEN || 'TU_TWILIO_AUTH_TOKEN';
-let twilioClient = null;
-
-if (accountSid && accountSid.startsWith('AC') && authToken && authToken !== 'TU_TWILIO_AUTH_TOKEN') {
-  twilioClient = twilio(accountSid, authToken);
-}
-
-app.post('/enviar-sms', async (req, res) => {
-  const { telefono, mensaje } = req.body;
-
-  if (!twilioClient) {
-    return res.status(503).json({ success: false, error: 'Servicio Twilio no configurado.' });
-  }
-
-  try {
-    const response = await twilioClient.messages.create({
-      body: mensaje,
-      from: process.env.TWILIO_PHONE_NUMBER || '+15077095977',
-      to: telefono,
-    });
-
-    res.status(200).send({ success: true, sid: response.sid });
-  } catch (error) {
-    console.error('Error al enviar SMS:', error);
-    res.status(500).send({ success: false, error: error.message });
-  }
-});
-
-// ══════════════════════════════════════════════════════════════════════════════
-//  AUTH ENDPOINTS — JWT + SQLite (sin Firebase)
-// ══════════════════════════════════════════════════════════════════════════════
-
-// Registro
-app.post('/api/auth/register', (req, res) => {
-  const { email, password, nombre } = req.body;
-  if (!email || !password || !nombre)
-    return res.status(400).json({ error: 'Faltan datos: email, password y nombre son requeridos.' });
-  try {
-    const hash = bcrypt.hashSync(password, 10);
-    const result = db.prepare('INSERT INTO users (email, password, nombre, role) VALUES (?, ?, ?, ?)')
-      .run(email.trim().toLowerCase(), hash, nombre.trim(), 'user');
-    const user = { uid: result.lastInsertRowid, email: email.trim().toLowerCase(), nombre: nombre.trim(), role: 'user' };
-    const token = jwt.sign(user, JWT_SECRET, { expiresIn: '7d' });
-    res.json({ token, user });
-  } catch (e) {
-    if (e.message.includes('UNIQUE'))
-      return res.status(409).json({ error: 'El correo ya está registrado. Intenta iniciar sesión.' });
-    console.error('Error en /api/auth/register:', e);
-    res.status(500).json({ error: 'Error al registrar usuario.' });
-  }
-});
-
-// Login
-app.post('/api/auth/login', (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password)
-    return res.status(400).json({ error: 'Faltan datos.' });
-  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email.trim().toLowerCase());
-  if (!user || !bcrypt.compareSync(password, user.password))
-    return res.status(401).json({ error: 'Correo o contraseña incorrectos.' });
-  const payload = { uid: user.id, email: user.email, nombre: user.nombre, role: user.role };
-  const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
-  res.json({ token, user: payload });
-});
-
-// Perfil propio (requiere token)
-app.get('/api/auth/me', (req, res) => {
-  const auth = req.headers.authorization;
-  if (!auth?.startsWith('Bearer ')) return res.status(401).json({ error: 'No autorizado.' });
-  try {
-    const decoded = jwt.verify(auth.slice(7), JWT_SECRET);
-    const user = db.prepare('SELECT id, email, nombre, role FROM users WHERE id = ?').get(decoded.uid);
-    if (!user) return res.status(404).json({ error: 'Usuario no encontrado.' });
-    res.json({ uid: user.id, email: user.email, nombre: user.nombre, role: user.role });
-  } catch {
-    res.status(401).json({ error: 'Token inválido.' });
-  }
-});
-
-// Admin: listar todos los usuarios
-app.get('/api/auth/users', (req, res) => {
-  const auth = req.headers.authorization;
-  if (!auth?.startsWith('Bearer ')) return res.status(401).json({ error: 'No autorizado.' });
-  try {
-    const decoded = jwt.verify(auth.slice(7), JWT_SECRET);
-    if (decoded.role !== 'admin') return res.status(403).json({ error: 'Solo administradores.' });
-    const users = db.prepare('SELECT id, email, nombre, role, created_at FROM users').all();
-    res.json(users);
-  } catch {
-    res.status(401).json({ error: 'Token inválido.' });
-  }
-});
-
-// Admin: cambiar rol de usuario
-app.post('/api/auth/set-role', (req, res) => {
-  const auth = req.headers.authorization;
-  if (!auth?.startsWith('Bearer ')) return res.status(401).json({ error: 'No autorizado.' });
-  try {
-    const decoded = jwt.verify(auth.slice(7), JWT_SECRET);
-    if (decoded.role !== 'admin') return res.status(403).json({ error: 'Solo administradores.' });
-    const { userId, role } = req.body;
-    if (!['admin', 'recepcionista', 'receptionist', 'user', 'subscriptor'].includes(role)) return res.status(400).json({ error: 'Rol inválido. Usa admin, recepcionista o subscriptor.' });
-    db.prepare('UPDATE users SET role = ? WHERE id = ?').run(role, userId);
-    res.json({ ok: true, mensaje: `Rol actualizado a ${role}` });
-  } catch {
-    res.status(401).json({ error: 'Token inválido.' });
-  }
-});
-
-// ══════════════════════════════════════════════════════════════════════════════
-//  GOOGLE OAUTH — verificar ID token y emitir JWT propio
-// ══════════════════════════════════════════════════════════════════════════════
-app.post('/api/auth/google', async (req, res) => {
-  const { credential } = req.body;
-  if (!credential) return res.status(400).json({ error: 'Token de Google requerido.' });
-  try {
-    const ticket = await googleClient.verifyIdToken({
-      idToken: credential,
-      audience: GOOGLE_CLIENT_ID,
-    });
-    const payload = ticket.getPayload();
-    const email = payload.email.toLowerCase().trim();
-    const nombre = payload.name || email.split('@')[0];
-    const esAdminAutorizado = email === 'guevara.cardona.yahir@gmail.com' || email === 'admin@gymseminario.com';
-
-    let user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
-    if (!user) {
-      const assignedRole = esAdminAutorizado ? 'admin' : 'user';
-      const info = db.prepare(
-        "INSERT INTO users (email, password, nombre, role, provider) VALUES (?, '', ?, ?, 'google')"
-      ).run(email, nombre, assignedRole);
-      user = { id: info.lastInsertRowid, email, nombre, role: assignedRole };
-    } else if (esAdminAutorizado && user.role !== 'admin') {
-      db.prepare('UPDATE users SET role = ? WHERE id = ?').run('admin', user.id);
-      user.role = 'admin';
-    }
-
-    const token = jwt.sign(
-      { uid: user.id, email: user.email, nombre: user.nombre, role: user.role },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    );
-    res.json({ token, user: { uid: user.id, email: user.email, nombre: user.nombre, role: user.role } });
-  } catch (e) {
-    console.error('Error Google auth:', e.message);
-    res.status(401).json({ error: 'Token de Google inválido o expirado.' });
-  }
-});
-
-// ══════════════════════════════════════════════════════════════════════════════
-//  PHONE AUTH — demo con código 123456
-// ══════════════════════════════════════════════════════════════════════════════
-app.post('/api/auth/phone', (req, res) => {
-  const { phone, code } = req.body;
-  if (!phone) return res.status(400).json({ error: 'Número requerido.' });
-  if (!code) {
-    return res.json({ ok: true, mensaje: 'Código enviado. Para demo usa: 123456' });
-  }
-  if (code !== '123456') return res.status(401).json({ error: 'Código incorrecto.' });
-
-  const email = `phone_${phone.replace(/\D/g, '')}@gymseminario.demo`;
-  let user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
-  if (!user) {
-    const info = db.prepare(
-      "INSERT INTO users (email, password, nombre, role, provider) VALUES (?, '', ?, 'user', 'phone')"
-    ).run(email, phone);
-    user = { id: info.lastInsertRowid, email, nombre: phone, role: 'user' };
-  }
-
-  const token = jwt.sign(
-    { uid: user.id, email: user.email, nombre: user.nombre, role: user.role },
-    JWT_SECRET,
-    { expiresIn: '7d' }
-  );
-  res.json({ token, user: { uid: user.id, email: user.email, nombre: user.nombre, role: user.role } });
-});
-
-// ══════════════════════════════════════════════════════════════════════════════
-//  MEMBERSHIPS API — Persistencia en base de datos cloud (Render)
-// ══════════════════════════════════════════════════════════════════════════════
-app.get('/api/membership', (req, res) => {
-  try {
-    const email = req.query.email;
-    if (!email) return res.status(400).json({ error: 'Email requerido' });
-    const mem = db.prepare(`
-      SELECT * FROM memberships 
-      WHERE user_email = ? 
-      ORDER BY datetime(updated_at) DESC 
-      LIMIT 1
-    `).get(email);
-
-    if (!mem) return res.status(404).json({ error: 'No se encontró membresía' });
-
+  app.get('/api/health', (_req, res) => {
     res.json({
-      id: mem.id,
-      nombrePlan: mem.plan_nombre,
-      precio: mem.precio,
-      periodo: mem.periodo,
-      fechaInicio: mem.fecha_inicio,
-      fechaFin: mem.fecha_fin,
-      estado: mem.estado,
-      beneficios: JSON.parse(mem.beneficios || '[]')
+      status: 'ok',
+      servicio: 'espacioGYM Backend Server',
+      geminiConfigured: !!(process.env.GEMINI_LLAVE || process.env.GEMINI_API_KEY),
+      stripeConfigured: !!process.env.STRIPE_SECRET_KEY,
+      timestamp: new Date().toISOString(),
     });
-  } catch (err) {
-    console.error('Error al consultar membresía:', err);
-    res.status(500).json({ error: 'Error al consultar membresía' });
-  }
-});
+  });
 
-app.post('/api/membership', (req, res) => {
-  try {
-    const { email, id, nombrePlan, precio, periodo, fechaInicio, fechaFin, estado, beneficios } = req.body;
-    if (!email || !nombrePlan) {
-      return res.status(400).json({ error: 'Datos de membresía incompletos' });
+  app.get('/api/ai/status', (_req, res) => {
+    res.json({
+      timestamp: new Date().toISOString(),
+      aiTracker: AI_STATUS,
+    });
+  });
+
+  app.get('/api/coaches', (_req, res) => {
+    const lista = Object.values(COACHES).map(({ id, nombre, titulo, emoji, frase }) => ({
+      id,
+      nombre,
+      titulo,
+      emoji,
+      frase,
+    }));
+    res.json(lista);
+  });
+
+  app.post('/api/coach/chat', limiterIA, verificarMembresiaBackend, async (req, res) => {
+    try {
+      const { coachId, mensaje, historial, contextoRutina, perfilUsuario } = req.body || {};
+      if (!mensaje || !String(mensaje).trim()) {
+        return res.status(400).json({ error: 'Mensaje requerido' });
+      }
+      const membresiaResumen = req.activeMembership || hasActiveMembership(req.user?.email);
+      const respuesta = await chatearConCoach({
+        coachId,
+        mensaje: String(mensaje),
+        historial,
+        contextoRutina,
+        perfilUsuario,
+        membresiaResumen,
+      });
+      return res.json(respuesta);
+    } catch (err) {
+      console.error('Error en /api/coach/chat:', err);
+      return res.status(500).json({ error: 'Error procesando el chat.' });
     }
-    const memId = id || `MEM-${Math.floor(100000 + Math.random() * 900000)}`;
-    const beneficiosJson = JSON.stringify(beneficios || []);
+  });
 
-    const stmt = db.prepare(`
-      INSERT INTO memberships (id, user_email, plan_nombre, precio, periodo, fecha_inicio, fecha_fin, estado, beneficios, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-      ON CONFLICT(id) DO UPDATE SET
-        plan_nombre = excluded.plan_nombre,
-        precio = excluded.precio,
-        periodo = excluded.periodo,
-        fecha_inicio = excluded.fecha_inicio,
-        fecha_fin = excluded.fecha_fin,
-        estado = excluded.estado,
-        beneficios = excluded.beneficios,
-        updated_at = datetime('now')
-    `);
+  app.post('/api/rutina', limiterIA, verificarMembresiaBackend, async (req, res) => {
+    try {
+      const perfil = req.body || {};
+      const resultado = await generarRutinaEntrenamiento(perfil);
+      return res.json(resultado);
+    } catch (err) {
+      console.error('Error en /api/rutina:', err);
+      return res.status(500).json({ error: 'Error interno del servidor.' });
+    }
+  });
 
-    stmt.run(memId, email, nombrePlan, precio, periodo, fechaInicio, fechaFin, estado || 'Activa', beneficiosJson);
+  app.post(['/enviar-correo', '/api/enviar-correo'], async (req, res) => {
+    const { correo, nombre, entrenamiento, fecha, turno } = req.body || {};
+    if (!correo || !nombre || !entrenamiento || !fecha || !turno) {
+      return res.status(400).json({ error: 'Faltan datos requeridos (correo, nombre, entrenamiento, fecha, turno)' });
+    }
+    try {
+      const resultado = await sendBookingNotification({ correo, nombre, entrenamiento, fecha, turno });
+      return res.json({ mensaje: 'Correo enviado', resultado });
+    } catch (error) {
+      console.error('Error al enviar el correo:', error);
+      return res.status(500).json({ error: 'Error al enviar el correo' });
+    }
+  });
 
-    res.json({ ok: true, mensaje: 'Membresía guardada en la base de datos cloud', id: memId });
-  } catch (err) {
-    console.error('Error al guardar membresía:', err);
-    res.status(500).json({ error: 'Error al registrar membresía' });
-  }
-});
+  app.post(['/enviar-asistencia', '/api/enviar-asistencia'], async (req, res) => {
+    const { correo, nombre, clase, fecha, hora } = req.body || {};
+    if (!correo || !nombre || !clase || !fecha || !hora) {
+      return res.status(400).json({ mensaje: 'Faltan campos requeridos.' });
+    }
+    try {
+      const resultado = await sendAttendanceNotification({ correo, nombre, clase, fecha, hora });
+      return res.status(200).json({ mensaje: 'Correo enviado', resultado });
+    } catch (error) {
+      console.error('Error al enviar el correo:', error);
+      return res.status(500).json({ mensaje: 'Error al enviar el correo.' });
+    }
+  });
 
-app.post('/api/membership/renew', (req, res) => {
-  try {
-    const { id, fechaFin, estado } = req.body;
-    if (!id || !fechaFin) return res.status(400).json({ error: 'ID y fecha de fin requeridos' });
+  app.use(createAuthRouter({ verifyGoogleToken, twilioClientOverride }));
+  app.use(createStripeRouter({ getStripe }));
+  app.use(createMembershipRouter());
+  app.use(createQrRouter());
+  app.use(createProfileRouter());
+  app.use(createTrainingRouter());
+  app.use(createProductsRouter());
 
-    db.prepare(`
-      UPDATE memberships 
-      SET fecha_fin = ?, estado = ?, updated_at = datetime('now')
-      WHERE id = ?
-    `).run(fechaFin, estado || 'Activa', id);
+  return app;
+}
 
-    res.json({ ok: true, mensaje: 'Membresía renovada en la base de datos cloud' });
-  } catch (err) {
-    console.error('Error al renovar membresía:', err);
-    res.status(500).json({ error: 'Error al renovar membresía' });
-  }
-});
+const isMain = process.argv[1] && path.resolve(process.argv[1]) === __filename;
+if (isMain && process.env.DISABLE_LISTEN !== '1') {
+  const PORT = process.env.PORT || 3000;
+  const app = createApp();
+  app.listen(PORT, () => {
+    console.log(`🚀 Servidor espacioGYM corriendo en http://localhost:${PORT}`);
+  });
+}
 
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor GROM Backend + Coach IA corriendo en http://localhost:${PORT}`);
-});
+export default createApp;

@@ -9,14 +9,6 @@ export const environment = {
     legacyExercises: "https://gym-proyecto.free.beeceptor.com/todos",
     coach: "http://localhost:3000/api",
   },
-  firebase: {
-    apiKey: "AIzaSyBUIzZqDR_spIfFsRkPVqh3ClnpRqLlsOQ",
-    authDomain: "dbgroom-4eba4.firebaseapp.com",
-    projectId: "dbgroom-4eba4",
-    storageBucket: "dbgroom-4eba4.firebasestorage.app",
-    messagingSenderId: "963889664175",
-    appId: "1:963889664175:web:cd0fc54b0adea5b28a445a",
-  },
   stripe: {
     publishableKey:
       "pk_live_51TJbqSAXikJUnNBirg3ahcqYKpdObC3zDNfPcRLB85CWT0fVzm9WLIgwUywsqy8CbcyVYBdzMRvv1fRjWcnHQho100V5kYgtUa",

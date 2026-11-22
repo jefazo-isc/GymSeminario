@@ -2,6 +2,7 @@ import { Routes } from "@angular/router";
 import {
   adminGuard,
   authGuard,
+  noReceptionExerciseGuard,
   receptionOrAdminGuard,
   subscriptionGuard,
 } from "./core/auth/route.guards";
@@ -128,6 +129,7 @@ export const routes: Routes = [
   },
   {
     path: "ejercicios",
+    canActivate: [noReceptionExerciseGuard],
     loadComponent: () =>
       import("./features/training/pages/ejercicios/ejercicios.component").then(
         (m) => m.EjerciciosComponent,
@@ -135,6 +137,7 @@ export const routes: Routes = [
   },
   {
     path: "videos",
+    canActivate: [noReceptionExerciseGuard],
     loadComponent: () =>
       import(
         "./features/training/pages/video-cards/video-cards.component"
@@ -187,6 +190,14 @@ export const routes: Routes = [
     loadComponent: () =>
       import("./features/admin/pages/editar2/editar2.component").then(
         (m) => m.Editar2Component,
+      ),
+  },
+  {
+    path: "scanner",
+    canActivate: [authGuard, receptionOrAdminGuard],
+    loadComponent: () =>
+      import("./features/training/pages/scanner/scanner.component").then(
+        (m) => m.ScannerComponent,
       ),
   },
   {

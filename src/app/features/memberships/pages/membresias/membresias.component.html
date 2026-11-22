@@ -44,6 +44,20 @@
             <dd>{{ mem.diasRestantes }} días</dd>
           </div>
         </dl>
+        <div class="autorenew-row">
+          <label class="autorenew-toggle">
+            <input
+              type="checkbox"
+              [ngModel]="!!mem.autoRenew"
+              (ngModelChange)="toggleAutoRenew($event)"
+              [disabled]="autoRenewSaving"
+            />
+            <span>Renovación automática mensual/ciclo</span>
+          </label>
+          @if (autoRenewFeedback) {
+            <span class="help" role="status">{{ autoRenewFeedback }}</span>
+          }
+        </div>
       </div>
       <div class="membership-actions">
         <button
@@ -97,6 +111,71 @@
       </div>
     </div>
   }
+
+  @if (isAdmin) {
+    <section class="surface stack admin-lookup-panel" aria-label="Gestión administrativa de membresías">
+      <div>
+        <span class="eyebrow">Panel administrativo</span>
+        <h2>Consultar y asignar membresía a un socio</h2>
+        <p class="help">
+          Busca cualquier cuenta por correo para activar, renovar o cancelar su vigencia directamente.
+        </p>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label for="admin-client-email">Correo del socio</label>
+          <input
+            id="admin-client-email"
+            type="email"
+            [(ngModel)]="adminTargetEmail"
+            placeholder="socio@correo.com"
+          />
+        </div>
+        <div class="field">
+          <label for="admin-client-plan">Plan</label>
+          <select id="admin-client-plan" [(ngModel)]="adminPlanNombre">
+            @for (name of adminPlanNames; track name) {
+              <option [value]="name">{{ name }}</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label for="admin-client-period">Periodo</label>
+          <select id="admin-client-period" [(ngModel)]="adminPeriodo">
+            @for (period of periods; track period) {
+              <option [value]="period">{{ period }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button appButton="secondary" type="button" [disabled]="adminBusy" (click)="consultarClienteAdmin()">
+          Consultar socio
+        </button>
+        <button appButton="primary" type="button" [disabled]="adminBusy" (click)="ejecutarAccionAdmin('assign')">
+          Asignar / Activar plan
+        </button>
+        <button appButton="secondary" type="button" [disabled]="adminBusy" (click)="ejecutarAccionAdmin('renew')">
+          Renovar ciclo
+        </button>
+        <button appButton="ghost" type="button" [disabled]="adminBusy" (click)="ejecutarAccionAdmin('cancel')">
+          Cancelar membresía
+        </button>
+      </div>
+      @if (adminFeedback) {
+        <p class="notice" role="status">{{ adminFeedback }}</p>
+      }
+      @if (adminLookupResult; as targetMem) {
+        <div class="notice notice--success">
+          <p>
+            <strong>{{ targetMem.nombrePlan }}</strong> ({{ targetMem.periodo }}) · Estado:
+            <strong>{{ targetMem.estado }}</strong> · Vence: {{ targetMem.fechaFin }}
+          </p>
+        </div>
+      }
+    </section>
+  }
+
   <app-request-state
     [state]="plansState"
     loadingLabel="Consultando planes…"
@@ -146,7 +225,7 @@
           ><span>MXN / {{ filtroPeriodo.toLowerCase() }}</span>
         </div>
         <div style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: #4f46e5; margin-top: 4px; font-weight: 600;">
-          <app-icon name="spark" /><span>Pagos con Stripe · Tarjetas y Cupones</span>
+          <app-icon name="spark" /><span>Pagos con Stripe Elements · Tarjetas y Cupones</span>
         </div>
         @if (hasConflict(plan)) {
           <p class="tariff-note">
@@ -175,6 +254,51 @@
       </article>
     }
   </div>
+
+  @if (isLoggedIn) {
+    <section class="surface stack" aria-label="Historial de membresía y renovaciones">
+      <div class="toolbar">
+        <div>
+          <span class="eyebrow">Historial</span>
+          <h2>Renovaciones y cambios de plan</h2>
+        </div>
+        <button appButton="ghost" type="button" [disabled]="historyLoading" (click)="loadHistory()">
+          {{ historyLoading ? "Consultando…" : "Actualizar historial" }}
+        </button>
+      </div>
+      @if (history.length) {
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th scope="col">Plan</th>
+                <th scope="col">Ciclo</th>
+                <th scope="col">Inicio</th>
+                <th scope="col">Fin</th>
+                <th scope="col">Importe</th>
+                <th scope="col">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of history; track item.id) {
+                <tr>
+                  <td><strong>{{ item.planNombre }}</strong></td>
+                  <td>{{ item.periodo }}</td>
+                  <td>{{ item.fechaInicio }}</td>
+                  <td>{{ item.fechaFin }}</td>
+                  <td>{{ item.precio | currency: "MXN" : "symbol-narrow" : "1.2-2" }}</td>
+                  <td><span class="status">{{ item.estado }}</span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <p class="help">No hay movimientos de renovación registrados todavía en tu cuenta.</p>
+      }
+    </section>
+  }
+
   <details class="surface benefits-comparison">
     <summary>Comparación detallada de beneficios</summary>
     <div class="table-scroll">

@@ -1,22 +1,32 @@
-import { createProfileDraft } from "../../models/profile.model";
-import { DestroyRef } from "@angular/core";
+import { Dialog, DialogModule } from "@angular/cdk/dialog";
+import { CommonModule } from "@angular/common";
+import { Component, DestroyRef, inject, OnInit } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { FormsModule, NgForm } from "@angular/forms";
+import { Router, RouterLink } from "@angular/router";
 import { take } from "rxjs";
 import Swal from "sweetalert2";
 import { RequestState } from "../../../../core/data-access/request-state";
-import { RequestStateComponent } from "../../../../shared/ui/request-state/request-state.component";
-import { Dialog, DialogModule } from "@angular/cdk/dialog";
-import { CommonModule } from "@angular/common";
-import { Component, inject, OnInit } from "@angular/core";
-import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { FormsModule, NgForm } from "@angular/forms";
-import { RouterLink } from "@angular/router";
 import { ThemeService } from "../../../../core/theme/theme.service";
 import { AppearancePanelComponent } from "../../../../shared/ui/appearance-panel/appearance-panel.component";
 import { ButtonDirective } from "../../../../shared/ui/button.directive";
 import { IconComponent } from "../../../../shared/ui/icon/icon.component";
+import { RequestStateComponent } from "../../../../shared/ui/request-state/request-state.component";
 import { SESSION } from "../../../auth/data-access/session.repository";
 import { PerfilSocio } from "../../../coach/models/rutina.model";
 import { PROFILES } from "../../data-access/profile.repository";
+import {
+  bmiCategory,
+  BodyMeasurement,
+  calculateBmi,
+  createProfileDraft,
+} from "../../models/profile.model";
+
+const ADMIN_EMAILS = new Set([
+  "guevara.cardona.yahir@gmail.com",
+  "admin@gymseminario.com",
+]);
+
 @Component({
   selector: "app-micuenta",
   standalone: true,
@@ -33,22 +43,36 @@ import { PROFILES } from "../../data-access/profile.repository";
   styleUrl: "./micuenta.component.css",
 })
 export class MicuentaComponent implements OnInit {
-  private auth = inject(SESSION);
-  private profileService = inject(PROFILES);
-  private dialog = inject(Dialog);
+  private readonly auth = inject(SESSION);
+  private readonly profileService = inject(PROFILES);
+  private readonly dialog = inject(Dialog);
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
   readonly theme = inject(ThemeService);
+
   nombre: string | null = null;
   email: string | null = null;
   role: string | null = null;
   authReady = false;
   authError = "";
   perfil: PerfilSocio = createProfileDraft();
-  private destroyRef = inject(DestroyRef);
   profileLoading = false;
   profileError = "";
   guardadoExitoso = false;
   saveMessage = "";
   saving = false;
+  cloudSynced = false;
+
+  measurements: BodyMeasurement[] = [];
+  healthAlerts: string[] = [];
+  measurementSaving = false;
+  measurementMessage = "";
+  cintura: number | null = null;
+  pecho: number | null = null;
+  brazo: number | null = null;
+  grasaCorporal: number | null = null;
+  measurementNotas = "";
+
   objetivos = [
     "Ganancia muscular",
     "Pérdida de grasa / Definición",
@@ -59,17 +83,20 @@ export class MicuentaComponent implements OnInit {
   niveles = ["Principiante", "Intermedio", "Avanzado"];
   opcionesDias = [2, 3, 4, 5, 6];
   generos = ["Masculino", "Femenino", "Otro"];
+
   constructor() {
     this.auth.userName$.pipe(takeUntilDestroyed()).subscribe((name) => {
       this.nombre = name;
-      if (name && (!this.perfil.nombre || this.perfil.nombre === "Socio"))
+      if (name && (!this.perfil.nombre || this.perfil.nombre === "Socio")) {
         this.perfil.nombre = name;
+      }
     });
     this.auth.userRole$
       .pipe(takeUntilDestroyed())
       .subscribe((role) => (this.role = role));
     this.loadProfile();
   }
+
   get profileState(): RequestState<PerfilSocio> {
     if (this.profileLoading) return { status: "loading" };
     if (this.profileError)
@@ -79,6 +106,7 @@ export class MicuentaComponent implements OnInit {
       };
     return { status: "data", data: this.perfil };
   }
+
   loadProfile() {
     if (this.profileLoading) return;
     this.profileLoading = true;
@@ -91,8 +119,9 @@ export class MicuentaComponent implements OnInit {
           if (
             this.nombre &&
             (!this.perfil.nombre || this.perfil.nombre === "Socio")
-          )
+          ) {
             this.perfil.nombre = this.nombre;
+          }
           this.profileLoading = false;
         },
         error: () => {
@@ -102,6 +131,7 @@ export class MicuentaComponent implements OnInit {
         },
       });
   }
+
   ngOnInit() {
     const sessionUser =
       this.profileService.getSessionUserInfo?.() ??
@@ -109,15 +139,50 @@ export class MicuentaComponent implements OnInit {
     if (sessionUser) {
       this.email = sessionUser.email;
       this.nombre = sessionUser.nombre || this.nombre;
+      if (
+        "role" in sessionUser &&
+        typeof sessionUser.role === "string" &&
+        sessionUser.role
+      ) {
+        this.role = sessionUser.role;
+      }
     }
     this.authReady = true;
+    void this.syncFromServer();
   }
-  get imc() {
-    if (!this.perfil.peso || !this.perfil.altura) return 0;
-    return Number(
-      (this.perfil.peso / (this.perfil.altura / 100) ** 2).toFixed(1),
+
+  private async syncFromServer() {
+    if (this.profileService.syncProfileFromServer) {
+      const res = await this.profileService.syncProfileFromServer();
+      this.perfil = { ...res.perfil };
+      this.cloudSynced = res.synced;
+      this.healthAlerts = res.healthAlerts;
+    }
+    if (this.profileService.loadMeasurements) {
+      const mRes = await this.profileService.loadMeasurements();
+      this.measurements = mRes.measurements;
+      if (mRes.healthAlerts.length) {
+        this.healthAlerts = mRes.healthAlerts;
+      }
+    }
+  }
+
+  get imc(): number {
+    return calculateBmi(this.perfil.peso, this.perfil.altura);
+  }
+
+  get imcLabel(): string {
+    return bmiCategory(this.imc);
+  }
+
+  get hasMedicalRestriction(): boolean {
+    const text = (this.perfil.restriccionesMedicas || "").trim().toLowerCase();
+    return Boolean(
+      text &&
+        !["ninguna", "ninguno", "sin restricciones", "n/a", "no"].includes(text),
     );
   }
+
   async guardarDatos(form?: NgForm) {
     if (this.saving) return;
     if (form?.invalid) {
@@ -130,26 +195,67 @@ export class MicuentaComponent implements OnInit {
     try {
       await this.profileService.guardarPerfil({ ...this.perfil });
       this.guardadoExitoso = true;
-      this.saveMessage = "Perfil guardado en este navegador.";
+      this.saveMessage = this.cloudSynced
+        ? "Perfil actualizado y sincronizado en tu cuenta."
+        : "Perfil guardado en este navegador.";
     } catch {
       this.saveMessage =
-        "No se pudo guardar el perfil. Conservamos tus campos; revisa el almacenamiento del navegador y vuelve a intentar.";
+        "No se pudo guardar el perfil. Conservamos tus campos; revisa tu conexión o almacenamiento e intenta de nuevo.";
     } finally {
       this.saving = false;
     }
   }
+
+  async registrarMedicion() {
+    if (this.measurementSaving || !this.profileService.saveMeasurement) return;
+    if (
+      !Number.isFinite(this.perfil.peso) ||
+      this.perfil.peso <= 0 ||
+      !Number.isFinite(this.perfil.altura) ||
+      this.perfil.altura <= 0
+    ) {
+      this.measurementMessage =
+        "Ingresa un peso y altura válidos en tu perfil antes de registrar una medición.";
+      return;
+    }
+
+    this.measurementSaving = true;
+    this.measurementMessage = "";
+    try {
+      const res = await this.profileService.saveMeasurement({
+        peso: this.perfil.peso,
+        altura: this.perfil.altura,
+        cintura: this.cintura,
+        pecho: this.pecho,
+        brazo: this.brazo,
+        grasaCorporal: this.grasaCorporal,
+        restriccionesMedicas: this.perfil.restriccionesMedicas,
+        notas: this.measurementNotas.trim() || undefined,
+      });
+      this.measurements = [res.measurement, ...this.measurements];
+      this.healthAlerts = res.healthAlerts;
+      this.measurementNotas = "";
+      this.measurementMessage = `Medición registrada (IMC ${res.measurement.imc}).`;
+    } catch {
+      this.measurementMessage =
+        "No se pudo registrar la medición en el servidor. Intenta de nuevo.";
+    } finally {
+      this.measurementSaving = false;
+    }
+  }
+
   get effectiveRole(): "admin" | "receptionist" | "subscriber" | "guest" {
     const email = (this.email || "").toLowerCase().trim();
-    const r = (this.role || "").toLowerCase();
-    if (
-      email === "guevara.cardona.yahir@gmail.com" ||
-      email === "admin@gymseminario.com" ||
-      r === "admin" ||
-      this.nombre?.toLowerCase().includes("yahir")
-    ) {
+    const r = (this.role || "").toLowerCase().trim();
+    if (ADMIN_EMAILS.has(email) || r === "admin") {
       return "admin";
     }
-    if (r === "receptionist" || r === "recepcionista" || r === "staff") {
+    if (
+      r === "reception" ||
+      r === "receptionist" ||
+      r === "recepcionista" ||
+      r === "staff"
+    ) {
       return "receptionist";
     }
     if (r === "subscriber" || r === "subscriptor" || r === "socio") {
@@ -205,8 +311,9 @@ export class MicuentaComponent implements OnInit {
       timerProgressBar: true,
       showConfirmButton: false,
     });
-    window.location.href = "/home";
+    await this.router.navigate(["/home"]);
   }
+
   openPreferences() {
     this.dialog.open(AppearancePanelComponent, {
       width: "440px",

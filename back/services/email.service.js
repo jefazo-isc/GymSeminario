@@ -242,3 +242,22 @@ export async function sendAttendanceNotification({ correo, nombre, clase, fecha,
 
   return await sendEmail({ to: correo, subject, html, text });
 }
+
+/**
+ * Envía recordatorio de próxima expiración de membresía
+ */
+export async function sendExpiryNotification({ correo, nombre, planNombre, fechaFin, diasRestantes }) {
+  const subject = `⏰ Tu membresía ${planNombre} vence pronto - espacioGYM`;
+  const text = `Hola ${nombre || 'Socio'},\n\nTu membresía ${planNombre} vence el ${fechaFin} (${diasRestantes} días restantes). Renueva desde /membresias para mantener tu acceso y Coach IA.`;
+  const html = `
+    <div style="font-family: sans-serif; background:#0f172a; color:#f8fafc; padding:24px;">
+      <div style="max-width:560px; margin:0 auto; background:#1e293b; border-radius:14px; padding:24px; border:1px solid #334155;">
+        <h2 style="color:#f59e0b; margin-top:0;">⏰ Aviso de Vencimiento — espacioGYM</h2>
+        <p>Hola <strong>${nombre || 'Socio'}</strong>,</p>
+        <p>Tu membresía <strong>${planNombre}</strong> vence el <strong>${fechaFin}</strong> (${diasRestantes} días restantes).</p>
+        <p style="color:#94a3b8; font-size:13px;">Renueva desde tu perfil o en recepción para continuar con tu acceso QR y Coach Virtual IA.</p>
+      </div>
+    </div>
+  `;
+  return await sendEmail({ to: correo, subject, html, text });
+}

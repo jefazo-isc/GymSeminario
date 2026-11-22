@@ -14,9 +14,13 @@
     <app-icon name="grid" />
     <p>
       <strong>Registros compartidos.</strong> Las ediciones y eliminaciones
-      modifican Firestore. Los permisos efectivos dependen de las reglas del
-      proyecto, no de la visibilidad del menú.
+      modifican la base de datos SQLite en tiempo real. Los permisos efectivos
+      dependen de tu sesión y rol autorizado en el servidor.
     </p>
+  </div>
+  <div class="toolbar">
+    <span class="help">Control de entrada y asistencia física en recepción</span>
+    <a appButton="secondary" routerLink="/scanner">Escanear QR de acceso</a>
   </div>
   <div class="filters">
     <div class="field">
@@ -52,7 +56,7 @@
   }
   @if (loading) {
     <div class="surface" role="status">
-      <p>Cargando registros de Firestore…</p>
+      <p>Cargando registros de SQLite en tiempo real…</p>
       <div class="loading-line"></div>
     </div>
   } @else if (error) {
@@ -78,7 +82,7 @@
       >
         <table class="data-table">
           <caption>
-            Datos de asistencias publicados en Firestore
+            Datos de asistencias publicados en SQLite en tiempo real
           </caption>
           <thead>
             <tr>
@@ -233,7 +237,7 @@
         }
         <div class="form-actions">
           <button appButton="primary" type="submit" [disabled]="!!busyId">
-            {{ busyId ? "Guardando…" : "Guardar en Firestore" }}</button
+            {{ busyId ? "Guardando…" : "Guardar en SQLite" }}</button
           ><button
             appButton="secondary"
             type="button"

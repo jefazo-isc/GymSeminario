@@ -14,6 +14,15 @@
 .data-table {
   max-width: 100%;
 }
+.inline-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.inline-controls select {
+  min-width: 112px;
+}
 @media (max-width: 767px) {
   .chart-wrapper {
     height: 300px;

@@ -48,3 +48,22 @@ export interface RespuestaChat {
   coach: string;
   respuesta: string;
 }
+
+export interface SavedRoutineRecord {
+  id: string | number;
+  userEmail: string;
+  assignedBy?: string | null;
+  updatedAt?: string;
+  rutina: RutinaData;
+}
+
+export interface SaveRoutinePayload {
+  rutina: RutinaData;
+  targetEmail?: string;
+  assignedBy?: string;
+}
+
+export interface CoachChatContext {
+  membershipSummary?: string;
+  equipmentContext?: string;
+}

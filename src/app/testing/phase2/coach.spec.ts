@@ -300,4 +300,144 @@ describe("Coach subscription gate", () => {
     expect(comp.tieneSuscripcion).toBeTrue();
     expect(fixture.nativeElement.querySelector(".routine-form")).not.toBeNull();
   });
+
+  it("blocks pure reception users from Coach IA and renders zero lock icons", () => {
+    const { fixture, serviceSpy } = setupGate(
+      { nombre: "Recep", email: "recep@example.com", role: "reception" },
+      "Recep",
+    );
+    const comp = fixture.componentInstance;
+    expect(comp.usuarioAutenticado).toBeTrue();
+    expect(comp.tieneSuscripcion).toBeFalse();
+    expect(comp.esEntrenadorOAdmin).toBeFalse();
+    expect(fixture.nativeElement.querySelector(".routine-form")).toBeNull();
+    expect(fixture.nativeElement.textContent).not.toContain("🔒");
+
+    comp.generarRutina();
+    comp.mensajeInput = "Ayuda con rutina";
+    comp.enviarMensaje();
+    expect(serviceSpy.generarRutina).not.toHaveBeenCalled();
+    expect(serviceSpy.enviarMensajeChat).not.toHaveBeenCalled();
+  });
+
+  it("loads saved routines on init, persists newly generated routines, and supports trainer assignment", () => {
+    const savedRoutine = {
+      tituloRutina: "Rutina Guardada",
+      objetivo: "Fuerza máxima",
+      nivelRecomendado: "Intermedio",
+      diasSemana: [
+        {
+          dia: "Día 1",
+          grupoMuscular: "Pierna",
+          ejercicios: [
+            {
+              nombre: "Sentadilla",
+              series: 4,
+              repeticiones: "8",
+              descansoSegundos: 90,
+            },
+          ],
+        },
+      ],
+      recomendacionesGenerales: "Hidratación constante",
+    };
+    localStorage.setItem(
+      "gym_user",
+      JSON.stringify({
+        uid: "t-1",
+        nombre: "Coach",
+        email: "coach@example.com",
+        role: "trainer",
+      }),
+    );
+
+    const coachSpy = {
+      obtenerCoaches: jasmine.createSpy().and.returnValue(of([])),
+      generarRutina: jasmine
+        .createSpy()
+        .and.returnValue(of({ exito: true, origen: "gemini", data: savedRoutine })),
+      enviarMensajeChat: jasmine.createSpy().and.returnValue(
+        of({ exito: true, coach: "Coach", respuesta: "Sigue así" }),
+      ),
+      getRoutines: jasmine.createSpy().and.returnValue(
+        of([
+          {
+            id: "rt-10",
+            userEmail: "coach@example.com",
+            rutina: savedRoutine,
+          },
+        ]),
+      ),
+      saveRoutine: jasmine.createSpy().and.returnValue(
+        of({
+          id: "rt-11",
+          userEmail: "cliente@example.com",
+          rutina: savedRoutine,
+        }),
+      ),
+      updateRoutine: jasmine.createSpy().and.returnValue(
+        of({
+          id: "rt-10",
+          userEmail: "cliente@example.com",
+          rutina: savedRoutine,
+        }),
+      ),
+    };
+
+    TestBed.configureTestingModule({
+      imports: [CoachIaComponent],
+      providers: [
+        provideRouter([]),
+        { provide: RutinaService, useValue: coachSpy },
+        {
+          provide: SESSION,
+          useValue: {
+            getCurrentUser: () => Promise.resolve(null),
+            userName$: of("Coach"),
+            userRole$: of("trainer"),
+          },
+        },
+        {
+          provide: MEMBERSHIPS,
+          useValue: { membresiaActual$: of(inactiveMembership) },
+        },
+        {
+          provide: PerfilSocioService,
+          useValue: {
+            perfil$: of({
+              nombre: "Coach",
+              edad: 30,
+              peso: 80,
+              altura: 178,
+              genero: "Masculino",
+              objetivo: "Fuerza máxima",
+              diasDisponibles: 4,
+              nivel: "Intermedio",
+              restriccionesMedicas: "Ninguna",
+            }),
+            actualizarNombre: () => {},
+          },
+        },
+      ],
+    });
+
+    const fixture = TestBed.createComponent(CoachIaComponent);
+    fixture.detectChanges();
+    const comp = fixture.componentInstance;
+
+    expect(comp.esEntrenadorOAdmin).toBeTrue();
+    expect(coachSpy.getRoutines).toHaveBeenCalledWith(undefined);
+    expect(comp.rutina?.tituloRutina).toBe("Rutina Guardada");
+    expect(comp.savedRoutineId).toBe("rt-10");
+
+    comp.modoEntrenador = true;
+    comp.clientEmail = "cliente@example.com";
+    comp.guardarRutinaActual();
+    expect(coachSpy.updateRoutine).toHaveBeenCalledWith("rt-10", {
+      rutina: comp.rutina!,
+      targetEmail: "cliente@example.com",
+      assignedBy: "coach@example.com",
+    });
+    expect(comp.routineFeedback).toContain("cliente@example.com");
+  });
 });

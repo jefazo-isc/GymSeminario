@@ -1,11 +1,18 @@
-import { summarizePayments } from "../models/account-summary";
+import { DOCUMENT } from "@angular/common";
+import { HttpClient } from "@angular/common/http";
+import { inject, Injectable, signal } from "@angular/core";
+import { BehaviorSubject, firstValueFrom, Observable } from "rxjs";
+import {
+  APP_ENDPOINTS,
+  backendBaseUrl,
+} from "../../../core/config/app-endpoints";
 import { localDate } from "../../../core/date/local-date";
-import { inject, Injectable } from "@angular/core";
-import { BehaviorSubject, Observable } from "rxjs";
 import { BrowserStorage } from "../../../core/storage/browser-storage.service";
 import { isList } from "../../../core/storage/storage-guards";
+import { summarizePayments } from "../models/account-summary";
 import {
   ConceptoPago,
+  EstadoPago,
   MetodoPago,
   Pago,
   ResumenCuenta,
@@ -13,28 +20,84 @@ import {
 import { isPayment } from "../models/storage.guard";
 import type { BillingRepository } from "./billing.repository";
 
+interface BackendStripeTransaction {
+  id?: string | number;
+  folio?: string;
+  payment_intent_id?: string;
+  paymentIntentId?: string;
+  user_email?: string;
+  plan_nombre?: string;
+  planNombre?: string;
+  monto?: number;
+  montoPagado?: number;
+  descuento?: number;
+  cupon?: string | null;
+  moneda?: string;
+  estado?: string;
+  tipo?: string;
+  type?: string;
+  created_at?: string;
+  fecha?: string;
+}
+
 @Injectable({ providedIn: "root" })
 export class PagoService implements BillingRepository {
-  private storage = inject(BrowserStorage);
-  private storageKey = "espacio_gym_pagos";
-  private pagosSubject = new BehaviorSubject<Pago[]>(
+  private readonly storage = inject(BrowserStorage);
+  private readonly http = inject(HttpClient, { optional: true });
+  private readonly endpoints = inject(APP_ENDPOINTS, { optional: true });
+  private readonly doc = inject(DOCUMENT, { optional: true });
+  private readonly storageKey = "espacio_gym_pagos";
+  private readonly syncedFromServer = signal(false);
+
+  private readonly pagosSubject = new BehaviorSubject<Pago[]>(
     this.cargarPagosIniciales(),
   );
-  public pagos$: Observable<Pago[]> = this.pagosSubject.asObservable();
+  public readonly pagos$: Observable<Pago[]> =
+    this.pagosSubject.asObservable();
 
-  constructor() {}
+  constructor() {
+    if (this.http && this.hasAuthToken()) {
+      void this.refreshFromBackend();
+    }
+  }
 
-  // ── Obtener todos los pagos ──────────────────────────────────────────────
+  isSyncedFromServer(): boolean {
+    return this.syncedFromServer();
+  }
+
   getPagos(): Pago[] {
     return structuredClone(this.pagosSubject.value);
   }
 
-  // ── Resumen de cuenta del cliente ────────────────────────────────────────
   getResumen(): ResumenCuenta {
     return summarizePayments(this.getPagos());
   }
 
-  // ── Registrar un nuevo pago ──────────────────────────────────────────────
+  async refreshFromBackend(email?: string): Promise<void> {
+    if (!this.http) return;
+    const base = backendBaseUrl(this.endpoints);
+    const url = email
+      ? `${base}/api/stripe/transactions?email=${encodeURIComponent(email)}`
+      : `${base}/api/stripe/transactions`;
+
+    try {
+      const response = await firstValueFrom(
+        this.http.get<
+          | BackendStripeTransaction[]
+          | { transactions?: BackendStripeTransaction[]; data?: BackendStripeTransaction[] }
+        >(url),
+      );
+      const rows = Array.isArray(response)
+        ? response
+        : response?.transactions || response?.data || [];
+      const mapped = rows.map((row, index) => this.mapBackendRow(row, index));
+      this.syncedFromServer.set(true);
+      this.guardar(mapped);
+    } catch {
+      this.syncedFromServer.set(false);
+    }
+  }
+
   registrarPago(
     concepto: ConceptoPago,
     monto: number,
@@ -45,7 +108,8 @@ export class PagoService implements BillingRepository {
     const hoy = new Date();
     const nuevo: Pago = {
       id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
-      folio: customFolio || ("GYM-" + Math.floor(100000 + Math.random() * 900000)),
+      folio:
+        customFolio || "GYM-" + Math.floor(100000 + Math.random() * 900000),
       concepto,
       monto,
       metodo,
@@ -62,7 +126,6 @@ export class PagoService implements BillingRepository {
     return nuevo;
   }
 
-  // ── Marcar pago pendiente como pagado ────────────────────────────────────
   marcarComoPagado(id: string, metodo: MetodoPago): void {
     const actualizados = this.pagosSubject.value.map((p) =>
       p.id === id
@@ -70,14 +133,13 @@ export class PagoService implements BillingRepository {
             ...p,
             estado: "Pagado" as const,
             metodo,
-            fecha: new Date().toISOString().split("T")[0],
+            fecha: localDate(new Date()),
           }
         : p,
     );
     this.guardar(actualizados);
   }
 
-  // ── Cancelar pago pendiente ──────────────────────────────────────────────
   cancelarPago(id: string): void {
     const actualizados = this.pagosSubject.value.map((p) =>
       p.id === id ? { ...p, estado: "Cancelado" as const } : p,
@@ -85,7 +147,6 @@ export class PagoService implements BillingRepository {
     this.guardar(actualizados);
   }
 
-  // ── Persistencia ─────────────────────────────────────────────────────────
   private guardar(pagos: Pago[]): void {
     this.storage.write(this.storageKey, pagos);
     this.pagosSubject.next(pagos);
@@ -93,12 +154,66 @@ export class PagoService implements BillingRepository {
 
   private cargarPagosIniciales(): Pago[] {
     return this.storage.read(this.storageKey, isList(isPayment), () =>
-      this.defaultPayments(),
+      this.http ? [] : this.defaultPayments(),
     );
   }
 
+  private hasAuthToken(): boolean {
+    try {
+      const storage = this.doc?.defaultView?.localStorage;
+      return Boolean(storage?.getItem("gym_jwt") || storage?.getItem("gym_user"));
+    } catch {
+      return false;
+    }
+  }
+
+  private mapBackendRow(row: BackendStripeTransaction, index: number): Pago {
+    const idStr = String(
+      row.id ?? row.payment_intent_id ?? row.paymentIntentId ?? `tx-${index}`,
+    );
+    const rawFolio = row.folio ? String(row.folio) : "";
+    const folio = rawFolio.startsWith("STR-")
+      ? rawFolio
+      : idStr.startsWith("STR-")
+        ? idStr
+        : `STR-${idStr.replace(/\D/g, "").slice(-6).padStart(6, "0")}`;
+    const planNombre = String(
+      row.plan_nombre || row.planNombre || "Transacción Stripe",
+    );
+    const isProduct =
+      (row.tipo || row.type) === "product" ||
+      planNombre.toLowerCase().startsWith("productos");
+    const concepto: ConceptoPago = isProduct ? "Suplementos" : "Mensualidad";
+    const monto = Number(row.monto ?? row.montoPagado ?? 0);
+    const rawFecha = String(row.created_at || row.fecha || "").slice(0, 10);
+    const fecha = /^\d{4}-\d{2}-\d{2}$/.test(rawFecha)
+      ? rawFecha
+      : localDate(new Date());
+    const rawState = String(row.estado || "").toLowerCase();
+    const estado: EstadoPago =
+      rawState === "cancelado" || rawState === "canceled"
+        ? "Cancelado"
+        : rawState === "pendiente" || rawState === "pending"
+          ? "Pendiente"
+          : "Pagado";
+    const pi = row.payment_intent_id || row.paymentIntentId || "";
+    const parts = [planNombre];
+    if (row.cupon) parts.push(`Cupón: ${row.cupon}`);
+    if (pi) parts.push(`Stripe ID: ${pi}`);
+
+    return {
+      id: idStr,
+      folio,
+      concepto,
+      monto: Number.isFinite(monto) ? monto : 0,
+      fecha,
+      metodo: "Tarjeta de crédito",
+      estado,
+      descripcion: parts.join(" · "),
+    };
+  }
+
   private defaultPayments(): Pago[] {
-    // Historial de demostración
     const base = new Date();
     const fecha = (mesesAtras: number): string => {
       const d = new Date(base);

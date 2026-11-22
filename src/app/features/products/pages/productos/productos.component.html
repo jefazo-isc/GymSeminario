@@ -1,13 +1,90 @@
 <section class="feature-page stack">
-  <div class="notice notice--warning">
+  <div class="notice">
     <app-icon name="grid" />
     <p>
-      <strong>Catálogo por validar.</strong> Los precios originales se
-      conservan; Gymshark Whey Protein figura con un importe de prueba de $1
-      MXN. El sitio no tiene confirmación propia de inventario ni un sistema
-      persistente de pedidos. Revisa los importes antes de continuar con Stripe.
+      <strong>Tienda oficial espacioGYM.</strong> Explora suplementos,
+      accesorios y ropa deportiva. Los pagos se procesan mediante Stripe Elements
+      con soporte para cupones institucionales.
     </p>
   </div>
+
+  @if (isAdmin) {
+    <section class="surface stack admin-products-panel" aria-label="Gestión del catálogo de productos">
+      <div class="toolbar">
+        <div>
+          <span class="eyebrow">Panel administrativo</span>
+          <h2>Gestión del catálogo (Admin)</h2>
+        </div>
+        <button appButton="secondary" type="button" (click)="startNewProduct()">
+          Nuevo producto<app-icon name="plus" />
+        </button>
+      </div>
+      @if (adminMessage) {
+        <p class="notice" role="status">{{ adminMessage }}</p>
+      }
+      @if (adminFormOpen) {
+        <form class="form-grid" (ngSubmit)="saveAdminProduct()">
+          <div class="field">
+            <label for="admin-prod-name">Nombre</label>
+            <input
+              id="admin-prod-name"
+              name="nombre"
+              [(ngModel)]="adminForm.nombre"
+              required
+            />
+          </div>
+          <div class="field">
+            <label for="admin-prod-price">Precio (MXN)</label>
+            <input
+              id="admin-prod-price"
+              name="precio"
+              type="number"
+              min="1"
+              [(ngModel)]="adminForm.precio"
+              required
+            />
+          </div>
+          <div class="field">
+            <label for="admin-prod-category">Categoría</label>
+            <select
+              id="admin-prod-category"
+              name="categoria"
+              [(ngModel)]="adminForm.categoria"
+            >
+              @for (item of categories; track item.value) {
+                <option [value]="item.value">{{ item.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label for="admin-prod-image">URL de imagen</label>
+            <input
+              id="admin-prod-image"
+              name="imagen"
+              [(ngModel)]="adminForm.imagen"
+            />
+          </div>
+          <div class="field full-width">
+            <label for="admin-prod-desc">Descripción</label>
+            <input
+              id="admin-prod-desc"
+              name="descripcion"
+              [(ngModel)]="adminForm.descripcion"
+            />
+          </div>
+          <div class="form-actions full-width">
+            <button appButton="primary" type="submit" [disabled]="adminBusy">
+              {{ editingProductId !== null ? "Guardar cambios" : "Crear producto" }}
+            </button>
+            <button appButton="ghost" type="button" (click)="cancelAdminEdit()">
+              Cancelar
+            </button>
+          </div>
+        </form>
+      }
+    </section>
+  }
+
   <div class="filters">
     <div class="field">
       <label for="product-query">Buscar productos</label
@@ -96,9 +173,6 @@
                 }}
                 <small>MXN</small></strong
               >
-              @if (product.id === 1) {
-                <span class="status status--warning">Importe de prueba</span>
-              }
               <button
                 appButton="secondary"
                 type="button"
@@ -108,6 +182,26 @@
               >
                 Añadir al carrito<app-icon name="plus" />
               </button>
+              @if (isAdmin) {
+                <div class="product-admin-actions">
+                  <button
+                    appButton="ghost"
+                    type="button"
+                    [disabled]="adminBusy"
+                    (click)="editProduct(product)"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    appButton="ghost"
+                    type="button"
+                    [disabled]="adminBusy"
+                    (click)="deleteAdminProduct(product.id)"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              }
             </div>
           </article>
         } @empty {
@@ -156,7 +250,7 @@
       <span class="eyebrow">Revisa tu selección</span>
       <h2>Tu carrito</h2>
     }
-    <p class="help">{{ carrito.length }} unidades · Solo durante esta visita</p>
+    <p class="help">{{ carrito.length }} unidades · Guardado en este navegador</p>
     @if (carrito.length) {
       <div class="cart-lines">
         @for (line of cartLines; track line.product.id) {
@@ -226,8 +320,7 @@
         }
       </div>
       <p class="help">
-        La suma conserva los importes del catálogo. Puedes aplicar un cupón
-        institucional antes de confirmar en Stripe.
+        Puedes aplicar un cupón institucional antes de confirmar con Stripe.
       </p>
       <label class="checkout-review"
         ><input
@@ -247,8 +340,8 @@
           aria-label="Pasarela de pago Stripe"
         >
           <div class="stripe-checkout__header">
-            <span class="eyebrow">Pasarela Stripe</span>
-            <span class="status status--accent">Stripe Live · 256-bit</span>
+            <span class="eyebrow">Stripe Elements</span>
+            <span class="status status--accent">PCI-DSS · 256-bit</span>
           </div>
 
           <div class="stripe-coupon">
@@ -320,51 +413,18 @@
                 />
               </div>
               <div class="field">
-                <label for="stripe-card-number">Número de tarjeta</label>
-                <input
-                  id="stripe-card-number"
-                  class="control"
-                  type="text"
-                  maxlength="19"
-                  inputmode="numeric"
-                  autocomplete="cc-number"
-                  [ngModel]="cardNumber"
-                  (ngModelChange)="onCardNumberInput($event)"
-                  placeholder="4242 4242 4242 4242"
-                  [disabled]="checkoutPending"
-                />
+                <label for="stripe-card-element">Tarjeta bancaria (Stripe Elements)</label>
+                <div
+                  #stripeCardMount
+                  id="stripe-card-element"
+                  class="stripe-card-element"
+                ></div>
               </div>
-              <div class="stripe-card-row">
-                <div class="field">
-                  <label for="stripe-card-expiry">Expiración</label>
-                  <input
-                    id="stripe-card-expiry"
-                    class="control"
-                    type="text"
-                    maxlength="5"
-                    inputmode="numeric"
-                    autocomplete="cc-exp"
-                    [ngModel]="cardExpiry"
-                    (ngModelChange)="onCardExpiryInput($event)"
-                    placeholder="MM/AA"
-                    [disabled]="checkoutPending"
-                  />
-                </div>
-                <div class="field">
-                  <label for="stripe-card-cvc">CVC</label>
-                  <input
-                    id="stripe-card-cvc"
-                    class="control"
-                    type="password"
-                    maxlength="4"
-                    inputmode="numeric"
-                    autocomplete="cc-csc"
-                    [(ngModel)]="cardCvc"
-                    placeholder="123"
-                    [disabled]="checkoutPending"
-                  />
-                </div>
-              </div>
+              @if (cardError) {
+                <p class="coupon-status coupon-status--invalid" role="alert">
+                  {{ cardError }}
+                </p>
+              }
             </div>
           }
 

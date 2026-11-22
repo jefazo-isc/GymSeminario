@@ -1,16 +1,39 @@
-import { Observable, of } from "rxjs";
+import { DOCUMENT } from "@angular/common";
+import { HttpClient } from "@angular/common/http";
 import { inject, Injectable, InjectionToken } from "@angular/core";
+import { catchError, firstValueFrom, map, Observable, of, startWith } from "rxjs";
+import {
+  APP_ENDPOINTS,
+  backendBaseUrl,
+} from "../../../core/config/app-endpoints";
 import { Producto } from "../models/producto.model";
+
 export interface ProductCatalogRepository {
   loadProducts(): Observable<Producto[]>;
+  isAdmin?(): boolean;
+  createProduct?(input: Omit<Producto, "id">): Promise<Producto>;
+  updateProduct?(
+    id: number,
+    patch: Partial<Omit<Producto, "id">>,
+  ): Promise<Producto>;
+  deleteProduct?(id: number): Promise<void>;
 }
+
+const VALID_CATEGORIES = new Set<Producto["categoria"]>([
+  "proteina",
+  "creatina",
+  "preentreno",
+  "accesorio",
+  "ropa",
+]);
+
 const PRODUCTS: Producto[] = [
   // 8 Proteínas (Gymshark, YoungLA, Optimum Nutrition, Myprotein)
   {
     id: 1,
     nombre: "Gymshark Whey Protein",
     descripcion: "Proteína de suero premium Gymshark",
-    precio: 1,
+    precio: 1350,
     imagen: "https://m.media-amazon.com/images/I/51+1dK5TL6L._AC_SX679_.jpg",
     categoria: "proteina",
   },
@@ -368,15 +391,103 @@ const PRODUCTS: Producto[] = [
     categoria: "ropa",
   },
 ];
+
 @Injectable({ providedIn: "root" })
 export class LocalProductCatalog implements ProductCatalogRepository {
-  loadProducts() {
-    return of(this.getProducts());
+  private readonly http = inject(HttpClient, { optional: true });
+  private readonly endpoints = inject(APP_ENDPOINTS, { optional: true });
+  private readonly doc = inject(DOCUMENT, { optional: true });
+
+  loadProducts(): Observable<Producto[]> {
+    const fallback = this.getProducts();
+    if (!this.http) return of(fallback);
+
+    const base = backendBaseUrl(this.endpoints);
+    return this.http
+      .get<Producto[] | { products?: Producto[]; data?: Producto[] }>(
+        `${base}/api/products`,
+      )
+      .pipe(
+        map((resp) => {
+          const list = Array.isArray(resp)
+            ? resp
+            : resp?.products || resp?.data || [];
+          const valid = list.filter(
+            (item): item is Producto =>
+              Boolean(item) &&
+              typeof item.id === "number" &&
+              typeof item.nombre === "string" &&
+              typeof item.precio === "number" &&
+              VALID_CATEGORIES.has(item.categoria),
+          );
+          return valid.length ? valid : fallback;
+        }),
+        startWith(fallback),
+        catchError(() => of(fallback)),
+      );
   }
-  getProducts() {
+
+  getProducts(): Producto[] {
     return structuredClone(PRODUCTS);
   }
+
+  isAdmin(): boolean {
+    try {
+      const raw = this.doc?.defaultView?.localStorage?.getItem("gym_user");
+      if (!raw) return false;
+      const u = JSON.parse(raw) as { email?: string; role?: string };
+      const email = (u.email || "").toLowerCase().trim();
+      const role = (u.role || "").toLowerCase().trim();
+      return (
+        email === "guevara.cardona.yahir@gmail.com" ||
+        email === "admin@gymseminario.com" ||
+        role === "admin"
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  async createProduct(input: Omit<Producto, "id">): Promise<Producto> {
+    if (!this.http) {
+      throw new Error("Cliente HTTP no disponible para crear producto.");
+    }
+    const base = backendBaseUrl(this.endpoints);
+    const resp = await firstValueFrom(
+      this.http.post<Producto | { product?: Producto }>(
+        `${base}/api/products`,
+        input,
+      ),
+    );
+    return "product" in resp && resp.product ? resp.product : (resp as Producto);
+  }
+
+  async updateProduct(
+    id: number,
+    patch: Partial<Omit<Producto, "id">>,
+  ): Promise<Producto> {
+    if (!this.http) {
+      throw new Error("Cliente HTTP no disponible para actualizar producto.");
+    }
+    const base = backendBaseUrl(this.endpoints);
+    const resp = await firstValueFrom(
+      this.http.put<Producto | { product?: Producto }>(
+        `${base}/api/products/${id}`,
+        patch,
+      ),
+    );
+    return "product" in resp && resp.product ? resp.product : (resp as Producto);
+  }
+
+  async deleteProduct(id: number): Promise<void> {
+    if (!this.http) {
+      throw new Error("Cliente HTTP no disponible para eliminar producto.");
+    }
+    const base = backendBaseUrl(this.endpoints);
+    await firstValueFrom(this.http.delete(`${base}/api/products/${id}`));
+  }
 }
+
 export const PRODUCT_CATALOG = new InjectionToken<ProductCatalogRepository>(
   "ProductCatalogRepository",
   { providedIn: "root", factory: () => inject(LocalProductCatalog) },

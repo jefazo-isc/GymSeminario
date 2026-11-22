@@ -1,0 +1,6 @@
+node_modules
+edge_gym.db*
+gym.db*
+*.log
+.env*
+.DS_Store

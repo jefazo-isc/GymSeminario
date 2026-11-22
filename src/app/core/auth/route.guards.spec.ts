@@ -14,6 +14,7 @@ import { Membresia } from "../../features/memberships/models/membresia.model";
 import {
   adminGuard,
   authGuard,
+  noReceptionExerciseGuard,
   receptionOrAdminGuard,
   subscriptionGuard,
 } from "./route.guards";
@@ -167,10 +168,11 @@ describe("Route guards", () => {
       expect(await executeGuard(subscriptionGuard, "/coach-ia")).toBeTrue();
     });
 
-    it("allows subscriber, receptionist, and admin roles even with inactive local membership", async () => {
+    it("allows subscriber, trainer, and admin roles even with inactive local membership", async () => {
       for (const user of [
         { uid: "s-1", nombre: "Socio", email: "s@example.com", role: "subscriber" },
-        { uid: "r-1", nombre: "Recep", email: "r@example.com", role: "receptionist" },
+        { uid: "t-1", nombre: "Coach", email: "t@example.com", role: "trainer" },
+        { uid: "t-2", nombre: "Entrenador", email: "t2@example.com", role: "entrenador" },
         { uid: "a-1", nombre: "Admin", email: "a@example.com", role: "admin" },
         {
           uid: "a-2",
@@ -190,6 +192,56 @@ describe("Route guards", () => {
           .withContext(user.email)
           .toBeTrue();
       }
+    });
+
+    it("redirects pure reception roles away from coach, booking, and exercise routes to /scanner", async () => {
+      membership$.next(activeMembership);
+      for (const role of ["receptionist", "reception", "recepcionista", "staff"]) {
+        localStorage.setItem(
+          "gym_user",
+          JSON.stringify({
+            uid: "r-only",
+            nombre: "Recep",
+            email: "recep@example.com",
+            role,
+          }),
+        );
+        for (const protectedPath of ["/coach-ia", "/f2", "/f3", "/actividad"]) {
+          expectRedirect(
+            await executeGuard(subscriptionGuard, protectedPath),
+            "/scanner",
+          );
+        }
+        for (const exercisePath of ["/ejercicios", "/videos"]) {
+          expectRedirect(
+            await executeGuard(noReceptionExerciseGuard, exercisePath),
+            "/scanner",
+          );
+        }
+      }
+
+      localStorage.removeItem("gym_user");
+      expect(await executeGuard(noReceptionExerciseGuard, "/ejercicios")).toBeTrue();
+      localStorage.setItem(
+        "gym_user",
+        JSON.stringify({
+          uid: "sub-1",
+          nombre: "Socio",
+          email: "sub@example.com",
+          role: "subscriber",
+        }),
+      );
+      expect(await executeGuard(noReceptionExerciseGuard, "/videos")).toBeTrue();
+      localStorage.setItem(
+        "gym_user",
+        JSON.stringify({
+          uid: "adm-1",
+          nombre: "Yahir",
+          email: "guevara.cardona.yahir@gmail.com",
+          role: "receptionist",
+        }),
+      );
+      expect(await executeGuard(noReceptionExerciseGuard, "/ejercicios")).toBeTrue();
     });
 
     it("falls back to /membresias if MEMBERSHIPS stream errors", async () => {
@@ -248,9 +300,11 @@ describe("Route guards", () => {
       }
     });
 
-    it("allows receptionist and admin users", async () => {
+    it("allows receptionist, reception, trainer, and admin users", async () => {
       for (const user of [
         { uid: "r-1", nombre: "Recep", email: "recep@example.com", role: "receptionist" },
+        { uid: "r-2", nombre: "RecepBackend", email: "rec2@example.com", role: "reception" },
+        { uid: "t-1", nombre: "Coach", email: "coach@example.com", role: "trainer" },
         { uid: "a-1", nombre: "Admin", email: "admin@example.com", role: "admin" },
         {
           uid: "a-2",

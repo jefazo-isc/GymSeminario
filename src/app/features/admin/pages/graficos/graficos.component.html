@@ -2,9 +2,9 @@
   <div class="notice">
     <app-icon name="grid" />
     <p>
-      <strong>Servicio externo de estadísticas.</strong> Esta vista consulta la
-      API publicada del proyecto. Es independiente de la ocupación local y no
-      acredita datos de asistencia del usuario actual.
+      <strong>Analítica operativa en SQLite.</strong> Métricas reales de
+      reservas, asistencias, ingresos Stripe, piso en tiempo real y pronóstico
+      de demanda.
     </p>
   </div>
   <div class="toolbar">
@@ -33,6 +33,7 @@
       </p>
     </div>
     <div class="form-actions">
+      <a appButton="secondary" routerLink="/scanner">Escáner QR</a>
       <button
         appButton="secondary"
         type="button"
@@ -46,7 +47,7 @@
         appButton="primary"
         type="button"
         [disabled]="fetching"
-        (click)="load()"
+        (click)="load(); loadOperationalPanels()"
       >
         {{ fetching ? "Consultando…" : "Actualizar ahora" }}
       </button>
@@ -70,10 +71,28 @@
         </p>
       </div>
     }
+    <div class="grid-4">
+      <article class="surface">
+        <span class="help">Reservas por actividad</span>
+        <div class="metric">{{ totalSessions | number }}</div>
+      </article>
+      <article class="surface">
+        <span class="help">Asistencias confirmadas</span>
+        <div class="metric">{{ totalAttendances | number }}</div>
+      </article>
+      <article class="surface">
+        <span class="help">Socios activos</span>
+        <div class="metric">{{ activeMembers | number }}</div>
+      </article>
+      <article class="surface">
+        <span class="help">Ingresos totales</span>
+        <div class="metric">${{ totalRevenue | number: "1.0-0" }}</div>
+      </article>
+    </div>
     <div class="grid-3">
       <article class="surface">
-        <span class="help">Sesiones informadas por la API</span>
-        <div class="metric">{{ totalSessions | number }}</div>
+        <span class="help">Total de reservas históricas</span>
+        <div class="metric">{{ totalBookings | number }}</div>
       </article>
       <article class="surface">
         <span class="help">Actividad con más sesiones</span>
@@ -89,7 +108,7 @@
       </article>
     </div>
     <article class="surface">
-      <h2>Sesiones por actividad</h2>
+      <h2>Reservas y asistencias por actividad</h2>
       <div class="chart-wrapper">
         <canvas
           baseChart
@@ -103,12 +122,13 @@
       <div class="table-scroll">
         <table class="data-table">
           <caption>
-            Valores de las cinco actividades de la gráfica
+            Comparativa de reservas y asistencias por disciplina
           </caption>
           <thead>
             <tr>
               <th scope="col">Actividad</th>
-              <th scope="col" class="amount">Sesiones</th>
+              <th scope="col" class="amount">Reservas</th>
+              <th scope="col" class="amount">Asistencias</th>
             </tr>
           </thead>
           <tbody>
@@ -117,6 +137,271 @@
                 <th scope="row">{{ label }}</th>
                 <td class="amount">
                   {{ barChartData.datasets[0].data[$index] ?? "No informado" }}
+                </td>
+                <td class="amount">
+                  {{ attendancesByActivity[label + ""] ?? 0 }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </article>
+
+    @if (hourlyOccupancy.length) {
+      <article class="surface stack">
+        <h2>Ocupación por franja horaria</h2>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th scope="col">Horario</th>
+                <th scope="col" class="amount">Reservas</th>
+                <th scope="col" class="amount">Asistencias</th>
+                <th scope="col" class="amount">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (slot of hourlyOccupancy; track slot.hora) {
+                <tr>
+                  <th scope="row">{{ slot.hora }}</th>
+                  <td class="amount">{{ slot.reservas }}</td>
+                  <td class="amount">{{ slot.asistencias }}</td>
+                  <td class="amount">{{ slot.total }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </article>
+    }
+  }
+
+  @if (liveFloor; as live) {
+    <article class="surface stack">
+      <div class="toolbar">
+        <div>
+          <span class="eyebrow">Piso en tiempo real</span>
+          <h2>Sesiones activas hoy ({{ live.activeCount }})</h2>
+        </div>
+        <span class="status status--success">En vivo</span>
+      </div>
+      @if (live.sessions.length) {
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th scope="col">Socio</th>
+                <th scope="col">Clase</th>
+                <th scope="col">Hora</th>
+                <th scope="col">Plan</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of live.sessions; track item.id) {
+                <tr>
+                  <td><strong>{{ item.alumno }}</strong></td>
+                  <td>{{ item.clase }}</td>
+                  <td>{{ item.hora }}</td>
+                  <td>{{ item.plan || "Vigente" }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <p class="help">No hay check-ins recientes activos en este momento.</p>
+      }
+    </article>
+  }
+
+  @if (forecast; as ai) {
+    <article class="surface stack">
+      <div class="toolbar">
+        <div>
+          <span class="eyebrow">Pronóstico predictivo de demanda</span>
+          <h2>Horas pico y recomendación operativa</h2>
+        </div>
+        <span class="status status--accent">Fuente: {{ ai.source }}</span>
+      </div>
+      <p>{{ ai.summary }}</p>
+      <div class="grid-3">
+        <div class="surface surface--soft">
+          <span class="help">Horario pico previsto</span>
+          <strong>{{ ai.peakHour }}</strong>
+        </div>
+        <div class="surface surface--soft">
+          <span class="help">Personal de supervisión</span>
+          <p class="help">{{ ai.staffRecommendation }}</p>
+        </div>
+        <div class="surface surface--soft">
+          <span class="help">Limpieza y sanitización</span>
+          <p class="help">{{ ai.cleaningRecommendation }}</p>
+        </div>
+      </div>
+      @if (ai.windows.length) {
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th scope="col">Franja</th>
+                <th scope="col" class="amount">Demanda estimada</th>
+                <th scope="col">Nivel</th>
+                <th scope="col">Recomendación</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (w of ai.windows; track w.franja) {
+                <tr>
+                  <td>{{ w.franja }}</td>
+                  <td class="amount">{{ w.demandaEstimada }}</td>
+                  <td>{{ w.nivel }}</td>
+                  <td>{{ w.recomendacionPersonal }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </article>
+  }
+
+  @if (expiringMemberships.length || users.length) {
+    @if (adminFeedback) {
+      <p class="notice" role="status">{{ adminFeedback }}</p>
+    }
+  }
+
+  @if (expiringMemberships.length) {
+    <article class="surface stack">
+      <div class="toolbar">
+        <div>
+          <span class="eyebrow">Retención y renovaciones</span>
+          <h2>Membresías próximas a vencer ({{ expiringMemberships.length }})</h2>
+        </div>
+        <button
+          appButton="primary"
+          type="button"
+          [disabled]="adminBusy"
+          (click)="notifyExpiring()"
+        >
+          {{ adminBusy ? "Enviando…" : "Notificar por correo" }}
+        </button>
+      </div>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th scope="col">Correo del socio</th>
+              <th scope="col">Plan</th>
+              <th scope="col">Vencimiento</th>
+              <th scope="col" class="amount">Días restantes</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (m of expiringMemberships; track m.id) {
+              <tr>
+                <td>{{ m.userEmail }}</td>
+                <td>{{ m.nombrePlan }}</td>
+                <td>{{ m.fechaFin }}</td>
+                <td class="amount">{{ m.diasRestantes }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </article>
+  }
+
+  @if (users.length) {
+    <article class="surface stack">
+      <div>
+        <span class="eyebrow">Control de acceso RBAC</span>
+        <h2>Usuarios y roles del sistema ({{ users.length }})</h2>
+      </div>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th scope="col">Nombre</th>
+              <th scope="col">Correo</th>
+              <th scope="col">Rol actual</th>
+              <th scope="col">Cambiar rol</th>
+              <th scope="col">Suscripción</th>
+              <th scope="col">Asignar suscripción</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (u of users; track u.uid) {
+              <tr>
+                <td><strong>{{ u.nombre }}</strong></td>
+                <td>{{ u.email }}</td>
+                <td><span class="status status--accent">{{ u.role }}</span></td>
+                <td>
+                  <select
+                    [attr.aria-label]="'Rol para ' + u.email"
+                    [ngModel]="u.role"
+                    [disabled]="adminBusy"
+                    (ngModelChange)="changeUserRole(u, $event)"
+                  >
+                    @for (roleOption of availableRoles; track roleOption) {
+                      <option [value]="roleOption">{{ roleOption }}</option>
+                    }
+                  </select>
+                </td>
+                <td>
+                  @if (u.membresia; as m) {
+                    <span
+                      class="status"
+                      [class.status--success]="m.estado === 'Activa'"
+                      [class.status--warning]="m.estado === 'Por vencer'"
+                      [class.status--danger]="m.estado === 'Cancelada' || m.estado === 'Vencida'"
+                    >
+                      {{ m.planNombre }} ({{ m.estado }})
+                    </span>
+                  } @else {
+                    <span class="help">Sin membresía</span>
+                  }
+                </td>
+                <td>
+                  <div class="inline-controls">
+                    <select
+                      [attr.aria-label]="'Plan para ' + u.email"
+                      [ngModel]="selectedPlanFor(u)"
+                      [disabled]="adminBusy"
+                      (ngModelChange)="setUserPlan(u, $event)"
+                    >
+                      @for (planOpt of subscriptionPlans; track planOpt) {
+                        <option [value]="planOpt">{{ planOpt }}</option>
+                      }
+                    </select>
+                    <select
+                      [attr.aria-label]="'Periodo para ' + u.email"
+                      [ngModel]="selectedPeriodFor(u)"
+                      [disabled]="adminBusy"
+                      (ngModelChange)="setUserPeriod(u, $event)"
+                    >
+                      @for (perOpt of subscriptionPeriods; track perOpt) {
+                        <option [value]="perOpt">{{ perOpt }}</option>
+                      }
+                    </select>
+                    <button
+                      appButton="secondary"
+                      type="button"
+                      [disabled]="adminBusy"
+                      (click)="assignMembershipToUser(u, 'assign')"
+                    >
+                      Activar
+                    </button>
+                    <button
+                      appButton="ghost"
+                      type="button"
+                      [disabled]="adminBusy"
+                      (click)="assignMembershipToUser(u, 'cancel')"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
                 </td>
               </tr>
             }

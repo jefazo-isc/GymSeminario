@@ -35,6 +35,22 @@ dd {
   display: grid;
   gap: 12px;
 }
+.autorenew-row {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-border);
+}
+.autorenew-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+.autorenew-toggle input {
+  accent-color: var(--color-action);
+}
 .plans-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

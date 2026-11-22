@@ -13,11 +13,8 @@ export interface CouponEvaluation {
   precioFinal: number;
 }
 
-export interface StripeCardDetails {
-  cardNumber: string;
-  expiry: string;
-  cvc: string;
-  holderName: string;
+export interface StripeProductCheckoutInput {
+  holderName?: string;
 }
 
 export interface ProductCheckoutReceipt {

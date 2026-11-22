@@ -41,9 +41,68 @@ dd {
 .registration-result code {
   overflow-wrap: anywhere;
 }
+.kiosk-checkin-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  align-items: start;
+}
+.camera-box {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  width: 100%;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--color-border-strong);
+  background: var(--color-surface-secondary);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+.camera-box video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: none;
+}
+.camera-box--active video {
+  display: block;
+}
+.camera-placeholder {
+  padding: 20px;
+  text-align: center;
+}
+.hidden-canvas {
+  display: none;
+}
+.file-upload-btn {
+  position: relative;
+  cursor: pointer;
+}
+.file-upload-btn input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.scan-result {
+  padding: 16px;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--color-border);
+}
+.scan-result--pass {
+  background: var(--color-success-soft);
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+.scan-result--reject {
+  background: var(--color-danger-soft);
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
 @media (max-width: 767px) {
   .booking-layout,
-  .registration-result {
+  .registration-result,
+  .kiosk-checkin-grid {
     grid-template-columns: 1fr;
     gap: 24px;
   }

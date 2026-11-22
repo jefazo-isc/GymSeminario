@@ -8,6 +8,7 @@ export interface Membresia {
   estado: "Activa" | "Por vencer" | "Vencida";
   beneficios: string[];
   diasRestantes?: number;
+  autoRenew?: boolean;
 }
 
 export interface PlanCatalogo {
@@ -18,4 +19,26 @@ export interface PlanCatalogo {
   popular?: boolean;
   descripcion: string;
   beneficios: string[];
+}
+
+export interface MembershipHistoryEntry {
+  id: string | number;
+  userEmail?: string;
+  planNombre: string;
+  precio: number;
+  periodo: string;
+  fechaInicio: string;
+  fechaFin: string;
+  estado: string;
+  action?: string;
+  createdAt?: string;
+}
+
+export interface AdminMembershipAssignPayload {
+  email: string;
+  action: "assign" | "renew" | "cancel" | "extend";
+  planNombre?: "Básico" | "Pro Fitness" | "Black Elite";
+  precio?: number;
+  periodo?: "Mensual" | "Trimestral" | "Anual";
+  dias?: number;
 }

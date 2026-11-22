@@ -184,6 +184,13 @@ export const PAGE_META: Record<string, PageMeta> = {
     description: "Consulta y actualiza el registro de clases.",
     parent: admin,
   },
+  scanner: {
+    title: "Control de acceso QR.",
+    section: "Escáner de recepción",
+    description:
+      "Valida pases QR de socios en puerta y registra asistencias en SQLite en tiempo real.",
+    parent: admin,
+  },
   graficos: {
     title: "Una mirada a las sesiones.",
     section: "Estadísticas",

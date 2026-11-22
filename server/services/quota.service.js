@@ -1,40 +1,4 @@
-import Database from 'better-sqlite3';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const dbPath = process.env.SQLITE_DB_PATH || path.join(__dirname, '../edge_gym.db');
-const db = new Database(dbPath);
-
-// Configuración de alto rendimiento para memoria flash (WAL mode)
-db.pragma('journal_mode = WAL');
-db.pragma('synchronous = NORMAL');
-
-// Inicializar tablas esenciales para el nodo Edge
-db.exec(`
-  CREATE TABLE IF NOT EXISTS user_quotas (
-    uid TEXT PRIMARY KEY,
-    email TEXT,
-    consultas_hoy INTEGER DEFAULT 0,
-    ultimo_acceso TEXT
-  );
-
-  CREATE TABLE IF NOT EXISTS asistencias_edge (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    uid TEXT NOT NULL,
-    codigo_qr TEXT,
-    timestamp TEXT NOT NULL,
-    sincronizado INTEGER DEFAULT 0
-  );
-
-  CREATE TABLE IF NOT EXISTS ia_cache (
-    prompt_hash TEXT PRIMARY KEY,
-    respuesta TEXT NOT NULL,
-    creado_en TEXT NOT NULL
-  );
-`);
+import db from './db.js';
 
 const MAX_CONSULTAS_DIARIAS = parseInt(process.env.MAX_AI_QUOTA || '15', 10);
 
@@ -89,6 +53,31 @@ export function registrarAsistenciaEdge(uid, codigoQr) {
     INSERT INTO asistencias_edge (uid, codigo_qr, timestamp, sincronizado)
     VALUES (?, ?, ?, 0)
   `).run(String(uid).trim(), String(codigoQr).trim(), ahora);
+}
+
+export function getIaCache(promptHash, ttlMs) {
+  const row = db.prepare('SELECT respuesta, creado_en FROM ia_cache WHERE prompt_hash = ?').get(promptHash);
+  if (!row) return null;
+  const age = Date.now() - new Date(row.creado_en).getTime();
+  if (!Number.isFinite(age) || age > ttlMs) {
+    db.prepare('DELETE FROM ia_cache WHERE prompt_hash = ?').run(promptHash);
+    return null;
+  }
+  try {
+    return JSON.parse(row.respuesta);
+  } catch {
+    return null;
+  }
+}
+
+export function setIaCache(promptHash, data) {
+  db.prepare(`
+    INSERT INTO ia_cache (prompt_hash, respuesta, creado_en)
+    VALUES (?, ?, ?)
+    ON CONFLICT(prompt_hash) DO UPDATE SET
+      respuesta = excluded.respuesta,
+      creado_en = excluded.creado_en
+  `).run(promptHash, JSON.stringify(data), new Date().toISOString());
 }
 
 export default db;

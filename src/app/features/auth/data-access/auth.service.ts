@@ -265,7 +265,9 @@ export class AuthService implements SessionRepository {
       const esAdmin =
         email === "guevara.cardona.yahir@gmail.com" ||
         email === "admin@gymseminario.com";
-      if (!esAdmin && resp.user) {
+      if (esAdmin && resp.user) {
+        resp.user.role = "admin";
+      } else if (resp.user && !resp.user.role) {
         resp.user.role = "user";
       }
       this.saveSession(resp.token, resp.user);
@@ -336,9 +338,17 @@ export class AuthService implements SessionRepository {
     void _args;
   }
 
-  async cambiarPassword(..._args: unknown[]): Promise<void> {
-    void _args;
-    throw new Error("Cambia tu contraseña desde el panel de administración.");
+  async cambiarPassword(user: LoginData, nuevoPassword: string): Promise<void> {
+    await firstValueFrom(
+      this.http.post<{ ok?: boolean; mensaje?: string }>(
+        `${this.backendUrl}/api/auth/change-password`,
+        {
+          email: user.email,
+          currentPassword: user.password,
+          newPassword: nuevoPassword,
+        },
+      ),
+    );
   }
 
   /** No aplica en JWT — se reemplazó por verifyPhoneCode */

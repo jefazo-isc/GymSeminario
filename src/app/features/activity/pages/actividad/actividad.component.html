@@ -14,7 +14,9 @@
     <div class="notice">
       <app-icon name="check" />
       <p>
-        <strong>Panel de Actividad.</strong> Historial de asistencias, próximas clases agendadas y alertas en tiempo real de tu cuenta.
+        <strong>Panel de Actividad.</strong> Historial de asistencias, próximas
+        clases agendadas, disponibilidad real y bitácora de progreso de tu
+        cuenta.
       </p>
     </div>
     <div class="grid-4">
@@ -57,7 +59,13 @@
         [attr.aria-pressed]="vistaActiva === 'ocupacion'"
         (click)="vistaActiva = 'ocupacion'"
       >
-        Ocupación de muestra</button
+        Ocupación de horarios</button
+      ><button
+        type="button"
+        [attr.aria-pressed]="vistaActiva === 'bitacora'"
+        (click)="vistaActiva = 'bitacora'"
+      >
+        Bitácora de progreso · {{ workoutLogs.length }}</button
       ><button
         type="button"
         [attr.aria-pressed]="vistaActiva === 'alertas'"
@@ -70,9 +78,9 @@
       @if (proximasSesiones.length) {
         <div class="surface">
           <div class="section-heading">
-            <h2>Reservadas en el ejemplo</h2>
+            <h2>Próximas sesiones reservadas</h2>
             <a class="text-link" routerLink="/agendar"
-              >Ir a la agenda oficial<app-icon name="external"
+              >Agendar otra clase<app-icon name="external"
             /></a>
           </div>
           <div class="grid-2">
@@ -86,21 +94,21 @@
                     {{ session.sala || "Sala no especificada" }}
                   </p>
                   <span class="help">{{
-                    session.entrenador || "Sin entrenador asignado"
+                    session.entrenador || "Entrenador asignado en sala"
                   }}</span>
                 </div>
                 <button
                   appButton="ghost"
                   type="button"
                   [attr.aria-label]="
-                    'Cancelar ejemplo de ' +
+                    'Cancelar reserva de ' +
                     session.clase +
                     ' del ' +
                     session.fecha
                   "
                   (click)="cancelar(session)"
                 >
-                  Cancelar ejemplo
+                  Cancelar reserva
                 </button>
               </article>
             }
@@ -108,7 +116,7 @@
         </div>
       }
       <div class="toolbar">
-        <h2>Historial local</h2>
+        <h2>Historial de sesiones</h2>
         <div class="field">
           <label for="history-state">Estado</label
           ><select id="history-state" [(ngModel)]="filtroEstado">
@@ -124,7 +132,7 @@
         <div
           class="table-scroll"
           role="region"
-          aria-label="Historial local de sesiones"
+          aria-label="Historial de sesiones"
           tabindex="0"
         >
           <table class="data-table">
@@ -132,7 +140,7 @@
               {{
                 historialFiltrado.length
               }}
-              sesiones de demostración
+              sesiones registradas
             </caption>
             <thead>
               <tr>
@@ -173,7 +181,7 @@
                         type="button"
                         (click)="cancelar(session)"
                       >
-                        Cancelar ejemplo
+                        Cancelar reserva
                       </button>
                     } @else {
                       <span class="help">Sin acciones</span>
@@ -200,7 +208,7 @@
     }
     @if (vistaActiva === "ocupacion") {
       <div class="toolbar">
-        <h2>Explora los horarios de muestra.</h2>
+        <h2>Disponibilidad por franja horaria</h2>
         <div class="field">
           <label for="occupancy-shift">Turno</label
           ><select id="occupancy-shift" [(ngModel)]="filtroTurno">
@@ -232,14 +240,14 @@
             </div>
             <h3>{{ slot.hora }}</h3>
             <p class="help">
-              {{ slot.inscritos }} de {{ slot.capacidadMax }} plazas de ejemplo
-              · {{ getPct(slot) }}%
+              {{ slot.inscritos }} de {{ slot.capacidadMax }} plazas ocupadas ·
+              {{ getPct(slot) }}%
             </p>
             <meter
               min="0"
               max="100"
               [value]="getPct(slot)"
-              [attr.aria-label]="'Ocupación de ejemplo en ' + slot.hora"
+              [attr.aria-label]="'Ocupación en ' + slot.hora"
             >
               {{ getPct(slot) }}%
             </meter>
@@ -248,15 +256,181 @@
         }
       </div>
     }
-    @if (vistaActiva === "alertas") {
-      <div class="notice notice--warning">
-        <p>
-          Estas alertas ilustran escenarios y no se calculan con tu membresía o
-          saldo actual.
-        </p>
+    @if (vistaActiva === "bitacora") {
+      <div class="grid-3">
+        <article class="surface">
+          <span class="help">Registros en bitácora</span>
+          <div class="metric">{{ workoutLogs.length }}</div>
+          <span class="status status--accent">Progreso guardado</span>
+        </article>
+        <article class="surface">
+          <span class="help">Volumen total acumulado</span>
+          <div class="metric">{{ volumenTotalKg | number }} kg</div>
+          <span class="help">Series × repeticiones × peso</span>
+        </article>
+        <article class="surface">
+          <span class="help">Carga máxima registrada</span>
+          <div class="metric">{{ pesoMaximoKg | number }} kg</div>
+          <span class="status status--success">Marca personal</span>
+        </article>
       </div>
+
+      <form class="surface stack" (ngSubmit)="registrarEjercicio()">
+        <div>
+          <span class="eyebrow">Bitácora de Progreso</span>
+          <h2>Registrar ejercicio realizado</h2>
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label for="log-exercise">Ejercicio</label>
+            <input
+              id="log-exercise"
+              name="ejercicio"
+              [(ngModel)]="logDraft.ejercicio"
+              placeholder="Ej. Sentadilla libre, Press de banca"
+              required
+            />
+          </div>
+          <div class="field">
+            <label for="log-muscle">Grupo muscular</label>
+            <select
+              id="log-muscle"
+              name="grupoMuscular"
+              [(ngModel)]="logDraft.grupoMuscular"
+            >
+              @for (group of gruposMusculares; track group) {
+                <option [value]="group">{{ group }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label for="log-sets">Series</label>
+            <input
+              id="log-sets"
+              type="number"
+              min="1"
+              max="20"
+              name="series"
+              [(ngModel)]="logDraft.series"
+              required
+            />
+          </div>
+          <div class="field">
+            <label for="log-reps">Repeticiones</label>
+            <input
+              id="log-reps"
+              type="number"
+              min="1"
+              max="100"
+              name="repeticiones"
+              [(ngModel)]="logDraft.repeticiones"
+              required
+            />
+          </div>
+          <div class="field">
+            <label for="log-weight">Peso (kg)</label>
+            <input
+              id="log-weight"
+              type="number"
+              min="0"
+              step="0.5"
+              name="pesoKg"
+              [(ngModel)]="logDraft.pesoKg"
+              required
+            />
+          </div>
+          <div class="field">
+            <label for="log-rpe">Esfuerzo RPE (1-10)</label>
+            <input
+              id="log-rpe"
+              type="number"
+              min="1"
+              max="10"
+              name="rpe"
+              [(ngModel)]="logDraft.rpe"
+            />
+          </div>
+          <div class="field">
+            <label for="log-date">Fecha</label>
+            <input
+              id="log-date"
+              type="date"
+              name="fecha"
+              [(ngModel)]="logDraft.fecha"
+              required
+            />
+          </div>
+          <div class="field">
+            <label for="log-notes">Notas</label>
+            <input
+              id="log-notes"
+              name="notas"
+              [(ngModel)]="logDraft.notas"
+              placeholder="Sensaciones o técnica"
+            />
+          </div>
+        </div>
+        <div class="form-actions">
+          <button appButton="primary" type="submit" [disabled]="busy">
+            {{ busy ? "Guardando…" : "Guardar en bitácora" }}
+          </button>
+        </div>
+      </form>
+
+      @if (workoutLogs.length) {
+        <div class="table-scroll" role="region" aria-label="Bitácora de progreso" tabindex="0">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th scope="col">Fecha</th>
+                <th scope="col">Ejercicio</th>
+                <th scope="col">Grupo</th>
+                <th scope="col">Series × Reps</th>
+                <th scope="col">Peso</th>
+                <th scope="col">RPE</th>
+                <th scope="col">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (entry of workoutLogs; track entry.id) {
+                <tr>
+                  <td>{{ entry.fecha }}</td>
+                  <td>
+                    <strong>{{ entry.ejercicio }}</strong>
+                    @if (entry.notas) {
+                      <small>{{ entry.notas }}</small>
+                    }
+                  </td>
+                  <td>{{ entry.grupoMuscular }}</td>
+                  <td>{{ entry.series }} × {{ entry.repeticiones }}</td>
+                  <td>{{ entry.pesoKg }} kg</td>
+                  <td>{{ entry.rpe ?? "—" }}</td>
+                  <td>
+                    <button
+                      appButton="ghost"
+                      type="button"
+                      [disabled]="busy"
+                      (click)="eliminarRegistro(entry)"
+                    >
+                      Eliminar
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <div class="empty-state">
+          <app-icon name="spark" />
+          <h2>Aún no hay entrenamientos en tu bitácora.</h2>
+          <p>Registra tus cargas y repeticiones para medir tu evolución.</p>
+        </div>
+      }
+    }
+    @if (vistaActiva === "alertas") {
       <div class="toolbar">
-        <h2>Centro de alertas de ejemplo</h2>
+        <h2>Centro de alertas</h2>
         <button
           appButton="secondary"
           type="button"
@@ -309,7 +483,7 @@
         } @empty {
           <div class="empty-state">
             <app-icon name="check" />
-            <h2>No hay alertas de ejemplo.</h2>
+            <h2>No hay alertas pendientes.</h2>
           </div>
         }
       </div>

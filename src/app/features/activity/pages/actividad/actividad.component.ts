@@ -3,17 +3,20 @@ import { Component, DestroyRef, OnInit, inject } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormsModule } from "@angular/forms";
 import { RouterModule } from "@angular/router";
+import { Subscription, combineLatest, of } from "rxjs";
 import Swal from "sweetalert2";
+import { RequestState } from "../../../../core/data-access/request-state";
+import { localDate } from "../../../../core/date/local-date";
 import { ButtonDirective } from "../../../../shared/ui/button.directive";
 import { IconComponent } from "../../../../shared/ui/icon/icon.component";
-import { ACTIVITY } from "../../data-access/activity.repository";
-import { combineLatest, Subscription } from "rxjs";
-import { RequestState } from "../../../../core/data-access/request-state";
 import { RequestStateComponent } from "../../../../shared/ui/request-state/request-state.component";
+import { ACTIVITY } from "../../data-access/activity.repository";
 import {
   AlertaVencimiento,
   OcupacionHorario,
   SesionHistorial,
+  WorkoutLogDraft,
+  WorkoutLogEntry,
 } from "../../models/sesion.model";
 
 @Component({
@@ -32,10 +35,14 @@ import {
 })
 export class ActividadComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
-  vistaActiva: "historial" | "ocupacion" | "alertas" = "historial";
+  private readonly sesionService = inject(ACTIVITY);
+
+  vistaActiva: "historial" | "ocupacion" | "alertas" | "bitacora" =
+    "historial";
   historial: SesionHistorial[] = [];
   ocupacion: OcupacionHorario[] = [];
   alertas: AlertaVencimiento[] = [];
+  workoutLogs: WorkoutLogEntry[] = [];
   alertasSinLeer = 0;
   feedback = "";
   busy = false;
@@ -43,15 +50,35 @@ export class ActividadComponent implements OnInit {
   error = "";
   private stream?: Subscription;
 
-  filtroEstado: string = "todos";
-  filtroTurno: string = "todos";
+  filtroEstado = "todos";
+  filtroTurno = "todos";
 
-  private readonly sesionService = inject(ACTIVITY);
+  readonly gruposMusculares = [
+    "Pecho",
+    "Espalda",
+    "Pierna",
+    "Hombro",
+    "Brazo",
+    "Core",
+    "Full Body",
+  ];
+  logDraft: WorkoutLogDraft = {
+    ejercicio: "",
+    grupoMuscular: "Pecho",
+    series: 4,
+    repeticiones: 10,
+    pesoKg: 40,
+    rpe: 8,
+    fecha: localDate(),
+    notas: "",
+  };
 
   ngOnInit(): void {
     this.load();
+    void this.sesionService.syncFromServer?.().catch(() => undefined);
     this.destroyRef.onDestroy(() => this.stream?.unsubscribe());
   }
+
   get viewState(): RequestState<unknown> {
     if (this.loading) return { status: "loading" };
     if (this.error)
@@ -61,7 +88,8 @@ export class ActividadComponent implements OnInit {
       };
     return { status: "data", data: this.historial };
   }
-  load() {
+
+  load(): void {
     this.stream?.unsubscribe();
     this.loading = true;
     this.error = "";
@@ -69,6 +97,7 @@ export class ActividadComponent implements OnInit {
       history: this.sesionService.historial$,
       alerts: this.sesionService.alertas$,
       occupancy: this.sesionService.ocupacion$,
+      logs: this.sesionService.workoutLogs$ ?? of([]),
     })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -76,6 +105,7 @@ export class ActividadComponent implements OnInit {
           this.historial = data.history;
           this.alertas = data.alerts;
           this.ocupacion = data.occupancy;
+          this.workoutLogs = data.logs;
           this.alertasSinLeer = this.alertas.filter((a) => !a.leida).length;
           this.loading = false;
         },
@@ -90,10 +120,10 @@ export class ActividadComponent implements OnInit {
   // ── Historial ─────────────────────────────────────────────────────────
   get historialFiltrado(): SesionHistorial[] {
     return this.historial.filter((s) => {
-      const okEstado =
+      return (
         this.filtroEstado === "todos" ||
-        s.estado.toLowerCase() === this.filtroEstado;
-      return okEstado;
+        s.estado.toLowerCase() === this.filtroEstado
+      );
     });
   }
 
@@ -115,14 +145,14 @@ export class ActividadComponent implements OnInit {
 
   cancelar(sesion: SesionHistorial): void {
     if (this.busy) return;
-    Swal.fire({
+    void Swal.fire({
       title: "¿Cancelar esta sesión?",
       text:
-        "Se cancelará solo el ejemplo de " +
+        "Se cancelará tu reserva de " +
         sesion.clase +
         " del " +
         sesion.fecha +
-        ". No se modifica ninguna reserva de Firestore.",
+        " en SQLite.",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "var(--color-action)",
@@ -134,18 +164,14 @@ export class ActividadComponent implements OnInit {
         this.busy = true;
         try {
           await this.sesionService.cancelarSesion(sesion.id);
+          this.feedback = "Sesión cancelada correctamente.";
         } catch {
           this.feedback =
-            "No se pudo guardar la cancelación local. El ejemplo conserva su estado anterior.";
+            "No se pudo guardar la cancelación. Conservamos el estado anterior.";
           return;
         } finally {
           this.busy = false;
         }
-        Swal.fire({
-          icon: "info",
-          title: "Ejemplo cancelado en este navegador",
-          confirmButtonColor: "var(--color-action)",
-        });
       }
     });
   }
@@ -163,6 +189,7 @@ export class ActividadComponent implements OnInit {
   getPct(o: OcupacionHorario): number {
     return this.sesionService.getPorcentajeOcupacion(o);
   }
+
   getNivel(o: OcupacionHorario): string {
     return this.sesionService.getNivelOcupacion(this.getPct(o));
   }
@@ -181,6 +208,58 @@ export class ActividadComponent implements OnInit {
     );
   }
 
+  // ── Bitácora de Progreso (HU6) ────────────────────────────────────────
+  get volumenTotalKg(): number {
+    return Math.round(
+      this.workoutLogs.reduce(
+        (sum, log) => sum + log.series * log.repeticiones * log.pesoKg,
+        0,
+      ),
+    );
+  }
+
+  get pesoMaximoKg(): number {
+    if (!this.workoutLogs.length) return 0;
+    return Math.max(...this.workoutLogs.map((log) => log.pesoKg));
+  }
+
+  async registrarEjercicio(): Promise<void> {
+    if (this.busy || !this.sesionService.addWorkoutLog) return;
+    if (!this.logDraft.ejercicio.trim() || this.logDraft.series <= 0) {
+      this.feedback = "Ingresa el nombre del ejercicio y series válidas.";
+      return;
+    }
+    this.busy = true;
+    this.feedback = "";
+    try {
+      await this.sesionService.addWorkoutLog({ ...this.logDraft });
+      this.feedback = "Registro añadido a tu bitácora de progreso.";
+      this.logDraft = {
+        ...this.logDraft,
+        ejercicio: "",
+        notas: "",
+      };
+    } catch {
+      this.feedback = "No se pudo guardar el registro en la bitácora.";
+    } finally {
+      this.busy = false;
+    }
+  }
+
+  async eliminarRegistro(log: WorkoutLogEntry): Promise<void> {
+    if (this.busy || !this.sesionService.deleteWorkoutLog) return;
+    this.busy = true;
+    this.feedback = "";
+    try {
+      await this.sesionService.deleteWorkoutLog(log.id);
+      this.feedback = "Registro eliminado de la bitácora.";
+    } catch {
+      this.feedback = "No se pudo eliminar el registro de la bitácora.";
+    } finally {
+      this.busy = false;
+    }
+  }
+
   // ── Alertas ───────────────────────────────────────────────────────────
   get alertasOrdenadas(): AlertaVencimiento[] {
     const orden: Record<string, number> = { alta: 0, media: 1, baja: 2 };
@@ -195,10 +274,9 @@ export class ActividadComponent implements OnInit {
     this.busy = true;
     try {
       await this.sesionService.marcarLeidaAlerta(alerta.id);
-      this.feedback = "Aviso marcado como leído en este navegador.";
+      this.feedback = "Aviso marcado como leído.";
     } catch {
-      this.feedback =
-        "No se pudo guardar el cambio local. Conservamos el aviso sin modificar.";
+      this.feedback = "No se pudo guardar el cambio.";
     } finally {
       this.busy = false;
     }
@@ -209,10 +287,9 @@ export class ActividadComponent implements OnInit {
     this.busy = true;
     try {
       await this.sesionService.marcarTodasLeidas();
-      this.feedback = "Avisos marcados como leídos en este navegador.";
+      this.feedback = "Avisos marcados como leídos.";
     } catch {
-      this.feedback =
-        "No se pudieron guardar los cambios locales. Conservamos los avisos.";
+      this.feedback = "No se pudieron actualizar los avisos.";
     } finally {
       this.busy = false;
     }

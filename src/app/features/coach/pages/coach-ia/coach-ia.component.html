@@ -39,7 +39,7 @@
     </div>
   } @else if (!tieneSuscripcion) {
     <div class="coach-welcome coach-locked surface" role="region" aria-label="Suscripción requerida">
-      <div class="coach-lock-badge">🔒 Membresía Activa Requerida</div>
+      <div class="coach-lock-badge">Membresía Activa Requerida</div>
       <h2>Activa una membresía para usar el Coach IA.</h2>
       <p class="muted">
         Hola, <strong>{{ usuarioNombre || "Socio" }}</strong>. Para proteger nuestra capacidad de procesamiento con Gemini IA, la configuración de rutinas personalizadas y el chat con coaches están disponibles exclusivamente para miembros con suscripción activa.
@@ -87,6 +87,60 @@
         3. Conversar
       </button>
     </div>
+    @if (esEntrenadorOAdmin) {
+      <article class="surface stack no-print">
+        <div class="toolbar">
+          <div>
+            <span class="eyebrow">Modo Entrenador / Asignación</span>
+            <p class="help">
+              Alterna entre tu rutina personal o asigna y edita rutinas para un
+              socio.
+            </p>
+          </div>
+          <div class="view-switch">
+            <button
+              type="button"
+              [attr.aria-pressed]="!modoEntrenador"
+              (click)="modoEntrenador = false; cargarRutinaGuardada()"
+            >
+              Mi rutina
+            </button>
+            <button
+              type="button"
+              [attr.aria-pressed]="modoEntrenador"
+              (click)="modoEntrenador = true"
+            >
+              Asignar a socio
+            </button>
+          </div>
+        </div>
+        @if (modoEntrenador) {
+          <div class="filters">
+            <div class="field">
+              <label for="trainer-client-email">Correo del socio</label>
+              <input
+                id="trainer-client-email"
+                type="email"
+                class="control"
+                [(ngModel)]="clientEmail"
+                placeholder="socio@espaciogym.mx"
+              />
+            </div>
+            <button
+              appButton="secondary"
+              type="button"
+              [disabled]="!clientEmail.trim()"
+              (click)="cargarRutinaGuardada(clientEmail.trim())"
+            >
+              Cargar rutina del socio
+            </button>
+          </div>
+        }
+        @if (routineFeedback) {
+          <p class="notice" role="status">{{ routineFeedback }}</p>
+        }
+      </article>
+    }
     @if (pestanaActiva === "rutina") {
       @if (!rutina) {
         <form
@@ -188,11 +242,87 @@
                 (click)="imprimirRutina()"
               >
                 Imprimir rutina<app-icon name="external" /></button
-              ><button appButton="ghost" type="button" (click)="nuevaRutina()">
+              >
+              @if (esEntrenadorOAdmin) {
+                <button
+                  appButton="secondary"
+                  type="button"
+                  (click)="editingRoutine = !editingRoutine"
+                >
+                  {{ editingRoutine ? "Terminar edición" : "Editar rutina" }}
+                </button>
+                <button
+                  appButton="primary"
+                  type="button"
+                  [disabled]="routineSaving"
+                  (click)="guardarRutinaActual()"
+                >
+                  {{ routineSaving ? "Guardando…" : modoEntrenador ? "Asignar al socio" : "Guardar cambios" }}
+                </button>
+              }
+              <button appButton="ghost" type="button" (click)="nuevaRutina()">
                 Nueva solicitud
               </button>
             </div>
           </header>
+          @if (editingRoutine && esEntrenadorOAdmin) {
+            <div class="surface stack no-print">
+              <h3>Ajustar rutina</h3>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="edit-routine-title">Título</label>
+                  <input
+                    id="edit-routine-title"
+                    [(ngModel)]="rutina.tituloRutina"
+                  />
+                </div>
+                <div class="field">
+                  <label for="edit-routine-goal">Objetivo</label>
+                  <input
+                    id="edit-routine-goal"
+                    [(ngModel)]="rutina.objetivo"
+                  />
+                </div>
+                <div class="field full-width">
+                  <label for="edit-routine-notes">Recomendaciones generales</label>
+                  <textarea
+                    id="edit-routine-notes"
+                    rows="2"
+                    [(ngModel)]="rutina.recomendacionesGenerales"
+                  ></textarea>
+                </div>
+              </div>
+              @for (day of rutina.diasSemana; track $index) {
+                <div class="stack">
+                  <strong>{{ day.dia }} · {{ day.grupoMuscular }}</strong>
+                  @for (ex of day.ejercicios; track $index) {
+                    <div class="form-grid">
+                      <div class="field">
+                        <label>Ejercicio</label>
+                        <input [(ngModel)]="ex.nombre" />
+                      </div>
+                      <div class="field">
+                        <label>Series</label>
+                        <input type="number" min="1" [(ngModel)]="ex.series" />
+                      </div>
+                      <div class="field">
+                        <label>Repeticiones</label>
+                        <input [(ngModel)]="ex.repeticiones" />
+                      </div>
+                      <div class="field">
+                        <label>Descanso (s)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          [(ngModel)]="ex.descansoSegundos"
+                        />
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
           <div class="routine-days">
             @for (day of rutina.diasSemana; track $index) {
               <details class="surface routine-day" [open]="$first">

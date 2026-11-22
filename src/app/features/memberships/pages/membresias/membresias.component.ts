@@ -1,17 +1,24 @@
 import { CommonModule } from "@angular/common";
 import { Component, DestroyRef, inject } from "@angular/core";
-import { RequestState } from "../../../../core/data-access/request-state";
-import { RequestStateComponent } from "../../../../shared/ui/request-state/request-state.component";
-import { Subscription } from "rxjs";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { FormsModule } from "@angular/forms";
 import { RouterLink } from "@angular/router";
+import { Subscription } from "rxjs";
 import Swal from "sweetalert2";
+import { RequestState } from "../../../../core/data-access/request-state";
 import { ButtonDirective } from "../../../../shared/ui/button.directive";
 import { IconComponent } from "../../../../shared/ui/icon/icon.component";
+import { RequestStateComponent } from "../../../../shared/ui/request-state/request-state.component";
 import { MEMBERSHIPS } from "../../data-access/membership.repository";
 import { MembershipStripeService } from "../../data-access/membership-stripe.service";
-import { Membresia, PlanCatalogo } from "../../models/membresia.model";
+import {
+  Membresia,
+  MembershipHistoryEntry,
+  PlanCatalogo,
+} from "../../models/membresia.model";
+
 export type BillingPeriod = "Mensual" | "Trimestral" | "Anual";
+
 export function demoPrice(base: number, period: BillingPeriod) {
   return period === "Trimestral"
     ? Math.round(base * 3 * 0.9)
@@ -19,11 +26,13 @@ export function demoPrice(base: number, period: BillingPeriod) {
       ? Math.round(base * 12 * 0.8)
       : base;
 }
+
 @Component({
   selector: "app-membresias",
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     RouterLink,
     IconComponent,
     ButtonDirective,
@@ -33,20 +42,44 @@ export function demoPrice(base: number, period: BillingPeriod) {
   styleUrl: "./membresias.component.css",
 })
 export class MembresiasComponent {
-  private service = inject(MEMBERSHIPS);
-  private stripeService = inject(MembershipStripeService, { optional: true });
+  private readonly service = inject(MEMBERSHIPS);
+  private readonly stripeService = inject(MembershipStripeService, {
+    optional: true,
+  });
+  private readonly destroyRef = inject(DestroyRef);
+
   membresiaActual: Membresia | null = null;
   private memberStream?: Subscription;
   memberLoading = false;
   memberError = "";
-  private destroyRef = inject(DestroyRef);
+
   planes: PlanCatalogo[] = [];
   plansLoading = false;
   plansError = "";
+  history: MembershipHistoryEntry[] = [];
+  historyLoading = false;
+
   filtroPeriodo: BillingPeriod = "Mensual";
   processing = false;
+  autoRenewSaving = false;
+  autoRenewFeedback = "";
   descuentoAdmin = 0;
+
+  adminTargetEmail = "";
+  adminPlanNombre = "Plan Pro";
+  adminPeriodo: BillingPeriod = "Mensual";
+  adminLookupResult: Membresia | null = null;
+  adminLookupHistory: MembershipHistoryEntry[] = [];
+  adminBusy = false;
+  adminFeedback = "";
+
   readonly periods: BillingPeriod[] = ["Mensual", "Trimestral", "Anual"];
+  readonly adminPlanNames: string[] = [
+    "Plan Básico",
+    "Plan Pro",
+    "Black Elite",
+    "Cortesía VIP",
+  ];
 
   get isLoggedIn(): boolean {
     return this.service.getUserSessionStatus?.().isLoggedIn ?? false;
@@ -54,7 +87,10 @@ export class MembresiasComponent {
 
   get tieneMembresiaActiva(): Membresia | null {
     if (!this.isLoggedIn || !this.membresiaActual) return null;
-    if (this.membresiaActual.id === "MEM-INACTIVA" || this.membresiaActual.estado === "Vencida") {
+    if (
+      this.membresiaActual.id === "MEM-INACTIVA" ||
+      this.membresiaActual.estado === "Vencida"
+    ) {
       return null;
     }
     return this.membresiaActual;
@@ -63,11 +99,16 @@ export class MembresiasComponent {
   get isAdmin(): boolean {
     return this.service.getUserSessionStatus?.().isAdmin ?? false;
   }
+
   constructor() {
     this.loadMembership();
     this.destroyRef.onDestroy(() => this.memberStream?.unsubscribe());
     this.loadPlans();
+    if (this.isLoggedIn) {
+      void this.loadHistory();
+    }
   }
+
   get memberState(): RequestState<Membresia> {
     if (this.memberLoading) return { status: "loading" };
     if (this.memberError)
@@ -79,10 +120,12 @@ export class MembresiasComponent {
       ? { status: "data", data: this.membresiaActual }
       : { status: "empty" };
   }
+
   loadMembership() {
     this.memberStream?.unsubscribe();
     this.memberLoading = true;
     this.memberError = "";
+    this.service.refreshMembership?.();
     this.memberStream = this.service.membresiaActual$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -97,6 +140,17 @@ export class MembresiasComponent {
         },
       });
   }
+
+  async loadHistory() {
+    if (!this.service.loadHistory) return;
+    this.historyLoading = true;
+    try {
+      this.history = await this.service.loadHistory();
+    } finally {
+      this.historyLoading = false;
+    }
+  }
+
   get plansState(): RequestState<PlanCatalogo[]> {
     if (this.plansLoading) return { status: "loading" };
     if (this.plansError)
@@ -106,6 +160,7 @@ export class MembresiasComponent {
       };
     return { status: "data", data: this.planes };
   }
+
   loadPlans() {
     if (this.plansLoading) return;
     this.plansLoading = true;
@@ -125,15 +180,108 @@ export class MembresiasComponent {
         },
       });
   }
+
   cambiarPeriodo(value: BillingPeriod) {
     this.filtroPeriodo = value;
   }
+
   getPrecioCalculado(base: number) {
     let price = demoPrice(base, this.filtroPeriodo);
     if (this.descuentoAdmin > 0) {
       price = Math.round(price * (1 - this.descuentoAdmin / 100));
     }
     return price;
+  }
+
+  async toggleAutoRenew(enabled: boolean) {
+    if (this.autoRenewSaving || !this.service.setAutoRenew || !this.membresiaActual) {
+      return;
+    }
+    this.autoRenewSaving = true;
+    this.autoRenewFeedback = "";
+    try {
+      const res = await this.service.setAutoRenew(enabled, this.membresiaActual.id);
+      this.autoRenewFeedback = res.autoRenew
+        ? "Renovación automática activada."
+        : "Renovación automática desactivada.";
+    } catch {
+      this.autoRenewFeedback =
+        "No se pudo actualizar la renovación automática en el servidor.";
+    } finally {
+      this.autoRenewSaving = false;
+    }
+  }
+
+  async consultarClienteAdmin() {
+    const email = this.adminTargetEmail.trim().toLowerCase();
+    if (!email || !this.isAdmin) {
+      this.adminFeedback = "Ingresa el correo electrónico del socio.";
+      return;
+    }
+    this.adminBusy = true;
+    this.adminFeedback = "";
+    try {
+      this.adminLookupResult =
+        (await this.service.lookupClientMembership?.(email)) ?? null;
+      this.adminLookupHistory =
+        (await this.service.loadHistory?.(email)) ?? [];
+      this.adminFeedback = this.adminLookupResult
+        ? `Socio encontrado: ${this.adminLookupResult.nombrePlan} (${this.adminLookupResult.estado}).`
+        : "El socio aún no tiene una membresía registrada.";
+    } catch {
+      this.adminFeedback = "Error al consultar la membresía del socio.";
+    } finally {
+      this.adminBusy = false;
+    }
+  }
+
+  async ejecutarAccionAdmin(action: "assign" | "renew" | "cancel") {
+    const email = this.adminTargetEmail.trim().toLowerCase();
+    if (!email || !this.isAdmin || !this.service.adminAssignMembership) {
+      this.adminFeedback = "Ingresa un correo válido de cliente.";
+      return;
+    }
+    this.adminBusy = true;
+    this.adminFeedback = "";
+    const basePrices: Record<string, number> = {
+      "Plan Básico": 350,
+      "Básico": 350,
+      "Plan Pro": 550,
+      "Pro Fitness": 550,
+      "Black Elite": 1200,
+      "Cortesía VIP": 0,
+    };
+    const matchedPlan = this.planes.find(
+      (p) => p.nombre === this.adminPlanNombre,
+    );
+    const basePrecio =
+      basePrices[this.adminPlanNombre] ?? matchedPlan?.precio ?? 550;
+    const precio =
+      basePrecio === 0 ? 0 : demoPrice(basePrecio, this.adminPeriodo);
+    try {
+      const res = await this.service.adminAssignMembership({
+        email,
+        action,
+        planNombre: this.adminPlanNombre as Membresia["nombrePlan"],
+        precio,
+        periodo: this.adminPeriodo,
+      });
+      this.adminFeedback =
+        res.mensaje || `Acción (${action}) aplicada a ${email}.`;
+      this.adminLookupResult =
+        (await this.service.lookupClientMembership?.(email)) ??
+        res.membresia ??
+        null;
+      this.adminLookupHistory =
+        (await this.service.loadHistory?.(email)) ?? [];
+      this.loadMembership();
+      void this.loadHistory();
+    } catch {
+      this.adminFeedback =
+        "No se pudo completar la operación administrativa en el servidor.";
+    } finally {
+      this.adminBusy = false;
+    }
   }
 
   async aplicarDescuentoAdmin() {
@@ -204,11 +352,14 @@ export class MembresiasComponent {
         showConfirmButton: false,
       });
       this.loadMembership();
+      void this.loadHistory();
     }
   }
+
   hasConflict(plan: PlanCatalogo) {
     return plan.periodo !== "Mensual";
   }
+
   comparisonBenefits(plan: PlanCatalogo) {
     return plan.beneficios.map((benefit) =>
       benefit.startsWith("Todos los beneficios Pro")
@@ -218,6 +369,7 @@ export class MembresiasComponent {
         : benefit,
     );
   }
+
   async seleccionarPlan(plan: PlanCatalogo) {
     if (this.processing) return;
     this.processing = true;
@@ -268,6 +420,7 @@ export class MembresiasComponent {
           );
           if (res.success) {
             this.loadMembership();
+            void this.loadHistory();
           }
         } else {
           await this.service.adquirirOActualizarPlan(
@@ -275,6 +428,7 @@ export class MembresiasComponent {
             this.filtroPeriodo,
           );
           this.loadMembership();
+          void this.loadHistory();
         }
       } else if (result.isDenied) {
         await this.service.adquirirOActualizarPlan(
@@ -287,6 +441,7 @@ export class MembresiasComponent {
           text: "Tu plan se ha actualizado exitosamente y sincronizado en tu cuenta.",
         });
         this.loadMembership();
+        void this.loadHistory();
       }
     } catch {
       await Swal.fire({
@@ -298,6 +453,7 @@ export class MembresiasComponent {
       this.processing = false;
     }
   }
+
   async renovarActual() {
     if (this.processing || !this.membresiaActual) return;
     this.processing = true;
@@ -342,10 +498,12 @@ export class MembresiasComponent {
           );
           if (res.success) {
             this.loadMembership();
+            void this.loadHistory();
           }
         } else {
           await this.service.renovarMembresia();
           this.loadMembership();
+          void this.loadHistory();
         }
       } else if (result.isDenied) {
         await this.service.renovarMembresia();
@@ -355,6 +513,7 @@ export class MembresiasComponent {
           text: "La renovación de tu membresía ha sido registrada y sincronizada exitosamente.",
         });
         this.loadMembership();
+        void this.loadHistory();
       }
     } catch {
       await Swal.fire({

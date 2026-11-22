@@ -11,6 +11,7 @@ import { Editar2Component } from "../../features/admin/pages/editar2/editar2.com
 import { AuthService } from "../../features/auth/data-access/auth.service";
 import { MEMBERSHIPS } from "../../features/memberships/data-access/membership.repository";
 import { Membresia } from "../../features/memberships/models/membresia.model";
+import { QR_CODES } from "../../features/training/data-access/qr.repository";
 import { TRAINING } from "../../features/training/data-access/training.repository";
 import { Formulario2Component } from "../../features/training/pages/formulario2/formulario2.component";
 import { Formulario3Component } from "../../features/training/pages/formulario3/formulario3.component";
@@ -164,7 +165,7 @@ describe("Administrative editing", () => {
     await fixture.componentInstance.borrar(record);
     expect(confirm).toHaveBeenCalled();
     expect((confirm.calls.mostRecent().args[0] as any).text).toContain(
-      "Firestore",
+      "SQLite",
     );
     expect(fixture.componentInstance.registros.length).toBe(1);
   });
@@ -394,5 +395,111 @@ describe("Role and subscription view hardening", () => {
     const fixture3 = TestBed.createComponent(Formulario3Component);
     fixture3.detectChanges();
     expect(fixture3.componentInstance.authenticated).toBeFalse();
+  });
+
+  it("blocks pure receptionists in Formulario3Component and allows active subscribers to scan kiosk QR check-in", async () => {
+    const activeMem: Membresia = {
+      id: "MEM-ACTIVE",
+      nombrePlan: "Pro Fitness",
+      precio: 550,
+      periodo: "Mensual",
+      fechaInicio: "2026-11-01",
+      fechaFin: "2026-12-01",
+      estado: "Activa",
+      diasRestantes: 20,
+      beneficios: [],
+    };
+    const kioskCheckinSpy = jasmine.createSpy("kioskCheckin").and.returnValue(
+      of({
+        valid: true,
+        code: "ACCESO_CONCEDIDO",
+        message: "Asistencia registrada mediante QR de mostrador.",
+        memberName: "Ana Socio",
+        plan: "Plan Pro",
+        clase: "Boxeo",
+      }),
+    );
+    const trainingSpy = {
+      createAttendance: jasmine.createSpy().and.resolveTo({ id: "att-1" }),
+      notifyAttendance: jasmine.createSpy().and.resolveTo("email"),
+    };
+
+    localStorage.setItem(
+      "gym_user",
+      JSON.stringify({
+        uid: "u-rec",
+        nombre: "Recepción",
+        email: "recep@example.com",
+        role: "receptionist",
+      }),
+    );
+
+    TestBed.configureTestingModule({
+      imports: [Formulario3Component],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: Firestore, useValue: {} },
+        { provide: TRAINING, useValue: trainingSpy },
+        { provide: MEMBERSHIPS, useValue: { membresiaActual$: of(activeMem) } },
+        {
+          provide: QR_CODES,
+          useValue: {
+            getQrData: () => of({ data: "GROM-LOCAL" }),
+            kioskCheckin: kioskCheckinSpy,
+          },
+        },
+        {
+          provide: AuthService,
+          useValue: {
+            getCurrentUser: jasmine.createSpy().and.resolveTo(null),
+            userName$: of("Recepción"),
+            userUid$: of("u-rec"),
+          },
+        },
+      ],
+    });
+
+    const recFixture = TestBed.createComponent(Formulario3Component);
+    recFixture.detectChanges();
+    const recComp = recFixture.componentInstance;
+    expect(recComp.tieneSuscripcion).toBeFalse();
+    recComp.nuevo = {
+      clase: "Boxeo",
+      fecha: "2099-01-01",
+      hora: "10:00",
+      alumno: "",
+    };
+    await recComp.guardar();
+    expect(trainingSpy.createAttendance).not.toHaveBeenCalled();
+
+    localStorage.setItem(
+      "gym_user",
+      JSON.stringify({
+        uid: "u-sub",
+        nombre: "Ana Socio",
+        email: "ana@example.com",
+        role: "subscriber",
+      }),
+    );
+    const subFixture = TestBed.createComponent(Formulario3Component);
+    subFixture.detectChanges();
+    const subComp = subFixture.componentInstance;
+    expect(subComp.tieneSuscripcion).toBeTrue();
+    expect(
+      subFixture.nativeElement
+        .querySelector('input[type="file"]')
+        ?.getAttribute("capture"),
+    ).toBe("environment");
+
+    subComp.nuevo.clase = "Boxeo";
+    subComp.kioskToken = "GROM-K-DESK01";
+    subComp.checkInWithKioskToken();
+    subFixture.detectChanges();
+
+    expect(kioskCheckinSpy).toHaveBeenCalledWith("GROM-K-DESK01", "Boxeo");
+    expect(subFixture.nativeElement.querySelector(".scan-result--pass")).not.toBeNull();
+    expect(subFixture.nativeElement.textContent).toContain("ASISTENCIA REGISTRADA");
   });
 });

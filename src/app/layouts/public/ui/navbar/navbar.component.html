@@ -23,40 +23,59 @@
         ariaCurrentWhenActive="page"
         >Inicio</a
       >
-      <button
-        class="navigation-link"
-        type="button"
-        [matMenuTriggerFor]="gymMenu"
-        [class.is-active]="isActive(gymLinks)"
-      >
-        El gimnasio<app-icon name="chevron" />
-      </button>
-      <a
-        class="navigation-link"
-        routerLink="/membresias"
-        routerLinkActive="is-active"
-        ariaCurrentWhenActive="page"
-        >Membresías</a
-      >
-      <button
-        class="navigation-link"
-        type="button"
-        [matMenuTriggerFor]="trainingMenu"
-        [class.is-active]="isActive(trainingLinks)"
-      >
-        Entrenar<app-icon name="chevron" />
-      </button>
+      @if (effectiveRole === 'receptionist') {
+        <a
+          class="navigation-link"
+          routerLink="/scanner"
+          routerLinkActive="is-active"
+          ariaCurrentWhenActive="page"
+          >Escáner y QR en puerta</a
+        >
+        <a
+          class="navigation-link"
+          routerLink="/editar2"
+          routerLinkActive="is-active"
+          ariaCurrentWhenActive="page"
+          >Registro de asistencias</a
+        >
+      } @else {
+        <button
+          class="navigation-link"
+          type="button"
+          [matMenuTriggerFor]="gymMenu"
+          [class.is-active]="isActive(gymLinks)"
+        >
+          El gimnasio<app-icon name="chevron" />
+        </button>
+        <a
+          class="navigation-link"
+          routerLink="/membresias"
+          routerLinkActive="is-active"
+          ariaCurrentWhenActive="page"
+          >Membresías</a
+        >
+        <button
+          class="navigation-link"
+          type="button"
+          [matMenuTriggerFor]="trainingMenu"
+          [class.is-active]="isActive(visibleTrainingLinks)"
+        >
+          Entrenar<app-icon name="chevron" />
+        </button>
+      }
     </nav>
     <div class="header-actions">
-      <button
-        type="button"
-        class="search-trigger"
-        aria-label="Buscar cursos, Control K"
-        (click)="openSearch()"
-      >
-        <app-icon name="search" /><span>Buscar</span><kbd>Ctrl K</kbd>
-      </button>
-      <span class="action-divider" aria-hidden="true"></span>
+      @if (effectiveRole !== 'receptionist') {
+        <button
+          type="button"
+          class="search-trigger"
+          aria-label="Buscar cursos, Control K"
+          (click)="openSearch()"
+        >
+          <app-icon name="search" /><span>Buscar</span><kbd>Ctrl K</kbd>
+        </button>
+        <span class="action-divider" aria-hidden="true"></span>
+      }
       <button
         type="button"
         class="ui-icon-button appearance-trigger"
@@ -119,18 +138,7 @@
   <span class="grom-menu-label">Encuentra tu ritmo</span>
   <a mat-menu-item routerLink="/ejercicios"><app-icon name="grid" />Explorar ejercicios</a>
   <a mat-menu-item routerLink="/videos"><app-icon name="play" />Guías de entrenamiento</a>
-  @if (effectiveRole === 'guest') {
-    <a
-      mat-menu-item
-      routerLink="/coach-ia"
-      class="role-link--locked"
-      (click)="promptLockedFeature($event, 'Coach virtual IA')"
-    >
-      <app-icon name="spark" />
-      <span class="locked-text">Coach virtual IA</span>
-      <span class="lock-tag">🔒 Requiere suscripción</span>
-    </a>
-  } @else {
+  @if (effectiveRole === 'subscriber' || effectiveRole === 'admin') {
     <a mat-menu-item routerLink="/coach-ia" class="role-link--subscriber">
       <app-icon name="spark" />Coach virtual IA
     </a>
@@ -163,9 +171,7 @@
         <app-icon [name]="link.icon" />{{ link.label }}
       </a>
     }
-  }
 
-  @if (effectiveRole === 'admin' || effectiveRole === 'receptionist') {
     <hr />
     <span class="grom-menu-label role-label--reception">📋 Mostrador y Recepción</span>
     @for (link of receptionLinks; track link.path) {
@@ -173,19 +179,46 @@
         <app-icon [name]="link.icon" />{{ link.label }}
       </a>
     }
-  }
 
-  <hr />
-  <span class="grom-menu-label role-label--subscriber">⚡ Espacio del Socio</span>
-  @for (link of subscriberLinks; track link.path) {
-    <a mat-menu-item [routerLink]="link.path" class="role-link--subscriber">
-      <app-icon [name]="link.icon" />{{ link.label }}
-    </a>
-  }
-
-  @if (effectiveRole === 'admin') {
     <hr />
-    <span class="grom-menu-label demo-label">🎭 Simular vista de rol (Demo)</span>
+    <span class="grom-menu-label role-label--subscriber">⚡ Espacio del Socio</span>
+    @for (link of subscriberLinks; track link.path) {
+      <a mat-menu-item [routerLink]="link.path" class="role-link--subscriber">
+        <app-icon [name]="link.icon" />{{ link.label }}
+      </a>
+    }
+  } @else if (effectiveRole === 'receptionist') {
+    <hr />
+    <span class="grom-menu-label role-label--reception">📋 Mostrador y Recepción</span>
+    @for (link of receptionLinks; track link.path) {
+      <a mat-menu-item [routerLink]="link.path" class="role-link--reception">
+        <app-icon [name]="link.icon" />{{ link.label }}
+      </a>
+    }
+    <a mat-menu-item routerLink="/change">
+      <app-icon name="user" />Cambiar contraseña
+    </a>
+  } @else if (effectiveRole === 'subscriber') {
+    <hr />
+    <span class="grom-menu-label role-label--subscriber">⚡ Espacio del Socio</span>
+    @for (link of subscriberLinks; track link.path) {
+      <a mat-menu-item [routerLink]="link.path" class="role-link--subscriber">
+        <app-icon [name]="link.icon" />{{ link.label }}
+      </a>
+    }
+  } @else {
+    <hr />
+    <span class="grom-menu-label">Mi cuenta</span>
+    @for (link of guestAccountLinks; track link.path) {
+      <a mat-menu-item [routerLink]="link.path">
+        <app-icon [name]="link.icon" />{{ link.label }}
+      </a>
+    }
+  }
+
+  @if (effectiveRole === 'admin' || isRealAdmin) {
+    <hr />
+    <span class="grom-menu-label demo-label">🎭 Simular vista de rol</span>
     <div class="demo-role-buttons" (click)="$event.stopPropagation()">
       <button type="button" class="btn-demo-role btn-demo--admin" (click)="setDemoRole('admin')">Admin</button>
       <button type="button" class="btn-demo-role btn-demo--reception" (click)="setDemoRole('receptionist')">Recepción</button>
@@ -219,50 +252,44 @@
       <a class="mobile-primary" routerLink="/home" (click)="closeMobile()"
         >Inicio<app-icon name="arrow"
       /></a>
-      <a class="mobile-primary" routerLink="/membresias" (click)="closeMobile()"
-        >Membresías<app-icon name="arrow"
-      /></a>
-      @if (!isMobile) {
-        <a
-          class="mobile-primary"
-          href="https://github.com/jefazo-isc/GymSeminario/raw/main/public/downloads/espaciogym.apk"
-          download="espacioGYM-v1.0.apk"
-          target="_blank"
-          rel="noopener noreferrer"
-          (click)="closeMobile()"
-          >📲 Descargar App Android<app-icon name="arrow"
+      @if (effectiveRole !== 'receptionist') {
+        <a class="mobile-primary" routerLink="/membresias" (click)="closeMobile()"
+          >Membresías<app-icon name="arrow"
+        /></a>
+        @if (!isMobile) {
+          <a
+            class="mobile-primary"
+            href="https://github.com/jefazo-isc/GymSeminario/raw/main/public/downloads/espaciogym.apk"
+            download="espacioGYM-v1.0.apk"
+            target="_blank"
+            rel="noopener noreferrer"
+            (click)="closeMobile()"
+            >📲 Descargar App Android<app-icon name="arrow"
+          /></a>
+        }
+        <p class="ui-eyebrow">El gimnasio</p>
+        @for (link of gymLinks; track link.path) {
+          <a class="mobile-link" [routerLink]="link.path" (click)="closeMobile()"
+            >{{ link.label }}<app-icon name="external"
+          /></a>
+        }
+        <p class="ui-eyebrow">Entrenamiento</p>
+        <a class="mobile-link" routerLink="/ejercicios" (click)="closeMobile()"
+          >Explorar ejercicios<app-icon name="external"
+        /></a>
+        <a class="mobile-link" routerLink="/videos" (click)="closeMobile()"
+          >Guías de entrenamiento<app-icon name="external"
+        /></a>
+        @if (effectiveRole === 'subscriber' || effectiveRole === 'admin') {
+          <a class="mobile-link role-mobile-link--subscriber" routerLink="/coach-ia" (click)="closeMobile()"
+            >Coach virtual IA<app-icon name="spark"
+          /></a>
+        }
+        <a class="mobile-link" routerLink="/productos" (click)="closeMobile()"
+          >Productos<app-icon name="external"
         /></a>
       }
-      <p class="ui-eyebrow">El gimnasio</p>
-      @for (link of gymLinks; track link.path) {
-        <a class="mobile-link" [routerLink]="link.path" (click)="closeMobile()"
-          >{{ link.label }}<app-icon name="external"
-        /></a>
-      }
-      <p class="ui-eyebrow">Entrenamiento</p>
-      <a class="mobile-link" routerLink="/ejercicios" (click)="closeMobile()"
-        >Explorar ejercicios<app-icon name="external"
-      /></a>
-      <a class="mobile-link" routerLink="/videos" (click)="closeMobile()"
-        >Guías de entrenamiento<app-icon name="external"
-      /></a>
-      @if (effectiveRole === 'guest') {
-        <a
-          class="mobile-link role-mobile-link--locked"
-          routerLink="/coach-ia"
-          (click)="promptLockedFeature($event, 'Coach virtual IA')"
-        >
-          <span class="locked-title">Coach virtual IA</span>
-          <span class="lock-tag">🔒 Bloqueado</span>
-        </a>
-      } @else {
-        <a class="mobile-link role-mobile-link--subscriber" routerLink="/coach-ia" (click)="closeMobile()"
-          >Coach virtual IA<app-icon name="spark"
-        /></a>
-      }
-      <a class="mobile-link" routerLink="/productos" (click)="closeMobile()"
-        >Productos<app-icon name="external"
-      /></a>
+
       @if (userName) {
         <div class="mobile-user-card">
           <p class="mobile-user-name">{{ userName }}</p>
@@ -276,26 +303,46 @@
               >{{ link.label }}<app-icon [name]="link.icon"
             /></a>
           }
-        }
-
-        @if (effectiveRole === 'admin' || effectiveRole === 'receptionist') {
           <p class="ui-eyebrow role-eyebrow--reception">📋 Mostrador y Recepción</p>
           @for (link of receptionLinks; track link.path) {
             <a class="mobile-link role-mobile-link--reception" [routerLink]="link.path" (click)="closeMobile()"
               >{{ link.label }}<app-icon [name]="link.icon"
             /></a>
           }
-        }
-
-        <p class="ui-eyebrow role-eyebrow--subscriber">⚡ Espacio del Socio</p>
-        @for (link of subscriberLinks; track link.path) {
-          <a class="mobile-link role-mobile-link--subscriber" [routerLink]="link.path" (click)="closeMobile()"
-            >{{ link.label }}<app-icon [name]="link.icon"
+          <p class="ui-eyebrow role-eyebrow--subscriber">⚡ Espacio del Socio</p>
+          @for (link of subscriberLinks; track link.path) {
+            <a class="mobile-link role-mobile-link--subscriber" [routerLink]="link.path" (click)="closeMobile()"
+              >{{ link.label }}<app-icon [name]="link.icon"
+            /></a>
+          }
+        } @else if (effectiveRole === 'receptionist') {
+          <p class="ui-eyebrow role-eyebrow--reception">📋 Mostrador y Recepción</p>
+          @for (link of receptionLinks; track link.path) {
+            <a class="mobile-link role-mobile-link--reception" [routerLink]="link.path" (click)="closeMobile()"
+              >{{ link.label }}<app-icon [name]="link.icon"
+            /></a>
+          }
+          <a class="mobile-link" routerLink="/change" (click)="closeMobile()"
+            >Cambiar contraseña<app-icon name="user"
           /></a>
+        } @else if (effectiveRole === 'subscriber') {
+          <p class="ui-eyebrow role-eyebrow--subscriber">⚡ Espacio del Socio</p>
+          @for (link of subscriberLinks; track link.path) {
+            <a class="mobile-link role-mobile-link--subscriber" [routerLink]="link.path" (click)="closeMobile()"
+              >{{ link.label }}<app-icon [name]="link.icon"
+            /></a>
+          }
+        } @else {
+          <p class="ui-eyebrow">Mi cuenta</p>
+          @for (link of guestAccountLinks; track link.path) {
+            <a class="mobile-link" [routerLink]="link.path" (click)="closeMobile()"
+              >{{ link.label }}<app-icon [name]="link.icon"
+            /></a>
+          }
         }
 
-        @if (effectiveRole === 'admin') {
-          <p class="ui-eyebrow demo-label">🎭 Simular vista de rol (Demo)</p>
+        @if (effectiveRole === 'admin' || isRealAdmin) {
+          <p class="ui-eyebrow demo-label">🎭 Simular vista de rol</p>
           <div class="demo-role-buttons demo-role-buttons--mobile">
             <button type="button" class="btn-demo-role btn-demo--admin" (click)="setDemoRole('admin')">Admin</button>
             <button type="button" class="btn-demo-role btn-demo--reception" (click)="setDemoRole('receptionist')">Recepción</button>
@@ -307,18 +354,6 @@
           Cerrar sesión<app-icon name="logout" />
         </button>
       } @else {
-        <p class="ui-eyebrow role-eyebrow--locked">🔒 Opciones exclusivas de Socios (Bloqueadas)</p>
-        @for (item of restrictedGuestLinks; track item.label) {
-          <button
-            type="button"
-            class="mobile-link role-mobile-link--locked"
-            (click)="promptLockedFeature($event, item.label)"
-          >
-            <span class="locked-title">{{ item.label }}</span>
-            <span class="lock-tag">🔒 Bloqueado</span>
-          </button>
-        }
-
         <a appButton="primary" routerLink="/auth/sign-in" (click)="closeMobile()"
           >Ingresar a mi espacio<app-icon name="arrow"
         /></a>

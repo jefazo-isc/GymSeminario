@@ -1,0 +1,131 @@
+.scanner-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  align-items: start;
+}
+
+.camera-box {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  width: 100%;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--color-border-strong);
+  background: var(--color-surface-secondary);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+
+.camera-box video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: none;
+}
+
+.camera-box--active video {
+  display: block;
+}
+
+.camera-placeholder {
+  padding: 24px;
+  text-align: center;
+}
+
+.camera-placeholder app-icon {
+  font-size: 2rem;
+  color: var(--color-accent);
+  margin-bottom: 12px;
+}
+
+.hidden-canvas {
+  display: none;
+}
+
+.file-upload-btn {
+  position: relative;
+  cursor: pointer;
+}
+
+.file-upload-btn input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.scan-result {
+  padding: 20px;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--color-border);
+}
+
+.scan-result--pass {
+  background: var(--color-success-soft);
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+
+.scan-result--reject {
+  background: var(--color-danger-soft);
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.scan-result-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.scan-result h3 {
+  margin: 0 0 8px;
+  color: var(--color-text);
+}
+
+.scan-result p {
+  margin: 0;
+}
+
+.scan-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin: 16px 0 0;
+}
+
+.scan-meta dt {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.scan-meta dd {
+  margin: 4px 0 0;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.kiosk-display {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 24px;
+}
+
+.kiosk-qr-paper {
+  padding: 12px;
+  border-radius: 8px;
+  background: #fff;
+  color: #000;
+  width: fit-content;
+}
+
+@media (max-width: 767px) {
+  .scanner-grid {
+    grid-template-columns: 1fr;
+  }
+}

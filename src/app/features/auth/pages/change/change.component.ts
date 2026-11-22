@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from "@angular/common/http";
 import { Component, inject } from "@angular/core";
 import {
   FormBuilder,
@@ -71,7 +72,13 @@ export class ChangeComponent {
       this.newPasswordControl.reset();
       this.confirmPasswordControl.reset();
     } catch (error) {
-      this.message = authErrorMessage(error);
+      if (error instanceof HttpErrorResponse) {
+        const body = error.error as { error?: string; mensaje?: string } | null;
+        this.message =
+          body?.error || body?.mensaje || authErrorMessage(error);
+      } else {
+        this.message = authErrorMessage(error);
+      }
       try {
         await this.service.incrementarIntentosPorEmail(
           this.form.controls.email.value.trim(),

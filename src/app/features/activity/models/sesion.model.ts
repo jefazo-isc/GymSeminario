@@ -28,3 +28,17 @@ export interface AlertaVencimiento {
   leida: boolean;
   prioridad: "alta" | "media" | "baja";
 }
+
+export interface WorkoutLogEntry {
+  id: string;
+  ejercicio: string;
+  grupoMuscular: string;
+  series: number;
+  repeticiones: number;
+  pesoKg: number;
+  rpe?: number;
+  fecha: string;
+  notas?: string;
+}
+
+export type WorkoutLogDraft = Omit<WorkoutLogEntry, "id">;

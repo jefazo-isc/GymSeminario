@@ -3,7 +3,12 @@ import {
   isRecord,
   isString,
 } from "../../../core/storage/storage-guards";
-import { AlertaVencimiento, SesionHistorial } from "./sesion.model";
+import {
+  AlertaVencimiento,
+  SesionHistorial,
+  WorkoutLogEntry,
+} from "./sesion.model";
+
 export const isSession = (v: unknown): v is SesionHistorial =>
   isRecord(v) &&
   ["id", "clase", "fecha"].every((k) => isString(v[k])) &&
@@ -11,6 +16,7 @@ export const isSession = (v: unknown): v is SesionHistorial =>
   ["Reservada", "Asistida", "Cancelada", "Ausente"].includes(
     String(v["estado"]),
   );
+
 export const isAlert = (v: unknown): v is AlertaVencimiento =>
   isRecord(v) &&
   ["id", "titulo", "mensaje", "fecha"].every((k) => isString(v[k])) &&
@@ -18,3 +24,10 @@ export const isAlert = (v: unknown): v is AlertaVencimiento =>
   ["alta", "media", "baja"].includes(String(v["prioridad"])) &&
   isFiniteNumber(v["diasRestantes"]) &&
   typeof v["leida"] === "boolean";
+
+export const isWorkoutLog = (v: unknown): v is WorkoutLogEntry =>
+  isRecord(v) &&
+  ["id", "ejercicio", "grupoMuscular", "fecha"].every((k) => isString(v[k])) &&
+  isFiniteNumber(v["series"]) &&
+  isFiniteNumber(v["repeticiones"]) &&
+  isFiniteNumber(v["pesoKg"]);

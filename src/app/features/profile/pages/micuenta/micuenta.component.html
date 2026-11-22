@@ -25,7 +25,7 @@
         } @else {
           <h2>Accede a tu cuenta.</h2>
           <p class="muted">
-            Puedes revisar el perfil local, pero agenda e identidad utilizan tu
+            Puedes revisar el perfil, pero agenda e identidad utilizan tu
             sesión activa.
           </p>
           <a appButton="primary" routerLink="/auth/sign-in"
@@ -49,23 +49,47 @@
         /></a>
       </article>
       <article class="surface surface--soft">
-        <span class="eyebrow">Dato orientativo</span>
+        <span class="eyebrow">Índice de masa corporal</span>
         <div class="metric">{{ imc || "—" }}</div>
+        <span class="status" [class.status--accent]="imc > 0">{{ imcLabel }}</span>
         <p class="help">
-          Relación peso/altura calculada con tus datos. No es una evaluación
-          médica ni una recomendación de entrenamiento.
+          Relación peso/altura calculada con tus datos. Se actualiza al guardar
+          tu perfil o registrar mediciones.
         </p>
       </article>
     </aside>
     <div class="stack">
-      <div class="notice">
+      <div class="notice" [class.notice--success]="cloudSynced">
         <app-icon name="monitor" />
         <p>
-          <strong>Perfil local de entrenamiento.</strong> Los valores iniciales
-          son ejemplos editables. Se conservan en este navegador y se comparten
-          con el coach al usarlo; no están sincronizados con tu cuenta remota.
+          <strong>Perfil de entrenamiento.</strong>
+          @if (cloudSynced) {
+            Tus datos antropométricos y restricciones médicas están sincronizados
+            con tu cuenta para acompañar al Coach IA y recepcionistas.
+          } @else {
+            Tus cambios se conservan en este navegador y se sincronizan con tu
+            cuenta al iniciar sesión con conexión.
+          }
         </p>
       </div>
+
+      @if (healthAlerts.length || hasMedicalRestriction) {
+        <div class="notice notice--warning" role="alert">
+          <app-icon name="grid" />
+          <div>
+            <strong>Alertas médicas y de salud</strong>
+            <ul class="health-alerts-list">
+              @if (hasMedicalRestriction && !healthAlerts.length) {
+                <li>Restricción registrada: {{ perfil.restriccionesMedicas }}</li>
+              }
+              @for (alert of healthAlerts; track alert) {
+                <li>{{ alert }}</li>
+              }
+            </ul>
+          </div>
+        </div>
+      }
+
       <form
         class="surface"
         #profileForm="ngForm"
@@ -177,7 +201,7 @@
           </div>
           <div class="field full-width">
             <label for="profile-restrictions"
-              >Limitaciones que quieres comunicar al coach</label
+              >Restricciones médicas o lesiones</label
             ><textarea
               id="profile-restrictions"
               name="restriccionesMedicas"
@@ -185,8 +209,8 @@
               rows="3"
             ></textarea
             ><small class="help"
-              >Evita incluir información personal que no sea necesaria para usar
-              esta herramienta.</small
+              >Indica lesiones o condiciones médicas relevantes para activar
+              alertas de seguridad.</small
             >
           </div>
         </div>
@@ -212,13 +236,132 @@
             [disabled]="saving"
             [attr.aria-busy]="saving"
           >
-            {{ saving ? "Guardando…" : "Guardar perfil local"
+            {{ saving ? "Guardando…" : "Guardar perfil"
             }}<app-icon name="check" /></button
           ><a appButton="secondary" routerLink="/coach-ia"
             >Ir al coach<app-icon name="arrow"
           /></a>
         </div>
       </form>
+
+      <section class="surface stack" aria-label="Mediciones antropométricas">
+        <div>
+          <span class="eyebrow">Seguimiento físico</span>
+          <h2>Mediciones antropométricas e historial</h2>
+          <p class="help">
+            Registra cintura, pecho, brazo y porcentaje de grasa corporal para
+            seguir tu evolución.
+          </p>
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label for="meas-waist">Cintura (cm)</label>
+            <input
+              id="meas-waist"
+              type="number"
+              min="30"
+              max="250"
+              step=".1"
+              [(ngModel)]="cintura"
+              name="cintura"
+              placeholder="Ej. 80"
+            />
+          </div>
+          <div class="field">
+            <label for="meas-chest">Pecho (cm)</label>
+            <input
+              id="meas-chest"
+              type="number"
+              min="40"
+              max="250"
+              step=".1"
+              [(ngModel)]="pecho"
+              name="pecho"
+              placeholder="Ej. 102"
+            />
+          </div>
+          <div class="field">
+            <label for="meas-arm">Brazo (cm)</label>
+            <input
+              id="meas-arm"
+              type="number"
+              min="15"
+              max="100"
+              step=".1"
+              [(ngModel)]="brazo"
+              name="brazo"
+              placeholder="Ej. 36"
+            />
+          </div>
+          <div class="field">
+            <label for="meas-fat">Grasa corporal (%)</label>
+            <input
+              id="meas-fat"
+              type="number"
+              min="3"
+              max="70"
+              step=".1"
+              [(ngModel)]="grasaCorporal"
+              name="grasaCorporal"
+              placeholder="Ej. 16.5"
+            />
+          </div>
+          <div class="field full-width">
+            <label for="meas-notes">Notas de evaluación</label>
+            <input
+              id="meas-notes"
+              type="text"
+              [(ngModel)]="measurementNotas"
+              name="measurementNotas"
+              placeholder="Ej. Evaluación mensual en ayunas"
+            />
+          </div>
+        </div>
+        @if (measurementMessage) {
+          <p class="notice" role="status">{{ measurementMessage }}</p>
+        }
+        <div class="form-actions">
+          <button
+            appButton="secondary"
+            type="button"
+            [disabled]="measurementSaving"
+            (click)="registrarMedicion()"
+          >
+            {{ measurementSaving ? "Registrando…" : "Registrar medición" }}
+          </button>
+        </div>
+
+        @if (measurements.length) {
+          <div class="table-scroll" role="region" aria-label="Historial de mediciones">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th scope="col">Fecha</th>
+                  <th scope="col">Peso</th>
+                  <th scope="col">IMC</th>
+                  <th scope="col">Cintura</th>
+                  <th scope="col">Pecho</th>
+                  <th scope="col">Brazo</th>
+                  <th scope="col">% Grasa</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of measurements; track $index) {
+                  <tr>
+                    <td>{{ item.fecha || "—" }}</td>
+                    <td>{{ item.peso }} kg</td>
+                    <td>{{ item.imc }}</td>
+                    <td>{{ item.cintura ?? "—" }}</td>
+                    <td>{{ item.pecho ?? "—" }}</td>
+                    <td>{{ item.brazo ?? "—" }}</td>
+                    <td>{{ item.grasaCorporal ?? "—" }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
     </div>
   }
 </section>

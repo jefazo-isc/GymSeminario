@@ -9,7 +9,16 @@ prerendered-routes.json
 
 # Environment & credentials
 .env
+.env.*
 *.env.local
+!.env.example
+!server/.env.example
+!back/.env.example
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
 
 # Logs
 *.log

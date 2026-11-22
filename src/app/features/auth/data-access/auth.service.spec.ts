@@ -1,5 +1,8 @@
 import { provideHttpClient } from "@angular/common/http";
-import { provideHttpClientTesting } from "@angular/common/http/testing";
+import {
+  HttpTestingController,
+  provideHttpClientTesting,
+} from "@angular/common/http/testing";
 import { TestBed } from "@angular/core/testing";
 import { firstValueFrom } from "rxjs";
 import { AuthService } from "./auth.service";
@@ -44,5 +47,25 @@ describe("AuthService", () => {
     expect(await firstValueFrom(service.userName$)).toBe("Test");
     expect(await firstValueFrom(service.userRole$)).toBe("user");
     expect(await firstValueFrom(service.userUid$)).toBe("1");
+  });
+
+  it("calls POST /api/auth/change-password cleanly", async () => {
+    const http = TestBed.inject(HttpTestingController);
+    const pending = service.cambiarPassword(
+      { email: "socio@test.com", password: "OldPass1" },
+      "NewPass2",
+    );
+    const req = http.expectOne((r) =>
+      r.url.endsWith("/api/auth/change-password"),
+    );
+    expect(req.request.method).toBe("POST");
+    expect(req.request.body).toEqual({
+      email: "socio@test.com",
+      currentPassword: "OldPass1",
+      newPassword: "NewPass2",
+    });
+    req.flush({ ok: true, mensaje: "Contraseña actualizada" });
+    await expectAsync(pending).toBeResolved();
+    http.verify();
   });
 });

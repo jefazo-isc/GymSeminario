@@ -1,4 +1,5 @@
 import { executeAiQuery } from './aiProvider.service.js';
+import { GYM_EQUIPMENT_CATALOG } from './db.js';
 
 export const COACHES = {
   patricio: {
@@ -54,12 +55,24 @@ Tu dieta de volumen favorita son las tortas de jamón con aguas frescas. Adviert
 };
 
 /**
- * Procesa el chat con el coach seleccionado usando Mercury
+ * Procesa el chat con el coach seleccionado inyectando equipamiento FAQ y membresía
  */
-export async function chatearConCoach({ coachId, mensaje, historial = [], contextoRutina = null, perfilUsuario = null }) {
+export async function chatearConCoach({
+  coachId,
+  mensaje,
+  historial = [],
+  contextoRutina = null,
+  perfilUsuario = null,
+  membresiaResumen = null,
+}) {
   const coach = COACHES[coachId] || COACHES.temach;
 
-  let systemContent = coach.systemPrompt + '\n\n';
+  let systemContent = `${coach.systemPrompt}\n\n`;
+  systemContent += `EQUIPAMIENTO Y SERVICIOS DEL GIMNASIO (espacioGYM · GROM 21 - úsalo para responder dudas sobre máquinas, clases u horarios):\n${GYM_EQUIPMENT_CATALOG.map((item) => `- ${item}`).join('\n')}\n\n`;
+
+  if (membresiaResumen) {
+    systemContent += `MEMBRESÍA ACTUAL DEL SOCIO: Plan ${membresiaResumen.plan_nombre || membresiaResumen.nombrePlan || 'Activo'}, estado ${membresiaResumen.estado || 'Activa'}, vigencia hasta ${membresiaResumen.fecha_fin || membresiaResumen.fechaFin || 'vigente'}.\n\n`;
+  }
 
   if (perfilUsuario) {
     systemContent += `DATOS DE CONTEXTO DEL SOCIO (Usa esta información para adaptar tu respuesta de forma precisa al género, contextura, edad y nivel del usuario, pero NO recites ni menciones todos estos datos mecánicamente a cada rato; menciónalos solo cuando sea estrictamente útil o pertinente para la respuesta):\n` +
@@ -78,13 +91,12 @@ export async function chatearConCoach({ coachId, mensaje, historial = [], contex
     systemContent += `RUTINA ACTUAL: ${JSON.stringify(contextoRutina)}\n\n`;
   }
 
-  // Construir historial en formato OpenAI messages
   const messages = [{ role: 'system', content: systemContent }];
 
   for (const h of historial.slice(-6)) {
     messages.push({
       role: h.remitente === 'usuario' ? 'user' : 'assistant',
-      content: h.texto
+      content: h.texto,
     });
   }
   messages.push({ role: 'user', content: mensaje });
@@ -95,14 +107,14 @@ export async function chatearConCoach({ coachId, mensaje, historial = [], contex
       exito: true,
       coach: coach.nombre,
       origen,
-      respuesta: text.trim()
+      respuesta: text.trim(),
     };
   } catch (error) {
     console.error('[ERROR COACH_CHAT]:', error.message);
     return {
       exito: false,
       coach: coach.nombre,
-      respuesta: `(${coach.nombre} está tomando un respiro o tomando agua. ¡Inténtale en un momento, compa!)`
+      respuesta: `(${coach.nombre} está tomando un respiro o tomando agua. ¡Inténtale en un momento, compa!)`,
     };
   }
 }

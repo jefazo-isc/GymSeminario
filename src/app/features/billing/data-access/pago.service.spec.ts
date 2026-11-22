@@ -1,3 +1,8 @@
+import { provideHttpClient } from "@angular/common/http";
+import {
+  HttpTestingController,
+  provideHttpClientTesting,
+} from "@angular/common/http/testing";
 import { TestBed } from "@angular/core/testing";
 import { PagoService } from "./pago.service";
 
@@ -14,7 +19,7 @@ describe("PagoService", () => {
     expect(service).toBeTruthy();
   });
 
-  it("debe cargar el historial inicial de demostración (6 pagos)", () => {
+  it("debe cargar el historial inicial de demostración (6 pagos) sin HttpClient", () => {
     expect(service.getPagos().length).toBe(6);
   });
 
@@ -64,5 +69,59 @@ describe("PagoService", () => {
       }
     });
     service.registrarPago("Mensualidad", 550, "QR / App");
+  });
+});
+
+describe("PagoService Stripe backend sync", () => {
+  afterEach(() => localStorage.clear());
+
+  it("starts empty instead of overriding with 6 demo rows when HttpClient is present and syncs GET /api/stripe/transactions", async () => {
+    localStorage.clear();
+    localStorage.setItem("gym_jwt", "jwt-demo");
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting(), PagoService],
+    });
+    const http = TestBed.inject(HttpTestingController);
+    const svc = TestBed.inject(PagoService);
+
+    expect(svc.getPagos()).toEqual([]);
+
+    const req = http.expectOne((r) =>
+      r.url.endsWith("/api/stripe/transactions"),
+    );
+    req.flush([
+      {
+        id: "STX-1",
+        folio: "STR-778899",
+        payment_intent_id: "pi_real_1",
+        tipo: "membership",
+        plan_nombre: "Pro Fitness",
+        monto: 550,
+        cupon: null,
+        estado: "COMPLETED",
+        created_at: "2026-11-22T10:00:00Z",
+      },
+      {
+        id: "STX-2",
+        folio: "STR-112233",
+        payment_intent_id: "pi_real_2",
+        tipo: "product",
+        plan_nombre: "Gymshark Whey Protein",
+        monto: 1350,
+        cupon: null,
+        estado: "COMPLETED",
+        created_at: "2026-11-22T11:00:00Z",
+      },
+    ]);
+
+    await Promise.resolve();
+    const pagos = svc.getPagos();
+    expect(pagos.length).toBe(2);
+    expect(pagos[0].folio).toBe("STR-778899");
+    expect(pagos[0].concepto).toBe("Mensualidad");
+    expect(pagos[0].monto).toBe(550);
+    expect(pagos[1].concepto).toBe("Suplementos");
+    expect(svc.isSyncedFromServer()).toBeTrue();
+    http.verify();
   });
 });

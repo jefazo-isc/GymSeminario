@@ -33,7 +33,8 @@
             "scripts": [],
             "allowedCommonJsDependencies": [
               "sweetalert2",
-              "qrcode"
+              "qrcode",
+              "jsqr"
             ]
           },
           "configurations": {

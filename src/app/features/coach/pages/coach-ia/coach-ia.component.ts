@@ -20,6 +20,7 @@ import {
   hasRoleSubscriptionBypass,
   isMembershipActive,
   isTestEnvironment,
+  isTrainerOrAdminUser,
   readGymUser,
 } from "../../../../core/auth/route.guards";
 import { ButtonDirective } from "../../../../shared/ui/button.directive";
@@ -27,10 +28,12 @@ import { IconComponent } from "../../../../shared/ui/icon/icon.component";
 import { MarkdownPipe } from "../../../../shared/pipes/markdown.pipe";
 import { SESSION } from "../../../auth/data-access/session.repository";
 import { MEMBERSHIPS } from "../../../memberships/data-access/membership.repository";
+import { Membresia } from "../../../memberships/models/membresia.model";
 import { PROFILES } from "../../../profile/data-access/profile.repository";
 import { COACH } from "../../data-access/coach.repository";
 import { validRoutine } from "../../models/rutina.guard";
 import {
+  CoachChatContext,
   CoachInfo,
   MensajeChat,
   PerfilSocio,
@@ -63,8 +66,17 @@ export class CoachIaComponent implements OnInit {
   pestanaActiva: "rutina" | "chat" = "rutina";
   usuarioAutenticado = false;
   tieneSuscripcion = false;
+  esEntrenadorOAdmin = false;
+  modoEntrenador = false;
+  clientEmail = "";
+  savedRoutineId: string | number | null = null;
+  routineFeedback = "";
+  routineSaving = false;
+  editingRoutine = false;
   private rolConAcceso = false;
+  private esRecepcionPura = false;
   private membresiaActiva = false;
+  private currentMembership: Membresia | null = null;
   usuarioNombre: string | null = null;
   cargandoAuth = false;
   authBusy = false;
@@ -99,19 +111,46 @@ export class CoachIaComponent implements OnInit {
     this.observarMembresia();
     this.cargarCoaches();
     this.loadProfile();
+    if (this.tieneSuscripcion && readGymUser()) {
+      this.cargarRutinaGuardada();
+    }
     this.destroyRef.onDestroy(() => this.profileStream?.unsubscribe());
   }
   private observarMembresia() {
     this.memberships?.membresiaActual$
       ?.pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((mem) => {
+        this.currentMembership = mem;
         this.membresiaActiva = isMembershipActive(mem);
         this.actualizarEstadoSuscripcion();
       });
   }
   private actualizarEstadoSuscripcion() {
     this.tieneSuscripcion =
-      this.usuarioAutenticado && (this.rolConAcceso || this.membresiaActiva);
+      this.usuarioAutenticado &&
+      !this.esRecepcionPura &&
+      (this.rolConAcceso || this.membresiaActiva);
+  }
+
+  private isPureReceptionUser(
+    user: { email?: string | null; role?: string | null } | null,
+  ): boolean {
+    if (!user) return false;
+    const email = (user.email ?? "").toLowerCase().trim();
+    const role = (user.role ?? "").toLowerCase().trim();
+    if (
+      email === "guevara.cardona.yahir@gmail.com" ||
+      email === "admin@gymseminario.com" ||
+      role === "admin"
+    ) {
+      return false;
+    }
+    return (
+      role === "reception" ||
+      role === "receptionist" ||
+      role === "recepcionista" ||
+      role === "staff"
+    );
   }
   get profileState(): RequestState<PerfilSocio> {
     if (this.profileLoading) return { status: "loading" };
@@ -150,7 +189,9 @@ export class CoachIaComponent implements OnInit {
     if (u) {
       this.usuarioAutenticado = true;
       this.usuarioNombre = u.nombre || u.email || "Sesión activa";
-      this.rolConAcceso = hasRoleSubscriptionBypass(u);
+      this.esRecepcionPura = this.isPureReceptionUser(u);
+      this.rolConAcceso = !this.esRecepcionPura && hasRoleSubscriptionBypass(u);
+      this.esEntrenadorOAdmin = !this.esRecepcionPura && isTrainerOrAdminUser(u);
       if (u.nombre) {
         Promise.resolve(this.profiles.actualizarNombre(u.nombre)).catch(() => {
           this.errorMensaje =
@@ -160,7 +201,9 @@ export class CoachIaComponent implements OnInit {
     } else {
       this.usuarioAutenticado = false;
       this.usuarioNombre = null;
+      this.esRecepcionPura = false;
       this.rolConAcceso = false;
+      this.esEntrenadorOAdmin = false;
     }
     this.actualizarEstadoSuscripcion();
 
@@ -178,7 +221,9 @@ export class CoachIaComponent implements OnInit {
         } else if (!current) {
           this.usuarioAutenticado = false;
           this.usuarioNombre = null;
+          this.esRecepcionPura = false;
           this.rolConAcceso = false;
+          this.esEntrenadorOAdmin = false;
         }
         this.actualizarEstadoSuscripcion();
       });
@@ -190,15 +235,20 @@ export class CoachIaComponent implements OnInit {
       ?.pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((role) => {
         if (!role) return;
-        if (
-          hasRoleSubscriptionBypass({
-            uid: null,
-            nombre: null,
-            email: null,
-            role,
-          })
-        ) {
+        const candidate = {
+          uid: null,
+          nombre: null,
+          email: readGymUser()?.email ?? null,
+          role,
+        };
+        if (this.isPureReceptionUser(candidate)) {
+          this.esRecepcionPura = true;
+          this.rolConAcceso = false;
+          this.esEntrenadorOAdmin = false;
+        } else if (hasRoleSubscriptionBypass(candidate)) {
+          this.esRecepcionPura = false;
           this.rolConAcceso = true;
+          this.esEntrenadorOAdmin = isTrainerOrAdminUser(candidate);
         }
         this.actualizarEstadoSuscripcion();
       });
@@ -297,6 +347,7 @@ export class CoachIaComponent implements OnInit {
         this.mensajes,
         this.rutina,
         this.perfil,
+        this.buildChatContext(),
       )
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -360,6 +411,7 @@ export class CoachIaComponent implements OnInit {
             this.origenRespuesta = response.origen
               ? response.origen.toLowerCase()
               : "unverified";
+            this.persistGeneratedRoutine(response.data);
           } else {
             this.errorMensaje =
               response?.error ||
@@ -391,8 +443,107 @@ export class CoachIaComponent implements OnInit {
   }
   nuevaRutina() {
     this.rutina = null;
+    this.savedRoutineId = null;
+    this.editingRoutine = false;
+    this.routineFeedback = "";
     this.errorMensaje = null;
     this.origenRespuesta = null;
+  }
+
+  cargarRutinaGuardada(targetEmail?: string): void {
+    if (!this.routines.getRoutines) return;
+    this.routineFeedback = "";
+    this.routines
+      .getRoutines(targetEmail)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (records) => {
+          if (records.length) {
+            this.rutina = structuredClone(records[0].rutina);
+            this.savedRoutineId = records[0].id;
+            this.origenRespuesta = "cache";
+            if (targetEmail) {
+              this.routineFeedback = `Rutina cargada para ${targetEmail}.`;
+            }
+          } else if (targetEmail) {
+            this.rutina = null;
+            this.savedRoutineId = null;
+            this.routineFeedback = `No hay rutina guardada para ${targetEmail}. Puedes generar o crear una nueva.`;
+          }
+        },
+        error: () => {
+          if (targetEmail) {
+            this.routineFeedback = `No se pudo consultar la rutina de ${targetEmail}.`;
+          }
+        },
+      });
+  }
+
+  guardarRutinaActual(): void {
+    if (!this.rutina || this.routineSaving) return;
+    const targetEmail = this.modoEntrenador ? this.clientEmail.trim() : undefined;
+    if (this.modoEntrenador && !targetEmail) {
+      this.routineFeedback = "Ingresa el correo del socio para asignar la rutina.";
+      return;
+    }
+    const payload = {
+      rutina: this.rutina,
+      targetEmail,
+      assignedBy: readGymUser()?.email || undefined,
+    };
+    const op$ =
+      this.savedRoutineId && this.routines.updateRoutine
+        ? this.routines.updateRoutine(this.savedRoutineId, payload)
+        : this.routines.saveRoutine?.(payload);
+    if (!op$) return;
+
+    this.routineSaving = true;
+    this.routineFeedback = "";
+    op$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (saved) => {
+        this.routineSaving = false;
+        this.savedRoutineId = saved.id;
+        this.editingRoutine = false;
+        this.routineFeedback = targetEmail
+          ? `Rutina asignada y guardada para ${targetEmail}.`
+          : "Rutina guardada en tu cuenta.";
+      },
+      error: () => {
+        this.routineSaving = false;
+        this.routineFeedback = "No se pudo guardar la rutina en el servidor.";
+      },
+    });
+  }
+
+  private persistGeneratedRoutine(rutina: RutinaData): void {
+    if (!this.routines.saveRoutine || !readGymUser()) return;
+    const targetEmail =
+      this.modoEntrenador && this.clientEmail.trim()
+        ? this.clientEmail.trim()
+        : undefined;
+    this.routines
+      .saveRoutine({
+        rutina,
+        targetEmail,
+        assignedBy: readGymUser()?.email || undefined,
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (saved) => {
+          this.savedRoutineId = saved.id;
+        },
+        error: () => undefined,
+      });
+  }
+
+  private buildChatContext(): CoachChatContext {
+    const mem = this.currentMembership;
+    const membershipSummary = mem
+      ? `Plan: ${mem.nombrePlan} (${mem.periodo}), Estado: ${mem.estado}, Vigencia hasta: ${mem.fechaFin}`
+      : "Membresía activa verificada";
+    const equipmentContext =
+      "Equipamiento disponible en espacioGYM GROM 21: área de peso libre (barras olímpicas, mancuernas, rack de sentadillas), poleas y máquinas guiadas, bicicletas de spinning, zona funcional CrossFit, costales de boxeo y tapetes de yoga.";
+    return { membershipSummary, equipmentContext };
   }
   private obtenerHora() {
     return new Date().toLocaleTimeString("es-MX", {

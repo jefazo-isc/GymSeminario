@@ -7,8 +7,14 @@
   <div class="notice">
     <app-icon name="check" />
     <p>
-      <strong>Estado de cuenta.</strong> Consulta saldos, cuotas registradas y pagos de servicios vinculados a tu membresía.
+      <strong>Estado de cuenta.</strong> Consulta tus recibos oficiales de Stripe, folios y cuotas registradas en tu cuenta.
+      <span class="status" [class.status--success]="syncedFromServer">
+        {{ syncedFromServer ? "Sincronizado con Stripe" : "Caché local" }}
+      </span>
     </p>
+    <button appButton="ghost" type="button" (click)="loadAccount()">
+      Actualizar
+    </button>
   </div>
   <app-request-state
     [state]="accountState"

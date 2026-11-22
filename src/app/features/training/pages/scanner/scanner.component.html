@@ -1,0 +1,271 @@
+<section class="feature-page stack">
+  @if (!esRecepcionOAdmin) {
+    <div class="empty-state" role="alert">
+      <app-icon name="grid" />
+      <h2>Acceso restringido a recepción y administración.</h2>
+      <p>
+        Solo el personal autorizado de mostrador, entrenadores o administración
+        pueden validar códigos QR en puerta.
+      </p>
+      <a appButton="primary" routerLink="/home">Regresar al inicio</a>
+    </div>
+  } @else {
+    <div class="notice">
+      <app-icon name="check" />
+      <p>
+        <strong>Control de acceso en puerta.</strong> Escanea el código QR del
+        socio con la cámara, sube una foto o muestra el QR rotativo de
+        mostrador para que el socio registre su llegada al instante.
+      </p>
+    </div>
+
+    <div class="toolbar">
+      <div>
+        <span class="eyebrow">Recepción · Verificación instantánea</span>
+        <h2>Validar pase de entrada</h2>
+      </div>
+      <div class="form-actions">
+        <a appButton="secondary" routerLink="/editar2">Registro de asistencias</a>
+        @if (esAdmin) {
+          <a appButton="ghost" routerLink="/graficos">Estadísticas y métricas</a>
+        }
+      </div>
+    </div>
+
+    <div class="scanner-grid">
+      <article class="surface stack">
+        <span class="eyebrow">1. Escaneo por cámara o fotografía</span>
+        <div class="camera-box" [class.camera-box--active]="scanningCamera">
+          <video #videoPreview playsinline muted></video>
+          @if (!scanningCamera) {
+            <div class="camera-placeholder">
+              <app-icon name="search" />
+              <p class="help">
+                Activa la cámara para leer automáticamente códigos QR
+                <code>GROM-...</code>.
+              </p>
+            </div>
+          }
+          <canvas #scanCanvas class="hidden-canvas" aria-hidden="true"></canvas>
+        </div>
+
+        <div class="form-actions">
+          @if (!scanningCamera) {
+            <button appButton="primary" type="button" (click)="startCamera()">
+              Activar cámara
+            </button>
+          } @else {
+            <button appButton="secondary" type="button" (click)="stopCamera()">
+              Detener cámara
+            </button>
+          }
+          <label class="ui-button ui-button--secondary file-upload-btn">
+            Tomar foto / Subir imagen
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              (change)="onFileSelected($event)"
+            />
+          </label>
+        </div>
+
+        @if (cameraError) {
+          <p class="notice notice--warning" role="alert">{{ cameraError }}</p>
+        }
+      </article>
+
+      <article class="surface stack">
+        <span class="eyebrow">2. Ingreso manual de código</span>
+        <form class="stack" (ngSubmit)="validarManual()">
+          <div class="field">
+            <label for="qr-manual-token">Token QR del socio</label>
+            <input
+              id="qr-manual-token"
+              name="token"
+              class="control"
+              [(ngModel)]="manualToken"
+              placeholder="Ej. GROM-8F3A19C0..."
+              autocomplete="off"
+            />
+          </div>
+          <div class="form-actions">
+            <button
+              appButton="primary"
+              type="submit"
+              [disabled]="validating || !manualToken.trim()"
+            >
+              {{ validating ? "Validando…" : "Validar acceso" }}
+            </button>
+            <button
+              appButton="ghost"
+              type="button"
+              [disabled]="validating || (!manualToken && !lastResult)"
+              (click)="limpiarResultado()"
+            >
+              Limpiar
+            </button>
+          </div>
+        </form>
+
+        @if (lastResult; as result) {
+          <div
+            class="scan-result"
+            [class.scan-result--pass]="result.valid"
+            [class.scan-result--reject]="!result.valid"
+            [attr.role]="result.valid ? 'status' : 'alert'"
+          >
+            <div class="scan-result-header">
+              <span
+                class="status"
+                [class.status--success]="result.valid"
+                [class.status--danger]="!result.valid"
+              >
+                {{ result.valid ? "PASE VÁLIDO · ACCESO CONCEDIDO" : "ACCESO DENEGADO" }}
+              </span>
+              <code>{{ result.code }}</code>
+            </div>
+            <h3>
+              {{
+                result.valid
+                  ? result.memberName || "Socio verificado"
+                  : result.message
+              }}
+            </h3>
+            @if (result.valid) {
+              <p>{{ result.message }}</p>
+              <dl class="scan-meta">
+                @if (result.plan) {
+                  <div>
+                    <dt>Plan</dt>
+                    <dd>{{ result.plan }}</dd>
+                  </div>
+                }
+                @if (result.fechaFin) {
+                  <div>
+                    <dt>Vigencia hasta</dt>
+                    <dd>{{ result.fechaFin }}</dd>
+                  </div>
+                }
+                @if (result.clase) {
+                  <div>
+                    <dt>Clase</dt>
+                    <dd>{{ result.clase }}</dd>
+                  </div>
+                }
+              </dl>
+            } @else if (result.memberName || result.plan || result.fechaFin) {
+              <p class="help">
+                Socio: {{ result.memberName || "—" }} · Plan:
+                {{ result.plan || "Sin plan activo" }}
+                @if (result.fechaFin) {
+                  · Venció: {{ result.fechaFin }}
+                }
+              </p>
+            }
+          </div>
+        }
+      </article>
+    </div>
+
+    <article class="surface stack kiosk-section">
+      <div class="toolbar">
+        <div>
+          <span class="eyebrow">QR Rotativo de Mostrador</span>
+          <h3>Código dinámico para escaneo del socio</h3>
+          <p class="help">
+            Los socios con membresía activa pueden escanear este código desde su
+            teléfono en Registrar asistencia (/f3) para marcar su llegada en
+            SQLite.
+          </p>
+        </div>
+        <button
+          appButton="secondary"
+          type="button"
+          [disabled]="kioskLoading"
+          (click)="rotateKioskQr()"
+        >
+          {{ kioskLoading ? "Generando…" : "Rotar QR ahora" }}
+        </button>
+      </div>
+
+      @if (kioskError) {
+        <p class="notice notice--warning" role="alert">{{ kioskError }}</p>
+      }
+
+      @if (kioskToken) {
+        <div class="kiosk-display">
+          <div class="kiosk-qr-paper">
+            <qrcode
+              [qrdata]="kioskToken"
+              [width]="220"
+              [margin]="3"
+              [errorCorrectionLevel]="'M'"
+              [colorDark]="'#000000'"
+              [colorLight]="'#ffffff'"
+            />
+          </div>
+          <div class="stack">
+            <p class="help">
+              Token de mostrador: <code>{{ kioskToken }}</code>
+            </p>
+            <p class="help">
+              <span
+                class="status"
+                [class.status--success]="!kioskOffline"
+                [class.status--warning]="kioskOffline"
+              >
+                {{
+                  kioskOffline
+                    ? "Mostrador offline (token local)"
+                    : "Mostrador en vivo · Dinámico cada 30s"
+                }}
+              </span>
+              @if (!kioskOffline && kioskSecondsRemaining > 0) {
+                <span> · Se renueva en {{ kioskSecondsRemaining }}s</span>
+              } @else if (kioskExpiresAt) {
+                <span> · Vigente hasta {{ kioskExpiresAt }}</span>
+              }
+            </p>
+          </div>
+        </div>
+      }
+    </article>
+
+    @if (history.length) {
+      <article class="surface stack">
+        <h3>Lecturas recientes del turno</h3>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th scope="col">Resultado</th>
+                <th scope="col">Código</th>
+                <th scope="col">Socio / Detalle</th>
+                <th scope="col">Plan</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (entry of history; track $index) {
+                <tr>
+                  <td>
+                    <span
+                      class="status"
+                      [class.status--success]="entry.valid"
+                      [class.status--danger]="!entry.valid"
+                    >
+                      {{ entry.valid ? "Aprobado" : "Rechazado" }}
+                    </span>
+                  </td>
+                  <td><code>{{ entry.code }}</code></td>
+                  <td>{{ entry.memberName || entry.message }}</td>
+                  <td>{{ entry.plan || "—" }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </article>
+    }
+  }
+</section>

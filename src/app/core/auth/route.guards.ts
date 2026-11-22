@@ -59,6 +59,16 @@ export function readGymUser(): GymSessionUser | null {
   }
 }
 
+export function getSessionToken(): string | null {
+  try {
+    if (typeof localStorage === "undefined") return null;
+    const token = localStorage.getItem("gym_jwt");
+    return token && token.trim() ? token.trim() : null;
+  } catch {
+    return null;
+  }
+}
+
 export function isAdminUser(user: GymSessionUser | null): boolean {
   if (!user) return false;
   const email = (user.email ?? "").toLowerCase().trim();
@@ -66,22 +76,37 @@ export function isAdminUser(user: GymSessionUser | null): boolean {
   return ADMIN_EMAILS.has(email) || role === "admin";
 }
 
-export function isReceptionOrAdminUser(user: GymSessionUser | null): boolean {
-  if (!user) return false;
-  if (isAdminUser(user)) return true;
+export function isPureReceptionUser(user: GymSessionUser | null): boolean {
+  if (!user || isAdminUser(user)) return false;
   const role = (user.role ?? "").toLowerCase().trim();
   return (
     role === "receptionist" ||
+    role === "reception" ||
     role === "recepcionista" ||
     role === "staff"
   );
 }
 
+export function isReceptionOrAdminUser(user: GymSessionUser | null): boolean {
+  if (!user) return false;
+  if (isAdminUser(user)) return true;
+  if (isPureReceptionUser(user)) return true;
+  const role = (user.role ?? "").toLowerCase().trim();
+  return role === "trainer" || role === "entrenador";
+}
+
+export function isTrainerOrAdminUser(user: GymSessionUser | null): boolean {
+  if (!user) return false;
+  if (isAdminUser(user)) return true;
+  const role = (user.role ?? "").toLowerCase().trim();
+  return role === "trainer" || role === "entrenador";
+}
+
 export function hasRoleSubscriptionBypass(
   user: GymSessionUser | null,
 ): boolean {
-  if (!user) return false;
-  if (isReceptionOrAdminUser(user)) return true;
+  if (!user || isPureReceptionUser(user)) return false;
+  if (isTrainerOrAdminUser(user)) return true;
   const role = (user.role ?? "").toLowerCase().trim();
   return (
     role === "subscriber" ||
@@ -121,6 +146,9 @@ export const subscriptionGuard: CanActivateFn = () => {
   if (!user) {
     return router.createUrlTree(["/auth/sign-in"]);
   }
+  if (isPureReceptionUser(user)) {
+    return router.createUrlTree(["/scanner"]);
+  }
   if (hasRoleSubscriptionBypass(user)) {
     return true;
   }
@@ -137,6 +165,12 @@ export const subscriptionGuard: CanActivateFn = () => {
     ),
     catchError(() => of(router.createUrlTree(["/membresias"]))),
   );
+};
+
+export const noReceptionExerciseGuard: CanActivateFn = () => {
+  const router = inject(Router);
+  const user = readGymUser();
+  return isPureReceptionUser(user) ? router.createUrlTree(["/scanner"]) : true;
 };
 
 export const receptionOrAdminGuard: CanActivateFn = () => {
