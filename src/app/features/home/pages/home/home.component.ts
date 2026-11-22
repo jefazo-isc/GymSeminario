@@ -2,6 +2,7 @@ import { Component } from "@angular/core";
 import { RouterLink } from "@angular/router";
 import { ButtonDirective } from "../../../../shared/ui/button.directive";
 import { IconComponent } from "../../../../shared/ui/icon/icon.component";
+import { isMobileVersion } from "../../../../core/mobile/is-mobile";
 @Component({
   selector: "app-home",
   standalone: true,
@@ -10,6 +11,7 @@ import { IconComponent } from "../../../../shared/ui/icon/icon.component";
   styleUrl: "./home.component.css",
 })
 export class HomeComponent {
+  readonly isMobile = isMobileVersion();
   readonly services = [
     {
       number: "01",

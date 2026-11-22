@@ -22,6 +22,8 @@ import { ButtonDirective } from "../../../../shared/ui/button.directive";
 import { IconComponent } from "../../../../shared/ui/icon/icon.component";
 import { SearchPanelComponent } from "../../../../shared/ui/search-panel/search-panel.component";
 
+import { isMobileVersion } from "../../../../core/mobile/is-mobile";
+
 @Component({
   selector: "app-navbar",
   standalone: true,
@@ -38,6 +40,7 @@ import { SearchPanelComponent } from "../../../../shared/ui/search-panel/search-
   styleUrl: "./navbar.component.css",
 })
 export class NavbarComponent {
+  readonly isMobile = isMobileVersion();
   readonly theme = inject(ThemeService);
   private readonly auth = inject(SESSION);
   private readonly router = inject(Router);

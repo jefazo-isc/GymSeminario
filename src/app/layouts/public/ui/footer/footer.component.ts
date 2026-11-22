@@ -5,6 +5,7 @@ import { AppearancePanelComponent } from "../../../../shared/ui/appearance-panel
 import { BrandComponent } from "../../../../shared/ui/brand/brand.component";
 import { ButtonDirective } from "../../../../shared/ui/button.directive";
 import { IconComponent } from "../../../../shared/ui/icon/icon.component";
+import { isMobileVersion } from "../../../../core/mobile/is-mobile";
 
 @Component({
   selector: "app-footer",
@@ -20,6 +21,7 @@ import { IconComponent } from "../../../../shared/ui/icon/icon.component";
   styleUrl: "./footer.component.css",
 })
 export class FooterComponent {
+  readonly isMobile = isMobileVersion();
   readonly date = new Date().getFullYear();
   readonly email = "gromfitnesscenter@gmail.com";
   private readonly dialog = inject(Dialog);
