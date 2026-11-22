@@ -2,10 +2,7 @@ import { TestBed } from "@angular/core/testing";
 import { of } from "rxjs";
 import { BILLING } from "../../billing/data-access/billing.repository";
 import { MEMBERSHIPS } from "./membership.repository";
-import {
-  CUPONES_SISTEMA,
-  MembershipStripeService,
-} from "./membership-stripe.service";
+import { MembershipStripeService } from "./membership-stripe.service";
 
 describe("MembershipStripeService & Coupon Discount Engine", () => {
   let service: MembershipStripeService;

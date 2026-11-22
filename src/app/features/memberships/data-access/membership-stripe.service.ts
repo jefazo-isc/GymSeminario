@@ -5,7 +5,7 @@ import Swal from "sweetalert2";
 import { APP_ENDPOINTS } from "../../../core/config/app-endpoints";
 import { BILLING } from "../../billing/data-access/billing.repository";
 import { SESSION } from "../../auth/data-access/session.repository";
-import { Membresia, PlanCatalogo } from "../models/membresia.model";
+import { PlanCatalogo } from "../models/membresia.model";
 import { MEMBERSHIPS } from "./membership.repository";
 
 export type BillingPeriod = "Mensual" | "Trimestral" | "Anual";

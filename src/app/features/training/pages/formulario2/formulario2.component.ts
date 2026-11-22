@@ -64,6 +64,13 @@ export class Formulario2Component implements OnInit {
   tieneSuscripcion = false;
   private user: { email: string | null; phoneNumber: string | null; displayName: string | null } | null = null;
   constructor() {
+    this.auth.userName$
+      ?.pipe(takeUntilDestroyed())
+      .subscribe((name) => {
+        if (name && this.user && !this.user.displayName) {
+          this.user = { ...this.user, displayName: name };
+        }
+      });
     this.memberships?.membresiaActual$
       ?.pipe(takeUntilDestroyed())
       .subscribe((mem) => {
