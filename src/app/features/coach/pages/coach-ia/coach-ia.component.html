@@ -17,11 +17,9 @@
       <app-icon name="spark" /><span class="eyebrow"
         >Tu siguiente paso, con orientación</span
       >
-      <h2>Accede para usar las herramientas.</h2>
+      <h2>Inicia sesión para continuar.</h2>
       <p class="muted">
-        Configura tu perfil, solicita una rutina o conversa con un coach. El
-        acceso actual comprueba tu sesión activa; no valida una membresía
-        de pago.
+        El Coach Virtual IA y el generador de rutinas con Gemini están reservados para socios con cuenta y membresía activa.
       </p>
       @if (errorMensaje) {
         <p class="notice notice--error" role="alert">{{ errorMensaje }}</p>
@@ -35,8 +33,27 @@
         >
           {{ authBusy ? "Conectando…" : "Continuar con Google" }}</button
         ><a appButton="secondary" routerLink="/auth/sign-in"
-          >Usar otro acceso</a
+          >Iniciar sesión</a
         >
+      </div>
+    </div>
+  } @else if (!tieneSuscripcion) {
+    <div class="coach-welcome coach-locked surface" role="region" aria-label="Suscripción requerida">
+      <div class="coach-lock-badge">🔒 Membresía Activa Requerida</div>
+      <h2>Activa una membresía para usar el Coach IA.</h2>
+      <p class="muted">
+        Hola, <strong>{{ usuarioNombre || "Socio" }}</strong>. Para proteger nuestra capacidad de procesamiento con Gemini IA, la configuración de rutinas personalizadas y el chat con coaches están disponibles exclusivamente para miembros con suscripción activa.
+      </p>
+      @if (errorMensaje) {
+        <p class="notice notice--error" role="alert">{{ errorMensaje }}</p>
+      }
+      <div class="form-actions">
+        <a appButton="primary" routerLink="/membresias">
+          <app-icon name="spark" />Adquirir o Activar Membresía
+        </a>
+        <a appButton="secondary" routerLink="/ejercicios">
+          Explorar ejercicios gratuitos
+        </a>
       </div>
     </div>
   } @else {

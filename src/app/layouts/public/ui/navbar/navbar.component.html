@@ -1,14 +1,16 @@
-<div class="location-strip">
-  <div class="ui-container">
-    <span
-      ><span class="status-dot" aria-hidden="true"></span>Un espacio para
-      moverte. Un lugar para volver.</span
-    ><a routerLink="/ubicacion"
-      ><app-icon name="pin" />Jesús María, Aguascalientes<app-icon
-        name="external"
-    /></a>
+@if (!isMobile) {
+  <div class="location-strip">
+    <div class="ui-container">
+      <span
+        ><span class="status-dot" aria-hidden="true"></span>Un espacio para
+        moverte. Un lugar para volver.</span
+      ><a routerLink="/ubicacion"
+        ><app-icon name="pin" />Jesús María, Aguascalientes<app-icon
+          name="external"
+      /></a>
+    </div>
   </div>
-</div>
+}
 <header class="site-header">
   <div class="ui-container header-inner">
     <app-brand />

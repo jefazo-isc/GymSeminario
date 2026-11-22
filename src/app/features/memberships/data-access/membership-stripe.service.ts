@@ -4,6 +4,7 @@ import { firstValueFrom, Observable, of } from "rxjs";
 import Swal from "sweetalert2";
 import { APP_ENDPOINTS } from "../../../core/config/app-endpoints";
 import { BILLING } from "../../billing/data-access/billing.repository";
+import { SESSION } from "../../auth/data-access/session.repository";
 import { Membresia, PlanCatalogo } from "../models/membresia.model";
 import { MEMBERSHIPS } from "./membership.repository";
 
@@ -75,6 +76,7 @@ export class MembershipStripeService {
   private endpoints = inject(APP_ENDPOINTS, { optional: true });
   private membershipRepo = inject(MEMBERSHIPS, { optional: true });
   private billingRepo = inject(BILLING, { optional: true });
+  private session = this.http ? inject(SESSION, { optional: true }) : null;
 
   private getBackendBaseUrl(): string {
     const notif =
@@ -441,6 +443,9 @@ export class MembershipStripeService {
     }
 
     // 4. Elevar permisos a Socio Activo (subscriber) para desbloquear navegación y Coach IA
+    if (this.session && typeof this.session.upgradeToSubscriber === "function") {
+      this.session.upgradeToSubscriber();
+    }
     try {
       const raw = localStorage.getItem("gym_user");
       if (raw) {

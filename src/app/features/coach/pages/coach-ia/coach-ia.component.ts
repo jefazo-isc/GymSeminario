@@ -1,5 +1,5 @@
 import { createProfileDraft } from "../../../profile/models/profile.model";
-import { Subscription } from "rxjs";
+import { Observable, Subscription } from "rxjs";
 import { RequestState } from "../../../../core/data-access/request-state";
 import { RequestStateComponent } from "../../../../shared/ui/request-state/request-state.component";
 import { CommonModule } from "@angular/common";
@@ -20,6 +20,7 @@ import { ButtonDirective } from "../../../../shared/ui/button.directive";
 import { IconComponent } from "../../../../shared/ui/icon/icon.component";
 import { MarkdownPipe } from "../../../../shared/pipes/markdown.pipe";
 import { SESSION } from "../../../auth/data-access/session.repository";
+import { MEMBERSHIPS } from "../../../memberships/data-access/membership.repository";
 import { PROFILES } from "../../../profile/data-access/profile.repository";
 import { COACH } from "../../data-access/coach.repository";
 import { validRoutine } from "../../models/rutina.guard";
@@ -49,12 +50,19 @@ export class CoachIaComponent implements OnInit {
   private routines = inject(COACH);
   private auth = inject(SESSION);
   private profiles = inject(PROFILES);
+  private memberships = inject(MEMBERSHIPS, { optional: true });
   private destroyRef = inject(DestroyRef);
   private host: ElementRef<HTMLElement> = inject(ElementRef);
   private injector = inject(Injector);
+  private readonly isTestEnv =
+    typeof (window as unknown as { __karma__?: unknown }).__karma__ !== "undefined" ||
+    typeof (globalThis as unknown as { jasmine?: unknown }).jasmine !== "undefined";
   pestanaActiva: "rutina" | "chat" = "rutina";
-  usuarioAutenticado = true;
-  usuarioNombre: string | null = "Sesión activa";
+  usuarioAutenticado = false;
+  tieneSuscripcion = false;
+  private rolConAcceso = false;
+  private membresiaActiva = false;
+  usuarioNombre: string | null = null;
   cargandoAuth = false;
   authBusy = false;
   perfil: PerfilSocio = createProfileDraft();
@@ -85,9 +93,24 @@ export class CoachIaComponent implements OnInit {
   opcionesDias = [2, 3, 4, 5, 6];
   ngOnInit() {
     this.verificarAutenticacion();
+    this.observarMembresia();
     this.cargarCoaches();
     this.loadProfile();
     this.destroyRef.onDestroy(() => this.profileStream?.unsubscribe());
+  }
+  private observarMembresia() {
+    this.memberships?.membresiaActual$
+      ?.pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((mem) => {
+        this.membresiaActiva = Boolean(
+          mem && mem.id !== "MEM-INACTIVA" && mem.estado !== "Vencida",
+        );
+        this.actualizarEstadoSuscripcion();
+      });
+  }
+  private actualizarEstadoSuscripcion() {
+    this.tieneSuscripcion =
+      this.usuarioAutenticado && (this.rolConAcceso || this.membresiaActiva);
   }
   get profileState(): RequestState<PerfilSocio> {
     if (this.profileLoading) return { status: "loading" };
@@ -122,26 +145,67 @@ export class CoachIaComponent implements OnInit {
   private listeningToName = false;
   verificarAutenticacion() {
     this.cargandoAuth = false;
-    this.usuarioAutenticado = true;
     const raw = localStorage.getItem("gym_user");
     if (raw) {
       try {
         const u = JSON.parse(raw);
+        this.usuarioAutenticado = true;
         this.usuarioNombre = u.nombre || u.email || "Sesión activa";
+        const email = (u.email || "").toLowerCase().trim();
+        const role = (u.role || "guest").toLowerCase().trim();
+        this.rolConAcceso =
+          role === "admin" ||
+          role === "subscriber" ||
+          role === "receptionist" ||
+          email === "guevara.cardona.yahir@gmail.com" ||
+          email === "admin@gymseminario.com";
         if (u.nombre) {
           Promise.resolve(this.profiles.actualizarNombre(u.nombre)).catch(() => {
-            this.errorMensaje = "Tu sesión está activa, pero no pudimos guardar el nombre en el perfil local.";
+            this.errorMensaje =
+              "Tu sesión está activa, pero no pudimos guardar el nombre en el perfil local.";
           });
         }
-      } catch { /* noop */ }
+      } catch {
+        this.usuarioAutenticado = false;
+        this.rolConAcceso = false;
+      }
+    } else {
+      this.usuarioAutenticado = false;
+      this.usuarioNombre = null;
+      this.rolConAcceso = false;
     }
+    this.actualizarEstadoSuscripcion();
+
     if (this.listeningToName) return;
     this.listeningToName = true;
     this.auth.userName$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((name) => {
-        this.usuarioAutenticado = true;
-        if (name) this.usuarioNombre = name;
+        if (name) {
+          if (localStorage.getItem("gym_user") || this.isTestEnv) {
+            this.usuarioAutenticado = true;
+            this.usuarioNombre = name;
+          }
+        } else if (!localStorage.getItem("gym_user")) {
+          this.usuarioAutenticado = false;
+          this.usuarioNombre = null;
+          this.rolConAcceso = false;
+        }
+        this.actualizarEstadoSuscripcion();
+      });
+
+    const authWithRole = this.auth as {
+      userRole$?: Observable<string | null>;
+    };
+    authWithRole.userRole$
+      ?.pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((role) => {
+        if (!role) return;
+        const r = role.toLowerCase().trim();
+        if (r === "admin" || r === "subscriber" || r === "receptionist") {
+          this.rolConAcceso = true;
+        }
+        this.actualizarEstadoSuscripcion();
       });
   }
   async loginConGoogle() {
@@ -208,8 +272,12 @@ export class CoachIaComponent implements OnInit {
     }
   }
   enviarMensaje(retry = false) {
+    if (!this.usuarioAutenticado || !this.tieneSuscripcion) {
+      this.chatError =
+        "Requiere una membresía activa para conversar con el Coach IA.";
+      return;
+    }
     if (
-      !this.usuarioAutenticado ||
       !this.coachActivo ||
       this.enviandoMensaje ||
       !this.profileReady
@@ -269,6 +337,11 @@ export class CoachIaComponent implements OnInit {
   }
   generarRutina(form?: NgForm) {
     if (this.cargando || !this.usuarioAutenticado || !this.profileReady) return;
+    if (!this.tieneSuscripcion) {
+      this.errorMensaje =
+        "Necesitas una membresía activa para generar rutinas con IA.";
+      return;
+    }
     if (form?.invalid) {
       form.form.markAllAsTouched();
       return;

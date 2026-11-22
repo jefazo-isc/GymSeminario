@@ -20,7 +20,7 @@ export function isMobileVersion(): boolean {
       }
       const ua =
         (typeof navigator !== "undefined" ? navigator.userAgent : "") || "";
-      if (/android|iphone|ipad|ipod|mobile/i.test(ua)) {
+      if (/android|iphone|ipad|ipod|mobile|wv/i.test(ua)) {
         return true;
       }
     }

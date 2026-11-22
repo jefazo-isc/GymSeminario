@@ -122,7 +122,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-User-Email']
 }));
 app.use(express.json());
 
@@ -168,8 +168,71 @@ app.get('/api/coaches', (req, res) => {
   res.json(lista);
 });
 
+// Guardia de suscripción activa para proteger consumo de tokens IA (Gemini / Mercury)
+function verificarMembresiaBackend(req, res, next) {
+  let email = (
+    req.headers['x-user-email'] ||
+    req.body?.userEmail ||
+    req.body?.email ||
+    req.body?.perfilUsuario?.email ||
+    ''
+  ).toString().toLowerCase().trim();
+  let jwtRole = '';
+
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    try {
+      const parts = authHeader.split(' ')[1].split('.');
+      if (parts.length === 3) {
+        const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
+        if (!email && payload?.email) email = String(payload.email).toLowerCase().trim();
+        if (payload?.role) jwtRole = String(payload.role).toLowerCase().trim();
+      }
+    } catch {
+      /* token no decodificable */
+    }
+  }
+
+  if (
+    email === 'guevara.cardona.yahir@gmail.com' ||
+    email === 'admin@gymseminario.com' ||
+    jwtRole === 'admin' ||
+    jwtRole === 'subscriber' ||
+    jwtRole === 'receptionist'
+  ) {
+    return next();
+  }
+
+  if (!email) {
+    return res.status(403).json({
+      exito: false,
+      error: 'Suscripción requerida: Inicia sesión y adquiere una membresía activa para usar el Coach Virtual IA.'
+    });
+  }
+
+  try {
+    const hoy = new Date().toISOString().split('T')[0];
+    const mem = db.prepare(`
+      SELECT * FROM memberships
+      WHERE lower(user_email) = ? AND estado = 'Activa' AND fecha_fin >= ?
+      ORDER BY datetime(updated_at) DESC LIMIT 1
+    `).get(email, hoy);
+
+    if (mem) {
+      return next();
+    }
+  } catch (e) {
+    console.warn('Error verificando membresía en backend:', e);
+  }
+
+  return res.status(403).json({
+    exito: false,
+    error: 'Tu cuenta no cuenta con una membresía activa. Adquiere un plan para utilizar el Coach IA.'
+  });
+}
+
 // Endpoint de Chat con un Coach
-app.post('/api/coach/chat', async (req, res) => {
+app.post('/api/coach/chat', verificarMembresiaBackend, async (req, res) => {
   try {
     const { coachId, mensaje, historial, contextoRutina, perfilUsuario } = req.body;
     if (!mensaje || !mensaje.trim()) {
@@ -184,7 +247,7 @@ app.post('/api/coach/chat', async (req, res) => {
 });
 
 // Ruta para generar rutina
-app.post('/api/rutina', async (req, res) => {
+app.post('/api/rutina', verificarMembresiaBackend, async (req, res) => {
   try {
     const perfil = req.body;
     const resultado = await generarRutinaEntrenamiento(perfil);

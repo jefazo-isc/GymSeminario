@@ -31,6 +31,8 @@ export class CapacitorNativeService {
       return;
     }
 
+    void StatusBar.setOverlaysWebView({ overlay: false }).catch(() => undefined);
+
     effect(() => {
       const effectiveTheme = this.theme.effective();
       const isDark = effectiveTheme === "dark";

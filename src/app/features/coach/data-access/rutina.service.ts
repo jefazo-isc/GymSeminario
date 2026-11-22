@@ -22,11 +22,28 @@ export class RutinaService implements CoachRepository {
 
   constructor(private http: HttpClient) {}
 
+  private getEmailHeaders(): Record<string, string> {
+    try {
+      const raw = localStorage.getItem("gym_user");
+      if (raw) {
+        const u = JSON.parse(raw);
+        if (u?.email) {
+          return { "X-User-Email": String(u.email).toLowerCase().trim() };
+        }
+      }
+    } catch {
+      /* noop */
+    }
+    return {};
+  }
+
   /**
    * Envía el perfil del socio a la IA de Gemini para generar su rutina personalizada
    */
   generarRutina(perfil: PerfilSocio): Observable<RespuestaRutina> {
-    return this.http.post<unknown>(`${this.apiUrl}/rutina`, perfil).pipe(
+    const headers = this.getEmailHeaders();
+    const options = Object.keys(headers).length ? { headers } : undefined;
+    return this.http.post<unknown>(`${this.apiUrl}/rutina`, perfil, options).pipe(
       timeout(60000),
       map((v) => {
         if (!isRecord(v) || typeof v["exito"] !== "boolean")
@@ -62,14 +79,20 @@ export class RutinaService implements CoachRepository {
     contextoRutina?: RutinaData | null,
     perfilUsuario?: PerfilSocio,
   ): Observable<RespuestaChat> {
+    const headers = this.getEmailHeaders();
+    const options = Object.keys(headers).length ? { headers } : undefined;
     return this.http
-      .post<unknown>(`${this.apiUrl}/coach/chat`, {
-        coachId,
-        mensaje,
-        historial,
-        contextoRutina,
-        perfilUsuario,
-      })
+      .post<unknown>(
+        `${this.apiUrl}/coach/chat`,
+        {
+          coachId,
+          mensaje,
+          historial,
+          contextoRutina,
+          perfilUsuario,
+        },
+        options,
+      )
       .pipe(
         timeout(45000),
         map((v) => {

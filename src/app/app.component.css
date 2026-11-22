@@ -38,3 +38,6 @@
     padding-top: var(--space-4);
   }
 }
+:host.is-mobile-app .page-content {
+  padding-bottom: calc(var(--bottom-nav-height, 56px) + var(--sab, 0px) + 24px);
+}

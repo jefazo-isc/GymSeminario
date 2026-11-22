@@ -5,7 +5,7 @@
     <app-route-heading /><app-storage-notice /><router-outlet />
   </div>
 </main>
-@if (!router.url.startsWith("/footer")) {
+@if (!isNative && !router.url.startsWith("/footer")) {
   <app-footer />
 }
 <app-bottom-nav />

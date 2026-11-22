@@ -37,6 +37,9 @@ import { SearchPanelComponent } from "../../../../shared/ui/search-panel/search-
     BrandComponent,
     ButtonDirective,
   ],
+  host: {
+    "[class.is-mobile-header]": "isMobile",
+  },
   templateUrl: "./navbar.component.html",
   styleUrl: "./navbar.component.css",
 })

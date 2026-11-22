@@ -7,6 +7,9 @@ import {
   CoachIaComponent,
   validRoutine,
 } from "../../features/coach/pages/coach-ia/coach-ia.component";
+import { Membresia } from "../../features/memberships/models/membresia.model";
+import { MEMBERSHIPS } from "../../features/memberships/data-access/membership.repository";
+import { SESSION } from "../../features/auth/data-access/session.repository";
 import { PerfilSocioService } from "../../features/profile/data-access/perfil-socio.service";
 
 describe("Coach responses", () => {
@@ -163,5 +166,138 @@ describe("Coach responses", () => {
     expect(details.every((detail) => detail.open)).toBeTrue();
     window.dispatchEvent(new Event("afterprint"));
     expect(details[1].open).toBeFalse();
+  });
+});
+
+describe("Coach subscription gate", () => {
+  const inactiveMembership: Membresia = {
+    id: "MEM-INACTIVA",
+    nombrePlan: "Básico",
+    precio: 0,
+    periodo: "Mensual",
+    fechaInicio: "2026-01-01",
+    fechaFin: "2026-01-01",
+    estado: "Vencida",
+    diasRestantes: 0,
+    beneficios: [],
+  };
+
+  afterEach(() => {
+    localStorage.removeItem("gym_user");
+  });
+
+  function setupGate(userJson: object | null, userName: string | null) {
+    if (userJson) {
+      localStorage.setItem("gym_user", JSON.stringify(userJson));
+    } else {
+      localStorage.removeItem("gym_user");
+    }
+
+    const serviceSpy = {
+      obtenerCoaches: jasmine.createSpy().and.returnValue(of([])),
+      generarRutina: jasmine.createSpy(),
+      enviarMensajeChat: jasmine.createSpy(),
+    };
+
+    TestBed.configureTestingModule({
+      imports: [CoachIaComponent],
+      providers: [
+        provideRouter([]),
+        { provide: RutinaService, useValue: serviceSpy },
+        {
+          provide: SESSION,
+          useValue: {
+            getCurrentUser: () => Promise.resolve(null),
+            userName$: of(userName),
+            userRole$: of((userJson as { role?: string } | null)?.role || null),
+          },
+        },
+        {
+          provide: AuthService,
+          useValue: {
+            getCurrentUser: () => Promise.resolve(null),
+            userName$: of(userName),
+          },
+        },
+        {
+          provide: MEMBERSHIPS,
+          useValue: {
+            membresiaActual$: of(inactiveMembership),
+          },
+        },
+        {
+          provide: PerfilSocioService,
+          useValue: {
+            getPerfilActual: () => ({
+              nombre: "Socio",
+              edad: 25,
+              peso: 70,
+              altura: 170,
+              genero: "Otro",
+              objetivo: "Fuerza",
+              diasDisponibles: 3,
+              nivel: "Principiante",
+              restriccionesMedicas: "Ninguna",
+            }),
+            perfil$: of({
+              nombre: "Socio",
+              edad: 25,
+              peso: 70,
+              altura: 170,
+              genero: "Otro",
+              objetivo: "Fuerza",
+              diasDisponibles: 3,
+              nivel: "Principiante",
+              restriccionesMedicas: "Ninguna",
+            }),
+            actualizarNombre: () => {},
+          },
+        },
+      ],
+    });
+
+    const fixture = TestBed.createComponent(CoachIaComponent);
+    fixture.detectChanges();
+    return { fixture, serviceSpy };
+  }
+
+  it("blocks logged-in user without subscription from configuring a routine or spending AI tokens", () => {
+    const { fixture, serviceSpy } = setupGate(
+      { nombre: "Usuario Gratis", email: "free@example.com", role: "user" },
+      "Usuario Gratis",
+    );
+    const comp = fixture.componentInstance;
+    expect(comp.usuarioAutenticado).toBeTrue();
+    expect(comp.tieneSuscripcion).toBeFalse();
+    expect(fixture.nativeElement.querySelector(".routine-form")).toBeNull();
+    expect(fixture.nativeElement.querySelector(".coach-locked")).not.toBeNull();
+
+    comp.generarRutina();
+    comp.mensajeInput = "Quiero una rutina";
+    comp.enviarMensaje();
+    expect(serviceSpy.generarRutina).not.toHaveBeenCalled();
+    expect(serviceSpy.enviarMensajeChat).not.toHaveBeenCalled();
+  });
+
+  it("blocks unauthenticated visitors completely", () => {
+    const { fixture, serviceSpy } = setupGate(null, null);
+    const comp = fixture.componentInstance;
+    expect(comp.usuarioAutenticado).toBeFalse();
+    expect(comp.tieneSuscripcion).toBeFalse();
+    expect(fixture.nativeElement.querySelector(".routine-form")).toBeNull();
+
+    comp.generarRutina();
+    expect(serviceSpy.generarRutina).not.toHaveBeenCalled();
+  });
+
+  it("allows subscriber role to access the routine generator", () => {
+    const { fixture } = setupGate(
+      { nombre: "Socio Pago", email: "socio@example.com", role: "subscriber" },
+      "Socio Pago",
+    );
+    const comp = fixture.componentInstance;
+    expect(comp.usuarioAutenticado).toBeTrue();
+    expect(comp.tieneSuscripcion).toBeTrue();
+    expect(fixture.nativeElement.querySelector(".routine-form")).not.toBeNull();
   });
 });
