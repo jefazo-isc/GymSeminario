@@ -58,6 +58,12 @@
   --radius-md: 12px;
   --radius-lg: 20px;
   --radius-pill: 999px;
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --touch-target-min: 48px;
+  --bottom-nav-height: 56px;
   --shadow-sm: 0 2px 8px rgb(21 33 43 / 4%);
   --shadow-md: 0 12px 36px rgb(21 33 43 / 8%);
   --shadow-overlay: 0 24px 80px rgb(0 0 0 / 18%);

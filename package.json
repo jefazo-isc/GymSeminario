@@ -13,9 +13,9 @@
     "test:frontend": "ng test --configuration frontend --watch=false --browsers=ChromeHeadless",
     "check:architecture": "node scripts/check-architecture.cjs",
     "typecheck": "tsc --noEmit --project tsconfig.app.json && tsc --noEmit --project tsconfig.spec.json",
-    "build:mobile": "ng build --configuration production --base-href /",
+    "build:mobile": "ng build --configuration production --base-href / && rm -rf dist/libreria1/browser/downloads",
     "cap:sync": "npm run build:mobile && npx cap sync android",
-    "cap:copy": "npx cap copy android",
+    "cap:copy": "rm -rf dist/libreria1/browser/downloads && npx cap copy android",
     "cap:open:android": "npx cap open android",
     "android:apk": "npm run cap:sync && cd android && ./gradlew assembleDebug"
   },

@@ -6,6 +6,7 @@ import {
   DestroyRef,
   HostListener,
   TemplateRef,
+  ViewChild,
   inject,
   signal,
 } from "@angular/core";
@@ -14,6 +15,8 @@ import { MatMenuModule } from "@angular/material/menu";
 import { NavigationEnd, Router, RouterModule } from "@angular/router";
 import { filter } from "rxjs";
 import Swal from "sweetalert2";
+import { CapacitorNativeService } from "../../../../core/mobile/capacitor-native.service";
+import { isMobileVersion } from "../../../../core/mobile/is-mobile";
 import { ThemeService } from "../../../../core/theme/theme.service";
 import { SESSION } from "../../../../features/auth/data-access/session.repository";
 import { AppearancePanelComponent } from "../../../../shared/ui/appearance-panel/appearance-panel.component";
@@ -21,8 +24,6 @@ import { BrandComponent } from "../../../../shared/ui/brand/brand.component";
 import { ButtonDirective } from "../../../../shared/ui/button.directive";
 import { IconComponent } from "../../../../shared/ui/icon/icon.component";
 import { SearchPanelComponent } from "../../../../shared/ui/search-panel/search-panel.component";
-
-import { isMobileVersion } from "../../../../core/mobile/is-mobile";
 
 @Component({
   selector: "app-navbar",
@@ -48,6 +49,8 @@ export class NavbarComponent {
   private readonly overlay = inject(Overlay);
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly native = inject(CapacitorNativeService, { optional: true });
+  @ViewChild("mobileNavigation") mobileNavigationTemplate?: TemplateRef<unknown>;
   private currentDialog?: DialogRef;
   readonly activePath = signal(this.router.url.split("?")[0]);
   readonly mobileOpen = signal(false);
@@ -129,6 +132,25 @@ export class NavbarComponent {
         }
       });
     this.destroyRef.onDestroy(() => this.currentDialog?.close());
+
+    if (this.native) {
+      this.native.openDrawer$
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(() => {
+          if (this.mobileNavigationTemplate && !this.mobileOpen()) {
+            this.openMobile(this.mobileNavigationTemplate);
+          }
+        });
+
+      const unregister = this.native.registerModalCloseHandler(() => {
+        if (this.mobileOpen()) {
+          this.closeMobile();
+          return true;
+        }
+        return false;
+      });
+      this.destroyRef.onDestroy(() => unregister());
+    }
   }
 
   get initials(): string {

@@ -4,6 +4,7 @@ import { CapacitorNativeService } from "./core/mobile/capacitor-native.service";
 import { ThemeService } from "./core/theme/theme.service";
 import { FooterComponent } from "./layouts/public/ui/footer/footer.component";
 import { NavbarComponent } from "./layouts/public/ui/navbar/navbar.component";
+import { BottomNavComponent } from "./layouts/public/ui/bottom-nav/bottom-nav.component";
 import { RouteHeadingComponent } from "./shared/ui/route-heading/route-heading.component";
 import { StorageNoticeComponent } from "./shared/ui/storage-notice/storage-notice.component";
 
@@ -14,6 +15,7 @@ import { StorageNoticeComponent } from "./shared/ui/storage-notice/storage-notic
     RouterOutlet,
     StorageNoticeComponent,
     NavbarComponent,
+    BottomNavComponent,
     FooterComponent,
     RouteHeadingComponent,
   ],

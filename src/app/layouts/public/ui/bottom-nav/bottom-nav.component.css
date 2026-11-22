@@ -1,0 +1,94 @@
+:host {
+  display: block;
+}
+
+.bottom-nav-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 900;
+  background: var(--color-surface);
+  background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--color-border);
+  padding-bottom: max(var(--sab, 0px), 4px);
+  box-shadow: 0 -4px 20px rgb(0 0 0 / 6%);
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+.bottom-nav-bar {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-around;
+  max-width: 600px;
+  margin: 0 auto;
+  height: var(--bottom-nav-height, 56px);
+}
+
+.bottom-nav-item {
+  flex: 1;
+  min-width: 48px;
+  min-height: 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 6px 4px;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: color var(--motion-fast) ease, transform var(--motion-fast) ease;
+}
+
+.bottom-nav-item:active {
+  transform: scale(0.94);
+}
+
+.bottom-nav-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 24px;
+  border-radius: var(--radius-pill);
+  transition: background-color var(--motion-fast) ease, color var(--motion-fast) ease;
+}
+
+.bottom-nav-icon-wrapper app-icon {
+  font-size: 1.15rem;
+}
+
+.bottom-nav-label {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+/* Active State */
+.bottom-nav-item--active {
+  color: var(--color-accent);
+}
+
+.bottom-nav-item--active .bottom-nav-icon-wrapper {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+.bottom-nav-item--active .bottom-nav-label {
+  font-weight: 700;
+}
+
+/* Button Reset */
+.bottom-nav-button {
+  font: inherit;
+}

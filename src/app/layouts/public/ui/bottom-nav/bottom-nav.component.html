@@ -1,0 +1,34 @@
+@if (isMobile) {
+  <nav class="bottom-nav-container" aria-label="Navegación principal móvil">
+    <div class="bottom-nav-bar">
+      @for (item of items; track item.id) {
+        @if (item.path) {
+          <a
+            [routerLink]="item.path"
+            class="bottom-nav-item"
+            [class.bottom-nav-item--active]="isActive(item.path)"
+            [attr.aria-current]="isActive(item.path) ? 'page' : null"
+            (click)="onItemClick(item)"
+          >
+            <span class="bottom-nav-icon-wrapper">
+              <app-icon [name]="item.icon" />
+            </span>
+            <span class="bottom-nav-label">{{ item.label }}</span>
+          </a>
+        } @else {
+          <button
+            type="button"
+            class="bottom-nav-item bottom-nav-button"
+            (click)="onItemClick(item)"
+            aria-label="Abrir menú secundario"
+          >
+            <span class="bottom-nav-icon-wrapper">
+              <app-icon [name]="item.icon" />
+            </span>
+            <span class="bottom-nav-label">{{ item.label }}</span>
+          </button>
+        }
+      }
+    </div>
+  </nav>
+}

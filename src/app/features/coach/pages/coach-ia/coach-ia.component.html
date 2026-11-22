@@ -221,7 +221,12 @@
           <span class="eyebrow">Una conversación a tu manera</span>
           <h2>Elige un coach.</h2>
           @if (coachesLoading) {
-            <p class="help" role="status">Consultando coaches…</p>
+            <div class="coach-skeletons" aria-busy="true" aria-label="Consultando coaches">
+              <div class="skeleton-box skeleton-coach"></div>
+              <div class="skeleton-box skeleton-coach"></div>
+              <div class="skeleton-box skeleton-coach"></div>
+              <div class="skeleton-box skeleton-coach"></div>
+            </div>
           }
           @if (coachesError) {
             <p class="field-error" role="alert">{{ coachesError }}</p>

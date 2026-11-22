@@ -12,9 +12,14 @@ import { IconComponent } from "../icon/icon.component";
       <p class="help" role="status">{{ initialLabel() }}</p>
     }
     @case ("loading") {
-      <div class="surface" role="status" aria-busy="true">
+      <div class="surface request-loading-container" role="status" aria-busy="true">
         <p>{{ loadingLabel() }}</p>
         <div class="loading-line" aria-hidden="true"></div>
+        <div class="skeleton-grid" aria-hidden="true">
+          <div class="skeleton-box skeleton-item"></div>
+          <div class="skeleton-box skeleton-item"></div>
+          <div class="skeleton-box skeleton-item"></div>
+        </div>
       </div>
     }
     @case ("empty") {
@@ -42,7 +47,9 @@ import { IconComponent } from "../icon/icon.component";
       </div>
     }
   }`,
-  styles: [":host{display:block}:host:empty{display:none}"],
+  styles: [
+    ":host{display:block}:host:empty{display:none}.skeleton-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:16px}.skeleton-item{height:100px;border-radius:var(--radius-sm)}",
+  ],
 })
 export class RequestStateComponent {
   readonly state = input.required<RequestState<unknown>>();

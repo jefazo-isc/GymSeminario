@@ -19,4 +19,45 @@ describe("CapacitorNativeService", () => {
       theme.setPreference("light");
     }).not.toThrow();
   });
+
+  it("handles modal close registration and unregistration", () => {
+    TestBed.configureTestingModule({
+      providers: [provideRouter([])],
+    });
+    const service = TestBed.inject(CapacitorNativeService);
+    let closed = false;
+    const unregister = service.registerModalCloseHandler(() => {
+      closed = true;
+      return true;
+    });
+
+    expect(typeof unregister).toBe("function");
+    unregister();
+  });
+
+  it("emits open drawer requests to subscribers", (done) => {
+    TestBed.configureTestingModule({
+      providers: [provideRouter([])],
+    });
+    const service = TestBed.inject(CapacitorNativeService);
+
+    service.openDrawer$.subscribe(() => {
+      expect(true).toBeTrue();
+      done();
+    });
+
+    service.requestOpenDrawer();
+  });
+
+  it("triggers haptic feedback safely without throwing", () => {
+    TestBed.configureTestingModule({
+      providers: [provideRouter([])],
+    });
+    const service = TestBed.inject(CapacitorNativeService);
+
+    expect(() => {
+      service.hapticFeedback("light");
+      service.hapticFeedback("success");
+    }).not.toThrow();
+  });
 });
