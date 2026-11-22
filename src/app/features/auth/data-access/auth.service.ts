@@ -116,6 +116,11 @@ export class AuthService implements SessionRepository {
   private clearSession() {
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
+    try {
+      localStorage.removeItem("espacio_gym_membresia");
+    } catch {
+      /* noop */
+    }
     this.userNameSubject.next(null);
     this.userRoleSubject.next(null);
     this.userUidSubject.next(null);

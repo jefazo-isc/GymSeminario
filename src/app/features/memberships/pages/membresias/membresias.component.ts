@@ -48,6 +48,23 @@ export class MembresiasComponent {
   descuentoAdmin = 0;
   readonly periods: BillingPeriod[] = ["Mensual", "Trimestral", "Anual"];
 
+  get isLoggedIn(): boolean {
+    try {
+      const raw = localStorage.getItem("gym_user");
+      return !!raw;
+    } catch {
+      return false;
+    }
+  }
+
+  get tieneMembresiaActiva(): Membresia | null {
+    if (!this.isLoggedIn || !this.membresiaActual) return null;
+    if (this.membresiaActual.id === "MEM-INACTIVA" || this.membresiaActual.estado === "Vencida") {
+      return null;
+    }
+    return this.membresiaActual;
+  }
+
   get isAdmin(): boolean {
     try {
       const raw = localStorage.getItem("gym_user");

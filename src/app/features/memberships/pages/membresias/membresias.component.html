@@ -15,7 +15,7 @@
     emptyHelp="Compara las opciones del catálogo."
     (retry)="loadMembership()"
   />
-  @if (membresiaActual; as mem) {
+  @if (tieneMembresiaActiva; as mem) {
     <article class="surface membership-current">
       <div class="membership-title">
         <span class="eyebrow">Tu membresía activa</span>
@@ -81,6 +81,21 @@
         </div>
       }
     </article>
+  } @else if (!isLoggedIn) {
+    <div class="notice notice--guest-banner" style="margin: 16px 0 24px; padding: 16px 20px; background: rgba(55, 93, 103, 0.08); border: 1px solid rgba(55, 93, 103, 0.25); border-radius: 12px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+      <div>
+        <h3 style="margin: 0 0 4px; font-size: 1rem; font-weight: 600; color: var(--color-on-surface, #294b54);">¿Aún no tienes cuenta o no has iniciado sesión?</h3>
+        <p style="margin: 0; font-size: 0.875rem; color: #557363;">Compara nuestros planes abajo. Al iniciar sesión o registrarte podrás activar tu membresía y desbloquear el Coach IA.</p>
+      </div>
+      <a appButton="primary" routerLink="/auth/sign-in">Iniciar sesión</a>
+    </div>
+  } @else {
+    <div class="notice notice--inactive-banner" style="margin: 16px 0 24px; padding: 16px 20px; background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 12px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+      <div>
+        <h3 style="margin: 0 0 4px; font-size: 1rem; font-weight: 600; color: #b45309;">⚡ Aún no cuentas con una membresía activa</h3>
+        <p style="margin: 0; font-size: 0.875rem; color: #78350f;">Selecciona un plan del catálogo a continuación para activar tu acceso y elevar tu cuenta a Socio Activo.</p>
+      </div>
+    </div>
   }
   <app-request-state
     [state]="plansState"

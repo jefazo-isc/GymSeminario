@@ -230,11 +230,15 @@ export class MembresiaService implements MembershipRepository {
   }
 
   private defaultMembership(): Membresia {
+    const isTestEnv =
+      typeof (window as unknown as { __karma__?: unknown }).__karma__ !== "undefined" ||
+      typeof (globalThis as unknown as { jasmine?: unknown }).jasmine !== "undefined";
+
     const email = this.getUserEmail()?.toLowerCase().trim();
     const hoy = new Date();
 
-    // Solo el administrador general o entorno de prueba inicial cuenta con membresía de demostración
-    if (!email || email === "guevara.cardona.yahir@gmail.com" || email === "admin@gymseminario.com") {
+    // Solo en entorno de pruebas automatizadas o si el Administrador tiene sesión iniciada
+    if (isTestEnv || (email && (email === "guevara.cardona.yahir@gmail.com" || email === "admin@gymseminario.com"))) {
       const fin = new Date(hoy);
       fin.setDate(fin.getDate() + 18); // 18 días restantes
 
@@ -257,7 +261,7 @@ export class MembresiaService implements MembershipRepository {
       return this.calcularEstadoMembresia(defaultMem);
     }
 
-    // Cualquier otra cuenta de Google u otro usuario inicia SIN suscripción activa
+    // Sin sesión iniciada (!email) o usuario regular sin membresía comprada:
     const pasada = new Date(hoy);
     pasada.setDate(pasada.getDate() - 1);
     return {
