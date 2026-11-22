@@ -6,6 +6,7 @@ export interface ProfileRepository {
   perfil$: Observable<PerfilSocio>;
   guardarPerfil(perfil: PerfilSocio): void | Promise<void>;
   actualizarNombre(nombre: string): void | Promise<void>;
+  getSessionUserInfo?(): { email: string | null; nombre: string | null } | null;
 }
 export const PROFILES = new InjectionToken<ProfileRepository>(
   "ProfileRepository",

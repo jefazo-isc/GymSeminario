@@ -9,8 +9,9 @@ export class CaptchaController {
   readonly ready = signal(true);
   readonly error = signal("");
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  constructor(..._args: unknown[]) {}
+  constructor(..._args: unknown[]) {
+    void _args;
+  }
 
   get instance() { return undefined; }
   init(): void { this.resolved.set(true); this.ready.set(true); }

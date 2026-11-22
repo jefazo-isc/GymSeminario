@@ -1,4 +1,3 @@
-import { CommonModule } from "@angular/common";
 import { Component } from "@angular/core";
 
 export interface Integrante {
@@ -7,7 +6,6 @@ export interface Integrante {
 }
 
 @Component({
-  imports: [CommonModule],
   selector: "app-responsables",
   templateUrl: "./responsables.component.html",
   styleUrls: ["./responsables.component.css"],

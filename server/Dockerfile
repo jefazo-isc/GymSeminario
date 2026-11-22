@@ -1,11 +1,10 @@
-FROM node:22-alpine
+FROM node:22-slim
 WORKDIR /app
 
-# Instalar dependencias del sistema necesarias para compilar módulos nativos como better-sqlite3 en Alpine
-RUN apk add --no-cache python3 make g++ gcc
+ENV NODE_ENV=production
 
-COPY package*.json ./
-RUN npm install --omit=dev
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
 
 COPY . .
 

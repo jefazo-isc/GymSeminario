@@ -5,7 +5,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from "@angular/forms";
-import { Router, RouterLink } from "@angular/router";
+import { RouterLink } from "@angular/router";
 import { authErrorMessage } from "../../../../core/auth/auth-feedback";
 import { PasswordToggleDirective } from "../../../../shared/directives/password-toggle.directive";
 import { ButtonDirective } from "../../../../shared/ui/button.directive";
@@ -25,7 +25,6 @@ import { SESSION } from "../../data-access/session.repository";
 export class ChangeComponent {
   private fb = inject(FormBuilder);
   private service = inject(SESSION);
-  private router = inject(Router);
   busy = false;
   message = "";
   success = false;

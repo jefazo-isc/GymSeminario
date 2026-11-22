@@ -3,7 +3,6 @@ import { Component, inject, OnInit, signal } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import {
   FormBuilder,
-  FormsModule,
   ReactiveFormsModule,
   Validators,
 } from "@angular/forms";
@@ -28,7 +27,6 @@ import { QrViewComponent } from "../../ui/qr-view/qr-view.component";
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
     ReactiveFormsModule,
     RouterLink,
     QrViewComponent,

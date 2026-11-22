@@ -1,6 +1,5 @@
-import { CommonModule } from "@angular/common";
-import { Component, inject, NgZone, OnDestroy, OnInit, AfterViewInit, ElementRef, ViewChild, PLATFORM_ID } from "@angular/core";
 import { isPlatformBrowser } from "@angular/common";
+import { Component, inject, NgZone, OnDestroy, OnInit, AfterViewInit, ElementRef, ViewChild, PLATFORM_ID } from "@angular/core";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import { Router, RouterLink } from "@angular/router";
 import { Capacitor } from "@capacitor/core";
@@ -25,7 +24,6 @@ interface GoogleIdentityServices {
   selector: "app-sign-up",
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     RouterLink,
     PasswordToggleDirective,

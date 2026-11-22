@@ -1,7 +1,7 @@
 import { CommonModule } from "@angular/common";
 import { Component, inject, OnInit, signal } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { FormsModule } from "@angular/forms";
 import { RouterLink } from "@angular/router";
 import {
   GymSessionUser,
@@ -24,7 +24,6 @@ import { QrViewComponent } from "../../ui/qr-view/qr-view.component";
   imports: [
     CommonModule,
     FormsModule,
-    ReactiveFormsModule,
     RouterLink,
     QrViewComponent,
     ButtonDirective,

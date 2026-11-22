@@ -62,69 +62,61 @@ jobs:
           path: dist/libreria1/browser
           retention-days: 1
 
-      - name: 📦 Pages — Preparar artefacto para GitHub Pages
-        if: github.ref == 'refs/heads/main'
-        uses: actions/upload-pages-artifact@v5
-        with:
-          path: dist/libreria1/browser
-
       # ─────────────────────────────────────────────────────────────────────
-      # CRITERIO 5 (15%): Análisis estático de código — ESLint / Angular Lint
+      # CRITERIO 5 (15%): Análisis estático de código — ESLint v9 Flat Config
       # ─────────────────────────────────────────────────────────────────────
-      - name: 🔍 Linting — Instalar ESLint y plugin Angular
-        run: |
-          npm install --save-dev \
-            @angular-eslint/schematics \
-            @angular-eslint/eslint-plugin \
-            @angular-eslint/eslint-plugin-template \
-            @angular-eslint/template-parser \
-            @typescript-eslint/eslint-plugin \
-            @typescript-eslint/parser \
-            eslint@8.57.1 --legacy-peer-deps
+      - name: 🔍 Linting — Instalar ESLint v9 y angular-eslint
+        run: npm install --no-save eslint@^9.0.0 typescript-eslint@^8.0.0 angular-eslint@^19.0.0
 
-      - name: 🔍 Linting — Crear configuración ESLint para Angular
+      - name: 🔍 Linting — Crear configuración Flat Config (eslint.config.mjs)
         run: |
-          cat > .eslintrc.json << 'ESLINT'
-          {
-            "root": true,
-            "ignorePatterns": ["projects/**/*", "dist/**/*", "node_modules/**/*", "src/**/*.spec.ts"],
-            "overrides": [
-              {
-                "files": ["*.ts"],
-                "parser": "@typescript-eslint/parser",
-                "parserOptions": {
-                  "project": ["tsconfig.json"],
-                  "createDefaultProgram": true
-                },
-                "plugins": ["@typescript-eslint", "@angular-eslint"],
-                "rules": {
-                  "@typescript-eslint/no-explicit-any": "warn",
-                  "@typescript-eslint/no-unused-vars": "warn",
-                  "no-console": "off",
-                  "no-debugger": "error",
-                  "@angular-eslint/component-class-suffix": "error",
-                  "@angular-eslint/no-empty-lifecycle-method": "warn",
-                  "@angular-eslint/use-lifecycle-interface": "warn"
-                }
+          cat > eslint.config.mjs << 'ESLINT'
+          import tseslint from 'typescript-eslint';
+          import angular from 'angular-eslint';
+
+          export default [
+            {
+              ignores: ['projects/**/*', 'dist/**/*', 'node_modules/**/*', '.angular/**/*', 'src/**/*.spec.ts'],
+            },
+            {
+              files: ['src/**/*.ts'],
+              languageOptions: {
+                parser: tseslint.parser,
               },
-              {
-                "files": ["*.html"],
-                "parser": "@angular-eslint/template-parser",
-                "plugins": ["@angular-eslint/template"],
-                "rules": {
-                  "@angular-eslint/template/banana-in-box": "error",
-                  "@angular-eslint/template/no-negated-async": "warn"
-                }
-              }
-            ]
-          }
+              plugins: {
+                '@typescript-eslint': tseslint.plugin,
+                '@angular-eslint': angular.tsPlugin,
+              },
+              rules: {
+                '@typescript-eslint/no-explicit-any': 'error',
+                '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+                'no-console': 'off',
+                'no-debugger': 'error',
+                '@angular-eslint/component-class-suffix': 'error',
+                '@angular-eslint/no-empty-lifecycle-method': 'error',
+                '@angular-eslint/use-lifecycle-interface': 'error',
+              },
+            },
+            {
+              files: ['src/**/*.html'],
+              languageOptions: {
+                parser: angular.templateParser,
+              },
+              plugins: {
+                '@angular-eslint/template': angular.templatePlugin,
+              },
+              rules: {
+                '@angular-eslint/template/banana-in-box': 'error',
+                '@angular-eslint/template/no-negated-async': 'error',
+              },
+            },
+          ];
           ESLINT
 
-      - name: 🔍 Linting — Ejecutar análisis estático con ESLint
-        run: npx eslint "src/**/*.ts" --max-warnings=50 --format stylish
-        env:
-          ESLINT_USE_FLAT_CONFIG: "false"
-        continue-on-error: true
+      - name: 🔍 Linting — Ejecutar análisis estático con ESLint (cero advertencias)
+        run: |
+          npx eslint "src/**/*.ts" "src/**/*.html" --max-warnings=0 --format stylish
+          rm -f eslint.config.mjs
 
   # ══════════════════════════════════════════════════════════════════════════
   #  JOB 2 ── Pruebas Unitarias
@@ -323,30 +315,69 @@ jobs:
           retention-days: 14
 
   # ══════════════════════════════════════════════════════════════════════════
-  #  JOB 5 ── Empaquetado y Publicación Docker (GitHub Container Registry)
+  #  JOB 5A ── Empaquetado Docker Frontend (Prebuilt → GHCR, paralelo)
   # ══════════════════════════════════════════════════════════════════════════
-  docker-publish:
-    name: 🐳 Empaquetado Docker → GitHub Packages (GHCR)
+  docker-frontend:
+    name: 🐳 Docker Frontend → GHCR (Prebuilt)
     runs-on: ubuntu-24.04
     needs: [unit-tests, integration-tests, security-audit]
-    # Solo publicar en push a main (no en PRs)
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      # ─────────────────────────────────────────────────────────────────────
-      # CRITERIO 1 (5%): Checkout con historial para metadatos de imagen
-      # ─────────────────────────────────────────────────────────────────────
       - name: 📥 Checkout — Descargar código fuente
         uses: actions/checkout@v7
 
-      # ─────────────────────────────────────────────────────────────────────
-      # CRITERIO 7 (25%): Empaquetado — Build y push a GHCR
-      # ─────────────────────────────────────────────────────────────────────
-      - name: 🐳 Docker — Configurar QEMU (multi-arquitectura)
-        uses: docker/setup-qemu-action@v4
+      - name: 📥 Artefacto — Descargar build de producción
+        uses: actions/download-artifact@v8
+        with:
+          name: angular-dist
+          path: dist/libreria1/browser
+
+      - name: 🐳 Docker — Configurar Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: 🐳 Docker — Login en GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🐳 Docker — Extraer metadatos (tags y labels)
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=sha,prefix=sha-,format=short
+            type=semver,pattern={{version}}
+
+      - name: 🐳 Docker — Empaquetar y publicar imagen Angular (prebuilt)
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ./Dockerfile
+          target: prebuilt
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
+          platforms: linux/amd64
+
+  # ══════════════════════════════════════════════════════════════════════════
+  #  JOB 5B ── Empaquetado Docker Server (Node 22 Slim → GHCR, paralelo)
+  # ══════════════════════════════════════════════════════════════════════════
+  docker-server:
+    name: 🐳 Docker Server → GHCR (Slim)
+    runs-on: ubuntu-24.04
+    needs: [unit-tests, integration-tests, security-audit]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: 📥 Checkout — Descargar código fuente
+        uses: actions/checkout@v7
 
       - name: 🐳 Docker — Configurar Buildx
         uses: docker/setup-buildx-action@v4
@@ -369,21 +400,7 @@ jobs:
             type=semver,pattern={{version}}
 
       - name: 🐳 Docker — Preparar nombre de repositorio en minúsculas (lowercase)
-        id: repo_lower
-        run: |
-          echo "REPO_LOWER=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
-
-      - name: 🐳 Docker — Construir y publicar imagen Angular (Nginx)
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          platforms: linux/amd64
+        run: echo "REPO_LOWER=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
       - name: 🐳 Docker — Publicar imagen del servidor Express
         uses: docker/build-push-action@v7
@@ -395,12 +412,26 @@ jobs:
             ghcr.io/${{ env.REPO_LOWER }}-server:latest
             ghcr.io/${{ env.REPO_LOWER }}-server:sha-${{ github.sha }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=server
+          cache-to: type=gha,mode=max,scope=server
+          platforms: linux/amd64
 
-      # ─────────────────────────────────────────────────────────────────────
-      # DESPLIEGUE CONTINUO (CD): Publicar Frontend en GitHub Pages
-      # ─────────────────────────────────────────────────────────────────────
+  # ══════════════════════════════════════════════════════════════════════════
+  #  JOB 6 ── Despliegue Continuo → GitHub Pages (paralelo)
+  # ══════════════════════════════════════════════════════════════════════════
+  deploy-pages:
+    name: 🌐 Despliegue → GitHub Pages
+    runs-on: ubuntu-24.04
+    needs: [unit-tests, integration-tests, security-audit]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    concurrency:
+      group: "pages"
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
       - name: 📥 Artefacto — Descargar build de producción
         uses: actions/download-artifact@v8
         with:
@@ -408,22 +439,31 @@ jobs:
           path: dist/libreria1/browser
 
       - name: ⚙️ Pages — Configurar entorno GitHub Pages
-        if: github.ref == 'refs/heads/main'
         uses: actions/configure-pages@v6
 
+      - name: 📦 Pages — Empaquetar artefacto para GitHub Pages
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist/libreria1/browser
+
       - name: 🚀 Pages — Desplegar oficialmente a GitHub Pages
-        if: github.ref == 'refs/heads/main'
         id: deployment
-        continue-on-error: true
         uses: actions/deploy-pages@v5
 
       - name: 🌐 GitHub Pages (Legacy) — Sincronizar rama gh-pages
-        if: github.ref == 'refs/heads/main'
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist/libreria1/browser
-          cname: ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          WORK_DIR="$(mktemp -d)"
+          cp -a dist/libreria1/browser/. "${WORK_DIR}/"
+          touch "${WORK_DIR}/.nojekyll"
+          git -C "${WORK_DIR}" init -b gh-pages
+          git -C "${WORK_DIR}" config user.name "github-actions[bot]"
+          git -C "${WORK_DIR}" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C "${WORK_DIR}" add -A
+          git -C "${WORK_DIR}" commit -m "deploy: ${GITHUB_SHA}"
+          git -C "${WORK_DIR}" push --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
+          rm -rf "${WORK_DIR}"
 
       - name: ✅ Pipeline completado — Resumen
         run: |
@@ -431,10 +471,9 @@ jobs:
           echo "  ✅ espacioGYM CI/CD Pipeline — COMPLETADO"
           echo "=================================================="
           echo "  🔨 Build Angular:       OK"
-          echo "  🔍 Linting ESLint:      OK"
+          echo "  🔍 Linting ESLint v9:   OK (0 warnings)"
           echo "  🧪 Pruebas Unitarias:   OK"
           echo "  🔗 Pruebas Integración: OK"
           echo "  🛡️  Vulnerabilidades:    OK"
-          echo "  🐳 Imagen Docker:       ghcr.io/${{ github.repository }}"
-          echo "  📦 Tag:                 ${{ steps.meta.outputs.tags }}"
+          echo "  🌐 GitHub Pages:        ${{ steps.deployment.outputs.page_url }}"
           echo "=================================================="

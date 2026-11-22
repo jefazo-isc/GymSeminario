@@ -6,7 +6,7 @@ import {
   Validators,
 } from "@angular/forms";
 import { Router } from "@angular/router";
-import { CommonModule } from "@angular/common";
+import { IconComponent } from "../../../../shared/ui/icon/icon.component";
 import { SESSION } from "../../../auth/data-access/session.repository";
 
 @Component({
@@ -14,7 +14,7 @@ import { SESSION } from "../../../auth/data-access/session.repository";
   templateUrl: "./auth.component.html",
   styleUrls: ["./auth.component.css"],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule, IconComponent],
 })
 export class AuthComponent {
   private _fb = inject(FormBuilder);

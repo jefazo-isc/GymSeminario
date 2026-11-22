@@ -103,13 +103,12 @@ export class MicuentaComponent implements OnInit {
       });
   }
   ngOnInit() {
-    const raw = localStorage.getItem("gym_user");
-    if (raw) {
-      try {
-        const u = JSON.parse(raw);
-        this.email = u.email || null;
-        this.nombre = u.nombre || this.nombre;
-      } catch { /* noop */ }
+    const sessionUser =
+      this.profileService.getSessionUserInfo?.() ??
+      this.auth.getStoredUser?.();
+    if (sessionUser) {
+      this.email = sessionUser.email;
+      this.nombre = sessionUser.nombre || this.nombre;
     }
     this.authReady = true;
   }

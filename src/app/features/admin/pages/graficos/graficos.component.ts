@@ -25,6 +25,11 @@ import { Subscription, finalize, interval, timeout } from "rxjs";
 import { Router } from "@angular/router";
 import Swal from "sweetalert2";
 import { AccessibilityService } from "../../../../core/accessibility/accessibility.service";
+import {
+  isAdminUser,
+  isTestEnvironment,
+  readGymUser,
+} from "../../../../core/auth/route.guards";
 import { RequestState } from "../../../../core/data-access/request-state";
 import { ThemeService } from "../../../../core/theme/theme.service";
 import { ButtonDirective } from "../../../../shared/ui/button.directive";
@@ -115,7 +120,6 @@ export class GraficosComponent implements OnInit, OnDestroy {
 
   public loading = true;
   public error = false;
-  private initialLoaded = false;
   private refreshSubscription?: Subscription;
 
   private readonly theme = inject(ThemeService);
@@ -195,40 +199,17 @@ export class GraficosComponent implements OnInit, OnDestroy {
     return { status: "data", data: this.barChartData };
   }
   ngOnInit() {
-    const isTestEnv =
-      typeof window !== "undefined" &&
-      !!(window as unknown as { __karma__?: unknown; jasmine?: unknown })
-        .__karma__;
-
-    if (!isTestEnv) {
-      const raw = localStorage.getItem("gym_user");
-      let esAdmin = false;
-      if (raw) {
-        try {
-          const u = JSON.parse(raw);
-          const email = (u?.email || "").toLowerCase().trim();
-          const role = (u?.role || "").toLowerCase().trim();
-          esAdmin =
-            email === "guevara.cardona.yahir@gmail.com" ||
-            email === "admin@gymseminario.com" ||
-            role === "admin";
-        } catch {
-          /* noop */
-        }
-      }
-
-      if (!esAdmin) {
-        void Swal.fire({
-          icon: "error",
-          title: "Acceso denegado al Dashboard",
-          text: "Solo el administrador general (guevara.cardona.yahir@gmail.com) tiene acceso a las finanzas, dinero y métricas del gimnasio.",
-          confirmButtonText: "Regresar al inicio",
-          confirmButtonColor: "#375d67",
-        }).then(() => {
-          this.router?.navigate(["/home"]);
-        });
-        return;
-      }
+    if (!isTestEnvironment() && !isAdminUser(readGymUser())) {
+      void Swal.fire({
+        icon: "error",
+        title: "Acceso denegado al Dashboard",
+        text: "Solo el administrador general (guevara.cardona.yahir@gmail.com) tiene acceso a las finanzas, dinero y métricas del gimnasio.",
+        confirmButtonText: "Regresar al inicio",
+        confirmButtonColor: "#375d67",
+      }).then(() => {
+        this.router?.navigate(["/home"]);
+      });
+      return;
     }
 
     this.load();
@@ -290,7 +271,6 @@ export class GraficosComponent implements OnInit, OnDestroy {
           this.updateStats(stats);
           this.lastUpdate = new Date();
           this.hasData = true;
-          this.initialLoaded = true;
         },
         error: () => {
           this.error = true;

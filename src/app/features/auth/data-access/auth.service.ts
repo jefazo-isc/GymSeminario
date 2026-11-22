@@ -22,7 +22,7 @@ interface AuthResponse {
 }
 
 // Stub mínimo para compatibilidad con CaptchaController (ya no usa Firebase)
-const AUTH_STUB = {
+const AUTH_STUB: Record<string, unknown> = {
   app: null,
   config: {},
   currentUser: null,
@@ -38,7 +38,7 @@ const AUTH_STUB = {
   useDeviceLanguage: () => {},
   name: "[DEFAULT]",
   emulatorConfig: null,
-} as unknown;
+};
 
 @Injectable({ providedIn: "root" })
 export class AuthService implements SessionRepository {
@@ -46,8 +46,7 @@ export class AuthService implements SessionRepository {
   private apiUrl = inject(APP_ENDPOINTS).notifications; // usa base de render
 
   // Stub para compatibilidad con componentes que usan service.auth (CaptchaController)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  readonly auth = AUTH_STUB as any;
+  readonly auth: Record<string, unknown> = AUTH_STUB;
 
   private readonly TOKEN_KEY = "gym_jwt";
   private readonly USER_KEY = "gym_user";
@@ -128,6 +127,20 @@ export class AuthService implements SessionRepository {
 
   getToken(): string | null {
     return localStorage.getItem(this.TOKEN_KEY);
+  }
+
+  getStoredUser(): { email: string | null; nombre: string | null } | null {
+    const raw = localStorage.getItem(this.USER_KEY);
+    if (!raw) return null;
+    try {
+      const user = JSON.parse(raw) as Partial<JwtUser>;
+      return {
+        email: user.email || null,
+        nombre: user.nombre || null,
+      };
+    } catch {
+      return null;
+    }
   }
 
   upgradeToSubscriber(): void {

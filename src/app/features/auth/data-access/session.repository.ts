@@ -4,8 +4,8 @@ import { LoginData, UserRegistration } from "../models/user.model";
 import { AuthService } from "./auth.service";
 
 export interface SessionRepository {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  auth: any; // stub para compatibilidad con CaptchaController
+  auth: Record<string, unknown>; // stub para compatibilidad con CaptchaController
+  getStoredUser?(): { email: string | null; nombre: string | null } | null;
   userName$: Observable<string | null>;
   userRole$: Observable<string | null>;
   userUid$: Observable<string | null>;

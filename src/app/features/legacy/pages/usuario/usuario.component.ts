@@ -1,4 +1,3 @@
-import { CommonModule } from "@angular/common";
 import { Component, inject, Input } from "@angular/core";
 import {
   FormBuilder,
@@ -18,7 +17,6 @@ import { LegacySession } from "../../models/legacy-session.model";
   selector: "app-form",
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     FormsModule,
     RouterLink,

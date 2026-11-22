@@ -49,12 +49,7 @@ export class MembresiasComponent {
   readonly periods: BillingPeriod[] = ["Mensual", "Trimestral", "Anual"];
 
   get isLoggedIn(): boolean {
-    try {
-      const raw = localStorage.getItem("gym_user");
-      return !!raw;
-    } catch {
-      return false;
-    }
+    return this.service.getUserSessionStatus?.().isLoggedIn ?? false;
   }
 
   get tieneMembresiaActiva(): Membresia | null {
@@ -66,20 +61,7 @@ export class MembresiasComponent {
   }
 
   get isAdmin(): boolean {
-    try {
-      const raw = localStorage.getItem("gym_user");
-      if (!raw) return false;
-      const u = JSON.parse(raw);
-      const email = (u?.email || "").toLowerCase().trim();
-      const role = (u?.role || "").toLowerCase().trim();
-      return (
-        email === "guevara.cardona.yahir@gmail.com" ||
-        email === "admin@gymseminario.com" ||
-        role === "admin"
-      );
-    } catch {
-      return false;
-    }
+    return this.service.getUserSessionStatus?.().isAdmin ?? false;
   }
   constructor() {
     this.loadMembership();

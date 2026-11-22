@@ -148,15 +148,32 @@ export class MembresiaService implements MembershipRepository {
     this.sincronizarRenovacion(cancelada);
   }
 
-  private getUserEmail(): string | null {
+  private readGymUser(): { email?: string; role?: string } | null {
     try {
       const raw = localStorage.getItem("gym_user");
       if (!raw) return null;
-      const u = JSON.parse(raw);
-      return u?.email || null;
+      return JSON.parse(raw) as { email?: string; role?: string };
     } catch {
       return null;
     }
+  }
+
+  private getUserEmail(): string | null {
+    return this.readGymUser()?.email || null;
+  }
+
+  getUserSessionStatus(): { isLoggedIn: boolean; isAdmin: boolean } {
+    const user = this.readGymUser();
+    if (!user) return { isLoggedIn: false, isAdmin: false };
+    const email = (user.email || "").toLowerCase().trim();
+    const role = (user.role || "").toLowerCase().trim();
+    return {
+      isLoggedIn: true,
+      isAdmin:
+        email === "guevara.cardona.yahir@gmail.com" ||
+        email === "admin@gymseminario.com" ||
+        role === "admin",
+    };
   }
 
   private sincronizarConNube(mem: Membresia): void {

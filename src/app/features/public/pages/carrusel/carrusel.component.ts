@@ -1,4 +1,3 @@
-import { CommonModule } from "@angular/common";
 import { Component } from "@angular/core";
 
 @Component({
@@ -6,7 +5,6 @@ import { Component } from "@angular/core";
   templateUrl: "./carrusel.component.html",
   styleUrls: ["./carrusel.component.css"],
   standalone: true, // Marca el componente como standalone
-  imports: [CommonModule], // Importa los módulos que necesitas
 })
 export class CarruselComponent {
   currentIndex: number = 0;

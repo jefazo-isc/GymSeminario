@@ -11,6 +11,7 @@ export interface MembershipRepository {
   ): void | Promise<void>;
   renovarMembresia(): void | Promise<void>;
   cancelarMembresia?(): void | Promise<void>;
+  getUserSessionStatus?(): { isLoggedIn: boolean; isAdmin: boolean };
 }
 export const MEMBERSHIPS = new InjectionToken<MembershipRepository>(
   "MembershipRepository",

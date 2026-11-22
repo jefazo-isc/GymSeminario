@@ -16,6 +16,12 @@ import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormsModule, NgForm } from "@angular/forms";
 import { RouterLink } from "@angular/router";
 import { authErrorMessage } from "../../../../core/auth/auth-feedback";
+import {
+  hasRoleSubscriptionBypass,
+  isMembershipActive,
+  isTestEnvironment,
+  readGymUser,
+} from "../../../../core/auth/route.guards";
 import { ButtonDirective } from "../../../../shared/ui/button.directive";
 import { IconComponent } from "../../../../shared/ui/icon/icon.component";
 import { MarkdownPipe } from "../../../../shared/pipes/markdown.pipe";
@@ -54,9 +60,6 @@ export class CoachIaComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private host: ElementRef<HTMLElement> = inject(ElementRef);
   private injector = inject(Injector);
-  private readonly isTestEnv =
-    typeof (window as unknown as { __karma__?: unknown }).__karma__ !== "undefined" ||
-    typeof (globalThis as unknown as { jasmine?: unknown }).jasmine !== "undefined";
   pestanaActiva: "rutina" | "chat" = "rutina";
   usuarioAutenticado = false;
   tieneSuscripcion = false;
@@ -102,9 +105,7 @@ export class CoachIaComponent implements OnInit {
     this.memberships?.membresiaActual$
       ?.pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((mem) => {
-        this.membresiaActiva = Boolean(
-          mem && mem.id !== "MEM-INACTIVA" && mem.estado !== "Vencida",
-        );
+        this.membresiaActiva = isMembershipActive(mem);
         this.actualizarEstadoSuscripcion();
       });
   }
@@ -145,29 +146,16 @@ export class CoachIaComponent implements OnInit {
   private listeningToName = false;
   verificarAutenticacion() {
     this.cargandoAuth = false;
-    const raw = localStorage.getItem("gym_user");
-    if (raw) {
-      try {
-        const u = JSON.parse(raw);
-        this.usuarioAutenticado = true;
-        this.usuarioNombre = u.nombre || u.email || "Sesión activa";
-        const email = (u.email || "").toLowerCase().trim();
-        const role = (u.role || "guest").toLowerCase().trim();
-        this.rolConAcceso =
-          role === "admin" ||
-          role === "subscriber" ||
-          role === "receptionist" ||
-          email === "guevara.cardona.yahir@gmail.com" ||
-          email === "admin@gymseminario.com";
-        if (u.nombre) {
-          Promise.resolve(this.profiles.actualizarNombre(u.nombre)).catch(() => {
-            this.errorMensaje =
-              "Tu sesión está activa, pero no pudimos guardar el nombre en el perfil local.";
-          });
-        }
-      } catch {
-        this.usuarioAutenticado = false;
-        this.rolConAcceso = false;
+    const u = readGymUser();
+    if (u) {
+      this.usuarioAutenticado = true;
+      this.usuarioNombre = u.nombre || u.email || "Sesión activa";
+      this.rolConAcceso = hasRoleSubscriptionBypass(u);
+      if (u.nombre) {
+        Promise.resolve(this.profiles.actualizarNombre(u.nombre)).catch(() => {
+          this.errorMensaje =
+            "Tu sesión está activa, pero no pudimos guardar el nombre en el perfil local.";
+        });
       }
     } else {
       this.usuarioAutenticado = false;
@@ -181,12 +169,13 @@ export class CoachIaComponent implements OnInit {
     this.auth.userName$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((name) => {
+        const current = readGymUser();
         if (name) {
-          if (localStorage.getItem("gym_user") || this.isTestEnv) {
+          if (current || isTestEnvironment()) {
             this.usuarioAutenticado = true;
             this.usuarioNombre = name;
           }
-        } else if (!localStorage.getItem("gym_user")) {
+        } else if (!current) {
           this.usuarioAutenticado = false;
           this.usuarioNombre = null;
           this.rolConAcceso = false;
@@ -201,8 +190,14 @@ export class CoachIaComponent implements OnInit {
       ?.pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((role) => {
         if (!role) return;
-        const r = role.toLowerCase().trim();
-        if (r === "admin" || r === "subscriber" || r === "receptionist") {
+        if (
+          hasRoleSubscriptionBypass({
+            uid: null,
+            nombre: null,
+            email: null,
+            role,
+          })
+        ) {
           this.rolConAcceso = true;
         }
         this.actualizarEstadoSuscripcion();

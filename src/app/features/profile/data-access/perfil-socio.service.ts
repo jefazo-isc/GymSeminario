@@ -45,4 +45,18 @@ export class PerfilSocioService implements ProfileRepository {
       this.guardarPerfil(actual);
     }
   }
+
+  getSessionUserInfo(): { email: string | null; nombre: string | null } | null {
+    try {
+      const raw = localStorage.getItem("gym_user");
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as { email?: string; nombre?: string };
+      return {
+        email: parsed.email || null,
+        nombre: parsed.nombre || null,
+      };
+    } catch {
+      return null;
+    }
+  }
 }
