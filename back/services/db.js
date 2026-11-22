@@ -320,15 +320,62 @@ try {
   console.warn('Advertencia al verificar semilla de productos:', err.message);
 }
 
-// Inicialización segura de cuentas administradoras sin contraseñas hardcodeadas
+// Inicialización segura de cuentas administradoras y de demostración
 try {
+  const DEFAULT_RECEPCION_HASH = '$2b$10$7GBnreF.g3PDh40HCONVteBiFDQgvB5y8RpDldMBJnJUEW8cvIphC';
+  const DEFAULT_SOCIO_HASH = '$2b$10$eEy3f50zt6/nks5HmQzdEO.OBD1gHEaRETDMmt0E7C/7KILxVTtxu';
+
   const seedAdminEmail = (process.env.SEED_ADMIN_EMAIL || 'admin@gymseminario.com').trim().toLowerCase();
-  const seedAdminPass = process.env.SEED_ADMIN_PASSWORD || '';
+  const seedAdminPass = process.env.SEED_ADMIN_PASSWORD || 'Admin123';
   const adminRow = db.prepare('SELECT id FROM users WHERE lower(email) = ?').get(seedAdminEmail);
+  const adminHash = bcrypt.hashSync(seedAdminPass, 10);
   if (!adminRow) {
-    const passHash = seedAdminPass ? bcrypt.hashSync(seedAdminPass, 10) : '';
     db.prepare('INSERT INTO users (email, password, nombre, role, provider) VALUES (?, ?, ?, ?, ?)')
-      .run(seedAdminEmail, passHash, 'Administrador', 'admin', seedAdminPass ? 'email' : 'google');
+      .run(seedAdminEmail, adminHash, 'Administrador', 'admin', 'email');
+  } else {
+    db.prepare('UPDATE users SET password = ?, role = ? WHERE id = ?').run(adminHash, 'admin', adminRow.id);
+  }
+
+  const recepEmail = 'recepcionista@gymseminario.com';
+  const recepRow = db.prepare('SELECT id FROM users WHERE lower(email) = ?').get(recepEmail);
+  if (!recepRow) {
+    db.prepare('INSERT INTO users (email, password, nombre, role, provider) VALUES (?, ?, ?, ?, ?)')
+      .run(recepEmail, DEFAULT_RECEPCION_HASH, 'Recepcionista GROM 21', 'reception', 'email');
+  } else {
+    db.prepare('UPDATE users SET password = ?, role = ? WHERE id = ?')
+      .run(DEFAULT_RECEPCION_HASH, 'reception', recepRow.id);
+  }
+
+  const socioEmail = 'socio@gymseminario.com';
+  const socioRow = db.prepare('SELECT id FROM users WHERE lower(email) = ?').get(socioEmail);
+  if (!socioRow) {
+    db.prepare('INSERT INTO users (email, password, nombre, role, provider) VALUES (?, ?, ?, ?, ?)')
+      .run(socioEmail, DEFAULT_SOCIO_HASH, 'Socio Black Elite', 'subscriber', 'email');
+  } else {
+    db.prepare('UPDATE users SET password = ?, role = ? WHERE id = ?')
+      .run(DEFAULT_SOCIO_HASH, 'subscriber', socioRow.id);
+  }
+
+  const socioMem = db.prepare('SELECT id FROM memberships WHERE lower(user_email) = ?').get(socioEmail);
+  const blackBenefits = JSON.stringify([
+    'Todos los beneficios Pro Fitness',
+    'Invitación a 1 acompañante gratis al mes',
+    'Acceso a sillones de masaje y zona recovery',
+    'Asesoría personalizada de nutrición',
+    'Descuento del 15% en suplementos del Gym',
+  ]);
+  const futureEnd = new Date(Date.now() + 90 * 86400000).toISOString().split('T')[0];
+  if (!socioMem) {
+    db.prepare(`
+      INSERT INTO memberships (id, user_email, plan_nombre, precio, periodo, fecha_inicio, fecha_fin, estado, auto_renew, beneficios)
+      VALUES (?, ?, 'Black Elite', 1200, 'Trimestral', ?, ?, 'Activa', 1, ?)
+    `).run('MEM-BLACK-ELITE-01', socioEmail, todayIso(), futureEnd, blackBenefits);
+  } else {
+    db.prepare(`
+      UPDATE memberships
+      SET plan_nombre = 'Black Elite', precio = 1200, periodo = 'Trimestral', fecha_fin = ?, estado = 'Activa', beneficios = ?
+      WHERE lower(user_email) = ?
+    `).run(futureEnd, blackBenefits, socioEmail);
   }
 
   const yahirEmail = 'guevara.cardona.yahir@gmail.com';

@@ -78,7 +78,14 @@ export function createAuthRouter({ verifyGoogleToken } = {}) {
     if (!email || !password) {
       return res.status(400).json({ error: 'Faltan datos.' });
     }
-    const cleanEmail = String(email).trim().toLowerCase();
+    const rawEmail = String(email).trim().toLowerCase();
+    const aliasMap = {
+      recepcionista: 'recepcionista@gymseminario.com',
+      recepcion: 'recepcionista@gymseminario.com',
+      socio: 'socio@gymseminario.com',
+      admin: 'admin@gymseminario.com',
+    };
+    const cleanEmail = aliasMap[rawEmail] || rawEmail;
     const user = db.prepare('SELECT * FROM users WHERE lower(email) = ?').get(cleanEmail);
     if (!user || !user.password || !bcrypt.compareSync(String(password), user.password)) {
       return res.status(401).json({ error: 'Correo o contraseña incorrectos.' });

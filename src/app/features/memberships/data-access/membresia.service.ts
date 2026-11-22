@@ -419,6 +419,29 @@ export class MembresiaService implements MembershipRepository {
     const email = this.getUserEmail()?.toLowerCase().trim();
     const hoy = new Date();
 
+    if (email === "socio@gymseminario.com") {
+      const fin = new Date(hoy);
+      fin.setDate(fin.getDate() + 90);
+      const blackMem: Membresia = {
+        id: "MEM-BLACK-ELITE-01",
+        nombrePlan: "Black Elite",
+        precio: 1200,
+        periodo: "Trimestral",
+        fechaInicio: localDate(hoy),
+        fechaFin: localDate(fin),
+        estado: "Activa",
+        autoRenew: true,
+        beneficios: [
+          "Todos los beneficios Pro Fitness",
+          "Invitación a 1 acompañante gratis al mes",
+          "Acceso a sillones de masaje y zona recovery",
+          "Asesoría personalizada de nutrición",
+          "Descuento del 15% en suplementos del Gym",
+        ],
+      };
+      return this.calcularEstadoMembresia(blackMem);
+    }
+
     if (
       isTestEnv ||
       (email &&

@@ -89,8 +89,35 @@ export class AuthService implements SessionRepository {
     this.userRoleSubject.next(user.role);
     this.userUidSubject.next(String(user.uid));
 
-    // Si es un usuario que no es administrador, garantizar que no tenga suscripción activa previa
+    // Si es el socio demo Black Elite, garantizar que su membresía Black Elite quede activa en local
     const email = (user.email || "").toLowerCase().trim();
+    if (email === "socio@gymseminario.com") {
+      const hoy = new Date();
+      const fin = new Date(hoy);
+      fin.setDate(fin.getDate() + 90);
+      const blackMem = {
+        id: "MEM-BLACK-ELITE-01",
+        nombrePlan: "Black Elite",
+        precio: 1200,
+        periodo: "Trimestral",
+        fechaInicio: hoy.toISOString().split("T")[0],
+        fechaFin: fin.toISOString().split("T")[0],
+        estado: "Activa",
+        diasRestantes: 90,
+        autoRenew: true,
+        beneficios: [
+          "Todos los beneficios Pro Fitness",
+          "Invitación a 1 acompañante gratis al mes",
+          "Acceso a sillones de masaje y zona recovery",
+          "Asesoría personalizada de nutrición",
+          "Descuento del 15% en suplementos del Gym",
+        ],
+      };
+      localStorage.setItem("espacio_gym_membresia", JSON.stringify(blackMem));
+      return;
+    }
+
+    // Si es un usuario que no es administrador, garantizar que no tenga suscripción activa previa
     const esAdmin =
       email === "guevara.cardona.yahir@gmail.com" ||
       email === "admin@gymseminario.com" ||
@@ -161,9 +188,26 @@ export class AuthService implements SessionRepository {
   // ── Métodos públicos ────────────────────────────────────────────────────────
 
   async signIn(data: LoginData): Promise<unknown> {
+    const rawEmail = (data.email || "").trim().toLowerCase();
+    const aliasMap: Record<string, string> = {
+      recepcionista: "recepcionista@gymseminario.com",
+      recepcion: "recepcionista@gymseminario.com",
+      socio: "socio@gymseminario.com",
+      admin: "admin@gymseminario.com",
+    };
+    const normalizedEmail = aliasMap[rawEmail] || (data.email || "").trim();
     const resp = await firstValueFrom(
-      this.http.post<AuthResponse>(`${this.backendUrl}/api/auth/login`, data)
+      this.http.post<AuthResponse>(`${this.backendUrl}/api/auth/login`, {
+        ...data,
+        email: normalizedEmail,
+      }),
     );
+    const cleanRespEmail = (resp.user?.email || normalizedEmail).toLowerCase().trim();
+    if (cleanRespEmail === "recepcionista@gymseminario.com") {
+      resp.user.role = "reception";
+    } else if (cleanRespEmail === "socio@gymseminario.com" && resp.user.role === "user") {
+      resp.user.role = "subscriber";
+    }
     this.saveSession(resp.token, resp.user);
     return resp;
   }

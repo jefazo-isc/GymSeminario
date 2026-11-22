@@ -46,7 +46,24 @@ export default class SignInComponent implements OnInit, AfterViewInit, OnDestroy
   message = "";
 
   readonly form = this.fb.nonNullable.group({
-    email: ["", [Validators.required, Validators.email]],
+    email: [
+      "",
+      [
+        Validators.required,
+        (control) => {
+          const val = String(control.value || "").trim().toLowerCase();
+          if (
+            val === "recepcionista" ||
+            val === "recepcion" ||
+            val === "socio" ||
+            val === "admin"
+          ) {
+            return null;
+          }
+          return Validators.email(control);
+        },
+      ],
+    ],
     password: ["", Validators.required],
   });
 

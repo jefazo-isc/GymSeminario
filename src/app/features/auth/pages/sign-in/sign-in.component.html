@@ -54,19 +54,20 @@
       [attr.aria-busy]="!!busy"
     >
       <div class="field">
-        <label for="auth-email">Correo electrónico</label
+        <label for="auth-email">Correo o usuario</label
         ><input
           id="auth-email"
           name="email"
           formControlName="email"
-          type="email"
-          autocomplete="email"
+          type="text"
+          inputmode="email"
+          autocomplete="username"
           [attr.aria-invalid]="invalid('email')"
           aria-describedby="email-error"
-          placeholder="tu@correo.com"
+          placeholder="tu@correo.com o usuario"
         /><span class="field-error" id="email-error">
           @if (invalid("email")) {
-            Escribe un correo electrónico válido.
+            Escribe un correo o usuario válido.
           }
         </span>
       </div>
