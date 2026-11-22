@@ -1,5 +1,6 @@
 import { Component, inject } from "@angular/core";
 import { Router, RouterOutlet } from "@angular/router";
+import { CapacitorNativeService } from "./core/mobile/capacitor-native.service";
 import { ThemeService } from "./core/theme/theme.service";
 import { FooterComponent } from "./layouts/public/ui/footer/footer.component";
 import { NavbarComponent } from "./layouts/public/ui/navbar/navbar.component";
@@ -24,4 +25,5 @@ export class AppComponent {
   readonly title = "GROM 21";
   // Initialize the live system listener after theme-init.js has handled first paint.
   readonly theme = inject(ThemeService);
+  readonly native = inject(CapacitorNativeService);
 }

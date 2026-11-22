@@ -24,6 +24,7 @@ Thumbs.db
 *.jpeg
 *.jpg
 *.png
+!android/app/src/main/res/**/*.png
 *.mp4
 *.docx
 *.pdf
@@ -38,4 +39,19 @@ Thumbs.db
 *.tar.gz
 
 server/edge_gym.db*
+
+# Android / Capacitor
+.gradle/
+android-studio/
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/captures/
+android/.idea/
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor.config.json
+android/app/src/main/assets/capacitor.plugins.json
+
+back/gym.db*
 
