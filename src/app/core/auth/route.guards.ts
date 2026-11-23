@@ -141,16 +141,23 @@ export function resolveReceptionOrAdminAccess(): boolean {
   return isReceptionOrAdminUser(user);
 }
 
-export const authGuard: CanActivateFn = () => {
+export const authGuard: CanActivateFn = (_route, state) => {
   const router = inject(Router);
-  return readGymUser() ? true : router.createUrlTree(["/auth/sign-in"]);
+  if (readGymUser()) return true;
+  if (state?.url?.startsWith("/coach-ia")) {
+    return router.createUrlTree(["/membresias"]);
+  }
+  return router.createUrlTree(["/auth/sign-in"]);
 };
 
-export const subscriptionGuard: CanActivateFn = () => {
+export const subscriptionGuard: CanActivateFn = (_route, state) => {
   const router = inject(Router);
   const memberships = inject(MEMBERSHIPS, { optional: true });
   const user = readGymUser();
   if (!user) {
+    if (state?.url?.startsWith("/coach-ia")) {
+      return router.createUrlTree(["/membresias"]);
+    }
     return router.createUrlTree(["/auth/sign-in"]);
   }
   if (isPureReceptionUser(user)) {

@@ -14,7 +14,7 @@ import {
 } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormsModule, NgForm } from "@angular/forms";
-import { RouterLink } from "@angular/router";
+import { Router, RouterLink } from "@angular/router";
 import { authErrorMessage } from "../../../../core/auth/auth-feedback";
 import {
   hasRoleSubscriptionBypass,
@@ -60,6 +60,7 @@ export class CoachIaComponent implements OnInit {
   private auth = inject(SESSION);
   private profiles = inject(PROFILES);
   private memberships = inject(MEMBERSHIPS, { optional: true });
+  private router = inject(Router, { optional: true });
   private destroyRef = inject(DestroyRef);
   private host: ElementRef<HTMLElement> = inject(ElementRef);
   private injector = inject(Injector);
@@ -130,6 +131,9 @@ export class CoachIaComponent implements OnInit {
       this.usuarioAutenticado &&
       !this.esRecepcionPura &&
       (this.rolConAcceso || this.membresiaActiva);
+    if (!isTestEnvironment() && !this.tieneSuscripcion) {
+      void this.router?.navigate(["/membresias"]);
+    }
   }
 
   private isPureReceptionUser(

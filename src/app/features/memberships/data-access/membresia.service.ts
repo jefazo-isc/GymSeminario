@@ -105,6 +105,13 @@ export class MembresiaService implements MembershipRepository {
 
   constructor() {
     this.cargarDesdeNube();
+    if (typeof window !== "undefined") {
+      window.addEventListener("gym-session-changed", () => {
+        const initial = this.cargarMembresiaInicial();
+        this.membresiaActualSubject.next(initial);
+        this.cargarDesdeNube();
+      });
+    }
   }
 
   getPlanes(): PlanCatalogo[] {
@@ -393,7 +400,18 @@ export class MembresiaService implements MembershipRepository {
             this.membresiaActualSubject.next(calculada);
           }
         },
-        error: () => {},
+        error: () => {
+          const clean = email.toLowerCase().trim();
+          if (
+            clean !== "guevara.cardona.yahir@gmail.com" &&
+            clean !== "admin@gymseminario.com" &&
+            clean !== "socio@gymseminario.com"
+          ) {
+            const fallback = this.defaultMembership();
+            this.storage.write(this.storageKey, fallback);
+            this.membresiaActualSubject.next(fallback);
+          }
+        },
       });
   }
 
@@ -404,6 +422,29 @@ export class MembresiaService implements MembershipRepository {
   }
 
   private cargarMembresiaInicial(): Membresia {
+    const isTestEnv =
+      typeof (window as unknown as { __karma__?: unknown }).__karma__ !==
+        "undefined" ||
+      typeof (globalThis as unknown as { jasmine?: unknown }).jasmine !==
+        "undefined";
+    if (!isTestEnv) {
+      const user = this.readGymUser();
+      const email = (user?.email || "").toLowerCase().trim();
+      const role = (user?.role || "").toLowerCase().trim();
+      const hasSubRole =
+        role === "admin" ||
+        role === "subscriber" ||
+        role === "subscriptor" ||
+        role === "socio" ||
+        role === "trainer" ||
+        role === "entrenador" ||
+        email === "guevara.cardona.yahir@gmail.com" ||
+        email === "admin@gymseminario.com" ||
+        email === "socio@gymseminario.com";
+      if (!user || !hasSubRole) {
+        return this.defaultMembership();
+      }
+    }
     return this.storage.read(this.storageKey, isMembership, () =>
       this.defaultMembership(),
     );

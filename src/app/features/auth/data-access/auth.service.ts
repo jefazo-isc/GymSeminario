@@ -114,28 +114,42 @@ export class AuthService implements SessionRepository {
         ],
       };
       localStorage.setItem("espacio_gym_membresia", JSON.stringify(blackMem));
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("gym-session-changed"));
+      }
       return;
     }
 
-    // Si es un usuario que no es administrador, garantizar que no tenga suscripción activa previa
+    // Si es un usuario que no es administrador ni socio con suscripción activa, limpiar membresía previa en local
     const esAdmin =
       email === "guevara.cardona.yahir@gmail.com" ||
       email === "admin@gymseminario.com" ||
       user.role === "admin";
-    if (!esAdmin) {
+    const esSocioActivo =
+      user.role === "subscriber" ||
+      user.role === "subscriptor" ||
+      user.role === "socio";
+    if (!esAdmin && !esSocioActivo) {
+      localStorage.removeItem("espacio_gym_membresia");
+    } else if (!esAdmin) {
       const memRaw = localStorage.getItem("espacio_gym_membresia");
       if (memRaw) {
         try {
           const m = JSON.parse(memRaw);
-          if (m.id === "MEM-849201" || m.id === "MEM-ADMIN-01") {
-            m.estado = "Vencida";
-            m.diasRestantes = 0;
-            localStorage.setItem("espacio_gym_membresia", JSON.stringify(m));
+          if (
+            m.id === "MEM-849201" ||
+            m.id === "MEM-ADMIN-01" ||
+            (m.userEmail && String(m.userEmail).toLowerCase().trim() !== email)
+          ) {
+            localStorage.removeItem("espacio_gym_membresia");
           }
         } catch {
-          /* noop */
+          localStorage.removeItem("espacio_gym_membresia");
         }
       }
+    }
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("gym-session-changed"));
     }
   }
 
@@ -150,6 +164,9 @@ export class AuthService implements SessionRepository {
     this.userNameSubject.next(null);
     this.userRoleSubject.next(null);
     this.userUidSubject.next(null);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("gym-session-changed"));
+    }
   }
 
   getToken(): string | null {
