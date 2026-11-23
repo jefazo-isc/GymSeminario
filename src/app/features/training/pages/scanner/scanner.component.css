@@ -1,3 +1,7 @@
+:host [hidden] {
+  display: none !important;
+}
+
 :host .feature-page.stack {
   display: flex;
   flex-direction: column;

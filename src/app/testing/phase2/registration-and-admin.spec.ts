@@ -494,10 +494,9 @@ describe("Role and subscription view hardening", () => {
     const subComp = subFixture.componentInstance;
     expect(subComp.tieneSuscripcion).toBeTrue();
     expect(
-      subFixture.nativeElement
-        .querySelector('input[type="file"]')
-        ?.getAttribute("capture"),
-    ).toBe("environment");
+      subFixture.nativeElement.querySelector('input[type="file"]'),
+    ).toBeNull();
+    expect(subFixture.nativeElement.querySelector("video")).not.toBeNull();
 
     subComp.nuevo.clase = "Boxeo";
     subComp.kioskToken = "GROM-K-DESK01";

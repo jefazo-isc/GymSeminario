@@ -1,5 +1,6 @@
 import { CommonModule } from "@angular/common";
 import {
+  AfterViewInit,
   Component,
   ElementRef,
   OnDestroy,
@@ -49,7 +50,7 @@ import { TRAINING } from "../../data-access/training.repository";
   templateUrl: "./formulario3.component.html",
   styleUrl: "./formulario3.component.css",
 })
-export class Formulario3Component implements OnInit, OnDestroy {
+export class Formulario3Component implements OnInit, AfterViewInit, OnDestroy {
   private training = inject(TRAINING);
   private auth = inject(SESSION);
   private memberships = inject(MEMBERSHIPS, { optional: true });
@@ -122,6 +123,12 @@ export class Formulario3Component implements OnInit, OnDestroy {
     this.authReady = true;
   }
 
+  ngAfterViewInit() {
+    if (!isTestEnvironment() && this.authenticated && this.tieneSuscripcion) {
+      void this.startKioskCamera();
+    }
+  }
+
   ngOnDestroy() {
     this.stopKioskCamera();
   }
@@ -145,7 +152,7 @@ export class Formulario3Component implements OnInit, OnDestroy {
       !navigator.mediaDevices?.getUserMedia
     ) {
       this.kioskCameraError =
-        "Este dispositivo no permite cámara directa; usa 'Tomar foto' o ingresa el código del mostrador.";
+        "Este dispositivo no permite acceso directo a la cámara en vivo.";
       return;
     }
     try {
@@ -163,7 +170,7 @@ export class Formulario3Component implements OnInit, OnDestroy {
     } catch {
       this.stopKioskCamera();
       this.kioskCameraError =
-        "No se pudo abrir la cámara. Verifica permisos o usa 'Tomar foto / Subir imagen'.";
+        "No se pudo activar la cámara en vivo. Verifica que la aplicación tenga permiso de cámara.";
     }
   }
 
