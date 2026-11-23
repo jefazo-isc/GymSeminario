@@ -77,7 +77,7 @@ export class MembresiaService implements MembershipRepository {
         "Acceso 100% total sin restricciones de horario",
         "Todas las clases grupales (Spinning, Yoga, Cross)",
         "Acceso ilimitado al Coach Virtual IA",
-        "Generación de códigos QR de acceso rápido",
+        "Check-in rápido leyendo el QR de recepción",
         "1 Evaluación biométrica mensual",
       ],
     },
@@ -463,7 +463,7 @@ export class MembresiaService implements MembershipRepository {
           "Acceso 100% total sin restricciones de horario",
           "Todas las clases grupales (Spinning, Yoga, Cross)",
           "Acceso ilimitado al Coach Virtual IA",
-          "Generación de códigos QR de acceso rápido",
+          "Check-in rápido leyendo el QR de recepción",
         ],
       };
 

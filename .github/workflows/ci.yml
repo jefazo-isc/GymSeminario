@@ -473,27 +473,6 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v5
 
-      - name: 📥 Artefacto — Descargar build de producción
-        uses: actions/download-artifact@v8
-        with:
-          name: angular-dist
-          path: dist/libreria1/browser
-
-      - name: 🌐 GitHub Pages (Legacy) — Sincronizar rama gh-pages
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          WORK_DIR="$(mktemp -d)"
-          cp -a dist/libreria1/browser/. "${WORK_DIR}/"
-          touch "${WORK_DIR}/.nojekyll"
-          git -C "${WORK_DIR}" init -b gh-pages
-          git -C "${WORK_DIR}" config user.name "github-actions[bot]"
-          git -C "${WORK_DIR}" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git -C "${WORK_DIR}" add -A
-          git -C "${WORK_DIR}" commit -m "deploy: ${GITHUB_SHA}"
-          git -C "${WORK_DIR}" push --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
-          rm -rf "${WORK_DIR}"
-
       - name: ✅ Pipeline completado — Resumen
         run: |
           echo "=================================================="

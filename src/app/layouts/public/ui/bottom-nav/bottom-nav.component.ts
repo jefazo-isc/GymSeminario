@@ -38,7 +38,7 @@ export class BottomNavComponent {
     }
     return [
       { id: "home", label: "Inicio", icon: "monitor", path: "/home" },
-      { id: "qr", label: "Acceso QR", icon: "check", path: "/f3" },
+      { id: "qr", label: "Leer QR", icon: "check", path: "/f3" },
       { id: "coach", label: "Coach IA", icon: "spark", path: "/coach-ia" },
       { id: "cuenta", label: "Cuenta", icon: "calendar", path: "/estado-cuenta" },
       { id: "menu", label: "Más", icon: "menu", isAction: true },

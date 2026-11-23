@@ -2,18 +2,10 @@
   <div class="notice">
     <app-icon name="calendar" />
     <p>
-      <strong>Registro de asistencia.</strong> Escanea con tu cámara el código QR
-      que te muestra el recepcionista para registrar tu asistencia al instante.
+      <strong>Lector QR del socio.</strong> Los socios únicamente leen el código
+      QR que muestra el recepcionista en mostrador para registrar su asistencia.
     </p>
   </div>
-  @if (esRecepcionOAdmin) {
-    <div class="toolbar">
-      <span class="help"
-        >Herramienta de recepción para validar códigos QR en puerta</span
-      >
-      <a appButton="secondary" routerLink="/scanner">Abrir escáner QR</a>
-    </div>
-  }
   @if (!authReady) {
     <p class="help" role="status">Consultando tu sesión…</p>
   } @else if (!authenticated) {

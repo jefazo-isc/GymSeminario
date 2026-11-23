@@ -57,17 +57,6 @@
         <app-icon name="user" />
         <span>2. Socios con Suscripción ({{ subscribers.length }})</span>
       </button>
-      <button
-        type="button"
-        role="tab"
-        class="reception-tab"
-        [class.reception-tab--active]="activeTab === 'validador'"
-        [attr.aria-selected]="activeTab === 'validador'"
-        (click)="setTab('validador')"
-      >
-        <app-icon name="search" />
-        <span>3. Validar Código Manual</span>
-      </button>
     </div>
 
     <article class="surface stack subscribers-section" [hidden]="activeTab !== 'socios'">

@@ -94,15 +94,17 @@ export const PAGE_META: Record<string, PageMeta> = {
     parent: member,
   },
   f3: {
-    title: "Cada visita cuenta.",
-    section: "Registrar asistencia",
-    description: "Registra clase, fecha y hora en el sistema de asistencias.",
+    title: "Escanea el QR de recepción.",
+    section: "Leer QR de asistencia",
+    description:
+      "Usa tu cámara para leer el código QR que muestra el recepcionista y registrar tu entrada.",
     parent: member,
   },
   asistencia: {
-    title: "Cada visita cuenta.",
-    section: "Registrar asistencia",
-    description: "Registra clase, fecha y hora en el sistema de asistencias.",
+    title: "Escanea el QR de recepción.",
+    section: "Leer QR de asistencia",
+    description:
+      "Usa tu cámara para leer el código QR que muestra el recepcionista y registrar tu entrada.",
     parent: member,
   },
   actividad: {
@@ -172,10 +174,10 @@ export const PAGE_META: Record<string, PageMeta> = {
     parent: admin,
   },
   scanner: {
-    title: "Control de acceso QR.",
-    section: "Escáner de recepción",
+    title: "QR dinámico de recepción.",
+    section: "Mostrador de recepción",
     description:
-      "Valida pases QR de socios en puerta y registra asistencias en SQLite en tiempo real.",
+      "Muestra el código QR rotativo de recepción para que los socios lo lean con su cámara y consulta los socios con suscripción.",
     parent: admin,
   },
   graficos: {
