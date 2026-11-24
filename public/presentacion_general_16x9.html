@@ -105,11 +105,11 @@
       position: relative;
       transform-origin: center center;
       overflow: hidden;
-      background: var(--bg);
+      background: #0b1013;
       flex-shrink: 0;
     }
 
-    /* ── Slide Base ────────────────────────────────────────────────── */
+    /* ── Slide Base & 60fps GPU Transitions ────────────────────────── */
     section.slide {
       position: absolute;
       inset: 0;
@@ -122,21 +122,477 @@
       opacity: 0;
       visibility: hidden;
       pointer-events: none;
-      transform: translateY(10px) scale(0.992);
-      transition: opacity 0.28s ease, transform 0.28s ease, visibility 0.28s ease;
+      transform: translate3d(0, 0, 0);
       overflow: hidden;
+      will-change: transform;
+      backface-visibility: hidden;
+      contain: layout style paint;
     }
 
-    body.no-anim section.slide {
+    body.no-anim section.slide,
+    body.no-anim section.slide * {
+      animation: none !important;
       transition: none !important;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      section.slide,
+      section.slide *,
+      .floating-nav-btn,
+      .deck-progress-bar {
+        animation: none !important;
+        transition: none !important;
+        transform: none !important;
+      }
     }
 
     section.slide.active {
       opacity: 1;
       visibility: visible;
       pointer-events: auto;
-      transform: translateY(0) scale(1);
+      transform: translate3d(0, 0, 0);
       z-index: 10;
+    }
+
+    /* ── Directional Transitions between Slides (Full-Bleed 60fps) ── */
+    section.slide.slide-exit-forward {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: none;
+      z-index: 5;
+      animation: slideExitForward 0.44s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    section.slide.slide-exit-backward {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: none;
+      z-index: 5;
+      animation: slideExitBackward 0.44s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    section.slide.active.slide-enter-forward {
+      z-index: 12;
+      animation: slideEnterForward 0.44s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    section.slide.active.slide-enter-backward {
+      z-index: 12;
+      animation: slideEnterBackward 0.44s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* Chapter Intro Slide Custom Cinematic Transitions */
+    section.slide.intro-slide.active.slide-enter-forward {
+      z-index: 12;
+      animation: introEnterForward 0.46s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    section.slide.intro-slide.active.slide-enter-backward {
+      z-index: 12;
+      animation: introEnterBackward 0.46s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    section.slide.intro-slide.slide-exit-forward {
+      z-index: 5;
+      animation: introExitForward 0.44s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    section.slide.intro-slide.slide-exit-backward {
+      z-index: 5;
+      animation: introExitBackward 0.44s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* Dark Slide Custom Transitions (Slides 1, 9, 18) */
+    section.slide.dark-slide.active.slide-enter-forward {
+      z-index: 12;
+      animation: darkEnterForward 0.44s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    section.slide.dark-slide.active.slide-enter-backward {
+      z-index: 12;
+      animation: darkEnterBackward 0.44s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    section.slide.dark-slide.slide-exit-forward {
+      z-index: 5;
+      animation: darkExitForward 0.44s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    section.slide.dark-slide.slide-exit-backward {
+      z-index: 5;
+      animation: darkExitBackward 0.44s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* Freeze and silence child animations on exiting slides so they do not snap or flicker */
+    section.slide.slide-exit-forward *,
+    section.slide.slide-exit-backward * {
+      animation: none !important;
+    }
+
+    /* ── Transition Keyframes ──────────────────────────────────────── */
+    @keyframes slideEnterForward {
+      0% {
+        opacity: 1;
+        transform: translate3d(100%, 0, 0);
+        box-shadow: -24px 0 50px rgba(0, 0, 0, 0.38);
+      }
+      100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+        box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+      }
+    }
+
+    @keyframes slideExitForward {
+      0% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+        visibility: visible;
+      }
+      100% {
+        opacity: 0.35;
+        transform: translate3d(-28%, 0, 0) scale(0.96);
+        visibility: hidden;
+      }
+    }
+
+    @keyframes slideEnterBackward {
+      0% {
+        opacity: 1;
+        transform: translate3d(-100%, 0, 0);
+        box-shadow: 24px 0 50px rgba(0, 0, 0, 0.38);
+      }
+      100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+        box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+      }
+    }
+
+    @keyframes slideExitBackward {
+      0% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+        visibility: visible;
+      }
+      100% {
+        opacity: 0.35;
+        transform: translate3d(28%, 0, 0) scale(0.96);
+        visibility: hidden;
+      }
+    }
+
+    /* Cinematic Chapter Intro Keyframes */
+    @keyframes introEnterForward {
+      0% {
+        opacity: 1;
+        transform: translate3d(100%, 0, 0) scale(1.02);
+        box-shadow: -28px 0 60px rgba(0, 0, 0, 0.6);
+      }
+      100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+        box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+      }
+    }
+
+    @keyframes introExitForward {
+      0% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+        visibility: visible;
+      }
+      100% {
+        opacity: 0.25;
+        transform: translate3d(-30%, 0, 0) scale(0.94);
+        visibility: hidden;
+      }
+    }
+
+    @keyframes introEnterBackward {
+      0% {
+        opacity: 1;
+        transform: translate3d(-100%, 0, 0) scale(1.02);
+        box-shadow: 28px 0 60px rgba(0, 0, 0, 0.6);
+      }
+      100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+        box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+      }
+    }
+
+    @keyframes introExitBackward {
+      0% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+        visibility: visible;
+      }
+      100% {
+        opacity: 0.25;
+        transform: translate3d(30%, 0, 0) scale(0.94);
+        visibility: hidden;
+      }
+    }
+
+    /* Dark Slide Keyframes */
+    @keyframes darkEnterForward {
+      0% {
+        opacity: 1;
+        transform: translate3d(100%, 0, 0);
+        box-shadow: -24px 0 55px rgba(0, 0, 0, 0.55);
+      }
+      100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+        box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+      }
+    }
+
+    @keyframes darkExitForward {
+      0% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+        visibility: visible;
+      }
+      100% {
+        opacity: 0.25;
+        transform: translate3d(-28%, 0, 0) scale(0.95);
+        visibility: hidden;
+      }
+    }
+
+    @keyframes darkEnterBackward {
+      0% {
+        opacity: 1;
+        transform: translate3d(-100%, 0, 0);
+        box-shadow: 24px 0 55px rgba(0, 0, 0, 0.55);
+      }
+      100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+        box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+      }
+    }
+
+    @keyframes darkExitBackward {
+      0% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+        visibility: visible;
+      }
+      100% {
+        opacity: 0.25;
+        transform: translate3d(28%, 0, 0) scale(0.95);
+        visibility: hidden;
+      }
+    }
+
+    /* ── Staggered Internal Element Entrance Keyframes ─────────────── */
+    @keyframes slideHeadIn {
+      0% {
+        opacity: 0;
+        transform: translate3d(0, -12px, 0);
+      }
+      100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+      }
+    }
+
+    @keyframes pillPopIn {
+      0% {
+        opacity: 0;
+        transform: translate3d(14px, 0, 0) scale(0.92);
+      }
+      100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+      }
+    }
+
+    @keyframes contentBlockIn {
+      0% {
+        opacity: 0;
+        transform: translate3d(0, 16px, 0);
+      }
+      100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+      }
+    }
+
+    @keyframes introBadgeSlide {
+      0% {
+        opacity: 0;
+        transform: translate3d(-20px, 0, 0);
+      }
+      100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+      }
+    }
+
+    @keyframes introSpeakerPop {
+      0% {
+        opacity: 0;
+        transform: scale(0.84) translate3d(-10px, 0, 0);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) translate3d(0, 0, 0);
+      }
+    }
+
+    @keyframes introCardSlide {
+      0% {
+        opacity: 0;
+        transform: translate3d(24px, 0, 0);
+      }
+      100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+      }
+    }
+
+    /* Slide Header animations */
+    section.slide.active .s-head > div:first-child {
+      animation: slideHeadIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) 0.06s both;
+    }
+
+    section.slide.active .s-head .presenter-pill {
+      animation: pillPopIn 0.40s cubic-bezier(0.16, 1, 0.3, 1) 0.10s both;
+    }
+
+    /* Cards, Plan cards, Photo boxes, and grid columns in slide body */
+    section.slide.active .s-body .card,
+    section.slide.active .s-body .plan-card,
+    section.slide.active .s-body .photo-box,
+    section.slide.active .s-body .steps-row > *,
+    section.slide.active .s-body > div > .card,
+    section.slide.active .s-body > div > div > .card {
+      animation: contentBlockIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    /* Multi-column and multi-card staggering across all slides */
+    section.slide.active .grid-4 > *:nth-child(1),
+    section.slide.active .grid-3 > *:nth-child(1),
+    section.slide.active .grid-2 > *:nth-child(1),
+    section.slide.active .steps-row > *:nth-child(1),
+    section.slide.active .s-body > div:first-child > *:nth-child(1),
+    section.slide.active .s-body .card:nth-of-type(1),
+    section.slide.active .s-body .plan-card:nth-of-type(1) {
+      animation-delay: 0.08s;
+    }
+
+    section.slide.active .grid-4 > *:nth-child(2),
+    section.slide.active .grid-3 > *:nth-child(2),
+    section.slide.active .grid-2 > *:nth-child(2),
+    section.slide.active .steps-row > *:nth-child(2),
+    section.slide.active .s-body > div:first-child > *:nth-child(2),
+    section.slide.active .s-body .card:nth-of-type(2),
+    section.slide.active .s-body .plan-card:nth-of-type(2) {
+      animation-delay: 0.14s;
+    }
+
+    section.slide.active .grid-4 > *:nth-child(3),
+    section.slide.active .grid-3 > *:nth-child(3),
+    section.slide.active .steps-row > *:nth-child(3),
+    section.slide.active .s-body > div:first-child > *:nth-child(3),
+    section.slide.active .s-body .card:nth-of-type(3),
+    section.slide.active .s-body .plan-card:nth-of-type(3) {
+      animation-delay: 0.20s;
+    }
+
+    section.slide.active .grid-4 > *:nth-child(4),
+    section.slide.active .steps-row > *:nth-child(4),
+    section.slide.active .s-body > div:first-child > *:nth-child(4),
+    section.slide.active .s-body .card:nth-of-type(4) {
+      animation-delay: 0.26s;
+    }
+
+    section.slide.active .s-body .card:nth-of-type(5) {
+      animation-delay: 0.32s;
+    }
+
+    /* Chapter Intro Slide Stagger */
+    section.slide.intro-slide.active .chapter-badge {
+      animation: introBadgeSlide 0.40s cubic-bezier(0.16, 1, 0.3, 1) 0.06s both;
+    }
+
+    section.slide.intro-slide.active .intro-speaker-row {
+      animation: introSpeakerPop 0.44s cubic-bezier(0.16, 1, 0.3, 1) 0.10s both;
+    }
+
+    section.slide.intro-slide.active .intro-h2 {
+      animation: contentBlockIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) 0.14s both;
+    }
+
+    section.slide.intro-slide.active .intro-lead {
+      animation: contentBlockIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) 0.18s both;
+    }
+
+    section.slide.intro-slide.active .intro-roadmap-label {
+      animation: contentBlockIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) 0.13s both;
+    }
+
+    section.slide.intro-slide.active .intro-topic-card:nth-of-type(1) {
+      animation: introCardSlide 0.42s cubic-bezier(0.16, 1, 0.3, 1) 0.19s both;
+    }
+
+    section.slide.intro-slide.active .intro-topic-card:nth-of-type(2) {
+      animation: introCardSlide 0.42s cubic-bezier(0.16, 1, 0.3, 1) 0.27s both;
+    }
+
+    section.slide.intro-slide.active .intro-progress-dots {
+      animation: contentBlockIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) 0.31s both;
+    }
+
+    /* Slide 1 Cover Specific Stagger */
+    section.slide[data-slide="1"].active .cover-brand-row {
+      animation: contentBlockIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both;
+    }
+
+    section.slide[data-slide="1"].active .cover-kicker {
+      animation: contentBlockIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) 0.09s both;
+    }
+
+    section.slide[data-slide="1"].active .cover-h1 {
+      animation: contentBlockIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) 0.13s both;
+    }
+
+    section.slide[data-slide="1"].active .cover-lead {
+      animation: contentBlockIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) 0.17s both;
+    }
+
+    section.slide[data-slide="1"].active .cover-b1-box {
+      animation: contentBlockIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) 0.21s both;
+    }
+
+    section.slide[data-slide="1"].active .cover-photo {
+      animation: introSpeakerPop 0.46s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+    }
+
+    section.slide[data-slide="1"].active .member-pill:nth-child(1) { animation: contentBlockIn 0.36s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both; }
+    section.slide[data-slide="1"].active .member-pill:nth-child(2) { animation: contentBlockIn 0.36s cubic-bezier(0.16, 1, 0.3, 1) 0.26s both; }
+    section.slide[data-slide="1"].active .member-pill:nth-child(3) { animation: contentBlockIn 0.36s cubic-bezier(0.16, 1, 0.3, 1) 0.30s both; }
+    section.slide[data-slide="1"].active .member-pill:nth-child(4) { animation: contentBlockIn 0.36s cubic-bezier(0.16, 1, 0.3, 1) 0.34s both; }
+    section.slide[data-slide="1"].active .member-pill:nth-child(5) { animation: contentBlockIn 0.36s cubic-bezier(0.16, 1, 0.3, 1) 0.38s both; }
+    section.slide[data-slide="1"].active .member-pill:nth-child(6) { animation: contentBlockIn 0.36s cubic-bezier(0.16, 1, 0.3, 1) 0.42s both; }
+
+    /* Slide 17 Coach Virtual Stagger */
+    section.slide[data-slide="17"].active .coaches-bar {
+      animation: contentBlockIn 0.40s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both;
+    }
+    section.slide[data-slide="17"].active .coach-item:nth-child(1) { animation: introSpeakerPop 0.38s cubic-bezier(0.16, 1, 0.3, 1) 0.14s both; }
+    section.slide[data-slide="17"].active .coach-item:nth-child(2) { animation: introSpeakerPop 0.38s cubic-bezier(0.16, 1, 0.3, 1) 0.18s both; }
+    section.slide[data-slide="17"].active .coach-item:nth-child(3) { animation: introSpeakerPop 0.38s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both; }
+    section.slide[data-slide="17"].active .coach-item:nth-child(4) { animation: introSpeakerPop 0.38s cubic-bezier(0.16, 1, 0.3, 1) 0.26s both; }
+    section.slide[data-slide="17"].active .coach-gemini-pill { animation: contentBlockIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) 0.30s both; }
+
+    /* Slide Footer Entrance */
+    section.slide.active .s-foot {
+      animation: contentBlockIn 0.36s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
     }
 
     section.slide.dark-slide {
@@ -930,6 +1386,78 @@
       border-color: var(--teal);
     }
 
+    /* Floating Navigation Controls (Zero Toolbars, 100% Full Bleed) */
+    .deck-progress-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 3px;
+      width: 0%;
+      background: linear-gradient(90deg, var(--teal), var(--ice));
+      z-index: 100;
+      transition: width 0.44s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+
+    .floating-nav-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: rgba(16, 22, 25, 0.58);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: #f1f4f6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 120;
+      transition: opacity 0.25s ease, transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+      opacity: 0.22;
+      outline: none;
+      user-select: none;
+      padding: 0;
+    }
+
+    .floating-nav-btn.prev { left: 10px; }
+    .floating-nav-btn.next { right: 10px; }
+
+    .floating-nav-btn:hover {
+      opacity: 1 !important;
+      background: var(--teal-dark);
+      border-color: var(--ice);
+      color: #ffffff;
+      transform: translateY(-50%) scale(1.12);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    .floating-nav-btn:active {
+      transform: translateY(-50%) scale(0.96);
+    }
+
+    .floating-nav-btn.is-disabled {
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+
+    .floating-nav-btn svg.ico {
+      width: 20px;
+      height: 20px;
+    }
+
+    body:not(.mouse-idle) .floating-nav-btn {
+      opacity: 0.55;
+    }
+
+    body.mouse-idle .floating-nav-btn:not(:hover) {
+      opacity: 0;
+      pointer-events: none;
+    }
+
     /* ── Modals (Slide Index [G] + Optional Technical Sheet [T]) ──── */
     .modal-bg {
       display: none;
@@ -1053,6 +1581,8 @@
 
   <!-- Inline Crisp Vector Icon Sprite (Zero Emojis) -->
   <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+    <symbol id="i-chevron-left" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></symbol>
+    <symbol id="i-chevron-right" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></symbol>
     <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></symbol>
     <symbol id="i-smartphone" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></symbol>
     <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
@@ -1096,6 +1626,16 @@
   <!-- Full-Bleed 16:9 Stage (Zero Top/Bottom Panels) -->
   <main class="stage-wrap" id="stageWrap">
     <div class="stage-scaler" id="stageScaler">
+      <!-- Subtle top micro-progress bar (Zero toolbar footprint) -->
+      <div class="deck-progress-bar" id="deckProgressBar"></div>
+
+      <!-- Floating edge navigation chevrons (Zero emojis, unobtrusive) -->
+      <button class="floating-nav-btn prev" id="navBtnPrev" aria-label="Diapositiva anterior" title="Anterior (Flecha Izq / Backspace)">
+        <svg class="ico"><use href="#i-chevron-left"/></svg>
+      </button>
+      <button class="floating-nav-btn next" id="navBtnNext" aria-label="Diapositiva siguiente" title="Siguiente (Flecha Der / Espacio)">
+        <svg class="ico"><use href="#i-chevron-right"/></svg>
+      </button>
 
       <!-- ══════════════════════════════════════════════════════════════ -->
       <!-- BLOQUE 01 · YAHIR GUEVARA CARDONA (SLIDES 01 - 03)             -->
@@ -2542,19 +3082,23 @@
       const slides = Array.from(document.querySelectorAll('section.slide'));
       const total = slides.length;
       let current = 1;
+      let transitionTimer = null;
 
       const stageWrap = document.getElementById('stageWrap');
       const stageScaler = document.getElementById('stageScaler');
       const modalIndex = document.getElementById('modalIndex');
       const modalTech = document.getElementById('modalTech');
       const indexGrid = document.getElementById('indexGrid');
+      const deckProgressBar = document.getElementById('deckProgressBar');
+      const navBtnPrev = document.getElementById('navBtnPrev');
+      const navBtnNext = document.getElementById('navBtnNext');
 
       // Scale 1280x720 canvas cleanly edge-to-edge on any viewport
       function fitStage() {
         const availW = Math.max(320, stageWrap.clientWidth);
         const availH = Math.max(180, stageWrap.clientHeight);
         const scale = Math.min(availW / 1280, availH / 720);
-        stageScaler.style.transform = `scale(${scale})`;
+        stageScaler.style.transform = `scale(${scale}) translateZ(0)`;
       }
       window.addEventListener('resize', fitStage);
       fitStage();
@@ -2572,14 +3116,102 @@
         indexGrid.appendChild(btn);
       });
 
-      function goTo(num, updateHash = true) {
-        if (num < 1 || num > total) return;
-        current = num;
-        slides.forEach((s, idx) => s.classList.toggle('active', idx + 1 === current));
-
-        Array.from(indexGrid.children).forEach((el, idx) => {
-          el.classList.toggle('active', idx + 1 === current);
+      function clearTransitionClasses() {
+        slides.forEach(s => {
+          s.classList.remove(
+            'slide-exit-forward',
+            'slide-exit-backward',
+            'slide-enter-forward',
+            'slide-enter-backward'
+          );
         });
+      }
+
+      function goTo(num, updateHash = true, isInitial = false) {
+        if (num < 1 || num > total) return;
+        if (num === current && !isInitial) return;
+
+        const prevNum = current;
+        const prevSlide = slides[prevNum - 1];
+        const nextSlide = slides[num - 1];
+        const isForward = num >= prevNum;
+
+        current = num;
+
+        if (transitionTimer) {
+          clearTimeout(transitionTimer);
+          transitionTimer = null;
+        }
+
+        if (isInitial || document.body.classList.contains('no-anim')) {
+          slides.forEach((s, idx) => {
+            s.classList.toggle('active', idx + 1 === current);
+            s.classList.remove(
+              'slide-exit-forward',
+              'slide-exit-backward',
+              'slide-enter-forward',
+              'slide-enter-backward'
+            );
+          });
+        } else {
+          // Reset other slides that aren't the outgoing or incoming slide
+          slides.forEach((s, idx) => {
+            const slideNum = idx + 1;
+            if (slideNum !== prevNum && slideNum !== num) {
+              s.classList.remove(
+                'active',
+                'slide-exit-forward',
+                'slide-exit-backward',
+                'slide-enter-forward',
+                'slide-enter-backward'
+              );
+            }
+          });
+
+          // Animate outgoing slide out in direction of travel
+          if (prevSlide && prevSlide !== nextSlide) {
+            prevSlide.classList.remove('active', 'slide-enter-forward', 'slide-enter-backward');
+            prevSlide.classList.add(isForward ? 'slide-exit-forward' : 'slide-exit-backward');
+          }
+
+          // Animate incoming slide in
+          nextSlide.classList.remove('slide-exit-forward', 'slide-exit-backward');
+          nextSlide.classList.add('active', isForward ? 'slide-enter-forward' : 'slide-enter-backward');
+
+          // Cleanup transition classes after animation completes
+          transitionTimer = setTimeout(() => {
+            if (prevSlide && prevSlide !== nextSlide) {
+              prevSlide.classList.remove('slide-exit-forward', 'slide-exit-backward');
+            }
+            nextSlide.classList.remove('slide-enter-forward', 'slide-enter-backward');
+            clearTransitionClasses();
+            slides.forEach((s, idx) => {
+              s.classList.toggle('active', idx + 1 === current);
+            });
+            transitionTimer = null;
+          }, 460);
+        }
+
+        // Progress bar width
+        if (deckProgressBar) {
+          const pct = (current / total) * 100;
+          deckProgressBar.style.width = `${pct}%`;
+        }
+
+        // Floating nav buttons state
+        if (navBtnPrev) {
+          navBtnPrev.classList.toggle('is-disabled', current <= 1);
+        }
+        if (navBtnNext) {
+          navBtnNext.classList.toggle('is-disabled', current >= total);
+        }
+
+        // Slide index active highlight
+        if (indexGrid) {
+          Array.from(indexGrid.children).forEach((el, idx) => {
+            el.classList.toggle('active', idx + 1 === current);
+          });
+        }
 
         if (updateHash) {
           history.replaceState(null, '', `#slide-${current}`);
@@ -2598,11 +3230,29 @@
       }
 
       function toggleFullscreen() {
-        if (!document.fullscreenElement) {
-          document.documentElement.requestFullscreen().catch(() => {});
+        const docEl = document.documentElement;
+        const isFs = document.fullscreenElement || document.webkitFullscreenElement;
+        if (!isFs) {
+          if (docEl.requestFullscreen) docEl.requestFullscreen().catch(() => {});
+          else if (docEl.webkitRequestFullscreen) docEl.webkitRequestFullscreen();
         } else {
-          document.exitFullscreen().catch(() => {});
+          if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+          else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
         }
+      }
+
+      // Floating button click handlers
+      if (navBtnPrev) {
+        navBtnPrev.addEventListener('click', (e) => {
+          e.stopPropagation();
+          goTo(current - 1);
+        });
+      }
+      if (navBtnNext) {
+        navBtnNext.addEventListener('click', (e) => {
+          e.stopPropagation();
+          goTo(current + 1);
+        });
       }
 
       const btnOpenTechFromEnd = document.getElementById('btnOpenTechFromEnd');
@@ -2617,21 +3267,68 @@
         m.addEventListener('click', (e) => { if (e.target === m) closeModals(); });
       });
 
-      // Click anywhere on slide (except links/buttons) to navigate: left 25% prev, right 75% next
+      // Mouse idle detection for non-intrusive floating chevrons
+      let mouseIdleTimer = null;
+      function showControlsOnActivity() {
+        document.body.classList.remove('mouse-idle');
+        if (mouseIdleTimer) clearTimeout(mouseIdleTimer);
+        mouseIdleTimer = setTimeout(() => {
+          document.body.classList.add('mouse-idle');
+        }, 2600);
+      }
+      window.addEventListener('mousemove', showControlsOnActivity, { passive: true });
+      window.addEventListener('touchstart', showControlsOnActivity, { passive: true });
+      showControlsOnActivity();
+
+      // Touch swipe support for tablets/mobile with click-interference protection
+      let touchStartX = null;
+      let touchStartY = null;
+      let swipedJustNow = false;
+
+      stageWrap.addEventListener('touchstart', (e) => {
+        if (e.touches.length > 1) return;
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+      }, { passive: true });
+
+      stageWrap.addEventListener('touchend', (e) => {
+        if (touchStartX === null) return;
+        const touchEndX = e.changedTouches[0].clientX;
+        const touchEndY = e.changedTouches[0].clientY;
+        const dx = touchEndX - touchStartX;
+        const dy = touchEndY - touchStartY;
+        touchStartX = null;
+        touchStartY = null;
+
+        // Intentional swipe: must exceed 48px and horizontal displacement must dominate vertical
+        if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+          swipedJustNow = true;
+          setTimeout(() => { swipedJustNow = false; }, 360);
+          goTo(dx < 0 ? current + 1 : current - 1);
+        }
+      }, { passive: true });
+
+      // Click anywhere on slide (except links/buttons/interactive) to navigate: left 25% prev, right 75% next
       stageWrap.addEventListener('click', (e) => {
+        if (swipedJustNow) {
+          swipedJustNow = false;
+          return;
+        }
         if (modalIndex.classList.contains('open') || modalTech.classList.contains('open')) return;
-        if (e.target.closest('a, button')) return;
+        if (e.target.closest('a, button, .interactive, [data-interactive]')) return;
+        const sel = window.getSelection ? window.getSelection().toString() : '';
+        if (sel && sel.trim().length > 0) return;
         const ratio = e.clientX / window.innerWidth;
         goTo(ratio < 0.25 ? current - 1 : current + 1);
       });
 
-      // Keyboard navigation
+      // Keyboard navigation with arrows, space, backspace, page up/down, home/end, f, d, g, t
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') { closeModals(); return; }
         if (modalIndex.classList.contains('open') || modalTech.classList.contains('open')) return;
-        if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown' || e.key === 'ArrowDown' || e.key === 'Enter') {
           e.preventDefault(); goTo(current + 1);
-        } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        } else if (e.key === 'ArrowLeft' || e.key === 'PageUp' || e.key === 'ArrowUp' || e.key === 'Backspace') {
           e.preventDefault(); goTo(current - 1);
         } else if (e.key === 'Home') {
           e.preventDefault(); goTo(1);
@@ -2648,27 +3345,18 @@
         }
       });
 
-      // Touch swipe support for tablets/mobile
-      let touchX = null;
-      stageWrap.addEventListener('touchstart', (e) => { touchX = e.changedTouches[0].clientX; }, { passive: true });
-      stageWrap.addEventListener('touchend', (e) => {
-        if (touchX === null) return;
-        const dx = e.changedTouches[0].clientX - touchX;
-        touchX = null;
-        if (Math.abs(dx) > 48) goTo(dx < 0 ? current + 1 : current - 1);
-      }, { passive: true });
-
       // Init from hash if present (#slide-7)
       function syncFromHash() {
         const match = window.location.hash.match(/^#slide-(\d+)$/);
         if (match) {
           const n = parseInt(match[1], 10);
-          if (n >= 1 && n <= total) { goTo(n, false); return; }
+          if (n >= 1 && n <= total) { goTo(n, false, true); return; }
         }
-        goTo(1, false);
+        goTo(1, false, true);
       }
       window.addEventListener('hashchange', syncFromHash);
       document.addEventListener('fullscreenchange', () => setTimeout(fitStage, 60));
+      document.addEventListener('webkitfullscreenchange', () => setTimeout(fitStage, 60));
 
       syncFromHash();
       requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.remove('no-anim')));
