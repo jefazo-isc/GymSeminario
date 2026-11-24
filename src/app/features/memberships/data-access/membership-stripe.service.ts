@@ -108,6 +108,24 @@ export class MembershipStripeService {
   private readonly session = this.http ? inject(SESSION, { optional: true }) : null;
   private readonly doc = inject(DOCUMENT, { optional: true });
 
+  private promoteLocalUserRoleToSubscriber(): void {
+    try {
+      const storage = this.doc?.defaultView?.localStorage;
+      const raw = storage?.getItem("gym_user");
+      if (!storage || !raw) return;
+      const user = JSON.parse(raw) as { role?: string };
+      const role = String(user?.role || "user").toLowerCase().trim();
+      if (role === "user" || !role) {
+        storage.setItem(
+          "gym_user",
+          JSON.stringify({ ...user, role: "subscriber" }),
+        );
+      }
+    } catch {
+      /* noop */
+    }
+  }
+
   private getUserSessionInfo(): { email: string; nombre: string } {
     try {
       const raw = this.doc?.defaultView?.localStorage?.getItem("gym_user");
@@ -396,6 +414,7 @@ export class MembershipStripeService {
               });
               resolvedSuccess = true;
               finalFolio = res.folio;
+              Swal.close();
             } catch (err) {
               lastError =
                 err instanceof Error
@@ -556,6 +575,8 @@ export class MembershipStripeService {
 
     const folio = confirmResp.folio;
     paymentIntentId = confirmResp.paymentIntentId || paymentIntentId;
+
+    this.promoteLocalUserRoleToSubscriber();
 
     if (this.membershipRepo) {
       await this.membershipRepo.adquirirOActualizarPlan(
