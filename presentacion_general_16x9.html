@@ -1,0 +1,3362 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GROM 21 · espacioGYM — Presentación General del Proyecto (18 Diapositivas · 16:9)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* GROM 21 Design Tokens */
+      --bg: #f7f7f5;
+      --surface: #ffffff;
+      --surface-2: #eff2f3;
+      --border: #dce2e6;
+      --text: #1f2937;
+      --muted: #5b6470;
+      --teal: #375d67;
+      --teal-dark: #233f47;
+      --teal-soft: #e8f0f2;
+      --sage: #557363;
+      --sage-soft: #ebf3ee;
+      --amber: #9a6b22;
+      --amber-soft: #faf2e1;
+      --danger: #b93838;
+      --danger-soft: #fdecec;
+      --dark-bg: #101619;
+      --dark-card: #1a2429;
+      --dark-border: #2e3e46;
+      --ice: #93bac4;
+      --dark-text: #f1f4f6;
+      --dark-muted: #a7b3bc;
+      --font-sans: 'Plus Jakarta Sans', 'Lato', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+      --shadow-card: 0 2px 10px rgba(16, 22, 25, 0.05);
+    }
+
+    [data-theme="dark"] {
+      --bg: #101619;
+      --surface: #1a2429;
+      --surface-2: #141d21;
+      --border: #2e3e46;
+      --text: #f1f4f6;
+      --muted: #a7b3bc;
+      --teal: #93bac4;
+      --teal-dark: #1d353c;
+      --teal-soft: rgba(147, 186, 196, 0.14);
+      --sage: #8fb8a0;
+      --sage-soft: rgba(143, 184, 160, 0.14);
+      --amber: #ddb26d;
+      --amber-soft: rgba(221, 178, 109, 0.14);
+      --danger: #f07b7b;
+      --danger-soft: rgba(240, 123, 123, 0.14);
+      --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.28);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: var(--font-sans);
+      background: #0b1013;
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    svg.ico {
+      width: 1em;
+      height: 1em;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex-shrink: 0;
+      display: inline-block;
+    }
+
+    /* ── Stage & True 16:9 Scaled Canvas (1280 x 720, No Bars) ────── */
+    main.stage-wrap {
+      flex: 1;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      padding: 0;
+      background: #0b1013;
+    }
+
+    .stage-scaler {
+      width: 1280px;
+      height: 720px;
+      position: relative;
+      transform-origin: center center;
+      overflow: hidden;
+      background: #0b1013;
+      flex-shrink: 0;
+    }
+
+    /* ── Slide Base & 60fps GPU Transitions ────────────────────────── */
+    section.slide {
+      position: absolute;
+      inset: 0;
+      width: 1280px;
+      height: 720px;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: translate3d(0, 0, 0);
+      overflow: hidden;
+      will-change: transform;
+      backface-visibility: hidden;
+      contain: layout style paint;
+    }
+
+    body.no-anim section.slide,
+    body.no-anim section.slide * {
+      animation: none !important;
+      transition: none !important;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      section.slide,
+      section.slide *,
+      .floating-nav-btn,
+      .deck-progress-bar {
+        animation: none !important;
+        transition: none !important;
+        transform: none !important;
+      }
+    }
+
+    section.slide.active {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: translate3d(0, 0, 0);
+      z-index: 10;
+    }
+
+    /* ── Directional Transitions between Slides (Full-Bleed 60fps) ── */
+    section.slide.slide-exit-forward {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: none;
+      z-index: 5;
+      animation: slideExitForward 0.44s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    section.slide.slide-exit-backward {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: none;
+      z-index: 5;
+      animation: slideExitBackward 0.44s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    section.slide.active.slide-enter-forward {
+      z-index: 12;
+      animation: slideEnterForward 0.44s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    section.slide.active.slide-enter-backward {
+      z-index: 12;
+      animation: slideEnterBackward 0.44s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* Chapter Intro Slide Custom Cinematic Transitions */
+    section.slide.intro-slide.active.slide-enter-forward {
+      z-index: 12;
+      animation: introEnterForward 0.46s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    section.slide.intro-slide.active.slide-enter-backward {
+      z-index: 12;
+      animation: introEnterBackward 0.46s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    section.slide.intro-slide.slide-exit-forward {
+      z-index: 5;
+      animation: introExitForward 0.44s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    section.slide.intro-slide.slide-exit-backward {
+      z-index: 5;
+      animation: introExitBackward 0.44s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* Dark Slide Custom Transitions (Slides 1, 9, 18) */
+    section.slide.dark-slide.active.slide-enter-forward {
+      z-index: 12;
+      animation: darkEnterForward 0.44s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    section.slide.dark-slide.active.slide-enter-backward {
+      z-index: 12;
+      animation: darkEnterBackward 0.44s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    section.slide.dark-slide.slide-exit-forward {
+      z-index: 5;
+      animation: darkExitForward 0.44s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    section.slide.dark-slide.slide-exit-backward {
+      z-index: 5;
+      animation: darkExitBackward 0.44s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* Freeze and silence child animations on exiting slides so they do not snap or flicker */
+    section.slide.slide-exit-forward *,
+    section.slide.slide-exit-backward * {
+      animation: none !important;
+    }
+
+    /* ── Transition Keyframes ──────────────────────────────────────── */
+    @keyframes slideEnterForward {
+      0% {
+        opacity: 1;
+        transform: translate3d(100%, 0, 0);
+        box-shadow: -24px 0 50px rgba(0, 0, 0, 0.38);
+      }
+      100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+        box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+      }
+    }
+
+    @keyframes slideExitForward {
+      0% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+        visibility: visible;
+      }
+      100% {
+        opacity: 0.35;
+        transform: translate3d(-28%, 0, 0) scale(0.96);
+        visibility: hidden;
+      }
+    }
+
+    @keyframes slideEnterBackward {
+      0% {
+        opacity: 1;
+        transform: translate3d(-100%, 0, 0);
+        box-shadow: 24px 0 50px rgba(0, 0, 0, 0.38);
+      }
+      100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+        box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+      }
+    }
+
+    @keyframes slideExitBackward {
+      0% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+        visibility: visible;
+      }
+      100% {
+        opacity: 0.35;
+        transform: translate3d(28%, 0, 0) scale(0.96);
+        visibility: hidden;
+      }
+    }
+
+    /* Cinematic Chapter Intro Keyframes */
+    @keyframes introEnterForward {
+      0% {
+        opacity: 1;
+        transform: translate3d(100%, 0, 0) scale(1.02);
+        box-shadow: -28px 0 60px rgba(0, 0, 0, 0.6);
+      }
+      100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+        box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+      }
+    }
+
+    @keyframes introExitForward {
+      0% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+        visibility: visible;
+      }
+      100% {
+        opacity: 0.25;
+        transform: translate3d(-30%, 0, 0) scale(0.94);
+        visibility: hidden;
+      }
+    }
+
+    @keyframes introEnterBackward {
+      0% {
+        opacity: 1;
+        transform: translate3d(-100%, 0, 0) scale(1.02);
+        box-shadow: 28px 0 60px rgba(0, 0, 0, 0.6);
+      }
+      100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+        box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+      }
+    }
+
+    @keyframes introExitBackward {
+      0% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+        visibility: visible;
+      }
+      100% {
+        opacity: 0.25;
+        transform: translate3d(30%, 0, 0) scale(0.94);
+        visibility: hidden;
+      }
+    }
+
+    /* Dark Slide Keyframes */
+    @keyframes darkEnterForward {
+      0% {
+        opacity: 1;
+        transform: translate3d(100%, 0, 0);
+        box-shadow: -24px 0 55px rgba(0, 0, 0, 0.55);
+      }
+      100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+        box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+      }
+    }
+
+    @keyframes darkExitForward {
+      0% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+        visibility: visible;
+      }
+      100% {
+        opacity: 0.25;
+        transform: translate3d(-28%, 0, 0) scale(0.95);
+        visibility: hidden;
+      }
+    }
+
+    @keyframes darkEnterBackward {
+      0% {
+        opacity: 1;
+        transform: translate3d(-100%, 0, 0);
+        box-shadow: 24px 0 55px rgba(0, 0, 0, 0.55);
+      }
+      100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+        box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+      }
+    }
+
+    @keyframes darkExitBackward {
+      0% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+        visibility: visible;
+      }
+      100% {
+        opacity: 0.25;
+        transform: translate3d(28%, 0, 0) scale(0.95);
+        visibility: hidden;
+      }
+    }
+
+    /* ── Staggered Internal Element Entrance Keyframes ─────────────── */
+    @keyframes slideHeadIn {
+      0% {
+        opacity: 0;
+        transform: translate3d(0, -12px, 0);
+      }
+      100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+      }
+    }
+
+    @keyframes pillPopIn {
+      0% {
+        opacity: 0;
+        transform: translate3d(14px, 0, 0) scale(0.92);
+      }
+      100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+      }
+    }
+
+    @keyframes contentBlockIn {
+      0% {
+        opacity: 0;
+        transform: translate3d(0, 16px, 0);
+      }
+      100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+      }
+    }
+
+    @keyframes introBadgeSlide {
+      0% {
+        opacity: 0;
+        transform: translate3d(-20px, 0, 0);
+      }
+      100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+      }
+    }
+
+    @keyframes introSpeakerPop {
+      0% {
+        opacity: 0;
+        transform: scale(0.84) translate3d(-10px, 0, 0);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) translate3d(0, 0, 0);
+      }
+    }
+
+    @keyframes introCardSlide {
+      0% {
+        opacity: 0;
+        transform: translate3d(24px, 0, 0);
+      }
+      100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+      }
+    }
+
+    /* Slide Header animations */
+    section.slide.active .s-head > div:first-child {
+      animation: slideHeadIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) 0.06s both;
+    }
+
+    section.slide.active .s-head .presenter-pill {
+      animation: pillPopIn 0.40s cubic-bezier(0.16, 1, 0.3, 1) 0.10s both;
+    }
+
+    /* Cards, Plan cards, Photo boxes, and grid columns in slide body */
+    section.slide.active .s-body .card,
+    section.slide.active .s-body .plan-card,
+    section.slide.active .s-body .photo-box,
+    section.slide.active .s-body .steps-row > *,
+    section.slide.active .s-body > div > .card,
+    section.slide.active .s-body > div > div > .card {
+      animation: contentBlockIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    /* Multi-column and multi-card staggering across all slides */
+    section.slide.active .grid-4 > *:nth-child(1),
+    section.slide.active .grid-3 > *:nth-child(1),
+    section.slide.active .grid-2 > *:nth-child(1),
+    section.slide.active .steps-row > *:nth-child(1),
+    section.slide.active .s-body > div:first-child > *:nth-child(1),
+    section.slide.active .s-body .card:nth-of-type(1),
+    section.slide.active .s-body .plan-card:nth-of-type(1) {
+      animation-delay: 0.08s;
+    }
+
+    section.slide.active .grid-4 > *:nth-child(2),
+    section.slide.active .grid-3 > *:nth-child(2),
+    section.slide.active .grid-2 > *:nth-child(2),
+    section.slide.active .steps-row > *:nth-child(2),
+    section.slide.active .s-body > div:first-child > *:nth-child(2),
+    section.slide.active .s-body .card:nth-of-type(2),
+    section.slide.active .s-body .plan-card:nth-of-type(2) {
+      animation-delay: 0.14s;
+    }
+
+    section.slide.active .grid-4 > *:nth-child(3),
+    section.slide.active .grid-3 > *:nth-child(3),
+    section.slide.active .steps-row > *:nth-child(3),
+    section.slide.active .s-body > div:first-child > *:nth-child(3),
+    section.slide.active .s-body .card:nth-of-type(3),
+    section.slide.active .s-body .plan-card:nth-of-type(3) {
+      animation-delay: 0.20s;
+    }
+
+    section.slide.active .grid-4 > *:nth-child(4),
+    section.slide.active .steps-row > *:nth-child(4),
+    section.slide.active .s-body > div:first-child > *:nth-child(4),
+    section.slide.active .s-body .card:nth-of-type(4) {
+      animation-delay: 0.26s;
+    }
+
+    section.slide.active .s-body .card:nth-of-type(5) {
+      animation-delay: 0.32s;
+    }
+
+    /* Chapter Intro Slide Stagger */
+    section.slide.intro-slide.active .chapter-badge {
+      animation: introBadgeSlide 0.40s cubic-bezier(0.16, 1, 0.3, 1) 0.06s both;
+    }
+
+    section.slide.intro-slide.active .intro-speaker-row {
+      animation: introSpeakerPop 0.44s cubic-bezier(0.16, 1, 0.3, 1) 0.10s both;
+    }
+
+    section.slide.intro-slide.active .intro-h2 {
+      animation: contentBlockIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) 0.14s both;
+    }
+
+    section.slide.intro-slide.active .intro-lead {
+      animation: contentBlockIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) 0.18s both;
+    }
+
+    section.slide.intro-slide.active .intro-roadmap-label {
+      animation: contentBlockIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) 0.13s both;
+    }
+
+    section.slide.intro-slide.active .intro-topic-card:nth-of-type(1) {
+      animation: introCardSlide 0.42s cubic-bezier(0.16, 1, 0.3, 1) 0.19s both;
+    }
+
+    section.slide.intro-slide.active .intro-topic-card:nth-of-type(2) {
+      animation: introCardSlide 0.42s cubic-bezier(0.16, 1, 0.3, 1) 0.27s both;
+    }
+
+    section.slide.intro-slide.active .intro-progress-dots {
+      animation: contentBlockIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) 0.31s both;
+    }
+
+    /* Slide 1 Cover Specific Stagger */
+    section.slide[data-slide="1"].active .cover-brand-row {
+      animation: contentBlockIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both;
+    }
+
+    section.slide[data-slide="1"].active .cover-kicker {
+      animation: contentBlockIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) 0.09s both;
+    }
+
+    section.slide[data-slide="1"].active .cover-h1 {
+      animation: contentBlockIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) 0.13s both;
+    }
+
+    section.slide[data-slide="1"].active .cover-lead {
+      animation: contentBlockIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) 0.17s both;
+    }
+
+    section.slide[data-slide="1"].active .cover-b1-box {
+      animation: contentBlockIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) 0.21s both;
+    }
+
+    section.slide[data-slide="1"].active .cover-photo {
+      animation: introSpeakerPop 0.46s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+    }
+
+    section.slide[data-slide="1"].active .member-pill:nth-child(1) { animation: contentBlockIn 0.36s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both; }
+    section.slide[data-slide="1"].active .member-pill:nth-child(2) { animation: contentBlockIn 0.36s cubic-bezier(0.16, 1, 0.3, 1) 0.26s both; }
+    section.slide[data-slide="1"].active .member-pill:nth-child(3) { animation: contentBlockIn 0.36s cubic-bezier(0.16, 1, 0.3, 1) 0.30s both; }
+    section.slide[data-slide="1"].active .member-pill:nth-child(4) { animation: contentBlockIn 0.36s cubic-bezier(0.16, 1, 0.3, 1) 0.34s both; }
+    section.slide[data-slide="1"].active .member-pill:nth-child(5) { animation: contentBlockIn 0.36s cubic-bezier(0.16, 1, 0.3, 1) 0.38s both; }
+    section.slide[data-slide="1"].active .member-pill:nth-child(6) { animation: contentBlockIn 0.36s cubic-bezier(0.16, 1, 0.3, 1) 0.42s both; }
+
+    /* Slide 17 Coach Virtual Stagger */
+    section.slide[data-slide="17"].active .coaches-bar {
+      animation: contentBlockIn 0.40s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both;
+    }
+    section.slide[data-slide="17"].active .coach-item:nth-child(1) { animation: introSpeakerPop 0.38s cubic-bezier(0.16, 1, 0.3, 1) 0.14s both; }
+    section.slide[data-slide="17"].active .coach-item:nth-child(2) { animation: introSpeakerPop 0.38s cubic-bezier(0.16, 1, 0.3, 1) 0.18s both; }
+    section.slide[data-slide="17"].active .coach-item:nth-child(3) { animation: introSpeakerPop 0.38s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both; }
+    section.slide[data-slide="17"].active .coach-item:nth-child(4) { animation: introSpeakerPop 0.38s cubic-bezier(0.16, 1, 0.3, 1) 0.26s both; }
+    section.slide[data-slide="17"].active .coach-gemini-pill { animation: contentBlockIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) 0.30s both; }
+
+    /* Slide Footer Entrance */
+    section.slide.active .s-foot {
+      animation: contentBlockIn 0.36s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+    }
+
+    section.slide.dark-slide {
+      background: var(--dark-bg);
+      color: var(--dark-text);
+    }
+
+    section.slide.intro-slide {
+      background: linear-gradient(135deg, #101619 0%, #15252b 58%, #101619 100%);
+      color: var(--dark-text);
+    }
+
+    .top-stripe {
+      height: 6px;
+      width: 100%;
+      background: var(--teal);
+      flex-shrink: 0;
+    }
+    .dark-slide .top-stripe,
+    .intro-slide .top-stripe { background: var(--ice); }
+
+    .slide-inner {
+      flex: 1;
+      padding: 26px 52px 18px 52px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    /* ── Slide Header & Presenter Pill ─────────────────────────────── */
+    .s-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 22px;
+      flex-shrink: 0;
+    }
+    .dark-slide .s-head { border-bottom-color: var(--dark-border); }
+
+    .s-eyebrow {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 4px;
+    }
+    .dark-slide .s-eyebrow,
+    .intro-slide .s-eyebrow { color: var(--ice); }
+
+    .s-title {
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1.12;
+      letter-spacing: -0.025em;
+      color: var(--text);
+    }
+    .dark-slide .s-title,
+    .intro-slide .s-title { color: var(--dark-text); }
+
+    .s-sub {
+      font-size: 13.8px;
+      color: var(--muted);
+      margin-top: 4px;
+      font-weight: 500;
+    }
+    .dark-slide .s-sub,
+    .intro-slide .s-sub { color: var(--dark-muted); }
+
+    .presenter-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 14px 6px 7px;
+      border-radius: 999px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .dark-slide .presenter-pill {
+      background: var(--dark-card);
+      border-color: var(--dark-border);
+    }
+    .presenter-pill img {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: center 20%;
+      border: 2px solid var(--teal);
+      flex-shrink: 0;
+    }
+    .dark-slide .presenter-pill img { border-color: var(--ice); }
+    .presenter-pill strong {
+      display: block;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.2;
+    }
+    .dark-slide .presenter-pill strong { color: var(--dark-text); }
+    .presenter-pill span {
+      display: block;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-top: 1px;
+    }
+    .dark-slide .presenter-pill span { color: var(--ice); }
+
+    .s-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .s-foot {
+      margin-top: 16px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+    .dark-slide .s-foot,
+    .intro-slide .s-foot {
+      border-top-color: var(--dark-border);
+      color: var(--dark-muted);
+    }
+    .s-foot strong { color: var(--teal); font-weight: 700; }
+    .dark-slide .s-foot strong,
+    .intro-slide .s-foot strong { color: var(--ice); }
+
+    /* ── Super-Introductory Chapter Divider Layout ─────────────────── */
+    .intro-layout {
+      display: grid;
+      grid-template-columns: 1.08fr 0.96fr;
+      gap: 44px;
+      flex: 1;
+      align-items: center;
+      min-height: 0;
+    }
+
+    .intro-left {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .chapter-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(147, 186, 196, 0.12);
+      border: 1px solid rgba(147, 186, 196, 0.35);
+      color: #93bac4;
+      font-size: 11.5px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      width: fit-content;
+      margin-bottom: 22px;
+    }
+
+    .intro-speaker-row {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+    .intro-speaker-row img {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: center 20%;
+      border: 3px solid #93bac4;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      flex-shrink: 0;
+    }
+    .intro-speaker-row .spk-label {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #93bac4;
+    }
+    .intro-speaker-row .spk-name {
+      font-size: 24px;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.15;
+      margin-top: 3px;
+    }
+    .intro-speaker-row .spk-role {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #a7b3bc;
+      margin-top: 3px;
+    }
+
+    .intro-h2 {
+      font-size: 40px;
+      font-weight: 800;
+      line-height: 1.09;
+      letter-spacing: -0.03em;
+      color: #ffffff;
+    }
+    .intro-lead {
+      font-size: 15.5px;
+      line-height: 1.55;
+      color: #b7c5ce;
+      margin-top: 14px;
+      max-width: 560px;
+    }
+
+    .intro-right {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .intro-roadmap-label {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #93bac4;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .intro-topic-card {
+      background: rgba(26, 36, 41, 0.92);
+      border: 1px solid #2e3e46;
+      border-radius: 18px;
+      padding: 22px 24px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .intro-topic-card::before {
+      content: "";
+      position: absolute;
+      left: 0; top: 18px; bottom: 18px; width: 4px;
+      border-radius: 0 4px 4px 0;
+      background: var(--topic-accent, #93bac4);
+    }
+    .topic-num {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--topic-accent, #93bac4);
+      margin-bottom: 4px;
+    }
+    .intro-topic-card h3 {
+      font-size: 18px;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.24;
+    }
+    .intro-topic-card p {
+      font-size: 13.5px;
+      line-height: 1.5;
+      color: #a7b3bc;
+      margin-top: 6px;
+    }
+
+    .intro-progress-dots {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 26px;
+    }
+    .intro-dot {
+      height: 6px;
+      width: 26px;
+      border-radius: 999px;
+      background: #26353c;
+    }
+    .intro-dot.done { background: #4f7782; }
+    .intro-dot.now { width: 44px; background: #93bac4; }
+
+    /* ── Reusable Cards & Badges ───────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px 22px;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+    .dark-slide .card {
+      background: var(--dark-card);
+      border-color: var(--dark-border);
+    }
+
+    .card.accent-top::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 20px; right: 20px; height: 4px;
+      border-radius: 0 0 4px 4px;
+      background: var(--card-accent, var(--teal));
+    }
+
+    .card.accent-left::before {
+      content: "";
+      position: absolute;
+      left: 0; top: 18px; bottom: 18px; width: 4px;
+      border-radius: 0 4px 4px 0;
+      background: var(--card-accent, var(--teal));
+    }
+
+    .ico-box {
+      width: 42px;
+      height: 42px;
+      border-radius: 11px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      background: var(--teal-soft);
+      color: var(--teal);
+      flex-shrink: 0;
+    }
+    .ico-box.sage { background: var(--sage-soft); color: var(--sage); }
+    .ico-box.amber { background: var(--amber-soft); color: var(--amber); }
+    .ico-box.danger { background: var(--danger-soft); color: var(--danger); }
+    .ico-box.dark { background: #233f47; color: #93bac4; }
+    .ico-box.dark-sage { background: rgba(143, 184, 160, 0.16); color: #8fb8a0; }
+    .ico-box.dark-amber { background: rgba(221, 178, 109, 0.16); color: #ddb26d; }
+
+    .card h3 {
+      font-size: 16.5px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.25;
+      letter-spacing: -0.01em;
+    }
+    .dark-slide .card h3 { color: var(--dark-text); }
+
+    .card p {
+      font-size: 13.5px;
+      line-height: 1.5;
+      color: var(--muted);
+    }
+    .dark-slide .card p { color: var(--dark-muted); }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; flex: 1; min-height: 0; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; flex: 1; min-height: 0; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; flex: 1; min-height: 0; }
+
+    .clean-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      margin-top: 10px;
+    }
+    .clean-list li {
+      position: relative;
+      padding-left: 16px;
+      font-size: 13.2px;
+      line-height: 1.44;
+      color: var(--text);
+    }
+    .dark-slide .clean-list li { color: var(--dark-text); }
+    .clean-list li::before {
+      content: "";
+      position: absolute;
+      left: 0; top: 7px;
+      width: 6px; height: 6px;
+      border-radius: 2px;
+      background: var(--bullet-color, var(--teal));
+    }
+
+    .photo-box {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: #101619;
+    }
+    .photo-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .photo-caption {
+      position: absolute;
+      left: 14px;
+      bottom: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 13px;
+      border-radius: 999px;
+      background: rgba(16, 22, 25, 0.88);
+      border: 1px solid rgba(147, 186, 196, 0.25);
+      color: #f1f4f6;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .photo-caption svg.ico { color: #93bac4; font-size: 14px; }
+
+    /* ── Slide 1 Specific (Cover + Block 1 Intro) ──────────────────── */
+    .cover-top {
+      display: grid;
+      grid-template-columns: 1.25fr 0.95fr;
+      gap: 34px;
+      flex: 1;
+      min-height: 0;
+      align-items: stretch;
+    }
+    .cover-brand-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .logo-pill {
+      height: 50px;
+      padding: 5px 13px;
+      border-radius: 12px;
+      background: #0a0d0f;
+      border: 1px solid #2e3e46;
+      display: inline-flex;
+      align-items: center;
+    }
+    .logo-pill img { height: 35px; object-fit: contain; }
+    .uaa-pill {
+      height: 50px;
+      padding: 5px 13px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.96);
+      display: inline-flex;
+      align-items: center;
+    }
+    .uaa-pill img { height: 35px; object-fit: contain; }
+
+    .cover-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 13px;
+      border-radius: 999px;
+      background: #1a2429;
+      border: 1px solid #2e3e46;
+      color: #93bac4;
+      font-size: 11.5px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      width: fit-content;
+    }
+
+    .cover-h1 {
+      font-size: 44px;
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      color: #f1f4f6;
+    }
+    .cover-h1 span {
+      display: block;
+      font-size: 28px;
+      color: #93bac4;
+      margin-top: 5px;
+      font-weight: 700;
+    }
+    .cover-lead {
+      font-size: 14.5px;
+      line-height: 1.5;
+      color: #a7b3bc;
+      margin-top: 12px;
+      max-width: 620px;
+    }
+
+    .cover-b1-box {
+      margin-top: auto;
+      background: #1a2429;
+      border: 1px solid #375d67;
+      border-radius: 14px;
+      padding: 13px 16px;
+    }
+    .cover-b1-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .cover-b1-head span {
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #93bac4;
+    }
+    .cover-b1-head strong {
+      font-size: 12px;
+      font-weight: 700;
+      color: #f1f4f6;
+    }
+    .cover-b1-topics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .cover-b1-item {
+      background: #101619;
+      border: 1px solid #2e3e46;
+      border-radius: 10px;
+      padding: 9px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .cover-b1-item strong { display: block; font-size: 12.5px; color: #f1f4f6; }
+    .cover-b1-item span { display: block; font-size: 11px; color: #a7b3bc; margin-top: 1px; }
+
+    .cover-photo {
+      position: relative;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid #2e3e46;
+      height: 100%;
+    }
+    .cover-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: 0% 48%;
+      display: block;
+    }
+    .cover-photo-badge {
+      position: absolute;
+      left: 16px; right: 16px; bottom: 16px;
+      background: rgba(16, 22, 25, 0.90);
+      border: 1px solid #2e3e46;
+      border-radius: 12px;
+      padding: 11px 15px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .cover-photo-badge strong { display: block; font-size: 13px; color: #f1f4f6; }
+    .cover-photo-badge span { display: block; font-size: 11.5px; color: #93bac4; }
+
+    .team-strip {
+      margin-top: 18px;
+      padding-top: 12px;
+      border-top: 1px solid #2e3e46;
+      flex-shrink: 0;
+    }
+    .team-strip-label {
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: 0.09em;
+      color: #93bac4;
+      text-transform: uppercase;
+      margin-bottom: 9px;
+    }
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+    }
+    .member-pill {
+      background: #1a2429;
+      border: 1px solid #2e3e46;
+      border-radius: 12px;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+    .member-pill.active-member {
+      border-color: #93bac4;
+      background: #1d2f36;
+    }
+    .member-pill img {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: center 20%;
+      border: 2px solid #93bac4;
+      flex-shrink: 0;
+    }
+    .member-pill strong {
+      display: block;
+      font-size: 11.5px;
+      color: #f1f4f6;
+      line-height: 1.2;
+    }
+    .member-pill span {
+      display: block;
+      font-size: 10px;
+      color: #93bac4;
+      margin-top: 2px;
+    }
+
+    /* ── Tablet Frame Crop (hides Android system bars cleanly) ─────── */
+    .tablet-frame {
+      background: #141c20;
+      border: 6px solid #25333a;
+      border-radius: 18px;
+      overflow: hidden;
+      height: 314px;
+      position: relative;
+      box-shadow: 0 14px 32px rgba(16, 22, 25, 0.22);
+    }
+    .tablet-frame img {
+      width: 100%;
+      height: auto;
+      transform: translateY(-4.2%);
+      display: block;
+    }
+
+    /* ── Pricing Cards ─────────────────────────────────────────────── */
+    .plan-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px 22px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+    .plan-card.featured {
+      background: #233f47;
+      border-color: #375d67;
+      color: #f1f4f6;
+    }
+    .plan-card.vip { border-color: var(--amber); }
+    .plan-name {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--teal);
+    }
+    .plan-card.featured .plan-name { color: #93bac4; }
+    .plan-card.vip .plan-name { color: var(--amber); }
+    .plan-price {
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-top: 6px;
+      line-height: 1.05;
+      color: var(--text);
+    }
+    .plan-card.featured .plan-price { color: #ffffff; }
+    .plan-period {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      margin-top: 3px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .plan-card.featured .plan-period { color: #93bac4; border-bottom-color: rgba(147, 186, 196, 0.25); }
+    .plan-card.featured .clean-list li { color: #f1f4f6; }
+    .plan-card.featured .clean-list li::before { background: #93bac4; }
+    .plan-badge {
+      position: absolute;
+      top: 16px; right: 16px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #101619;
+      color: #93bac4;
+      border: 1px solid rgba(147, 186, 196, 0.45);
+    }
+
+    /* ── Step Arrows ───────────────────────────────────────────────── */
+    .steps-row {
+      display: grid;
+      grid-template-columns: 1fr 28px 1fr 28px 1fr;
+      align-items: stretch;
+      gap: 0;
+      flex: 1;
+      min-height: 0;
+    }
+    .step-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--teal);
+      font-size: 22px;
+    }
+
+    /* ── Category Chips ────────────────────────────────────────────── */
+    .chip-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 14px 0;
+    }
+    .cat-chip {
+      padding: 6px 13px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: var(--teal-soft);
+      color: var(--teal);
+    }
+    .cat-chip.sage { background: var(--sage-soft); color: var(--sage); }
+
+    /* ── Coach Avatars Row ─────────────────────────────────────────── */
+    .coaches-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px 20px;
+      margin-bottom: 18px;
+      flex-shrink: 0;
+    }
+    .coaches-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr) 1.05fr;
+      gap: 14px;
+      align-items: center;
+      margin-top: 10px;
+    }
+    .coach-item {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+    .coach-item img {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: center 20%;
+      border: 3px solid var(--teal);
+      flex-shrink: 0;
+    }
+    .coach-item strong { display: block; font-size: 14px; color: var(--text); }
+    .coach-item span { display: block; font-size: 11.5px; color: var(--muted); }
+    .coach-gemini-pill {
+      background: #233f47;
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #f1f4f6;
+    }
+    .coach-gemini-pill svg.ico { font-size: 24px; color: #93bac4; }
+    .coach-gemini-pill strong { display: block; font-size: 13.5px; color: #ffffff; }
+    .coach-gemini-pill span { display: block; font-size: 11.5px; color: #93bac4; }
+
+    .ctrl-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.16s ease;
+    }
+    .ctrl-btn:hover {
+      background: var(--teal);
+      color: #ffffff;
+      border-color: var(--teal);
+    }
+
+    /* Floating Navigation Controls (Zero Toolbars, 100% Full Bleed) */
+    .deck-progress-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 3px;
+      width: 0%;
+      background: linear-gradient(90deg, var(--teal), var(--ice));
+      z-index: 100;
+      transition: width 0.44s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+
+    .floating-nav-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: rgba(16, 22, 25, 0.58);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: #f1f4f6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 120;
+      transition: opacity 0.25s ease, transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+      opacity: 0.22;
+      outline: none;
+      user-select: none;
+      padding: 0;
+    }
+
+    .floating-nav-btn.prev { left: 10px; }
+    .floating-nav-btn.next { right: 10px; }
+
+    .floating-nav-btn:hover {
+      opacity: 1 !important;
+      background: var(--teal-dark);
+      border-color: var(--ice);
+      color: #ffffff;
+      transform: translateY(-50%) scale(1.12);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    .floating-nav-btn:active {
+      transform: translateY(-50%) scale(0.96);
+    }
+
+    .floating-nav-btn.is-disabled {
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+
+    .floating-nav-btn svg.ico {
+      width: 20px;
+      height: 20px;
+    }
+
+    body:not(.mouse-idle) .floating-nav-btn {
+      opacity: 0.55;
+    }
+
+    body.mouse-idle .floating-nav-btn:not(:hover) {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* ── Modals (Slide Index [G] + Optional Technical Sheet [T]) ──── */
+    .modal-bg {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 14, 17, 0.65);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .modal-bg.open { display: flex; }
+
+    .modal-box {
+      width: 780px;
+      max-width: 94vw;
+      max-height: 86vh;
+      overflow-y: auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 24px 26px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+    }
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .modal-head h3 { font-size: 18px; font-weight: 800; color: var(--text); }
+    .modal-close {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-close:hover { background: var(--teal); color: #fff; border-color: var(--teal); }
+
+    .index-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .index-item {
+      text-align: left;
+      padding: 9px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.14s ease;
+    }
+    .index-item.is-intro {
+      border-color: rgba(55, 93, 103, 0.45);
+      background: var(--teal-soft);
+    }
+    .index-item:hover { border-color: var(--teal); background: var(--teal-soft); }
+    .index-item.active { background: var(--teal); border-color: var(--teal); color: #ffffff; }
+    .index-num {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      opacity: 0.85;
+    }
+    .index-title { font-size: 12px; font-weight: 700; line-height: 1.25; }
+
+    .tech-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .tech-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+    .tech-card h4 { font-size: 13.5px; font-weight: 800; color: var(--teal); margin-bottom: 6px; }
+    .tech-card p { font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+
+    /* ── Print / Export to 16:9 PDF ────────────────────────────────── */
+    @media print {
+      html, body { overflow: visible !important; height: auto !important; background: #ffffff !important; }
+      .modal-bg { display: none !important; }
+      main.stage-wrap { display: block !important; padding: 0 !important; width: auto !important; height: auto !important; overflow: visible !important; background: #fff !important; }
+      .stage-scaler {
+        width: auto !important; height: auto !important;
+        transform: none !important; overflow: visible !important;
+      }
+      section.slide {
+        position: relative !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: none !important;
+        page-break-after: always !important;
+        break-after: page !important;
+        width: 1280px !important;
+        height: 720px !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      @page { size: 1280px 720px; margin: 0; }
+    }
+  </style>
+</head>
+<body class="no-anim">
+
+  <!-- Inline Crisp Vector Icon Sprite (Zero Emojis) -->
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+    <symbol id="i-chevron-left" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></symbol>
+    <symbol id="i-chevron-right" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></symbol>
+    <symbol id="i-smartphone" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+    <symbol id="i-key" viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-user-check" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></symbol>
+    <symbol id="i-qr" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3z"/><path d="M20 14v3h-1"/><path d="M14 20h7"/></symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+    <symbol id="i-credit-card" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></symbol>
+    <symbol id="i-bag" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 3 2.3 6.2L20.5 11.5l-6.2 2.3L12 20l-2.3-6.2-6.2-2.3 6.2-2.3L12 3Z"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></symbol>
+    <symbol id="i-activity" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+    <symbol id="i-trending-down" viewBox="0 0 24 24"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="i-video" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
+    <symbol id="i-dumbbell" viewBox="0 0 24 24"><path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/></symbol>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></symbol>
+    <symbol id="i-clipboard" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></symbol>
+    <symbol id="i-box" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></symbol>
+    <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+    <symbol id="i-external" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></symbol>
+    <symbol id="i-dollar" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></symbol>
+    <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></symbol>
+  </svg>
+
+  <!-- Full-Bleed 16:9 Stage (Zero Top/Bottom Panels) -->
+  <main class="stage-wrap" id="stageWrap">
+    <div class="stage-scaler" id="stageScaler">
+      <!-- Subtle top micro-progress bar (Zero toolbar footprint) -->
+      <div class="deck-progress-bar" id="deckProgressBar"></div>
+
+      <!-- Floating edge navigation chevrons (Zero emojis, unobtrusive) -->
+      <button class="floating-nav-btn prev" id="navBtnPrev" aria-label="Diapositiva anterior" title="Anterior (Flecha Izq / Backspace)">
+        <svg class="ico"><use href="#i-chevron-left"/></svg>
+      </button>
+      <button class="floating-nav-btn next" id="navBtnNext" aria-label="Diapositiva siguiente" title="Siguiente (Flecha Der / Espacio)">
+        <svg class="ico"><use href="#i-chevron-right"/></svg>
+      </button>
+
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <!-- BLOQUE 01 · YAHIR GUEVARA CARDONA (SLIDES 01 - 03)             -->
+      <!-- SLIDE 01: PORTADA + SÚPER INTRO / MINI-RESUMEN BLOQUE 1        -->
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <section class="slide dark-slide" data-slide="1" data-intro="true" data-title="Bloque 1 (Intro) · Yahir Guevara: Portada y Visión">
+        <div class="top-stripe"></div>
+        <div class="slide-inner" style="padding: 28px 52px 22px 52px;">
+          <div class="cover-top">
+            <div style="display:flex; flex-direction:column;">
+              <div class="cover-brand-row">
+                <div class="logo-pill"><img src="public/img/Responsables/logo.webp" alt="Logo GROM 21"></div>
+                <div class="uaa-pill"><img src="cartel_presentacion/assets/logo_uaa.png" alt="Logo UAA"></div>
+              </div>
+              <div class="cover-kicker">
+                <svg class="ico"><use href="#i-pin"/></svg>
+                Universidad Autónoma de Aguascalientes · Sede Jesús María, Ags.
+              </div>
+              <h1 class="cover-h1">
+                GROM 21 · espacioGYM
+                <span>Plataforma Integral para Gimnasios</span>
+              </h1>
+              <p class="cover-lead">
+                Ecosistema digital que conecta cada momento de un gimnasio real: portal informativo, pagos seguros, acceso QR en vivo, clases, tienda oficial, Coach Virtual IA y analítica para dirección.
+              </p>
+
+              <!-- Mini-resumen introductorio del Bloque 1 (Yahir) -->
+              <div class="cover-b1-box">
+                <div class="cover-b1-head">
+                  <span>Bloque 01 de 06 · En esta apertura veremos</span>
+                  <strong>Yahir Guevara Cardona</strong>
+                </div>
+                <div class="cover-b1-topics">
+                  <div class="cover-b1-item">
+                    <div class="ico-box dark" style="width:34px; height:34px; font-size:16px;"><svg class="ico"><use href="#i-alert"/></svg></div>
+                    <div><strong>1. Por qué nace el proyecto</strong><span>Retos reales de gimnasios locales</span></div>
+                  </div>
+                  <div class="cover-b1-item">
+                    <div class="ico-box dark" style="width:34px; height:34px; font-size:16px;"><svg class="ico"><use href="#i-globe"/></svg></div>
+                    <div><strong>2. Qué es espacioGYM</strong><span>Visión unificada Web + Android</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="cover-photo">
+              <img src="public/img/CARRUSEL/1.webp" alt="Fachada GROM 21 Fitness">
+              <div class="cover-photo-badge">
+                <div class="ico-box dark" style="width:36px; height:36px; font-size:17px;"><svg class="ico"><use href="#i-layers"/></svg></div>
+                <div>
+                  <strong>Operación Completa en Tiempo Real</strong>
+                  <span>Portal Web · App Android · Mostrador · Coach IA</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="team-strip">
+            <div class="team-strip-label">Equipo de Expositores · 6 Bloques Temáticos (Introducción + Desarrollo)</div>
+            <div class="team-grid">
+              <div class="member-pill active-member">
+                <img src="public/img/Responsables/yahir.webp" alt="Yahir Guevara Cardona">
+                <div><strong>Yahir Guevara</strong><span>Bloque 01</span></div>
+              </div>
+              <div class="member-pill">
+                <img src="public/img/Responsables/pepe.webp" alt="Jose Alberto Vazquez Guerrero">
+                <div><strong>Jose A. Vazquez</strong><span>Bloque 02</span></div>
+              </div>
+              <div class="member-pill">
+                <img src="public/img/Responsables/luis.webp" alt="Luis Antonio García Gómez">
+                <div><strong>Luis A. García</strong><span>Bloque 03</span></div>
+              </div>
+              <div class="member-pill">
+                <img src="public/img/Responsables/martin.webp" alt="Martin Alfonso Romo Martínez">
+                <div><strong>Martin A. Romo</strong><span>Bloque 04</span></div>
+              </div>
+              <div class="member-pill">
+                <img src="public/img/Responsables/ricardo.webp" alt="Ricardo Padilla Hernández">
+                <div><strong>Ricardo Padilla</strong><span>Bloque 05</span></div>
+              </div>
+              <div class="member-pill">
+                <img src="public/img/Responsables/tapia.webp" alt="Jesús Eduardo Tapia Avalos">
+                <div><strong>Jesús E. Tapia</strong><span>Bloque 06</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <!-- SLIDE 02: YAHIR (1/2) — EL RETO DE LOS GIMNASIOS LOCALES       -->
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <section class="slide" data-slide="2" data-title="02 · Yahir: ¿Por qué nace espacioGYM?">
+        <div class="top-stripe"></div>
+        <div class="slide-inner">
+          <div class="s-head">
+            <div>
+              <div class="s-eyebrow">Bloque 01 · Contexto y Problemática</div>
+              <h2 class="s-title">¿Por qué nace espacioGYM?</h2>
+              <p class="s-sub">Muchos gimnasios independientes aún dependen de procesos manuales que frenan su crecimiento y afectan la experiencia del socio.</p>
+            </div>
+            <div class="presenter-pill">
+              <img src="public/img/Responsables/yahir.webp" alt="Yahir Guevara Cardona">
+              <div><strong>Yahir Guevara Cardona</strong><span>Bloque 01 · Visión General</span></div>
+            </div>
+          </div>
+
+          <div class="s-body">
+            <div class="grid-4" style="margin-bottom: 18px;">
+              <div class="card accent-top" style="--card-accent: var(--danger);">
+                <div class="ico-box danger"><svg class="ico"><use href="#i-trending-down"/></svg></div>
+                <h3 style="margin-top:14px;">Fugas de Cobros y Descontrol</h3>
+                <p style="margin-top:8px;">Cuando las mensualidades se anotan en libretas u hojas de cálculo, los vencimientos pasan desapercibidos y se pierden ingresos cada mes.</p>
+                <div style="margin-top:auto; padding-top:14px; border-top:1px solid var(--border); font-size:12px; font-weight:700; color:var(--danger);">
+                  Sin alertas automáticas de corte
+                </div>
+              </div>
+
+              <div class="card accent-top" style="--card-accent: var(--amber);">
+                <div class="ico-box amber"><svg class="ico"><use href="#i-clock"/></svg></div>
+                <h3 style="margin-top:14px;">Filas y Pases Prestados</h3>
+                <p style="margin-top:8px;">Buscar nombres en listas durante horas pico genera espera en entrada, y los pases estáticos o capturas de pantalla se prestan fácilmente.</p>
+                <div style="margin-top:auto; padding-top:14px; border-top:1px solid var(--border); font-size:12px; font-weight:700; color:var(--amber);">
+                  Control vulnerable en puerta
+                </div>
+              </div>
+
+              <div class="card accent-top" style="--card-accent: var(--teal);">
+                <div class="ico-box"><svg class="ico"><use href="#i-users"/></svg></div>
+                <h3 style="margin-top:14px;">Abandono por Falta de Guía</h3>
+                <p style="margin-top:8px;">Quien inicia en el gimnasio suele desmotivarse al no contar con una rutina clara adaptada a su nivel, objetivo y equipo disponible.</p>
+                <div style="margin-top:auto; padding-top:14px; border-top:1px solid var(--border); font-size:12px; font-weight:700; color:var(--teal);">
+                  Alta deserción en primeros meses
+                </div>
+              </div>
+
+              <div class="card accent-top" style="--card-accent: var(--sage);">
+                <div class="ico-box sage"><svg class="ico"><use href="#i-dollar"/></svg></div>
+                <h3 style="margin-top:14px;">Software Externo Inaccesible</h3>
+                <p style="margin-top:8px;">Las plataformas comerciales cobran rentas mensuales en dólares, comisiones por usuario o exigen torniquetes propietarios costosos.</p>
+                <div style="margin-top:auto; padding-top:14px; border-top:1px solid var(--border); font-size:12px; font-weight:700; color:var(--sage);">
+                  Barrera económica para PyMEs
+                </div>
+              </div>
+            </div>
+
+            <div class="card" style="background: var(--teal-dark); border-color: var(--teal); padding: 16px 24px; flex-direction: row; align-items: center; gap: 18px;">
+              <div class="ico-box dark"><svg class="ico"><use href="#i-check"/></svg></div>
+              <div>
+                <h3 style="color:#ffffff; font-size:15.5px;">Nuestro Propósito con GROM 21</h3>
+                <p style="color:#d6e4e8; font-size:13.5px; margin-top:2px;">Digitalizar de forma accesible, intuitiva y segura la operación completa de un gimnasio real en Jesús María, Aguascalientes, mejorando tanto la gestión del negocio como la constancia de sus socios.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="s-foot">
+            <span>GROM 21 · espacioGYM — Bloque 01: Contexto y Problemática</span>
+            <strong>02 / 18</strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <!-- SLIDE 03: YAHIR (2/2) — QUÉ ES ESPACIOGYM EN UN VISTAZO        -->
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <section class="slide" data-slide="3" data-title="03 · Yahir: ¿Qué es espacioGYM?">
+        <div class="top-stripe"></div>
+        <div class="slide-inner">
+          <div class="s-head">
+            <div>
+              <div class="s-eyebrow">Bloque 01 · La Solución Integral</div>
+              <h2 class="s-title">¿Qué es espacioGYM? Todo el Gimnasio en un Solo Lugar</h2>
+              <p class="s-sub">Una plataforma unificada que conecta la operación física de GROM 21 con la web y la aplicación móvil Android.</p>
+            </div>
+            <div class="presenter-pill">
+              <img src="public/img/Responsables/yahir.webp" alt="Yahir Guevara Cardona">
+              <div><strong>Yahir Guevara Cardona</strong><span>Bloque 01 · Visión General</span></div>
+            </div>
+          </div>
+
+          <div class="s-body">
+            <div style="display:grid; grid-template-columns: 1.08fr 0.98fr; gap: 26px; flex:1; min-height:0; align-items:stretch;">
+              <div style="display:flex; flex-direction:column; gap:14px; justify-content:space-between;">
+                <div class="card accent-left" style="--card-accent: var(--teal); padding:16px 20px; flex-direction:row; gap:14px; align-items:center; flex:1;">
+                  <div class="ico-box"><svg class="ico"><use href="#i-globe"/></svg></div>
+                  <div>
+                    <h3>Un Solo Ecosistema Web + Android</h3>
+                    <p style="margin-top:4px;">Funciona en computadora, tablet y celular sin procesos complicados. Toda la información del gimnasio se mantiene sincronizada en la nube al instante.</p>
+                  </div>
+                </div>
+
+                <div class="card accent-left" style="--card-accent: var(--sage); padding:16px 20px; flex-direction:row; gap:14px; align-items:center; flex:1;">
+                  <div class="ico-box sage"><svg class="ico"><use href="#i-qr"/></svg></div>
+                  <div>
+                    <h3>Acompaña el Ciclo Completo del Socio</h3>
+                    <p style="margin-top:4px;">Desde explorar instalaciones y contratar membresía, hasta entrar con QR en vivo, reservar clases, comprar suplementos y entrenar con seguimiento.</p>
+                  </div>
+                </div>
+
+                <div class="card accent-left" style="--card-accent: var(--amber); padding:16px 20px; flex-direction:row; gap:14px; align-items:center; flex:1;">
+                  <div class="ico-box amber"><svg class="ico"><use href="#i-spark"/></svg></div>
+                  <div>
+                    <h3>Inteligencia Artificial Útil y Sostenible</h3>
+                    <p style="margin-top:4px;">Coach virtual con voz para cada socio y pronóstico de aforo para la gerencia, construido con tecnologías abiertas sin rentas en dólares.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display:flex; flex-direction:column; gap:14px; min-height:0;">
+                <div class="photo-box" style="flex:1; min-height:0;">
+                  <img src="public/img/CARRUSEL/4.webp" alt="Interior y recepción GROM 21" style="object-position: 55% 45%;">
+                  <div class="photo-caption"><svg class="ico"><use href="#i-pin"/></svg> GROM 21 Real · Cardio y Mostrador Conectados</div>
+                </div>
+                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; flex-shrink:0;">
+                  <div class="card" style="padding:12px; text-align:center;">
+                    <strong style="font-size:15px; color:var(--teal);">Web + APK</strong>
+                    <span style="font-size:11px; color:var(--muted); margin-top:2px;">Multiplataforma</span>
+                  </div>
+                  <div class="card" style="padding:12px; text-align:center;">
+                    <strong style="font-size:15px; color:var(--sage);">4 Perfiles</strong>
+                    <span style="font-size:11px; color:var(--muted); margin-top:2px;">Acceso ordenado</span>
+                  </div>
+                  <div class="card" style="padding:12px; text-align:center;">
+                    <strong style="font-size:15px; color:var(--amber);">En Producción</strong>
+                    <span style="font-size:11px; color:var(--muted); margin-top:2px;">100% operativo</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="s-foot">
+            <span>GROM 21 · espacioGYM — Bloque 01: Propuesta Integral</span>
+            <strong>03 / 18</strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <!-- BLOQUE 02 · JOSE ALBERTO VAZQUEZ GUERRERO (SLIDES 04 - 06)     -->
+      <!-- SLIDE 04: SÚPER INTRO / MINI-RESUMEN BLOQUE 2                  -->
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <section class="slide intro-slide" data-slide="4" data-intro="true" data-title="Bloque 2 (Intro) · Jose Alberto: Portal y Experiencia">
+        <div class="top-stripe"></div>
+        <div class="slide-inner">
+          <div class="intro-layout">
+            <div class="intro-left">
+              <div class="chapter-badge"><svg class="ico"><use href="#i-compass"/></svg> Bloque 02 de 06 · Introducción</div>
+              <div class="intro-speaker-row">
+                <img src="public/img/Responsables/pepe.webp" alt="Jose Alberto Vazquez Guerrero">
+                <div>
+                  <div class="spk-label">Presenta esta sección</div>
+                  <div class="spk-name">Jose Alberto Vazquez Guerrero</div>
+                  <div class="spk-role">Portal Público, Accesibilidad y Experiencia Móvil</div>
+                </div>
+              </div>
+              <h2 class="intro-h2">Primera Impresión Abierta y Diseño para Todos</h2>
+              <p class="intro-lead">
+                Antes de inscribirse, cualquier persona puede recorrer el gimnasio desde su pantalla y adaptar la interfaz a su comodidad visual.
+              </p>
+              <div class="intro-progress-dots">
+                <span class="intro-dot done"></span>
+                <span class="intro-dot now"></span>
+                <span class="intro-dot"></span>
+                <span class="intro-dot"></span>
+                <span class="intro-dot"></span>
+                <span class="intro-dot"></span>
+              </div>
+            </div>
+
+            <div class="intro-right">
+              <div class="intro-roadmap-label"><svg class="ico"><use href="#i-layers"/></svg> Mini-resumen de los temas que veremos ahora</div>
+
+              <div class="intro-topic-card" style="--topic-accent: #93bac4;">
+                <div class="ico-box dark"><svg class="ico"><use href="#i-globe"/></svg></div>
+                <div>
+                  <div class="topic-num">TEMA 01</div>
+                  <h3>Portal Público Abierto e Instalaciones</h3>
+                  <p>Cómo cualquier visitante conoce la sede en Jesús María, horarios, disciplinas, galería fotográfica, guías en video y el buscador rápido.</p>
+                </div>
+              </div>
+
+              <div class="intro-topic-card" style="--topic-accent: #8fb8a0;">
+                <div class="ico-box dark-sage"><svg class="ico"><use href="#i-smartphone"/></svg></div>
+                <div>
+                  <div class="topic-num">TEMA 02</div>
+                  <h3>Diseño Inclusivo, Modo Oscuro y App Android</h3>
+                  <p>Cómo cuidamos la accesibilidad con alto contraste, ajuste de lectura y una aplicación móvil fluida en celular y tablet.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="s-foot">
+            <span>GROM 21 · espacioGYM — Introducción Bloque 02 / 06</span>
+            <strong>04 / 18</strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <!-- SLIDE 05: JOSE ALBERTO (1/2) — PORTAL PÚBLICO ABIERTO          -->
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <section class="slide" data-slide="5" data-title="05 · Jose Alberto: Portal Público e Instalaciones">
+        <div class="top-stripe"></div>
+        <div class="slide-inner">
+          <div class="s-head">
+            <div>
+              <div class="s-eyebrow">Bloque 02 · Portal Informativo</div>
+              <h2 class="s-title">Portal Público Abierto: Conoce GROM 21 Antes de Ir</h2>
+              <p class="s-sub">Información transparente, recorridos visuales y herramientas prácticas disponibles sin necesidad de crear cuenta.</p>
+            </div>
+            <div class="presenter-pill">
+              <img src="public/img/Responsables/pepe.webp" alt="Jose Alberto Vazquez Guerrero">
+              <div><strong>Jose A. Vazquez Guerrero</strong><span>Bloque 02 · Portal y UX</span></div>
+            </div>
+          </div>
+
+          <div class="s-body">
+            <div style="display:grid; grid-template-columns: 0.94fr 1.12fr; gap:24px; flex:1; min-height:0;">
+              <div style="display:grid; grid-template-rows: 1fr 1fr; gap:16px; min-height:0;">
+                <div class="photo-box">
+                  <img src="public/img/CARRUSEL/3.webp" alt="Exterior GROM 21 Jesús María" style="object-position: 55% 55%;">
+                  <div class="photo-caption"><svg class="ico"><use href="#i-pin"/></svg> San Mateo #2, Col. Alcázar · Jesús María</div>
+                </div>
+                <div class="photo-box">
+                  <img src="public/img/CARRUSEL/2.webp" alt="Área de Pesas y Entrenamiento" style="object-position: 45% 55%;">
+                  <div class="photo-caption"><svg class="ico"><use href="#i-dumbbell"/></svg> Áreas de Fuerza, Cardio y Clases Grupales</div>
+                </div>
+              </div>
+
+              <div style="display:flex; flex-direction:column; gap:16px; justify-content:space-between;">
+                <div class="card accent-left" style="--card-accent: var(--teal); flex:1; flex-direction:row; gap:16px; align-items:center;">
+                  <div class="ico-box"><svg class="ico"><use href="#i-globe"/></svg></div>
+                  <div>
+                    <h3>Información Clara de la Sede y Servicios</h3>
+                    <p style="margin-top:5px;">Horarios de atención (lunes a viernes de 6:00 a 23:00 y sábados de 6:00 a 14:00), historia de GROM 21, ubicación interactiva, redes sociales y presentación del equipo.</p>
+                  </div>
+                </div>
+
+                <div class="card accent-left" style="--card-accent: var(--sage); flex:1; flex-direction:row; gap:16px; align-items:center;">
+                  <div class="ico-box sage"><svg class="ico"><use href="#i-video"/></svg></div>
+                  <div>
+                    <h3>Galería Fotográfica y Guías en Video</h3>
+                    <p style="margin-top:5px;">Fotografías reales optimizadas para cargar rápido en cualquier conexión y guías en video bajo demanda pensadas para orientar a visitantes y nuevos socios.</p>
+                  </div>
+                </div>
+
+                <div class="card accent-left" style="--card-accent: var(--amber); flex:1; flex-direction:row; gap:16px; align-items:center;">
+                  <div class="ico-box amber"><svg class="ico"><use href="#i-search"/></svg></div>
+                  <div>
+                    <h3>Buscador Rápido Global</h3>
+                    <p style="margin-top:5px;">Un atajo accesible desde cualquier pantalla para localizar al instante disciplinas, planes, tienda oficial o servicios sin perderse en menús largos.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="s-foot">
+            <span>GROM 21 · espacioGYM — Bloque 02: Portal Público y Catálogo</span>
+            <strong>05 / 18</strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <!-- SLIDE 06: JOSE ALBERTO (2/2) — DISEÑO INCLUSIVO Y APP ANDROID  -->
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <section class="slide" data-slide="6" data-title="06 · Jose Alberto: Diseño Inclusivo y App Android">
+        <div class="top-stripe"></div>
+        <div class="slide-inner">
+          <div class="s-head">
+            <div>
+              <div class="s-eyebrow">Bloque 02 · Accesibilidad y Movilidad</div>
+              <h2 class="s-title">Diseño Inclusivo, Modo Oscuro y App Android Oficial</h2>
+              <p class="s-sub">Una interfaz cómoda para cualquier persona y lista para usarse todos los días desde el teléfono o la tablet.</p>
+            </div>
+            <div class="presenter-pill">
+              <img src="public/img/Responsables/pepe.webp" alt="Jose Alberto Vazquez Guerrero">
+              <div><strong>Jose A. Vazquez Guerrero</strong><span>Bloque 02 · Portal y UX</span></div>
+            </div>
+          </div>
+
+          <div class="s-body">
+            <div style="display:grid; grid-template-columns: 1.04fr 1.02fr; gap:26px; flex:1; align-items:center; min-height:0;">
+              <div style="display:flex; flex-direction:column; gap:14px;">
+                <div class="card" style="background: var(--teal-dark); border-color: var(--teal); padding:16px 20px; flex-direction:row; justify-content:space-around; text-align:center;">
+                  <div>
+                    <div style="font-size:26px; font-weight:800; color:#93bac4;">14.68 : 1</div>
+                    <div style="font-size:11.5px; color:#d6e4e8; margin-top:2px;">Contraste Tema Claro</div>
+                  </div>
+                  <div style="width:1px; background:rgba(147,186,196,0.28);"></div>
+                  <div>
+                    <div style="font-size:26px; font-weight:800; color:#9cc9ac;">15.40 : 1</div>
+                    <div style="font-size:11.5px; color:#d6e4e8; margin-top:2px;">Contraste Tema Oscuro</div>
+                  </div>
+                </div>
+
+                <div class="card accent-left" style="--card-accent: var(--teal); padding:14px 18px; flex-direction:row; gap:14px; align-items:center;">
+                  <div class="ico-box"><svg class="ico"><use href="#i-sun"/></svg></div>
+                  <div>
+                    <h3>Modo Claro, Oscuro y Automático</h3>
+                    <p style="margin-top:3px;">Se adapta al gusto del usuario y a la luz del entorno sin parpadeos, recordando su preferencia en cada visita.</p>
+                  </div>
+                </div>
+
+                <div class="card accent-left" style="--card-accent: var(--sage); padding:14px 18px; flex-direction:row; gap:14px; align-items:center;">
+                  <div class="ico-box sage"><svg class="ico"><use href="#i-sliders"/></svg></div>
+                  <div>
+                    <h3>Panel de Accesibilidad en Vivo</h3>
+                    <p style="margin-top:3px;">Permite ampliar el tamaño de texto, activar alto contraste, reducir animaciones y navegar cómodamente con teclado.</p>
+                  </div>
+                </div>
+
+                <div class="card accent-left" style="--card-accent: var(--amber); padding:14px 18px; flex-direction:row; gap:14px; align-items:center;">
+                  <div class="ico-box amber"><svg class="ico"><use href="#i-smartphone"/></svg></div>
+                  <div>
+                    <h3>App Nativa Android en Celular y Tablet</h3>
+                    <p style="margin-top:3px;">Barra inferior que cambia según el perfil del usuario, acceso directo a cámara para QR y descarga oficial desde la web.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display:flex; flex-direction:column; gap:12px;">
+                <div class="tablet-frame">
+                  <img src="tablet_ready.png" alt="Captura real GROM 21 espacioGYM en Android">
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 16px; border-radius:12px; background:var(--surface); border:1px solid var(--border); font-size:12.5px; color:var(--muted);">
+                  <span style="display:inline-flex; align-items:center; gap:7px; font-weight:700; color:var(--text);">
+                    <svg class="ico" style="color:var(--teal);"><use href="#i-check"/></svg> Captura real en Tablet Android
+                  </span>
+                  <span style="font-weight:700; color:var(--teal);">Mismo diseño en Web y Móvil</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="s-foot">
+            <span>GROM 21 · espacioGYM — Bloque 02: Inclusión y App Android</span>
+            <strong>06 / 18</strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <!-- BLOQUE 03 · LUIS ANTONIO GARCÍA GÓMEZ (SLIDES 07 - 09)         -->
+      <!-- SLIDE 07: SÚPER INTRO / MINI-RESUMEN BLOQUE 3                  -->
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <section class="slide intro-slide" data-slide="7" data-intro="true" data-title="Bloque 3 (Intro) · Luis Antonio: Acceso y Perfiles">
+        <div class="top-stripe"></div>
+        <div class="slide-inner">
+          <div class="intro-layout">
+            <div class="intro-left">
+              <div class="chapter-badge"><svg class="ico"><use href="#i-compass"/></svg> Bloque 03 de 06 · Introducción</div>
+              <div class="intro-speaker-row">
+                <img src="public/img/Responsables/luis.webp" alt="Luis Antonio García Gómez">
+                <div>
+                  <div class="spk-label">Presenta esta sección</div>
+                  <div class="spk-name">Luis Antonio García Gómez</div>
+                  <div class="spk-role">Acceso Seguro, Notificaciones y Perfiles de Usuario</div>
+                </div>
+              </div>
+              <h2 class="intro-h2">Confianza en Cada Cuenta y Orden por Rol</h2>
+              <p class="intro-lead">
+                Entrar al sistema es muy simple para cualquier persona, pero cada herramienta está cuidadosamente protegida según quién la usa.
+              </p>
+              <div class="intro-progress-dots">
+                <span class="intro-dot done"></span>
+                <span class="intro-dot done"></span>
+                <span class="intro-dot now"></span>
+                <span class="intro-dot"></span>
+                <span class="intro-dot"></span>
+                <span class="intro-dot"></span>
+              </div>
+            </div>
+
+            <div class="intro-right">
+              <div class="intro-roadmap-label"><svg class="ico"><use href="#i-layers"/></svg> Mini-resumen de los temas que veremos ahora</div>
+
+              <div class="intro-topic-card" style="--topic-accent: #93bac4;">
+                <div class="ico-box dark"><svg class="ico"><use href="#i-key"/></svg></div>
+                <div>
+                  <div class="topic-num">TEMA 01</div>
+                  <h3>Registro Sencillo y Correos Automáticos</h3>
+                  <p>Inicio de sesión con correo o cuenta de Google, resguardo seguro de cuentas y avisos automáticos para reservas, visitas y vencimientos.</p>
+                </div>
+              </div>
+
+              <div class="intro-topic-card" style="--topic-accent: #ddb26d;">
+                <div class="ico-box dark-amber"><svg class="ico"><use href="#i-shield"/></svg></div>
+                <div>
+                  <div class="topic-num">TEMA 02</div>
+                  <h3>Cuatro Perfiles Diseñados a la Medida</h3>
+                  <p>Cómo se separa con claridad lo que ve un visitante, un socio activo, un recepcionista y el administrador del gimnasio.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="s-foot">
+            <span>GROM 21 · espacioGYM — Introducción Bloque 03 / 06</span>
+            <strong>07 / 18</strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <!-- SLIDE 08: LUIS ANTONIO (1/2) — ACCESO SENCILLO Y CORREOS       -->
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <section class="slide" data-slide="8" data-title="08 · Luis Antonio: Registro, Seguridad y Correos">
+        <div class="top-stripe"></div>
+        <div class="slide-inner">
+          <div class="s-head">
+            <div>
+              <div class="s-eyebrow">Bloque 03 · Identidad y Comunicación</div>
+              <h2 class="s-title">Registro Sencillo, Protección y Correos Automáticos</h2>
+              <p class="s-sub">Entrar toma segundos y el sistema mantiene informados a los socios sin saturar al personal en mostrador.</p>
+            </div>
+            <div class="presenter-pill">
+              <img src="public/img/Responsables/luis.webp" alt="Luis Antonio García Gómez">
+              <div><strong>Luis A. García Gómez</strong><span>Bloque 03 · Seguridad y Roles</span></div>
+            </div>
+          </div>
+
+          <div class="s-body">
+            <div class="grid-2">
+              <div style="display:flex; flex-direction:column; gap:18px;">
+                <div class="card accent-left" style="--card-accent: var(--teal); flex:1;">
+                  <div style="display:flex; align-items:center; gap:14px; margin-bottom:10px;">
+                    <div class="ico-box"><svg class="ico"><use href="#i-key"/></svg></div>
+                    <h3 style="font-size:18px;">Dos Formas Fáciles de Ingresar</h3>
+                  </div>
+                  <ul class="clean-list" style="--bullet-color: var(--teal); gap:10px;">
+                    <li><strong>Correo y contraseña:</strong> Registro directo con claves resguardadas de forma cifrada y cambio de contraseña disponible en cualquier momento.</li>
+                    <li><strong>Cuenta de Google en un toque:</strong> Funciona tanto en navegador web como directamente dentro de la app de Android.</li>
+                    <li><strong>Sostenible para el negocio:</strong> Sin depender de mensajes SMS de cobro externo para operar todos los días.</li>
+                  </ul>
+                </div>
+
+                <div class="card accent-left" style="--card-accent: var(--sage); flex:1;">
+                  <div style="display:flex; align-items:center; gap:14px; margin-bottom:10px;">
+                    <div class="ico-box sage"><svg class="ico"><use href="#i-lock"/></svg></div>
+                    <h3 style="font-size:18px;">Privacidad y Protección Continua</h3>
+                  </div>
+                  <ul class="clean-list" style="--bullet-color: var(--sage); gap:10px;">
+                    <li><strong>Sesiones verificadas:</strong> Cada acción importante valida la identidad del usuario antes de mostrar o guardar información.</li>
+                    <li><strong>Accesos protegidos:</strong> Nadie puede entrar a vistas administrativas, padrón de socios o herramientas de cobro sin autorización.</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="card" style="padding:20px 22px; justify-content:space-between;">
+                <div style="background: var(--teal-dark); border-radius:12px; padding:14px 18px; display:flex; align-items:center; gap:12px; margin-bottom:14px;">
+                  <div class="ico-box dark" style="width:36px; height:36px; font-size:18px;"><svg class="ico"><use href="#i-mail"/></svg></div>
+                  <div>
+                    <h3 style="color:#ffffff; font-size:16px;">Avisos Automáticos por Correo</h3>
+                    <p style="color:#93bac4; font-size:12px; margin-top:1px;">Comunicación puntual en cada momento clave</p>
+                  </div>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:18px; flex:1; justify-content:space-evenly;">
+                  <div style="display:flex; gap:14px; align-items:flex-start;">
+                    <div class="ico-box" style="width:38px; height:38px; font-size:18px;"><svg class="ico"><use href="#i-check"/></svg></div>
+                    <div>
+                      <h3 style="font-size:15px;">Comprobante de Reserva de Clase</h3>
+                      <p style="font-size:13px; margin-top:3px;">Al agendar una sesión grupal, el socio recibe al instante un correo confirmando disciplina, fecha y turno.</p>
+                    </div>
+                  </div>
+
+                  <div style="display:flex; gap:14px; align-items:flex-start;">
+                    <div class="ico-box sage" style="width:38px; height:38px; font-size:18px;"><svg class="ico"><use href="#i-calendar"/></svg></div>
+                    <div>
+                      <h3 style="font-size:15px;">Respaldo de Asistencias</h3>
+                      <p style="font-size:13px; margin-top:3px;">Envío de confirmación automática para llevar un historial claro de las visitas al gimnasio.</p>
+                    </div>
+                  </div>
+
+                  <div style="display:flex; gap:14px; align-items:flex-start;">
+                    <div class="ico-box amber" style="width:38px; height:38px; font-size:18px;"><svg class="ico"><use href="#i-clock"/></svg></div>
+                    <div>
+                      <h3 style="font-size:15px;">Recordatorios Antes del Vencimiento</h3>
+                      <p style="font-size:13px; margin-top:3px;">Alerta preventiva para avisar a los socios cuando su membresía está próxima a terminar y facilitar su renovación.</p>
+                    </div>
+                  </div>
+
+                  <div style="display:flex; gap:14px; align-items:flex-start;">
+                    <div class="ico-box" style="width:38px; height:38px; font-size:18px;"><svg class="ico"><use href="#i-key"/></svg></div>
+                    <div>
+                      <h3 style="font-size:15px;">Actualización Segura de Contraseña</h3>
+                      <p style="font-size:13px; margin-top:3px;">Cada usuario puede cambiar su clave verificando su contraseña actual para mantener su cuenta protegida.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="s-foot">
+            <span>GROM 21 · espacioGYM — Bloque 03: Identidad y Comunicación</span>
+            <strong>08 / 18</strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <!-- SLIDE 09: LUIS ANTONIO (2/2) — CUATRO PERFILES A LA MEDIDA     -->
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <section class="slide dark-slide" data-slide="9" data-title="09 · Luis Antonio: Cuatro Perfiles Diferenciados">
+        <div class="top-stripe"></div>
+        <div class="slide-inner">
+          <div class="s-head">
+            <div>
+              <div class="s-eyebrow">Bloque 03 · Personas y Permisos</div>
+              <h2 class="s-title">Cuatro Experiencias Diseñadas a la Medida</h2>
+              <p class="s-sub">Cada persona ve exactamente las herramientas que necesita, manteniendo orden y seguridad en toda la operación.</p>
+            </div>
+            <div class="presenter-pill">
+              <img src="public/img/Responsables/luis.webp" alt="Luis Antonio García Gómez">
+              <div><strong>Luis A. García Gómez</strong><span>Bloque 03 · Seguridad y Roles</span></div>
+            </div>
+          </div>
+
+          <div class="s-body">
+            <div class="grid-4">
+              <div class="card accent-top" style="--card-accent: #a7b3bc;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+                  <div class="ico-box dark" style="color:#a7b3bc;"><svg class="ico"><use href="#i-users"/></svg></div>
+                  <span style="font-size:11px; font-weight:700; color:#a7b3bc; padding:4px 10px; border-radius:999px; border:1px solid #2e3e46;">Perfil 1</span>
+                </div>
+                <h3>Visitante / Usuario Nuevo</h3>
+                <p style="margin-top:6px; font-size:12.5px;">Personas interesadas en conocer el gimnasio o recién registradas.</p>
+                <ul class="clean-list" style="--bullet-color:#a7b3bc; margin-top:14px;">
+                  <li>Explora instalaciones, horarios, videos y mapa.</li>
+                  <li>Se registra fácil con correo o cuenta de Google.</li>
+                  <li>Puede comprar artículos en la tienda y elegir membresía.</li>
+                  <li>Si intenta abrir funciones de socio, se le invita a activar su plan.</li>
+                </ul>
+              </div>
+
+              <div class="card accent-top" style="--card-accent: #8fb8a0;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+                  <div class="ico-box dark-sage"><svg class="ico"><use href="#i-user-check"/></svg></div>
+                  <span style="font-size:11px; font-weight:700; color:#8fb8a0; padding:4px 10px; border-radius:999px; border:1px solid #3c5d4c;">Perfil 2</span>
+                </div>
+                <h3>Socio con Suscripción</h3>
+                <p style="margin-top:6px; font-size:12.5px;">Miembro activo con acceso completo al entrenamiento y servicios.</p>
+                <ul class="clean-list" style="--bullet-color:#8fb8a0; margin-top:14px;">
+                  <li>Se activa automáticamente al confirmar su pago.</li>
+                  <li>Registra su entrada leyendo el QR en recepción.</li>
+                  <li>Reserva clases grupales y consulta cupos en vivo.</li>
+                  <li>Usa el Coach IA con voz, rutinas, bitácora y estado de cuenta.</li>
+                </ul>
+              </div>
+
+              <div class="card accent-top" style="--card-accent: #93bac4;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+                  <div class="ico-box dark"><svg class="ico"><use href="#i-qr"/></svg></div>
+                  <span style="font-size:11px; font-weight:700; color:#93bac4; padding:4px 10px; border-radius:999px; border:1px solid #375d67;">Perfil 3</span>
+                </div>
+                <h3>Recepcionista</h3>
+                <p style="margin-top:6px; font-size:12.5px;">Personal en mostrador enfocado en recibir y atender a los socios.</p>
+                <ul class="clean-list" style="--bullet-color:#93bac4; margin-top:14px;">
+                  <li>Es personal operativo: no requiere comprar membresía.</li>
+                  <li>Proyecta el código QR dinámico que cambia cada 30 segundos.</li>
+                  <li>Consulta el padrón de socios suscritos y alertas de vencimiento.</li>
+                  <li>Supervisa las asistencias y reservas del turno.</li>
+                </ul>
+              </div>
+
+              <div class="card accent-top" style="--card-accent: #ddb26d;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+                  <div class="ico-box dark-amber"><svg class="ico"><use href="#i-shield"/></svg></div>
+                  <span style="font-size:11px; font-weight:700; color:#ddb26d; padding:4px 10px; border-radius:999px; border:1px solid #75531d;">Perfil 4</span>
+                </div>
+                <h3>Administrador</h3>
+                <p style="margin-top:6px; font-size:12.5px;">Dueño o gerencia con visibilidad y gobierno total del negocio.</p>
+                <ul class="clean-list" style="--bullet-color:#ddb26d; margin-top:14px;">
+                  <li>Panel de métricas financieras, demanda y pronóstico de aforo.</li>
+                  <li>Asigna planes especiales, cortesías y envía avisos de vencimiento.</li>
+                  <li>Administra el inventario y precios de los 40 productos.</li>
+                  <li>Asigna o actualiza roles del personal de forma segura.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="s-foot">
+            <span>GROM 21 · espacioGYM — Bloque 03: Roles y Experiencia Personalizada</span>
+            <strong>09 / 18</strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <!-- BLOQUE 04 · MARTIN ALFONSO ROMO MARTÍNEZ (SLIDES 10 - 12)      -->
+      <!-- SLIDE 10: SÚPER INTRO / MINI-RESUMEN BLOQUE 4                  -->
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <section class="slide intro-slide" data-slide="10" data-intro="true" data-title="Bloque 4 (Intro) · Martin Alfonso: QR y Recepción">
+        <div class="top-stripe"></div>
+        <div class="slide-inner">
+          <div class="intro-layout">
+            <div class="intro-left">
+              <div class="chapter-badge"><svg class="ico"><use href="#i-compass"/></svg> Bloque 04 de 06 · Introducción</div>
+              <div class="intro-speaker-row">
+                <img src="public/img/Responsables/martin.webp" alt="Martin Alfonso Romo Martínez">
+                <div>
+                  <div class="spk-label">Presenta esta sección</div>
+                  <div class="spk-name">Martin Alfonso Romo Martínez</div>
+                  <div class="spk-role">Control de Acceso QR y Operación Diaria</div>
+                </div>
+              </div>
+              <h2 class="intro-h2">Entrada Rápida en Puerta y Control del Día a Día</h2>
+              <p class="intro-lead">
+                Veamos cómo funciona la llegada real del socio al gimnasio, la pantalla de recepción y la organización de clases grupales.
+              </p>
+              <div class="intro-progress-dots">
+                <span class="intro-dot done"></span>
+                <span class="intro-dot done"></span>
+                <span class="intro-dot done"></span>
+                <span class="intro-dot now"></span>
+                <span class="intro-dot"></span>
+                <span class="intro-dot"></span>
+              </div>
+            </div>
+
+            <div class="intro-right">
+              <div class="intro-roadmap-label"><svg class="ico"><use href="#i-layers"/></svg> Mini-resumen de los temas que veremos ahora</div>
+
+              <div class="intro-topic-card" style="--topic-accent: #93bac4;">
+                <div class="ico-box dark"><svg class="ico"><use href="#i-qr"/></svg></div>
+                <div>
+                  <div class="topic-num">TEMA 01</div>
+                  <h3>Control de Acceso QR en Tiempo Real</h3>
+                  <p>Cómo invertimos el flujo tradicional: recepción muestra un QR que cambia cada 30 segundos y el socio lo lee en vivo con su cámara.</p>
+                </div>
+              </div>
+
+              <div class="intro-topic-card" style="--topic-accent: #8fb8a0;">
+                <div class="ico-box dark-sage"><svg class="ico"><use href="#i-calendar"/></svg></div>
+                <div>
+                  <div class="topic-num">TEMA 02</div>
+                  <h3>Mostrador de Recepción, Clases y Cupos</h3>
+                  <p>El padrón de socios suscritos, la agenda de 5 disciplinas en 3 turnos con semáforo de disponibilidad y las bitácoras del turno.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="s-foot">
+            <span>GROM 21 · espacioGYM — Introducción Bloque 04 / 06</span>
+            <strong>10 / 18</strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <!-- SLIDE 11: MARTIN (1/2) — CONTROL DE ACCESO QR EN TIEMPO REAL   -->
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <section class="slide" data-slide="11" data-title="11 · Martin: Control de Acceso QR en Vivo">
+        <div class="top-stripe"></div>
+        <div class="slide-inner">
+          <div class="s-head">
+            <div>
+              <div class="s-eyebrow">Bloque 04 · Entrada Segura y Rápida</div>
+              <h2 class="s-title">Control de Acceso por QR: Recepción Muestra, Socio Lee</h2>
+              <p class="s-sub">Un mecanismo sencillo en puerta que elimina filas, evita capturas compartidas y verifica cada visita en segundos.</p>
+            </div>
+            <div class="presenter-pill">
+              <img src="public/img/Responsables/martin.webp" alt="Martin Alfonso Romo Martínez">
+              <div><strong>Martin A. Romo Martínez</strong><span>Bloque 04 · QR y Recepción</span></div>
+            </div>
+          </div>
+
+          <div class="s-body">
+            <div class="steps-row" style="margin-bottom: 18px;">
+              <div class="card accent-top" style="--card-accent: var(--teal);">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
+                  <div class="ico-box"><svg class="ico"><use href="#i-qr"/></svg></div>
+                  <div>
+                    <span style="font-size:10.5px; font-weight:800; letter-spacing:0.08em; color:var(--teal);">PASO 1 · MOSTRADOR</span>
+                    <h3>Recepción Muestra el QR</h3>
+                  </div>
+                </div>
+                <p style="margin-bottom:10px;">La pantalla del recepcionista genera un código QR exclusivo del gimnasio que se renueva automáticamente.</p>
+                <ul class="clean-list" style="--bullet-color: var(--teal);">
+                  <li>Solo el personal autorizado proyecta el código en mostrador.</li>
+                  <li>Cada código caduca a los <strong>30 segundos</strong> y genera uno nuevo.</li>
+                  <li>Impide que alguien tome foto y la envíe por mensaje a otra persona.</li>
+                </ul>
+                <div style="margin-top:auto; padding-top:12px; border-top:1px solid var(--border); font-size:12px; font-weight:700; color:var(--teal); text-align:center;">
+                  Código efímero anti-suplantación
+                </div>
+              </div>
+
+              <div class="step-arrow"><svg class="ico"><use href="#i-arrow-right"/></svg></div>
+
+              <div class="card accent-top" style="--card-accent: var(--sage);">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
+                  <div class="ico-box sage"><svg class="ico"><use href="#i-camera"/></svg></div>
+                  <div>
+                    <span style="font-size:10.5px; font-weight:800; letter-spacing:0.08em; color:var(--sage);">PASO 2 · CELULAR DEL SOCIO</span>
+                    <h3>Lectura en Vivo Sin Fotos</h3>
+                  </div>
+                </div>
+                <p style="margin-bottom:10px;">Al llegar al gimnasio, el socio abre su botón <strong>Leer QR</strong> y la cámara trasera se enciende automáticamente.</p>
+                <ul class="clean-list" style="--bullet-color: var(--sage);">
+                  <li>El socio no tiene que buscar pases ni generar códigos propios.</li>
+                  <li>La detección ocurre en tiempo real directo sobre el video.</li>
+                  <li>No permite subir fotos ni capturas desde la galería del teléfono.</li>
+                </ul>
+                <div style="margin-top:auto; padding-top:12px; border-top:1px solid var(--border); font-size:12px; font-weight:700; color:var(--sage); text-align:center;">
+                  Presencia física comprobada
+                </div>
+              </div>
+
+              <div class="step-arrow"><svg class="ico"><use href="#i-arrow-right"/></svg></div>
+
+              <div class="card accent-top" style="--card-accent: var(--teal-dark);">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
+                  <div class="ico-box"><svg class="ico"><use href="#i-check"/></svg></div>
+                  <div>
+                    <span style="font-size:10.5px; font-weight:800; letter-spacing:0.08em; color:var(--teal);">PASO 3 · CONFIRMACIÓN</span>
+                    <h3>Validación al Instante</h3>
+                  </div>
+                </div>
+                <p style="margin-bottom:10px;">El sistema verifica la identidad del socio y su suscripción vigente antes de autorizar la asistencia.</p>
+                <ul class="clean-list" style="--bullet-color: var(--teal);">
+                  <li>Confirma automáticamente si la membresía sigue activa.</li>
+                  <li>Rechaza códigos vencidos o registros duplicados el mismo día.</li>
+                  <li>Anota la visita al momento en la bitácora del gimnasio.</li>
+                </ul>
+                <div style="margin-top:auto; padding-top:12px; border-top:1px solid var(--border); font-size:12px; font-weight:700; color:var(--teal); text-align:center;">
+                  Registro inmediato y sin filas
+                </div>
+              </div>
+            </div>
+
+            <div class="card" style="background: var(--teal-dark); border-color: var(--teal); padding: 14px 22px; flex-direction: row; align-items: center; gap: 16px; flex-shrink:0;">
+              <div class="ico-box dark"><svg class="ico"><use href="#i-shield"/></svg></div>
+              <div>
+                <h3 style="color:#ffffff; font-size:14.5px;">¿Por qué invertir el flujo tradicional?</h3>
+                <p style="color:#d6e4e8; font-size:13px; margin-top:2px;">En lugar de que el socio muestre un código fácil de compartir, el gimnasio controla un QR vivo que cambia cada 30 segundos y cada socio lo escanea desde su propia sesión autenticada.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="s-foot">
+            <span>GROM 21 · espacioGYM — Bloque 04: Control de Acceso QR</span>
+            <strong>11 / 18</strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <!-- SLIDE 12: MARTIN (2/2) — RECEPCIÓN, CLASES Y CUPOS             -->
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <section class="slide" data-slide="12" data-title="12 · Martin: Mostrador, Clases y Cupos">
+        <div class="top-stripe"></div>
+        <div class="slide-inner">
+          <div class="s-head">
+            <div>
+              <div class="s-eyebrow">Bloque 04 · Día a Día en el Gimnasio</div>
+              <h2 class="s-title">Mostrador de Recepción, Clases y Control de Cupos</h2>
+              <p class="s-sub">Herramientas prácticas para organizar clases grupales, acompañar al recepcionista y mantener orden en cada turno.</p>
+            </div>
+            <div class="presenter-pill">
+              <img src="public/img/Responsables/martin.webp" alt="Martin Alfonso Romo Martínez">
+              <div><strong>Martin A. Romo Martínez</strong><span>Bloque 04 · QR y Recepción</span></div>
+            </div>
+          </div>
+
+          <div class="s-body">
+            <div style="display:grid; grid-template-columns: 0.90fr 1.15fr; gap:24px; flex:1; min-height:0;">
+              <div style="display:flex; flex-direction:column; gap:14px; min-height:0;">
+                <div class="photo-box" style="flex:1; min-height:0;">
+                  <img src="public/img/CARRUSEL/5.webp" alt="Piso de entrenamiento GROM 21" style="object-position: 50% 55%;">
+                  <div class="photo-caption"><svg class="ico"><use href="#i-activity"/></svg> Seguimiento Operativo en Vivo</div>
+                </div>
+                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; flex-shrink:0;">
+                  <div class="card accent-top" style="--card-accent: var(--teal); padding:14px; text-align:center;">
+                    <div style="font-size:26px; font-weight:800; color:var(--teal);">5</div>
+                    <div style="font-size:11.5px; font-weight:700; color:var(--muted); margin-top:2px;">Disciplinas</div>
+                  </div>
+                  <div class="card accent-top" style="--card-accent: var(--sage); padding:14px; text-align:center;">
+                    <div style="font-size:26px; font-weight:800; color:var(--sage);">3</div>
+                    <div style="font-size:11.5px; font-weight:700; color:var(--muted); margin-top:2px;">Turnos / Día</div>
+                  </div>
+                  <div class="card accent-top" style="--card-accent: var(--teal); padding:14px; text-align:center;">
+                    <div style="font-size:26px; font-weight:800; color:var(--teal);">30 s</div>
+                    <div style="font-size:11.5px; font-weight:700; color:var(--muted); margin-top:2px;">Rotación QR</div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display:flex; flex-direction:column; gap:16px; justify-content:space-between;">
+                <div class="card accent-left" style="--card-accent: var(--teal); flex:1; flex-direction:row; gap:16px; align-items:center;">
+                  <div class="ico-box"><svg class="ico"><use href="#i-users"/></svg></div>
+                  <div>
+                    <h3>Padrón de Socios con Suscripción</h3>
+                    <p style="margin-top:5px;">El recepcionista cuenta con una pestaña dedicada para consultar quién tiene plan activo (Básico, Pro Fitness o Black Elite), detectar cuentas por vencer y buscar socios en tiempo real.</p>
+                  </div>
+                </div>
+
+                <div class="card accent-left" style="--card-accent: var(--sage); flex:1; flex-direction:row; gap:16px; align-items:center;">
+                  <div class="ico-box sage"><svg class="ico"><use href="#i-calendar"/></svg></div>
+                  <div>
+                    <h3>Agenda de Clases y Semáforo de Disponibilidad</h3>
+                    <p style="margin-top:5px;">Los socios reservan Boxeo, Crossfit, Spinning, Yoga o Pesas en turnos Matutino, Vespertino y Nocturno, viendo ocupación real y recibiendo confirmación automática por correo.</p>
+                  </div>
+                </div>
+
+                <div class="card accent-left" style="--card-accent: var(--amber); flex:1; flex-direction:row; gap:16px; align-items:center;">
+                  <div class="ico-box amber"><svg class="ico"><use href="#i-clipboard"/></svg></div>
+                  <div>
+                    <h3>Bitácoras de Asistencias y Reservas</h3>
+                    <p style="margin-top:5px;">Registro ordenado de cada entrada por QR y cada clase agendada, con filtros de búsqueda para facilitar el cierre de turno y la auditoría diaria.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="s-foot">
+            <span>GROM 21 · espacioGYM — Bloque 04: Operación Diaria</span>
+            <strong>12 / 18</strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <!-- BLOQUE 05 · RICARDO PADILLA HERNÁNDEZ (SLIDES 13 - 15)         -->
+      <!-- SLIDE 13: SÚPER INTRO / MINI-RESUMEN BLOQUE 5                  -->
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <section class="slide intro-slide" data-slide="13" data-intro="true" data-title="Bloque 5 (Intro) · Ricardo Padilla: Membresías y Tienda">
+        <div class="top-stripe"></div>
+        <div class="slide-inner">
+          <div class="intro-layout">
+            <div class="intro-left">
+              <div class="chapter-badge"><svg class="ico"><use href="#i-compass"/></svg> Bloque 05 de 06 · Introducción</div>
+              <div class="intro-speaker-row">
+                <img src="public/img/Responsables/ricardo.webp" alt="Ricardo Padilla Hernández">
+                <div>
+                  <div class="spk-label">Presenta esta sección</div>
+                  <div class="spk-name">Ricardo Padilla Hernández</div>
+                  <div class="spk-role">Membresías, Pagos en Línea y Tienda Oficial</div>
+                </div>
+              </div>
+              <h2 class="intro-h2">Pagos Transparentes y Tienda Integrada</h2>
+              <p class="intro-lead">
+                Ahora veremos cómo el gimnasio genera ingresos de forma ordenada, sin filas en caja y con control automático del inventario.
+              </p>
+              <div class="intro-progress-dots">
+                <span class="intro-dot done"></span>
+                <span class="intro-dot done"></span>
+                <span class="intro-dot done"></span>
+                <span class="intro-dot done"></span>
+                <span class="intro-dot now"></span>
+                <span class="intro-dot"></span>
+              </div>
+            </div>
+
+            <div class="intro-right">
+              <div class="intro-roadmap-label"><svg class="ico"><use href="#i-layers"/></svg> Mini-resumen de los temas que veremos ahora</div>
+
+              <div class="intro-topic-card" style="--topic-accent: #93bac4;">
+                <div class="ico-box dark"><svg class="ico"><use href="#i-credit-card"/></svg></div>
+                <div>
+                  <div class="topic-num">TEMA 01</div>
+                  <h3>Planes de Membresía y Pago Seguro</h3>
+                  <p>Los 3 niveles de suscripción (Básico, Pro Fitness y Black Elite), cupones promocionales, pago en línea con Stripe y Estado de Cuenta.</p>
+                </div>
+              </div>
+
+              <div class="intro-topic-card" style="--topic-accent: #ddb26d;">
+                <div class="ico-box dark-amber"><svg class="ico"><use href="#i-bag"/></svg></div>
+                <div>
+                  <div class="topic-num">TEMA 02</div>
+                  <h3>Tienda Oficial de 40 Productos</h3>
+                  <p>Catálogo de suplementación, accesorios y ropa técnica con carrito, descuento automático de stock y gestión exclusiva para administración.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="s-foot">
+            <span>GROM 21 · espacioGYM — Introducción Bloque 05 / 06</span>
+            <strong>13 / 18</strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <!-- SLIDE 14: RICARDO (1/2) — MEMBRESÍAS Y PAGOS SEGUROS           -->
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <section class="slide" data-slide="14" data-title="14 · Ricardo: Membresías y Pago en Línea">
+        <div class="top-stripe"></div>
+        <div class="slide-inner">
+          <div class="s-head">
+            <div>
+              <div class="s-eyebrow">Bloque 05 · Inscripción Sin Fricción</div>
+              <h2 class="s-title">Planes Transparentes, Cupones y Pago en Línea Seguro</h2>
+              <p class="s-sub">El socio elige su plan, aplica descuentos promocionales y activa su acceso al instante sin filas en caja.</p>
+            </div>
+            <div class="presenter-pill">
+              <img src="public/img/Responsables/ricardo.webp" alt="Ricardo Padilla Hernández">
+              <div><strong>Ricardo Padilla Hernández</strong><span>Bloque 05 · Pagos y Tienda</span></div>
+            </div>
+          </div>
+
+          <div class="s-body">
+            <div class="grid-3" style="margin-bottom: 18px;">
+              <div class="plan-card accent-top" style="--card-accent: var(--teal);">
+                <div class="plan-name">Básico</div>
+                <div class="plan-price">$350</div>
+                <div class="plan-period">MXN / Mensual</div>
+                <ul class="clean-list" style="--bullet-color: var(--teal);">
+                  <li>Área libre de pesas y equipo cardiovascular.</li>
+                  <li>Horario regular de 06:00 a 22:00 horas.</li>
+                  <li>Uso de vestidores y casilleros diarios.</li>
+                  <li>Acceso inicial al Coach Virtual IA.</li>
+                </ul>
+              </div>
+
+              <div class="plan-card featured accent-top" style="--card-accent: #93bac4;">
+                <span class="plan-badge">MÁS POPULAR</span>
+                <div class="plan-name">Pro Fitness</div>
+                <div class="plan-price">$550</div>
+                <div class="plan-period">MXN / Mensual · Acceso Total</div>
+                <ul class="clean-list">
+                  <li>Entrada sin restricción de horario.</li>
+                  <li>Todas las clases grupales incluidas.</li>
+                  <li>Coach Virtual IA ilimitado y con voz.</li>
+                  <li>Check-in rápido leyendo QR en puerta.</li>
+                  <li>Evaluación de progreso mensual.</li>
+                </ul>
+              </div>
+
+              <div class="plan-card vip accent-top" style="--card-accent: var(--amber);">
+                <div class="plan-name">Black Elite</div>
+                <div class="plan-price">$1,200</div>
+                <div class="plan-period">MXN / Trimestral · Experiencia VIP</div>
+                <ul class="clean-list" style="--bullet-color: var(--amber);">
+                  <li>Todos los beneficios de Pro Fitness.</li>
+                  <li>Un pase de invitado gratis cada mes.</li>
+                  <li>Sillones de masaje y zona de recuperación.</li>
+                  <li>Orientación personalizada de nutrición.</li>
+                  <li>15% de descuento en suplementos.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="card accent-left" style="--card-accent: var(--teal); padding: 14px 22px; flex-direction: row; align-items: center; justify-content: space-between; gap: 24px; flex-shrink:0;">
+              <div style="display:flex; align-items:center; gap:12px; flex:1;">
+                <div class="ico-box"><svg class="ico"><use href="#i-credit-card"/></svg></div>
+                <div>
+                  <h3 style="font-size:14px;">Pasarela Segura Stripe</h3>
+                  <p style="font-size:12px; margin-top:2px;">Pagos con tarjeta protegidos sin almacenar datos bancarios sensibles.</p>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; gap:12px; flex:1;">
+                <div class="ico-box sage"><svg class="ico"><use href="#i-tag"/></svg></div>
+                <div>
+                  <h3 style="font-size:14px;">Cupones y Descuentos</h3>
+                  <p style="font-size:12px; margin-top:2px;">Códigos promocionales (ej. comunidad UAA) verificados automáticamente.</p>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; gap:12px; flex:1;">
+                <div class="ico-box amber"><svg class="ico"><use href="#i-clipboard"/></svg></div>
+                <div>
+                  <h3 style="font-size:14px;">Estado de Cuenta Claro</h3>
+                  <p style="font-size:12px; margin-top:2px;">Vigencia restante, folios de compra y avisos automáticos por correo.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="s-foot">
+            <span>GROM 21 · espacioGYM — Bloque 05: Membresías y Pagos</span>
+            <strong>14 / 18</strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <!-- SLIDE 15: RICARDO (2/2) — TIENDA OFICIAL DE 40 PRODUCTOS       -->
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <section class="slide" data-slide="15" data-title="15 · Ricardo: Tienda Oficial de 40 Productos">
+        <div class="top-stripe"></div>
+        <div class="slide-inner">
+          <div class="s-head">
+            <div>
+              <div class="s-eyebrow">Bloque 05 · Comercio Electrónico Propio</div>
+              <h2 class="s-title">Tienda Oficial del Gimnasio: 40 Productos Integrados</h2>
+              <p class="s-sub">Suplementación, accesorios y ropa técnica disponibles en la misma plataforma con control real de inventario.</p>
+            </div>
+            <div class="presenter-pill">
+              <img src="public/img/Responsables/ricardo.webp" alt="Ricardo Padilla Hernández">
+              <div><strong>Ricardo Padilla Hernández</strong><span>Bloque 05 · Pagos y Tienda</span></div>
+            </div>
+          </div>
+
+          <div class="s-body">
+            <div style="display:grid; grid-template-columns: 1.08fr 0.96fr; gap:24px; flex:1; min-height:0;">
+              <div class="card accent-top" style="--card-accent: var(--teal); justify-content:space-between;">
+                <div>
+                  <div style="display:flex; align-items:center; gap:14px;">
+                    <div class="ico-box"><svg class="ico"><use href="#i-bag"/></svg></div>
+                    <div>
+                      <h3 style="font-size:19px;">Catálogo Completo y Actualizado</h3>
+                      <p style="font-size:13px; margin-top:2px;">Disponible para socios y visitantes desde web y celular</p>
+                    </div>
+                  </div>
+
+                  <div class="chip-wrap">
+                    <span class="cat-chip">Proteínas (8)</span>
+                    <span class="cat-chip">Creatinas (8)</span>
+                    <span class="cat-chip">Pre-entrenos (8)</span>
+                    <span class="cat-chip sage">Accesorios (6)</span>
+                    <span class="cat-chip sage">Ropa Técnica (10)</span>
+                  </div>
+
+                  <div style="height:1px; background:var(--border); margin: 12px 0 14px 0;"></div>
+
+                  <ul class="clean-list" style="--bullet-color: var(--teal); gap:12px;">
+                    <li><strong>Búsqueda y filtros rápidos:</strong> Encuentra cualquier artículo por categoría o nombre al instante.</li>
+                    <li><strong>Carrito lateral integrado:</strong> Ajusta cantidades, aplica códigos de descuento y visualiza el total en MXN.</li>
+                    <li><strong>Pago seguro y folio de compra:</strong> Cada pedido se paga con tarjeta y queda guardado en el historial del socio.</li>
+                    <li><strong>Control real de existencias:</strong> El inventario se descuenta automáticamente al confirmarse la compra, evitando sobreventas.</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div style="display:flex; flex-direction:column; gap:16px; min-height:0;">
+                <div class="photo-box" style="flex:1; min-height:0;">
+                  <img src="public/img/CARRUSEL/6.webp" alt="Equipamiento y espacio GROM 21" style="object-position: 45% 60%;">
+                  <div class="photo-caption"><svg class="ico"><use href="#i-box"/></svg> Inventario y Finanzas Centralizadas</div>
+                </div>
+
+                <div class="card accent-left" style="--card-accent: var(--sage); padding:16px 20px; flex-direction:row; gap:14px; align-items:center; flex-shrink:0;">
+                  <div class="ico-box sage"><svg class="ico"><use href="#i-credit-card"/></svg></div>
+                  <div>
+                    <h3>Historial en Estado de Cuenta</h3>
+                    <p style="margin-top:3px;">El socio revisa sus recibos de tienda junto con sus pagos de membresía en un solo historial ordenado.</p>
+                  </div>
+                </div>
+
+                <div class="card accent-left" style="--card-accent: var(--amber); padding:16px 20px; flex-direction:row; gap:14px; align-items:center; flex-shrink:0;">
+                  <div class="ico-box amber"><svg class="ico"><use href="#i-sliders"/></svg></div>
+                  <div>
+                    <h3>Gestión Exclusiva para Administración</h3>
+                    <p style="margin-top:3px;">El administrador da de alta nuevos productos, ajusta precios o actualiza existencias sin tocar código.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="s-foot">
+            <span>GROM 21 · espacioGYM — Bloque 05: Tienda Oficial e Inventario</span>
+            <strong>15 / 18</strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <!-- BLOQUE 06 · JESÚS EDUARDO TAPIA AVALOS (SLIDES 16 - 18)        -->
+      <!-- SLIDE 16: SÚPER INTRO / MINI-RESUMEN BLOQUE 6                  -->
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <section class="slide intro-slide" data-slide="16" data-intro="true" data-title="Bloque 6 (Intro) · Jesús Eduardo: Coach IA y Cierre">
+        <div class="top-stripe"></div>
+        <div class="slide-inner">
+          <div class="intro-layout">
+            <div class="intro-left">
+              <div class="chapter-badge"><svg class="ico"><use href="#i-compass"/></svg> Bloque 06 de 06 · Cierre</div>
+              <div class="intro-speaker-row">
+                <img src="public/img/Responsables/tapia.webp" alt="Jesús Eduardo Tapia Avalos">
+                <div>
+                  <div class="spk-label">Presenta esta sección</div>
+                  <div class="spk-name">Jesús Eduardo Tapia Avalos</div>
+                  <div class="spk-role">Inteligencia Artificial, Dirección y Demostración</div>
+                </div>
+              </div>
+              <h2 class="intro-h2">Entrenamiento Inteligente, Datos Reales y Demo</h2>
+              <p class="intro-lead">
+                Para cerrar, descubriremos cómo la Inteligencia Artificial acompaña al socio cada día y cómo el sistema ya está listo para probarse en vivo.
+              </p>
+              <div class="intro-progress-dots">
+                <span class="intro-dot done"></span>
+                <span class="intro-dot done"></span>
+                <span class="intro-dot done"></span>
+                <span class="intro-dot done"></span>
+                <span class="intro-dot done"></span>
+                <span class="intro-dot now"></span>
+              </div>
+            </div>
+
+            <div class="intro-right">
+              <div class="intro-roadmap-label"><svg class="ico"><use href="#i-layers"/></svg> Mini-resumen de los temas que veremos ahora</div>
+
+              <div class="intro-topic-card" style="--topic-accent: #93bac4;">
+                <div class="ico-box dark"><svg class="ico"><use href="#i-spark"/></svg></div>
+                <div>
+                  <div class="topic-num">TEMA 01</div>
+                  <h3>Coach Virtual con Inteligencia Artificial y Voz</h3>
+                  <p>Cinco personalidades de entrenador, cálculo de IMC, chat hablado y escrito, rutinas a la medida y bitácora de progreso.</p>
+                </div>
+              </div>
+
+              <div class="intro-topic-card" style="--topic-accent: #8fb8a0;">
+                <div class="ico-box dark-sage"><svg class="ico"><use href="#i-chart"/></svg></div>
+                <div>
+                  <div class="topic-num">TEMA 02</div>
+                  <h3>Panel de Dirección, Impacto y Pruébalo en Vivo</h3>
+                  <p>Analítica en tiempo real, pronóstico de aforo con IA, impacto para el negocio y código QR para explorar la plataforma desde tu celular.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="s-foot">
+            <span>GROM 21 · espacioGYM — Introducción Bloque 06 / 06</span>
+            <strong>16 / 18</strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <!-- SLIDE 17: JESÚS EDUARDO (1/2) — COACH VIRTUAL IA Y VOZ         -->
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <section class="slide" data-slide="17" data-title="17 · Jesús Eduardo: Coach Virtual IA y Voz">
+        <div class="top-stripe"></div>
+        <div class="slide-inner">
+          <div class="s-head">
+            <div>
+              <div class="s-eyebrow">Bloque 06 · Acompañamiento Inteligente 24/7</div>
+              <h2 class="s-title">Coach Virtual Personalizado con Inteligencia Artificial y Voz</h2>
+              <p class="s-sub">Acompaña al socio dentro y fuera del gimnasio con rutinas reales adaptadas a su cuerpo, meta y equipo de GROM 21.</p>
+            </div>
+            <div class="presenter-pill">
+              <img src="public/img/Responsables/tapia.webp" alt="Jesús Eduardo Tapia Avalos">
+              <div><strong>Jesús E. Tapia Avalos</strong><span>Bloque 06 · IA y Dirección</span></div>
+            </div>
+          </div>
+
+          <div class="s-body">
+            <div class="coaches-bar">
+              <div style="font-size:10.5px; font-weight:800; letter-spacing:0.08em; color:var(--teal); text-transform:uppercase;">
+                3 Coaches Especialistas por Área Corporal con Voces Naturales
+              </div>
+              <div class="coaches-grid">
+                <div class="coach-item">
+                  <div style="width:44px; height:44px; border-radius:50%; background:rgba(13,148,136,0.14); border:2px solid var(--teal); display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:800; color:var(--teal); flex-shrink:0;">▲</div>
+                  <div><strong>Héctor "Titan" Morales</strong><span>Tren Superior · Pecho, Espalda y Brazos</span></div>
+                </div>
+                <div class="coach-item">
+                  <div style="width:44px; height:44px; border-radius:50%; background:rgba(16,185,129,0.14); border:2px solid var(--sage); display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:800; color:var(--sage); flex-shrink:0;">◆</div>
+                  <div><strong>Valeria "Apex" Navarro</strong><span>Tren Inferior · Cuádriceps, Femoral y Glúteo</span></div>
+                </div>
+                <div class="coach-item">
+                  <div style="width:44px; height:44px; border-radius:50%; background:rgba(245,158,11,0.14); border:2px solid var(--amber); display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:800; color:var(--amber); flex-shrink:0;">◎</div>
+                  <div><strong>Mateo "Pulse" Vega</strong><span>Core, Abdomen y Recomposición</span></div>
+                </div>
+                <div class="coach-gemini-pill">
+                  <svg class="ico"><use href="#i-spark"/></svg>
+                  <div><strong>Voces Naturales + IA Dual</strong><span>Mercury-2 · Gemini 3.5 Flash Lite</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap:16px; flex:1; min-height:0;">
+              <div class="card accent-left" style="--card-accent: var(--teal); flex-direction:row; gap:16px; align-items:center;">
+                <div class="ico-box"><svg class="ico"><use href="#i-user-check"/></svg></div>
+                <div>
+                  <h3>Perfil Físico e IMC Automático</h3>
+                  <p style="margin-top:5px;">Guarda peso, estatura, edad, nivel de experiencia y objetivo. Cada recomendación toma en cuenta estos datos y las máquinas reales del gimnasio.</p>
+                </div>
+              </div>
+
+              <div class="card accent-left" style="--card-accent: var(--sage); flex-direction:row; gap:16px; align-items:center;">
+                <div class="ico-box sage"><svg class="ico"><use href="#i-mic"/></svg></div>
+                <div>
+                  <h3>Conversación Escrita y por Voz</h3>
+                  <p style="margin-top:5px;">El socio puede hacer preguntas hablando al micrófono y escuchar la respuesta del coach en voz alta mientras entrena, con manos libres.</p>
+                </div>
+              </div>
+
+              <div class="card accent-left" style="--card-accent: var(--teal-dark); flex-direction:row; gap:16px; align-items:center;">
+                <div class="ico-box"><svg class="ico"><use href="#i-dumbbell"/></svg></div>
+                <div>
+                  <h3>Generador de Rutinas a la Medida</h3>
+                  <p style="margin-top:5px;">Crea planes completos organizados por días, grupos musculares, series, repeticiones y descansos, sustituyendo las viejas hojas genéricas.</p>
+                </div>
+              </div>
+
+              <div class="card accent-left" style="--card-accent: var(--amber); flex-direction:row; gap:16px; align-items:center;">
+                <div class="ico-box amber"><svg class="ico"><use href="#i-activity"/></svg></div>
+                <div>
+                  <h3>Bitácora de Progreso y Beneficio Exclusivo</h3>
+                  <p style="margin-top:5px;">Permite registrar pesos y avances sesión tras sesión. Reservado para socios con membresía vigente para incentivar la suscripción activa.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="s-foot">
+            <span>GROM 21 · espacioGYM — Bloque 06: Coach Virtual IA y Voz</span>
+            <strong>17 / 18</strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <!-- SLIDE 18: JESÚS EDUARDO (2/2) — DIRECCIÓN, IMPACTO Y EN VIVO   -->
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <section class="slide dark-slide" data-slide="18" data-title="18 · Jesús Eduardo: Dirección, Impacto y Demo en Vivo">
+        <div class="top-stripe"></div>
+        <div class="slide-inner">
+          <div class="s-head">
+            <div>
+              <div class="s-eyebrow">Bloque 06 · Visión Estratégica y Cierre en Vivo</div>
+              <h2 class="s-title">Decisiones con Datos Reales y Sistema en Producción</h2>
+              <p class="s-sub">Control administrativo con analítica inteligente y plataforma lista para probar hoy mismo desde tu celular.</p>
+            </div>
+            <div class="presenter-pill">
+              <img src="public/img/Responsables/tapia.webp" alt="Jesús Eduardo Tapia Avalos">
+              <div><strong>Jesús E. Tapia Avalos</strong><span>Bloque 06 · IA y Dirección</span></div>
+            </div>
+          </div>
+
+          <div class="s-body">
+            <div style="display:grid; grid-template-columns: 1.24fr 0.78fr; gap:24px; flex:1; min-height:0; align-items:stretch;">
+              <div style="display:flex; flex-direction:column; gap:14px; justify-content:space-between;">
+                <div class="card accent-top" style="--card-accent: #93bac4; flex:1;">
+                  <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+                    <div class="ico-box dark"><svg class="ico"><use href="#i-chart"/></svg></div>
+                    <h3 style="font-size:17.5px;">Tablero de Control e Inteligencia de Negocio</h3>
+                  </div>
+                  <ul class="clean-list" style="--bullet-color: #93bac4; gap:9px;">
+                    <li><strong>Indicadores en vivo:</strong> Ingresos, socios activos, reservas y disciplinas con mayor demanda en gráficas claras.</li>
+                    <li><strong>Pronóstico inteligente de aforo:</strong> Anticipa horas pico con IA para planear entrenadores y recursos.</li>
+                    <li><strong>Retención preventiva y gobierno:</strong> Recordatorios de vencimiento por correo, planes especiales y gestión segura de permisos.</li>
+                  </ul>
+                </div>
+
+                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px;">
+                  <div class="card" style="padding:14px; text-align:center;">
+                    <div style="font-size:23px; font-weight:800; color:#93bac4;">0 Fugas</div>
+                    <div style="font-size:11.5px; color:#a7b3bc; margin-top:3px;">Control de vigencias</div>
+                  </div>
+                  <div class="card" style="padding:14px; text-align:center;">
+                    <div style="font-size:23px; font-weight:800; color:#8fb8a0;">24 / 7</div>
+                    <div style="font-size:11.5px; color:#a7b3bc; margin-top:3px;">Autoservicio del socio</div>
+                  </div>
+                  <div class="card" style="padding:14px; text-align:center;">
+                    <div style="font-size:21px; font-weight:800; color:#ddb26d;">Sin Rentas USD</div>
+                    <div style="font-size:11.5px; color:#a7b3bc; margin-top:3px;">Modelo sostenible</div>
+                  </div>
+                </div>
+
+                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                  <a href="https://jefazo-isc.github.io/GymSeminario/" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:9px; padding:9px 15px; border-radius:10px; background:#233f47; border:1px solid #93bac4; color:#f1f4f6; font-family:var(--font-mono); font-size:12.5px; font-weight:700; text-decoration:none;">
+                    <svg class="ico" style="color:#93bac4;"><use href="#i-globe"/></svg>
+                    jefazo-isc.github.io/GymSeminario
+                    <svg class="ico" style="color:#93bac4;"><use href="#i-external"/></svg>
+                  </a>
+                  <button class="ctrl-btn" id="btnOpenTechFromEnd" style="background:#1a2429; border-color:#2e3e46; color:#93bac4;">
+                    <svg class="ico"><use href="#i-cpu"/></svg> Ficha Técnica [T]
+                  </button>
+                </div>
+              </div>
+
+              <div class="card" style="align-items:center; justify-content:center; text-align:center; padding:20px 22px;">
+                <div style="font-size:16px; font-weight:800; color:#ffffff;">Escanea y Explora la App</div>
+                <p style="font-size:12px; color:#a7b3bc; margin-top:4px;">Apunta la cámara de tu celular para abrir la plataforma web en vivo:</p>
+                <div style="background:#ffffff; padding:11px; border-radius:14px; margin:16px 0 12px 0; display:inline-block;">
+                  <img src="cartel_presentacion/assets/qr_demo.png" alt="Código QR espacioGYM en vivo" style="width:176px; height:176px; display:block;">
+                </div>
+                <div style="display:inline-flex; align-items:center; gap:8px; font-size:12px; font-weight:700; color:#93bac4;">
+                  <svg class="ico"><use href="#i-check"/></svg> Web · APK Android · API Cloud
+                </div>
+                <div style="margin-top:12px; font-size:16px; font-weight:800; color:#ffffff;">
+                  ¡Gracias por su atención!
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="s-foot">
+            <span>GROM 21 · espacioGYM — Universidad Autónoma de Aguascalientes</span>
+            <strong>18 / 18</strong>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Modal: Slide Index (Toggle with G) -->
+  <div class="modal-bg" id="modalIndex">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3>Índice de Diapositivas (18 · 6 Expositores)</h3>
+        <button class="modal-close" data-close="modalIndex"><svg class="ico"><use href="#i-x"/></svg></button>
+      </div>
+      <div class="index-grid" id="indexGrid"></div>
+    </div>
+  </div>
+
+  <!-- Modal: Optional Technical Summary (Toggle with T) -->
+  <div class="modal-bg" id="modalTech">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3>Ficha Técnica de Respaldo (Preguntas y Respuestas)</h3>
+        <button class="modal-close" data-close="modalTech"><svg class="ico"><use href="#i-x"/></svg></button>
+      </div>
+      <div class="tech-grid">
+        <div class="tech-card">
+          <h4>Cliente Web y Móvil Nativo</h4>
+          <p>Angular 19 (Standalone Components, Signals, Lazy Loading) desplegado en GitHub Pages y empaquetado como APK Android nativo con Capacitor 7 (probado en Tablet K92 y Xiaomi Redmi).</p>
+        </div>
+        <div class="tech-card">
+          <h4>Servidor API y Base de Datos</h4>
+          <p>Node.js + Express en Render conectado a SQLite 3 en modo WAL (15 tablas relacionales) para alta concurrencia, transacciones atómicas de stock/pagos y costo operativo mínimo.</p>
+        </div>
+        <div class="tech-card">
+          <h4>Seguridad, Pagos e Inteligencia Artificial</h4>
+          <p>Acceso dual (bcryptjs + Google Sign-In web/nativo), JWT HS256, 4 roles RBAC, pasarela real Stripe PaymentIntents, cupones validados en servidor, correos Brevo/Nodemailer y Google Gemini AI.</p>
+        </div>
+        <div class="tech-card">
+          <h4>Calidad Verificada y CI/CD</h4>
+          <p>208 pruebas unitarias Karma, 52 pruebas de integración HttpClient, 4 suites de API, 0 secretos expuestos (581 archivos auditados), contraste WCAG 14.68:1 / 15.40:1 y despliegue automático con GitHub Actions + Docker GHCR.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const slides = Array.from(document.querySelectorAll('section.slide'));
+      const total = slides.length;
+      let current = 1;
+      let transitionTimer = null;
+
+      const stageWrap = document.getElementById('stageWrap');
+      const stageScaler = document.getElementById('stageScaler');
+      const modalIndex = document.getElementById('modalIndex');
+      const modalTech = document.getElementById('modalTech');
+      const indexGrid = document.getElementById('indexGrid');
+      const deckProgressBar = document.getElementById('deckProgressBar');
+      const navBtnPrev = document.getElementById('navBtnPrev');
+      const navBtnNext = document.getElementById('navBtnNext');
+
+      // Scale 1280x720 canvas cleanly edge-to-edge on any viewport
+      function fitStage() {
+        const availW = Math.max(320, stageWrap.clientWidth);
+        const availH = Math.max(180, stageWrap.clientHeight);
+        const scale = Math.min(availW / 1280, availH / 720);
+        stageScaler.style.transform = `scale(${scale}) translateZ(0)`;
+      }
+      window.addEventListener('resize', fitStage);
+      fitStage();
+
+      // Build slide index grid (open with G)
+      slides.forEach((s, idx) => {
+        const num = idx + 1;
+        const btn = document.createElement('button');
+        btn.className = 'index-item' + (s.dataset.intro === 'true' ? ' is-intro' : '');
+        btn.innerHTML = `<span class="index-num">${String(num).padStart(2, '0')}</span><span class="index-title">${s.dataset.title || 'Diapositiva ' + num}</span>`;
+        btn.addEventListener('click', () => {
+          goTo(num);
+          closeModals();
+        });
+        indexGrid.appendChild(btn);
+      });
+
+      function clearTransitionClasses() {
+        slides.forEach(s => {
+          s.classList.remove(
+            'slide-exit-forward',
+            'slide-exit-backward',
+            'slide-enter-forward',
+            'slide-enter-backward'
+          );
+        });
+      }
+
+      function goTo(num, updateHash = true, isInitial = false) {
+        if (num < 1 || num > total) return;
+        if (num === current && !isInitial) return;
+
+        const prevNum = current;
+        const prevSlide = slides[prevNum - 1];
+        const nextSlide = slides[num - 1];
+        const isForward = num >= prevNum;
+
+        current = num;
+
+        if (transitionTimer) {
+          clearTimeout(transitionTimer);
+          transitionTimer = null;
+        }
+
+        if (isInitial || document.body.classList.contains('no-anim')) {
+          slides.forEach((s, idx) => {
+            s.classList.toggle('active', idx + 1 === current);
+            s.classList.remove(
+              'slide-exit-forward',
+              'slide-exit-backward',
+              'slide-enter-forward',
+              'slide-enter-backward'
+            );
+          });
+        } else {
+          // Reset other slides that aren't the outgoing or incoming slide
+          slides.forEach((s, idx) => {
+            const slideNum = idx + 1;
+            if (slideNum !== prevNum && slideNum !== num) {
+              s.classList.remove(
+                'active',
+                'slide-exit-forward',
+                'slide-exit-backward',
+                'slide-enter-forward',
+                'slide-enter-backward'
+              );
+            }
+          });
+
+          // Animate outgoing slide out in direction of travel
+          if (prevSlide && prevSlide !== nextSlide) {
+            prevSlide.classList.remove('active', 'slide-enter-forward', 'slide-enter-backward');
+            prevSlide.classList.add(isForward ? 'slide-exit-forward' : 'slide-exit-backward');
+          }
+
+          // Animate incoming slide in
+          nextSlide.classList.remove('slide-exit-forward', 'slide-exit-backward');
+          nextSlide.classList.add('active', isForward ? 'slide-enter-forward' : 'slide-enter-backward');
+
+          // Cleanup transition classes after animation completes
+          transitionTimer = setTimeout(() => {
+            if (prevSlide && prevSlide !== nextSlide) {
+              prevSlide.classList.remove('slide-exit-forward', 'slide-exit-backward');
+            }
+            nextSlide.classList.remove('slide-enter-forward', 'slide-enter-backward');
+            clearTransitionClasses();
+            slides.forEach((s, idx) => {
+              s.classList.toggle('active', idx + 1 === current);
+            });
+            transitionTimer = null;
+          }, 460);
+        }
+
+        // Progress bar width
+        if (deckProgressBar) {
+          const pct = (current / total) * 100;
+          deckProgressBar.style.width = `${pct}%`;
+        }
+
+        // Floating nav buttons state
+        if (navBtnPrev) {
+          navBtnPrev.classList.toggle('is-disabled', current <= 1);
+        }
+        if (navBtnNext) {
+          navBtnNext.classList.toggle('is-disabled', current >= total);
+        }
+
+        // Slide index active highlight
+        if (indexGrid) {
+          Array.from(indexGrid.children).forEach((el, idx) => {
+            el.classList.toggle('active', idx + 1 === current);
+          });
+        }
+
+        if (updateHash) {
+          history.replaceState(null, '', `#slide-${current}`);
+        }
+      }
+
+      function closeModals() {
+        modalIndex.classList.remove('open');
+        modalTech.classList.remove('open');
+      }
+
+      function toggleTheme() {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        if (isDark) document.documentElement.removeAttribute('data-theme');
+        else document.documentElement.setAttribute('data-theme', 'dark');
+      }
+
+      function toggleFullscreen() {
+        const docEl = document.documentElement;
+        const isFs = document.fullscreenElement || document.webkitFullscreenElement;
+        if (!isFs) {
+          if (docEl.requestFullscreen) docEl.requestFullscreen().catch(() => {});
+          else if (docEl.webkitRequestFullscreen) docEl.webkitRequestFullscreen();
+        } else {
+          if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+          else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+        }
+      }
+
+      // Floating button click handlers
+      if (navBtnPrev) {
+        navBtnPrev.addEventListener('click', (e) => {
+          e.stopPropagation();
+          goTo(current - 1);
+        });
+      }
+      if (navBtnNext) {
+        navBtnNext.addEventListener('click', (e) => {
+          e.stopPropagation();
+          goTo(current + 1);
+        });
+      }
+
+      const btnOpenTechFromEnd = document.getElementById('btnOpenTechFromEnd');
+      if (btnOpenTechFromEnd) {
+        btnOpenTechFromEnd.addEventListener('click', () => modalTech.classList.add('open'));
+      }
+
+      document.querySelectorAll('[data-close]').forEach(btn => {
+        btn.addEventListener('click', () => closeModals());
+      });
+      [modalIndex, modalTech].forEach(m => {
+        m.addEventListener('click', (e) => { if (e.target === m) closeModals(); });
+      });
+
+      // Mouse idle detection for non-intrusive floating chevrons
+      let mouseIdleTimer = null;
+      function showControlsOnActivity() {
+        document.body.classList.remove('mouse-idle');
+        if (mouseIdleTimer) clearTimeout(mouseIdleTimer);
+        mouseIdleTimer = setTimeout(() => {
+          document.body.classList.add('mouse-idle');
+        }, 2600);
+      }
+      window.addEventListener('mousemove', showControlsOnActivity, { passive: true });
+      window.addEventListener('touchstart', showControlsOnActivity, { passive: true });
+      showControlsOnActivity();
+
+      // Touch swipe support for tablets/mobile with click-interference protection
+      let touchStartX = null;
+      let touchStartY = null;
+      let swipedJustNow = false;
+
+      stageWrap.addEventListener('touchstart', (e) => {
+        if (e.touches.length > 1) return;
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+      }, { passive: true });
+
+      stageWrap.addEventListener('touchend', (e) => {
+        if (touchStartX === null) return;
+        const touchEndX = e.changedTouches[0].clientX;
+        const touchEndY = e.changedTouches[0].clientY;
+        const dx = touchEndX - touchStartX;
+        const dy = touchEndY - touchStartY;
+        touchStartX = null;
+        touchStartY = null;
+
+        // Intentional swipe: must exceed 48px and horizontal displacement must dominate vertical
+        if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+          swipedJustNow = true;
+          setTimeout(() => { swipedJustNow = false; }, 360);
+          goTo(dx < 0 ? current + 1 : current - 1);
+        }
+      }, { passive: true });
+
+      // Click anywhere on slide (except links/buttons/interactive) to navigate: left 25% prev, right 75% next
+      stageWrap.addEventListener('click', (e) => {
+        if (swipedJustNow) {
+          swipedJustNow = false;
+          return;
+        }
+        if (modalIndex.classList.contains('open') || modalTech.classList.contains('open')) return;
+        if (e.target.closest('a, button, .interactive, [data-interactive]')) return;
+        const sel = window.getSelection ? window.getSelection().toString() : '';
+        if (sel && sel.trim().length > 0) return;
+        const ratio = e.clientX / window.innerWidth;
+        goTo(ratio < 0.25 ? current - 1 : current + 1);
+      });
+
+      // Keyboard navigation with arrows, space, backspace, page up/down, home/end, f, d, g, t
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') { closeModals(); return; }
+        if (modalIndex.classList.contains('open') || modalTech.classList.contains('open')) return;
+        if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown' || e.key === 'ArrowDown' || e.key === 'Enter') {
+          e.preventDefault(); goTo(current + 1);
+        } else if (e.key === 'ArrowLeft' || e.key === 'PageUp' || e.key === 'ArrowUp' || e.key === 'Backspace') {
+          e.preventDefault(); goTo(current - 1);
+        } else if (e.key === 'Home') {
+          e.preventDefault(); goTo(1);
+        } else if (e.key === 'End') {
+          e.preventDefault(); goTo(total);
+        } else if (e.key.toLowerCase() === 'f') {
+          e.preventDefault(); toggleFullscreen();
+        } else if (e.key.toLowerCase() === 'd') {
+          e.preventDefault(); toggleTheme();
+        } else if (e.key.toLowerCase() === 'g') {
+          e.preventDefault(); modalIndex.classList.toggle('open');
+        } else if (e.key.toLowerCase() === 't') {
+          e.preventDefault(); modalTech.classList.toggle('open');
+        }
+      });
+
+      // Init from hash if present (#slide-7)
+      function syncFromHash() {
+        const match = window.location.hash.match(/^#slide-(\d+)$/);
+        if (match) {
+          const n = parseInt(match[1], 10);
+          if (n >= 1 && n <= total) { goTo(n, false, true); return; }
+        }
+        goTo(1, false, true);
+      }
+      window.addEventListener('hashchange', syncFromHash);
+      document.addEventListener('fullscreenchange', () => setTimeout(fitStage, 60));
+      document.addEventListener('webkitfullscreenchange', () => setTimeout(fitStage, 60));
+
+      syncFromHash();
+      requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.remove('no-anim')));
+    })();
+  </script>
+</body>
+</html>
