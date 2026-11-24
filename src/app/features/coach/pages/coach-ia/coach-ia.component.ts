@@ -1,5 +1,13 @@
-import { createProfileDraft } from "../../../profile/models/profile.model";
+import {
+  calculateBmi,
+  createProfileDraft,
+} from "../../../profile/models/profile.model";
 import { Observable, Subscription } from "rxjs";
+import { ACTIVITY } from "../../../activity/data-access/activity.repository";
+import {
+  SesionHistorial,
+  WorkoutLogEntry,
+} from "../../../activity/models/sesion.model";
 import { RequestState } from "../../../../core/data-access/request-state";
 import { RequestStateComponent } from "../../../../shared/ui/request-state/request-state.component";
 import { CommonModule } from "@angular/common";
@@ -36,6 +44,8 @@ import { validRoutine } from "../../models/rutina.guard";
 import {
   CoachChatContext,
   CoachInfo,
+  CoachUserTelemetry,
+  CoachWorkoutSummary,
   MensajeChat,
   PerfilSocio,
   RutinaData,
@@ -68,6 +78,7 @@ export class CoachIaComponent implements OnInit {
   private routines = inject(COACH);
   private auth = inject(SESSION);
   private profiles = inject(PROFILES);
+  private activity = inject(ACTIVITY, { optional: true });
   private memberships = inject(MEMBERSHIPS, { optional: true });
   private router = inject(Router, { optional: true });
   private destroyRef = inject(DestroyRef);
@@ -110,6 +121,13 @@ export class CoachIaComponent implements OnInit {
   chatError = "";
   autoVoz = false;
   reproduciendoSaludo = false;
+  historialSesiones: SesionHistorial[] = [];
+  workoutLogs: WorkoutLogEntry[] = [];
+  totalAsistencias = 0;
+  pesoTotalLevantadoKg = 0;
+  pesoMaximoKg = 0;
+  ejercicioRecord = "";
+  imcActual = 0;
   private failedText = "";
   private objectUrls: string[] = [];
   objetivos = [
@@ -133,14 +151,56 @@ export class CoachIaComponent implements OnInit {
     this.observarMembresia();
     this.cargarCoaches();
     this.loadProfile();
+    this.observarActividadUsuario();
     if (this.tieneSuscripcion && readGymUser()) {
       this.cargarRutinaGuardada();
+      if (!isTestEnvironment()) {
+        void this.activity?.syncFromServer?.();
+      }
     }
     this.destroyRef.onDestroy(() => {
       this.profileStream?.unsubscribe();
       this.detenerTodoAudio();
       this.limpiarObjectUrls();
     });
+  }
+
+  private observarActividadUsuario() {
+    this.activity?.historial$
+      ?.pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((rows) => {
+        this.historialSesiones = Array.isArray(rows) ? rows : [];
+        this.recalcularTelemetria();
+      });
+    this.activity?.workoutLogs$
+      ?.pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((logs) => {
+        this.workoutLogs = Array.isArray(logs) ? logs : [];
+        this.recalcularTelemetria();
+      });
+  }
+
+  private recalcularTelemetria() {
+    this.totalAsistencias = this.historialSesiones.filter(
+      (s) => s.estado === "Asistida",
+    ).length;
+    let totalVolumen = 0;
+    let maxPeso = 0;
+    let topEjercicio = "";
+    for (const log of this.workoutLogs) {
+      totalVolumen +=
+        Number(log.series || 0) *
+        Number(log.repeticiones || 0) *
+        Number(log.pesoKg || 0);
+      if (Number(log.pesoKg || 0) > maxPeso) {
+        maxPeso = Number(log.pesoKg || 0);
+        topEjercicio = log.ejercicio;
+      }
+    }
+    this.pesoTotalLevantadoKg = Math.round(totalVolumen * 100) / 100;
+    this.pesoMaximoKg = Math.round(maxPeso * 100) / 100;
+    this.ejercicioRecord = topEjercicio;
+    this.imcActual = calculateBmi(this.perfil.peso, this.perfil.altura);
   }
   private observarMembresia() {
     this.memberships?.membresiaActual$
@@ -202,6 +262,7 @@ export class CoachIaComponent implements OnInit {
           this.perfil = { ...profile };
           this.profileReady = true;
           this.profileLoading = false;
+          this.recalcularTelemetria();
         },
         error: () => {
           this.profileReady = false;
@@ -322,6 +383,24 @@ export class CoachIaComponent implements OnInit {
       });
   }
 
+  get coachesPersonalizados(): CoachInfo[] {
+    return this.coaches.filter((c) => Boolean(c.personalizado));
+  }
+
+  get coachesPersonajes(): CoachInfo[] {
+    return this.coaches.filter((c) => !c.personalizado);
+  }
+
+  coachTieneVozIntro(coach: CoachInfo | null): boolean {
+    return Boolean(coach && coach.hasIntroAudio !== false);
+  }
+
+  coachTieneVozChat(coach: CoachInfo | null): boolean {
+    return Boolean(
+      coach && coach.hasVoice !== false && coach.hasIntroAudio !== false,
+    );
+  }
+
   abrirPestanaRutina() {
     this.detenerTodoAudio();
     this.pestanaActiva = "rutina";
@@ -329,7 +408,7 @@ export class CoachIaComponent implements OnInit {
 
   abrirPestanaChat() {
     this.pestanaActiva = "chat";
-    if (this.coachActivo) {
+    if (this.coachActivo && this.coachTieneVozIntro(this.coachActivo)) {
       this.detenerTodoAudio();
       this.reproducirVozCoach(this.coachActivo.id);
     }
@@ -341,7 +420,7 @@ export class CoachIaComponent implements OnInit {
     this.mensajes = [];
     this.chatError = "";
     this.failedText = "";
-    if (fromUserClick) {
+    if (fromUserClick && this.coachTieneVozIntro(coach)) {
       this.reproducirVozCoach(coach.id);
     }
   }
@@ -627,11 +706,12 @@ export class CoachIaComponent implements OnInit {
               texto: response.respuesta,
               hora: this.obtenerHora(),
               coachId: coachIdActual,
+              hasVoice: this.coachTieneVozChat(this.coachActivo),
             };
             this.mensajes.push(nuevoMensaje);
             this.failedText = "";
             this.scrollLog();
-            if (this.autoVoz) {
+            if (this.autoVoz && nuevoMensaje.hasVoice !== false) {
               this.alternarVozMensaje(nuevoMensaje);
             }
           } else this.messageFailed(text);
@@ -806,13 +886,70 @@ export class CoachIaComponent implements OnInit {
   }
 
   private buildChatContext(): CoachChatContext {
+    this.recalcularTelemetria();
     const mem = this.currentMembership;
     const membershipSummary = mem
       ? `Plan: ${mem.nombrePlan} (${mem.periodo}), Estado: ${mem.estado}, Vigencia hasta: ${mem.fechaFin}`
       : "Membresía activa verificada";
     const equipmentContext =
       "Equipamiento disponible en espacioGYM GROM 21: área de peso libre (barras olímpicas, mancuernas, rack de sentadillas), poleas y máquinas guiadas, bicicletas de spinning, zona funcional CrossFit, costales de boxeo y tapetes de yoga.";
-    return { membershipSummary, equipmentContext };
+    const volumenPorGrupoMuscular: Record<string, number> = {};
+    const ultimosLevantamientos: CoachWorkoutSummary[] = this.workoutLogs
+      .slice(0, 12)
+      .map((l) => {
+        const vol =
+          Math.round(
+            Number(l.series || 0) *
+              Number(l.repeticiones || 0) *
+              Number(l.pesoKg || 0) *
+              100,
+          ) / 100;
+        const grupo = l.grupoMuscular || "General";
+        volumenPorGrupoMuscular[grupo] =
+          Math.round(((volumenPorGrupoMuscular[grupo] || 0) + vol) * 100) / 100;
+        return {
+          ejercicio: l.ejercicio,
+          grupoMuscular: grupo,
+          series: Number(l.series || 0),
+          repeticiones: Number(l.repeticiones || 0),
+          pesoKg: Number(l.pesoKg || 0),
+          volumenKg: vol,
+          fecha: l.fecha,
+          ...(l.rpe !== undefined ? { rpe: l.rpe } : {}),
+        };
+      });
+
+    const asistencias = this.historialSesiones.filter(
+      (s) => s.estado === "Asistida",
+    );
+    const reservas = this.historialSesiones.filter(
+      (s) => s.estado === "Reservada",
+    );
+
+    const userTelemetry: CoachUserTelemetry = {
+      asistencia: {
+        totalAsistencias: asistencias.length,
+        totalReservas: reservas.length,
+        asistenciasRecientes: asistencias.slice(0, 10).map((s) => ({
+          clase: s.clase,
+          fecha: s.fecha,
+          turno: s.turno,
+          estado: s.estado,
+        })),
+      },
+      recuentoPeso: {
+        pesoCorporalKg: Number(this.perfil.peso || 0),
+        alturaCm: Number(this.perfil.altura || 0),
+        imc: this.imcActual,
+        totalRegistrosEntrenamiento: this.workoutLogs.length,
+        pesoTotalLevantadoKg: this.pesoTotalLevantadoKg,
+        pesoMaximoKg: this.pesoMaximoKg,
+        ejercicioRecord: this.ejercicioRecord,
+        volumenPorGrupoMuscular,
+        ultimosLevantamientos,
+      },
+    };
+    return { membershipSummary, equipmentContext, userTelemetry };
   }
   private obtenerHora() {
     return new Date().toLocaleTimeString("es-MX", {

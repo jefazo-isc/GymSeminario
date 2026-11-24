@@ -85,22 +85,37 @@ export function createApp({
   });
 
   app.get('/api/coaches', (_req, res) => {
-    const lista = Object.values(COACHES).map(({ id, nombre, titulo, emoji, frase }) => ({
-      id,
-      nombre,
-      titulo,
-      emoji,
-      frase,
-      hasVoice: Boolean(VOICE_PROFILES[id]),
-      voiceStyle: VOICE_PROFILES[id]?.style || '',
-    }));
+    const lista = Object.values(COACHES).map(
+      ({ id, nombre, titulo, emoji, frase, especialidad, personalizado, hasIntroAudio }) => {
+        const hasAudioIntro = hasIntroAudio !== false;
+        return {
+          id,
+          nombre,
+          titulo,
+          emoji,
+          frase,
+          especialidad: especialidad || '',
+          personalizado: Boolean(personalizado),
+          hasIntroAudio: hasAudioIntro,
+          hasVoice: hasAudioIntro && Boolean(VOICE_PROFILES[id]),
+          voiceStyle: hasAudioIntro ? VOICE_PROFILES[id]?.style || '' : '',
+        };
+      },
+    );
     res.json(lista);
   });
 
   app.post('/api/coach/chat', limiterIA, verificarMembresiaBackend, async (req, res) => {
     try {
-      const { coachId, mensaje, historial, contextoRutina, perfilUsuario, incluirVoz } =
-        req.body || {};
+      const {
+        coachId,
+        mensaje,
+        historial,
+        contextoRutina,
+        perfilUsuario,
+        userTelemetry,
+        incluirVoz,
+      } = req.body || {};
       if (!mensaje || !String(mensaje).trim()) {
         return res.status(400).json({ error: 'Mensaje requerido' });
       }
@@ -112,6 +127,8 @@ export function createApp({
         contextoRutina,
         perfilUsuario,
         membresiaResumen,
+        userEmail: req.user?.email || null,
+        userTelemetry: userTelemetry || null,
       });
       if (incluirVoz === true && respuesta?.exito && respuesta.respuesta) {
         const voz = await sintetizarVozCoach({

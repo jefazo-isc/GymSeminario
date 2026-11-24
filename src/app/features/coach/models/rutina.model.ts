@@ -35,6 +35,9 @@ export interface CoachInfo {
   titulo: string;
   emoji: string;
   frase: string;
+  especialidad?: string;
+  personalizado?: boolean;
+  hasIntroAudio?: boolean;
   hasVoice?: boolean;
   voiceStyle?: string;
 }
@@ -44,6 +47,7 @@ export interface MensajeChat {
   texto: string;
   hora: string;
   coachId?: string;
+  hasVoice?: boolean;
   audioSrc?: string;
   audioOrigen?: "chatterbox" | "gemini-tts" | "cache" | "local";
   cargandoAudio?: boolean;
@@ -83,7 +87,45 @@ export interface SaveRoutinePayload {
   assignedBy?: string;
 }
 
+export interface CoachWorkoutSummary {
+  ejercicio: string;
+  grupoMuscular: string;
+  series: number;
+  repeticiones: number;
+  pesoKg: number;
+  volumenKg: number;
+  fecha: string;
+  rpe?: number;
+}
+
+export interface CoachAttendanceSummary {
+  totalAsistencias: number;
+  totalReservas: number;
+  asistenciasRecientes: Array<{
+    clase: string;
+    fecha: string;
+    turno: string;
+    estado: string;
+  }>;
+}
+
+export interface CoachUserTelemetry {
+  asistencia: CoachAttendanceSummary;
+  recuentoPeso: {
+    pesoCorporalKg: number;
+    alturaCm: number;
+    imc: number;
+    totalRegistrosEntrenamiento: number;
+    pesoTotalLevantadoKg: number;
+    pesoMaximoKg: number;
+    ejercicioRecord: string;
+    volumenPorGrupoMuscular: Record<string, number>;
+    ultimosLevantamientos: CoachWorkoutSummary[];
+  };
+}
+
 export interface CoachChatContext {
   membershipSummary?: string;
   equipmentContext?: string;
+  userTelemetry?: CoachUserTelemetry;
 }

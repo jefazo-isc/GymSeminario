@@ -134,9 +134,61 @@
   color: var(--color-text-secondary);
   margin-top: 4px;
 }
+.coach-group-label {
+  display: block;
+  margin-top: 18px;
+  margin-bottom: 4px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+}
+
+.coach-list-item-tag {
+  display: inline-block;
+  margin-top: 5px !important;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--color-accent-soft);
+  color: var(--color-accent) !important;
+  font-weight: 600;
+}
+
 .coach-choice[aria-pressed="true"] {
   background: var(--color-accent-soft);
   border-color: var(--color-accent);
+}
+
+.telemetry-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.telemetry-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--color-surface-secondary);
+  border: 1px solid var(--color-border);
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.telemetry-pill strong {
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.voice-chip--data {
+  cursor: default;
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 .conversation {
   padding: 0;
@@ -167,6 +219,10 @@
   max-width: 92%;
   min-width: 0;
   align-self: flex-start;
+}
+.chat-message.from-coach {
+  width: 100%;
+  max-width: 100%;
 }
 .chat-message > span {
   font-size: 0.6875rem;
@@ -276,6 +332,7 @@
   }
   .coach-list > .eyebrow,
   .coach-list > h2,
+  .coach-list > .coach-group-label,
   .coach-list > .field-error,
   .coach-skeletons {
     grid-column: 1/-1;
@@ -333,125 +390,132 @@
 }
 
 
-/* ── Markdown renderizado del Coach IA ────────────────────── */
+/* ── Markdown renderizado del Coach IA (:host ::ng-deep para innerHTML) ── */
 .coach-markdown {
   background: var(--color-surface-secondary);
-  padding: 14px 18px;
+  padding: 16px 18px;
   border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
   margin: 6px 0 0;
   overflow-wrap: anywhere;
   line-height: 1.7;
   font-size: 0.875rem;
 }
 
-.coach-markdown p {
-  margin: 0 0 0.6em;
+:host ::ng-deep .coach-markdown p {
+  margin: 0 0 0.65em;
   background: none;
   padding: 0;
 }
-.coach-markdown p:last-child {
+:host ::ng-deep .coach-markdown p:last-child {
   margin-bottom: 0;
 }
 
-.coach-markdown strong {
+:host ::ng-deep .coach-markdown strong {
   font-weight: 700;
-  color: var(--color-text-primary, inherit);
+  color: var(--color-text);
 }
 
-.coach-markdown h3,
-.coach-markdown h4 {
-  margin: 1em 0 0.4em;
+:host ::ng-deep .coach-markdown h3,
+:host ::ng-deep .coach-markdown h4 {
+  margin: 1em 0 0.45em;
   font-weight: 700;
   font-size: 1rem;
+  color: var(--color-text);
 }
-.coach-markdown h3:first-child,
-.coach-markdown h4:first-child {
+:host ::ng-deep .coach-markdown h3:first-child,
+:host ::ng-deep .coach-markdown h4:first-child {
   margin-top: 0;
 }
 
-.coach-markdown ul,
-.coach-markdown ol {
+:host ::ng-deep .coach-markdown ul,
+:host ::ng-deep .coach-markdown ol {
   padding-left: 1.5em;
-  margin: 0.4em 0 0.8em;
+  margin: 0.4em 0 0.85em;
 }
-.coach-markdown li {
-  margin-bottom: 0.25em;
+:host ::ng-deep .coach-markdown li {
+  margin-bottom: 0.3em;
 }
 
-/* Tablas (GFM) — contenedor scrollable para no romper el layout */
-.coach-markdown .table-wrap {
+/* Tablas (GFM) — contenedor scrollable limpio en modo claro y oscuro */
+:host ::ng-deep .coach-markdown .table-wrap {
   width: 100%;
+  max-width: 100%;
   overflow-x: auto;
   margin: 14px 0;
-  border: 1px solid var(--color-border, #cbd5e1);
-  border-radius: var(--radius-sm, 6px);
-  background: var(--color-surface, #ffffff);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--color-border-strong, var(--color-border));
+  border-radius: var(--radius-sm, 8px);
+  background: var(--color-surface);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
   -webkit-overflow-scrolling: touch;
 }
-.coach-markdown table {
+:host ::ng-deep .coach-markdown table {
   width: 100%;
-  min-width: 580px;
+  min-width: 440px;
   border-collapse: collapse;
   font-size: 0.8125rem;
   table-layout: auto;
 }
-.coach-markdown thead {
-  background: var(--color-surface-secondary, #f1f5f9);
+:host ::ng-deep .coach-markdown thead {
+  background: var(--color-accent-soft);
 }
-.coach-markdown th {
+:host ::ng-deep .coach-markdown th {
   font-weight: 700;
-  color: var(--color-text-primary, #0f172a);
-  padding: 10px 14px;
-  border-bottom: 2px solid var(--color-border, #94a3b8);
-  border-right: 1px solid var(--color-border, #e2e8f0);
-  white-space: nowrap !important;
+  color: var(--color-text);
+  padding: 10px 12px;
+  border-bottom: 2px solid var(--color-accent);
+  border-right: 1px solid var(--color-border);
+  white-space: nowrap;
   text-align: left;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
 }
-.coach-markdown td {
-  padding: 10px 14px;
-  border-bottom: 1px solid var(--color-border, #e2e8f0);
-  border-right: 1px solid var(--color-border, #e2e8f0);
+:host ::ng-deep .coach-markdown td {
+  padding: 10px 12px;
+  color: var(--color-text);
+  border-bottom: 1px solid var(--color-border);
+  border-right: 1px solid var(--color-border);
   text-align: left;
-  vertical-align: top;
-  overflow-wrap: normal !important;
-  word-break: normal !important;
+  vertical-align: middle;
+  overflow-wrap: break-word;
+  word-break: normal;
   white-space: normal;
-  line-height: 1.5;
+  line-height: 1.45;
 }
-.coach-markdown th:last-child,
-.coach-markdown td:last-child {
+:host ::ng-deep .coach-markdown th:last-child,
+:host ::ng-deep .coach-markdown td:last-child {
   border-right: none;
 }
-.coach-markdown td:first-child {
+:host ::ng-deep .coach-markdown td:first-child {
   font-weight: 600;
-  white-space: nowrap !important;
+  color: var(--color-text);
 }
-.coach-markdown tbody tr:last-child td {
+:host ::ng-deep .coach-markdown tbody tr:last-child td {
   border-bottom: none;
 }
-.coach-markdown tbody tr:nth-child(even) {
-  background: var(--color-surface-secondary, rgba(0, 0, 0, 0.02));
+:host ::ng-deep .coach-markdown tbody tr:nth-child(even) td {
+  background: var(--color-surface-secondary);
 }
-.coach-markdown tbody tr:hover td {
-  background: rgba(0, 0, 0, 0.02);
+:host ::ng-deep .coach-markdown tbody tr:hover td {
+  background: var(--color-accent-soft);
 }
 
 /* Bloques de código inline */
-.coach-markdown code {
-  background: var(--color-accent-soft, rgba(0,0,0,.06));
+:host ::ng-deep .coach-markdown code {
+  background: var(--color-accent-soft);
+  color: var(--color-text);
   padding: 2px 6px;
   border-radius: 4px;
   font-size: 0.8125rem;
 }
 
-.coach-markdown hr {
+:host ::ng-deep .coach-markdown hr {
   border: none;
-  border-top: 1px solid var(--color-border, rgba(0,0,0,.12));
+  border-top: 1px solid var(--color-border);
   margin: 1em 0;
 }
 
-.coach-markdown blockquote {
+:host ::ng-deep .coach-markdown blockquote {
   border-left: 3px solid var(--color-sage, #6b9e7b);
   margin: 0.6em 0;
   padding: 0.4em 1em;

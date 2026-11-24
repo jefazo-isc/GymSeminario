@@ -17,6 +17,9 @@ const { default: db } = await import('../services/db.js');
 const { clearCoachVoiceCache, limpiarTextoParaVoz } = await import(
   '../services/coachVoice.service.js'
 );
+const { COACHES, buildUserJsonContext } = await import(
+  '../services/coachChat.service.js'
+);
 
 delete process.env.BREVO_API_KEY;
 delete process.env.RESEND_API_KEY;
@@ -975,4 +978,63 @@ test('Coach Virtual TTS synthesis, voice cloning/design RBAC, caching & fallback
     if (prevLlave === undefined) delete process.env.GEMINI_LLAVE;
     else process.env.GEMINI_LLAVE = prevLlave;
   }
+});
+
+test('Personalized body-part coaches, no intro audio metadata, and user attendance/weight JSON context', async () => {
+  const res = await api('/api/coaches');
+  assert.equal(res.status, 200);
+  assert.ok(Array.isArray(res.data));
+
+  for (const id of ['torso', 'pierna', 'core']) {
+    const coach = res.data.find((c) => c.id === id);
+    assert.ok(coach, `Expected custom coach ${id} in /api/coaches`);
+    assert.equal(coach.personalizado, true);
+    assert.equal(coach.hasIntroAudio, false);
+    assert.equal(coach.hasVoice, false);
+    assert.ok(typeof coach.especialidad === 'string' && coach.especialidad.length > 0);
+    assert.match(COACHES[id].systemPrompt, /DATOS_REALES_USUARIO_JSON/);
+    assert.match(COACHES[id].systemPrompt, /\|/);
+  }
+
+  const temach = res.data.find((c) => c.id === 'temach');
+  assert.ok(temach);
+  assert.equal(temach.personalizado, false);
+  assert.equal(temach.hasIntroAudio, true);
+  assert.equal(temach.hasVoice, true);
+
+  const email = `telemetry_${Date.now()}@gymseminario.com`;
+  db.prepare(
+    'INSERT INTO attendances (clase, fecha, hora, qr_token, email) VALUES (?, ?, ?, ?, ?)'
+  ).run('Fuerza', '2026-11-20', '18:00', `qr_${Date.now()}_1`, email);
+  db.prepare(
+    'INSERT INTO attendances (clase, fecha, hora, qr_token, email) VALUES (?, ?, ?, ?, ?)'
+  ).run('HIIT', '2026-11-22', '19:00', `qr_${Date.now()}_2`, email);
+
+  db.prepare(
+    'INSERT INTO workout_logs (user_email, fecha, ejercicio, grupo_muscular, series, repeticiones, peso_kg, rpe) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+  ).run(email, '2026-11-22', 'Press de banca', 'Pecho', 4, '10', 80, 8.5);
+  db.prepare(
+    'INSERT INTO workout_logs (user_email, fecha, ejercicio, grupo_muscular, series, repeticiones, peso_kg, rpe) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+  ).run(email, '2026-11-21', 'Remo con barra', 'Espalda', 3, '12', 60, 8);
+
+  const ctx = buildUserJsonContext({
+    userEmail: email,
+    perfilUsuario: {
+      nombre: 'Yahir',
+      edad: 23,
+      peso: 76,
+      altura: 176,
+      objetivo: 'Ganancia muscular',
+    },
+    membresiaResumen: 'Plan Black',
+    contextoRutina: 'Push/Pull/Legs',
+  });
+
+  assert.equal(ctx.asistencia.totalAsistencias, 2);
+  assert.equal(ctx.recuentoPesoYEntrenamiento.totalRegistrosBitacora, 2);
+  assert.equal(ctx.recuentoPesoYEntrenamiento.pesoTotalMovidoKg, 5360);
+  assert.equal(ctx.recuentoPesoYEntrenamiento.pesoMaximoLevantadoKg, 80);
+  assert.equal(ctx.recuentoPesoYEntrenamiento.ejercicioRecord, 'Press de banca');
+  assert.equal(ctx.recuentoPesoYEntrenamiento.volumenPorGrupoMuscular.Pecho, 3200);
+  assert.equal(ctx.recuentoPesoYEntrenamiento.volumenPorGrupoMuscular.Espalda, 2160);
 });

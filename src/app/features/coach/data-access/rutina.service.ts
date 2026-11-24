@@ -100,6 +100,9 @@ export class RutinaService implements CoachRepository {
     if (extraContext?.equipmentContext) {
       body["equipmentContext"] = extraContext.equipmentContext;
     }
+    if (extraContext?.userTelemetry) {
+      body["userTelemetry"] = extraContext.userTelemetry;
+    }
     return this.http
       .post<unknown>(`${this.apiUrl}/coach/chat`, body, options)
       .pipe(

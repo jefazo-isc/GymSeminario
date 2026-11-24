@@ -385,20 +385,46 @@
               Reintentar conexión
             </button>
           }
-          @for (coach of coaches; track coach.id) {
-            <button
-              type="button"
-              class="coach-choice"
-              [attr.aria-pressed]="coachActivo?.id === coach.id"
-              [disabled]="enviandoMensaje"
-              (click)="seleccionarCoach(coach, true)"
-            >
-              <span aria-hidden="true">{{ coach.emoji }}</span
-              ><span
-                ><strong>{{ coach.nombre }}</strong
-                ><small>{{ coach.titulo }}</small></span
+          @if (coachesPersonalizados.length) {
+            <span class="coach-group-label">Especialistas por zona (Datos JSON)</span>
+            @for (coach of coachesPersonalizados; track coach.id) {
+              <button
+                type="button"
+                class="coach-choice coach-choice--custom"
+                [attr.aria-pressed]="coachActivo?.id === coach.id"
+                [disabled]="enviandoMensaje"
+                (click)="seleccionarCoach(coach, true)"
               >
-            </button>
+                <span aria-hidden="true">{{ coach.emoji }}</span
+                ><span
+                  ><strong>{{ coach.nombre }}</strong
+                  ><small>{{ coach.titulo }}</small
+                  ><small class="coach-list-item-tag"
+                    >Sin audio · {{ coach.especialidad || "Personalizado" }}</small
+                  ></span
+                >
+              </button>
+            }
+          }
+          @if (coachesPersonajes.length) {
+            @if (coachesPersonalizados.length) {
+              <span class="coach-group-label">Coaches con voz y clonación</span>
+            }
+            @for (coach of coachesPersonajes; track coach.id) {
+              <button
+                type="button"
+                class="coach-choice"
+                [attr.aria-pressed]="coachActivo?.id === coach.id"
+                [disabled]="enviandoMensaje"
+                (click)="seleccionarCoach(coach, true)"
+              >
+                <span aria-hidden="true">{{ coach.emoji }}</span
+                ><span
+                  ><strong>{{ coach.nombre }}</strong
+                  ><small>{{ coach.titulo }}</small></span
+                >
+              </button>
+            }
           }
         </aside>
         <div class="surface conversation">
@@ -414,28 +440,54 @@
                 </p>
               </div>
               <div class="voice-controls">
-                <button
-                  type="button"
-                  class="voice-chip"
-                  [class.is-active]="reproduciendoSaludo"
-                  [disabled]="!coachActivo"
-                  (click)="coachActivo && reproducirVozCoach(coachActivo.id)"
-                >
-                  <app-icon [name]="reproduciendoSaludo ? 'stop' : 'play'" />
-                  <span>{{
-                    reproduciendoSaludo ? "Detener" : "Muestra de voz"
-                  }}</span>
-                </button>
-                <button
-                  type="button"
-                  class="voice-chip"
-                  [attr.aria-pressed]="autoVoz"
-                  (click)="toggleAutoVoz()"
-                >
-                  <app-icon [name]="autoVoz ? 'volume' : 'volumeOff'" />
-                  <span>{{ autoVoz ? "Auto-voz activa" : "Auto-voz" }}</span>
-                </button>
+                @if (coachTieneVozIntro(coachActivo)) {
+                  <button
+                    type="button"
+                    class="voice-chip"
+                    [class.is-active]="reproduciendoSaludo"
+                    [disabled]="!coachActivo"
+                    (click)="coachActivo && reproducirVozCoach(coachActivo.id)"
+                  >
+                    <app-icon [name]="reproduciendoSaludo ? 'stop' : 'play'" />
+                    <span>{{
+                      reproduciendoSaludo ? "Detener" : "Muestra de voz"
+                    }}</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="voice-chip"
+                    [attr.aria-pressed]="autoVoz"
+                    (click)="toggleAutoVoz()"
+                  >
+                    <app-icon [name]="autoVoz ? 'volume' : 'volumeOff'" />
+                    <span>{{ autoVoz ? "Auto-voz activa" : "Auto-voz" }}</span>
+                  </button>
+                } @else {
+                  <span class="voice-chip voice-chip--data">
+                    <app-icon name="spark" />
+                    <span>Sin voz intro · Datos JSON</span>
+                  </span>
+                }
               </div>
+            </div>
+            <div class="telemetry-pills" aria-label="Métricas enviadas al coach">
+              <span class="telemetry-pill"
+                >Asistencias: <strong>{{ totalAsistencias }}</strong></span
+              >
+              <span class="telemetry-pill"
+                >Recuento levantado:
+                <strong>{{ pesoTotalLevantadoKg | number: "1.0-0" }} kg</strong></span
+              >
+              <span class="telemetry-pill"
+                >PR máx: <strong>{{ pesoMaximoKg }} kg</strong></span
+              >
+              <span class="telemetry-pill"
+                >Peso corporal:
+                <strong>{{ perfil.peso || 0 }} kg</strong>
+                @if (imcActual > 0) {
+                  <span>(IMC {{ imcActual }})</span>
+                }</span
+              >
             </div>
           </header>
           <div
@@ -448,6 +500,7 @@
               <article
                 class="chat-message"
                 [class.from-user]="message.remitente === 'usuario'"
+                [class.from-coach]="message.remitente !== 'usuario'"
               >
                 <span
                   >{{
@@ -459,40 +512,42 @@
                   <p>{{ message.texto }}</p>
                 } @else {
                   <div class="coach-markdown" [innerHTML]="message.texto | markdown"></div>
-                  <div class="message-voice-bar">
-                    <button
-                      type="button"
-                      class="btn-listen-coach"
-                      [class.is-playing]="message.reproduciendo"
-                      [disabled]="message.cargandoAudio"
-                      (click)="alternarVozMensaje(message)"
-                    >
-                      @if (message.cargandoAudio) {
-                        <span class="voice-spinner" aria-hidden="true"></span>
-                        <span>Sintetizando voz…</span>
-                      } @else if (message.reproduciendo) {
-                        <app-icon name="stop" />
-                        <span>Detener</span>
-                        <span class="sound-wave" aria-hidden="true"
-                          ><i></i><i></i><i></i><i></i
-                        ></span>
-                      } @else {
-                        <app-icon name="volume" />
-                        <span>Escuchar al coach</span>
+                  @if (message.hasVoice !== false) {
+                    <div class="message-voice-bar">
+                      <button
+                        type="button"
+                        class="btn-listen-coach"
+                        [class.is-playing]="message.reproduciendo"
+                        [disabled]="message.cargandoAudio"
+                        (click)="alternarVozMensaje(message)"
+                      >
+                        @if (message.cargandoAudio) {
+                          <span class="voice-spinner" aria-hidden="true"></span>
+                          <span>Sintetizando voz…</span>
+                        } @else if (message.reproduciendo) {
+                          <app-icon name="stop" />
+                          <span>Detener</span>
+                          <span class="sound-wave" aria-hidden="true"
+                            ><i></i><i></i><i></i><i></i
+                          ></span>
+                        } @else {
+                          <app-icon name="volume" />
+                          <span>Escuchar al coach</span>
+                        }
+                      </button>
+                      @if (message.audioOrigen) {
+                        <span class="voice-origin-tag">{{
+                          message.audioOrigen === "local"
+                            ? "Voz del navegador"
+                            : message.audioOrigen === "chatterbox"
+                              ? "Voz clonada (Chatterbox)"
+                              : message.audioOrigen === "cache"
+                                ? "Voz clonada (caché)"
+                                : "Voz IA Gemini"
+                        }}</span>
                       }
-                    </button>
-                    @if (message.audioOrigen) {
-                      <span class="voice-origin-tag">{{
-                        message.audioOrigen === "local"
-                          ? "Voz del navegador"
-                          : message.audioOrigen === "chatterbox"
-                            ? "Voz clonada (Chatterbox)"
-                            : message.audioOrigen === "cache"
-                              ? "Voz clonada (caché)"
-                              : "Voz IA Gemini"
-                      }}</span>
-                    }
-                  </div>
+                    </div>
+                  }
                 }
               </article>
             } @empty {

@@ -10,6 +10,7 @@ import {
 import { Membresia } from "../../features/memberships/models/membresia.model";
 import { MEMBERSHIPS } from "../../features/memberships/data-access/membership.repository";
 import { SESSION } from "../../features/auth/data-access/session.repository";
+import { ACTIVITY } from "../../features/activity/data-access/activity.repository";
 import { PerfilSocioService } from "../../features/profile/data-access/perfil-socio.service";
 
 describe("Coach responses", () => {
@@ -572,5 +573,214 @@ describe("Coach subscription gate", () => {
     comp.mensajeInput = "Otra duda";
     comp.enviarMensaje();
     expect(coachSpy.sintetizarVozCoach.calls.count()).toBe(2);
+  });
+
+  it("skips intro voice for custom body-part coaches, sends attendance/weight JSON telemetry, and renders Markdown tables", () => {
+    localStorage.setItem(
+      "gym_user",
+      JSON.stringify({
+        uid: "s-custom",
+        nombre: "Socio",
+        email: "socio@example.com",
+        role: "subscriber",
+      }),
+    );
+
+    const torsoCoach = {
+      id: "torso",
+      nombre: 'Héctor "Titan" Morales',
+      emoji: "▲",
+      titulo: "Especialista en Tren Superior",
+      especialidad: "Tren Superior",
+      personalizado: true,
+      hasIntroAudio: false,
+      hasVoice: false,
+      frase: "Progresión para tren superior.",
+    };
+    const piernaCoach = {
+      id: "pierna",
+      nombre: 'Valeria "Apex" Navarro',
+      emoji: "◆",
+      titulo: "Especialista en Tren Inferior",
+      especialidad: "Tren Inferior",
+      personalizado: true,
+      hasIntroAudio: false,
+      hasVoice: false,
+      frase: "Fuerza en tren inferior.",
+    };
+    const coreCoach = {
+      id: "core",
+      nombre: 'Mateo "Pulse" Vega',
+      emoji: "◎",
+      titulo: "Especialista en Core",
+      especialidad: "Core y Recomposición",
+      personalizado: true,
+      hasIntroAudio: false,
+      hasVoice: false,
+      frase: "Control abdominal y recomposición.",
+    };
+    const temachCoach = {
+      id: "temach",
+      nombre: "El Temach",
+      emoji: "🪖",
+      titulo: "Comandante del Modo Guerra",
+      especialidad: "Disciplina y Fuerza",
+      personalizado: false,
+      hasIntroAudio: true,
+      hasVoice: true,
+      frase: "Cero excusas.",
+    };
+
+    const markdownReply = [
+      "Resumen de tu progreso en tren superior:",
+      "",
+      "| Métrica | Valor |",
+      "| --- | --- |",
+      "| Asistencias | 2 |",
+      "| Peso movido | 2,800 kg |",
+      "",
+      "Sigue aumentando 2.5 kg cuando completes 10 reps limpias.",
+    ].join("\n");
+
+    const coachSpy = {
+      obtenerCoaches: jasmine
+        .createSpy()
+        .and.returnValue(of([torsoCoach, piernaCoach, coreCoach, temachCoach])),
+      generarRutina: jasmine.createSpy(),
+      enviarMensajeChat: jasmine.createSpy().and.returnValue(
+        of({
+          exito: true,
+          coach: torsoCoach.nombre,
+          respuesta: markdownReply,
+        }),
+      ),
+      sintetizarVozCoach: jasmine.createSpy(),
+      leerPreferenciaAutoVoz: jasmine.createSpy().and.returnValue(false),
+      guardarPreferenciaAutoVoz: jasmine.createSpy(),
+    };
+
+    const playSpy = spyOn(HTMLAudioElement.prototype, "play").and.returnValue(
+      Promise.resolve(),
+    );
+    spyOn(HTMLAudioElement.prototype, "pause").and.stub();
+
+    TestBed.configureTestingModule({
+      imports: [CoachIaComponent],
+      providers: [
+        provideRouter([]),
+        { provide: RutinaService, useValue: coachSpy },
+        {
+          provide: SESSION,
+          useValue: {
+            getCurrentUser: () => Promise.resolve(null),
+            userName$: of("Socio"),
+            userRole$: of("subscriber"),
+          },
+        },
+        {
+          provide: PerfilSocioService,
+          useValue: {
+            perfil$: of({
+              nombre: "Socio",
+              edad: 25,
+              peso: 76,
+              altura: 176,
+              genero: "Masculino",
+              objetivo: "Ganancia muscular",
+              diasDisponibles: 4,
+              nivel: "Intermedio",
+              restriccionesMedicas: "Ninguna",
+            }),
+            actualizarNombre: () => {},
+          },
+        },
+        {
+          provide: ACTIVITY,
+          useValue: {
+            historial$: of([
+              {
+                id: "a1",
+                clase: "Funcional",
+                fecha: "2026-11-20",
+                turno: "08:00",
+                estado: "Asistida",
+              },
+              {
+                id: "a2",
+                clase: "Fuerza",
+                fecha: "2026-11-22",
+                turno: "19:00",
+                estado: "Asistida",
+              },
+              {
+                id: "a3",
+                clase: "Spinning",
+                fecha: "2026-11-25",
+                turno: "07:00",
+                estado: "Reservada",
+              },
+            ]),
+            workoutLogs$: of([
+              {
+                id: "w1",
+                fecha: "2026-11-22",
+                ejercicio: "Press inclinado",
+                grupoMuscular: "Pecho",
+                series: 4,
+                repeticiones: 10,
+                pesoKg: 70,
+              },
+            ]),
+          },
+        },
+      ],
+    });
+
+    const fixture = TestBed.createComponent(CoachIaComponent);
+    const comp = fixture.componentInstance;
+    fixture.detectChanges();
+
+    expect(comp.coachesPersonalizados.length).toBe(3);
+    expect(comp.coachesPersonajes.length).toBe(1);
+    expect(comp.totalAsistencias).toBe(2);
+    expect(comp.pesoTotalLevantadoKg).toBe(2800);
+    expect(comp.pesoMaximoKg).toBe(70);
+
+    comp.seleccionarCoach(torsoCoach, true);
+    comp.abrirPestanaChat();
+    fixture.detectChanges();
+
+    expect(playSpy).not.toHaveBeenCalled();
+
+    const pillsText =
+      fixture.nativeElement.querySelector(".telemetry-pills")?.textContent ?? "";
+    expect(pillsText).toContain("Asistencias: 2");
+    expect(pillsText).toContain("2,800 kg");
+    expect(pillsText).toContain("70 kg");
+
+    const dataChipText =
+      fixture.nativeElement.querySelector(".voice-chip--data")?.textContent ?? "";
+    expect(dataChipText).toContain("Sin voz intro");
+
+    comp.mensajeInput = "Analiza mi tren superior y asistencias";
+    comp.enviarMensaje();
+    fixture.detectChanges();
+
+    const chatArgs = coachSpy.enviarMensajeChat.calls.mostRecent().args;
+    expect(chatArgs[0]).toBe("torso");
+    expect(chatArgs[5]?.userTelemetry?.asistencia?.totalAsistencias).toBe(2);
+    expect(chatArgs[5]?.userTelemetry?.recuentoPeso?.pesoTotalLevantadoKg).toBe(
+      2800,
+    );
+    expect(chatArgs[5]?.userTelemetry?.recuentoPeso?.ejercicioRecord).toBe(
+      "Press inclinado",
+    );
+
+    expect(comp.mensajes.length).toBe(2);
+    expect(comp.mensajes[1].hasVoice).toBeFalse();
+    expect(fixture.nativeElement.querySelector(".btn-listen-coach")).toBeNull();
+    expect(
+      fixture.nativeElement.querySelector(".coach-markdown .table-wrap table tbody tr"),
+    ).not.toBeNull();
   });
 });
