@@ -5,7 +5,7 @@
 const MERCURY_BASE_URL = process.env.MERCURY_BASE_URL || 'https://api.inceptionlabs.ai/v1';
 
 // Modelo oficial configurado para Google Gemini
-const GEMINI_MODELS = ['gemini-3.5-flash'];
+const GEMINI_MODELS = ['gemini-3.5-flash-lite'];
 
 /**
  * Estado en memoria del sistema de IA (Tracker)
