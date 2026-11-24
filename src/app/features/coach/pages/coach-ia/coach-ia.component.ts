@@ -608,9 +608,7 @@ export class CoachIaComponent implements OnInit {
     utterance.lang = "es-MX";
     utterance.pitch = tuning.pitch;
     utterance.rate = tuning.rate;
-    const spanishVoice = window.speechSynthesis
-      .getVoices()
-      .find((v) => v.lang.toLowerCase().startsWith("es"));
+    const spanishVoice = this.seleccionarVozNatural(coachId);
     if (spanishVoice) {
       utterance.voice = spanishVoice;
     }
@@ -628,6 +626,31 @@ export class CoachIaComponent implements OnInit {
     } catch {
       message.reproduciendo = false;
     }
+  }
+
+  private seleccionarVozNatural(coachId: string): SpeechSynthesisVoice | undefined {
+    const voices = window.speechSynthesis
+      .getVoices()
+      .filter((v) => v.lang.toLowerCase().startsWith("es"));
+    if (voices.length === 0) return undefined;
+
+    const esFemenina = coachId === "pierna";
+    const genderHints = esFemenina
+      ? ["female", "mujer", "dalia", "sabina", "paulina", "sofia", "laura", "helena", "monica", "paloma"]
+      : ["male", "hombre", "jorge", "alonso", "raul", "diego", "pablo", "carlos", "alvaro", "tomas"];
+
+    const score = (v: SpeechSynthesisVoice): number => {
+      const name = v.name.toLowerCase();
+      const lang = v.lang.toLowerCase();
+      let s = 0;
+      if (lang === "es-mx" || lang === "es-us" || lang === "es-419") s += 3;
+      if (/natural|neural|online|google|microsoft/.test(name)) s += 5;
+      if (genderHints.some((h) => name.includes(h))) s += 2;
+      if (!v.localService) s += 1;
+      return s;
+    };
+
+    return [...voices].sort((a, b) => score(b) - score(a))[0];
   }
 
   private decodeBase64ToBlobUrl(base64: string, mimeType: string): string | null {
