@@ -737,12 +737,67 @@ export class CoachIaComponent implements OnInit {
             }
           } else this.messageFailed(text);
         },
-        error: () => {
+        error: (err: unknown) => {
           this.enviandoMensaje = false;
-          this.messageFailed(text);
+          const parsed = this.extractCoachHttpError(
+            err,
+            "No se recibió una respuesta válida del coach. Tu mensaje se conserva; puedes volver a enviarlo.",
+          );
+          if (parsed.status === 403) {
+            this.tieneSuscripcion = false;
+          }
+          this.failedText = text;
+          this.chatError = parsed.message;
         },
       });
   }
+  private extractCoachHttpError(
+    err: unknown,
+    networkFallback: string,
+  ): { status: number; message: string } {
+    const httpErr = err as {
+      status?: number;
+      name?: string;
+      error?: { error?: string; message?: string } | string;
+    } | null;
+    const status = typeof httpErr?.status === "number" ? httpErr.status : 0;
+    const serverMsg =
+      typeof httpErr?.error === "string"
+        ? httpErr.error.trim()
+        : typeof httpErr?.error === "object" && httpErr.error !== null
+          ? (httpErr.error.error || httpErr.error.message || "").trim()
+          : "";
+
+    if (status === 401) {
+      return {
+        status,
+        message:
+          serverMsg ||
+          "Tu sesión expiró. Inicia sesión nuevamente para usar el Coach IA.",
+      };
+    }
+    if (status === 403) {
+      return {
+        status,
+        message:
+          serverMsg ||
+          "Tu cuenta no cuenta con una membresía activa. Adquiere un plan para utilizar el Coach IA.",
+      };
+    }
+    if (status === 429) {
+      return {
+        status,
+        message:
+          serverMsg ||
+          "Has alcanzado el límite temporal de peticiones. Intenta de nuevo en unos minutos.",
+      };
+    }
+    if (status >= 400 && serverMsg) {
+      return { status, message: serverMsg };
+    }
+    return { status, message: networkFallback };
+  }
+
   private messageFailed(text: string) {
     this.failedText = text;
     this.chatError =
@@ -788,10 +843,16 @@ export class CoachIaComponent implements OnInit {
               "El servicio no devolvió una rutina personalizada válida. No mostramos un ejemplo genérico como resultado.";
           }
         },
-        error: () => {
+        error: (err: unknown) => {
           this.cargando = false;
-          this.errorMensaje =
-            "No se pudo contactar al servicio de rutinas. Revisa la conexión con el servidor e inténtalo de nuevo.";
+          const parsed = this.extractCoachHttpError(
+            err,
+            "El servicio de rutinas está tardando en responder o iniciando en el servidor. Intenta de nuevo en unos segundos.",
+          );
+          if (parsed.status === 403) {
+            this.tieneSuscripcion = false;
+          }
+          this.errorMensaje = parsed.message;
         },
       });
   }
