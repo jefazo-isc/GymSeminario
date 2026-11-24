@@ -3,7 +3,12 @@ import {
   isRecord,
   isString,
 } from "../../../core/storage/storage-guards";
-import { CoachInfo, RespuestaChat, RutinaData } from "./rutina.model";
+import {
+  CoachInfo,
+  RespuestaChat,
+  RespuestaVozCoach,
+  RutinaData,
+} from "./rutina.model";
 export const validRoutine = (v: unknown): v is RutinaData =>
   isRecord(v) &&
   [
@@ -41,3 +46,10 @@ export const isChatResponse = (v: unknown): v is RespuestaChat =>
   typeof v["exito"] === "boolean" &&
   isString(v["coach"]) &&
   isString(v["respuesta"]);
+
+export const isCoachTtsResponse = (v: unknown): v is RespuestaVozCoach =>
+  isRecord(v) &&
+  typeof v["exito"] === "boolean" &&
+  (v["audioBase64"] === undefined || isString(v["audioBase64"])) &&
+  (v["mimeType"] === undefined || isString(v["mimeType"])) &&
+  (v["error"] === undefined || isString(v["error"]));

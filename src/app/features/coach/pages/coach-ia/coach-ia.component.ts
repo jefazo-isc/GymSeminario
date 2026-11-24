@@ -8,6 +8,7 @@ import {
   DestroyRef,
   ElementRef,
   Injector,
+  NgZone,
   OnInit,
   afterNextRender,
   inject,
@@ -40,6 +41,14 @@ import {
   RutinaData,
 } from "../../models/rutina.model";
 export { validRoutine } from "../../models/rutina.guard";
+const COACH_SPEECH_TUNING: Record<string, { pitch: number; rate: number }> = {
+  temach: { pitch: 0.78, rate: 1.04 },
+  arnold: { pitch: 0.68, rate: 0.92 },
+  barbara: { pitch: 1.24, rate: 1.12 },
+  patricio: { pitch: 0.84, rate: 0.86 },
+  chavo: { pitch: 1.32, rate: 1.06 },
+};
+
 @Component({
   selector: "app-coach-ia",
   standalone: true,
@@ -64,6 +73,7 @@ export class CoachIaComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private host: ElementRef<HTMLElement> = inject(ElementRef);
   private injector = inject(Injector);
+  private ngZone = inject(NgZone);
   pestanaActiva: "rutina" | "chat" = "rutina";
   usuarioAutenticado = false;
   tieneSuscripcion = false;
@@ -98,7 +108,10 @@ export class CoachIaComponent implements OnInit {
   coachesLoading = false;
   coachesError = "";
   chatError = "";
+  autoVoz = false;
+  reproduciendoSaludo = false;
   private failedText = "";
+  private objectUrls: string[] = [];
   objetivos = [
     "Ganancia muscular",
     "Pérdida de grasa / Definición",
@@ -108,6 +121,14 @@ export class CoachIaComponent implements OnInit {
   ];
   opcionesDias = [2, 3, 4, 5, 6];
   ngOnInit() {
+    this.autoVoz = this.routines.leerPreferenciaAutoVoz?.() ?? false;
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      try {
+        window.speechSynthesis.getVoices();
+      } catch {
+        // Ignorar si speechSynthesis no está disponible
+      }
+    }
     this.verificarAutenticacion();
     this.observarMembresia();
     this.cargarCoaches();
@@ -115,7 +136,11 @@ export class CoachIaComponent implements OnInit {
     if (this.tieneSuscripcion && readGymUser()) {
       this.cargarRutinaGuardada();
     }
-    this.destroyRef.onDestroy(() => this.profileStream?.unsubscribe());
+    this.destroyRef.onDestroy(() => {
+      this.profileStream?.unsubscribe();
+      this.detenerTodoAudio();
+      this.limpiarObjectUrls();
+    });
   }
   private observarMembresia() {
     this.memberships?.membresiaActual$
@@ -295,6 +320,7 @@ export class CoachIaComponent implements OnInit {
   }
   seleccionarCoach(coach: CoachInfo, fromUserClick = false) {
     if (this.enviandoMensaje) return;
+    this.detenerTodoAudio();
     this.coachActivo = coach;
     this.mensajes = [];
     this.chatError = "";
@@ -307,18 +333,232 @@ export class CoachIaComponent implements OnInit {
   private audioActual: HTMLAudioElement | null = null;
   reproducirVozCoach(coachId: string) {
     try {
-      if (this.audioActual) {
-        this.audioActual.pause();
-        this.audioActual = null;
+      if (this.reproduciendoSaludo) {
+        this.detenerTodoAudio();
+        return;
       }
+      this.detenerTodoAudio();
       const audioUrl = `audio/coaches/${coachId}.mp3`;
-      this.audioActual = new Audio(audioUrl);
-      this.audioActual.play().catch(() => {
-        // Fallback silencioso si el navegador bloquea autoplay sin interacción previa
-      });
+      const audio = new Audio(audioUrl);
+      this.audioActual = audio;
+      this.reproduciendoSaludo = true;
+      const finalizar = () =>
+        this.ngZone.run(() => {
+          if (this.audioActual === audio) {
+            this.audioActual = null;
+          }
+          this.reproduciendoSaludo = false;
+        });
+      audio.onended = finalizar;
+      audio.onerror = finalizar;
+      audio.play().catch(finalizar);
     } catch {
-      // Audio no disponible
+      this.reproduciendoSaludo = false;
     }
+  }
+
+  toggleAutoVoz() {
+    this.autoVoz = !this.autoVoz;
+    this.routines.guardarPreferenciaAutoVoz?.(this.autoVoz);
+    if (!this.autoVoz) {
+      this.detenerTodoAudio();
+    }
+  }
+
+  detenerTodoAudio() {
+    if (this.audioActual) {
+      this.audioActual.onended = null;
+      this.audioActual.onerror = null;
+      this.audioActual.pause();
+      this.audioActual = null;
+    }
+    this.reproduciendoSaludo = false;
+    for (const msg of this.mensajes) {
+      msg.reproduciendo = false;
+      msg.cargandoAudio = false;
+    }
+    if (
+      typeof window !== "undefined" &&
+      "speechSynthesis" in window &&
+      (window.speechSynthesis.speaking || window.speechSynthesis.pending)
+    ) {
+      window.speechSynthesis.cancel();
+    }
+  }
+
+  alternarVozMensaje(message: MensajeChat) {
+    if (message.cargandoAudio) return;
+    if (message.reproduciendo) {
+      this.detenerTodoAudio();
+      return;
+    }
+    this.detenerTodoAudio();
+
+    const coachId = message.coachId || this.coachActivo?.id || "temach";
+    if (message.audioSrc) {
+      this.reproducirSrcEnMensaje(message, message.audioSrc, coachId);
+      return;
+    }
+
+    if (!this.routines.sintetizarVozCoach) {
+      this.reproducirFallbackWebSpeech(message, coachId);
+      return;
+    }
+
+    // Preservar gesto de usuario en el elemento Audio antes de la llamada asíncrona HTTP
+    const blessedAudio = typeof Audio !== "undefined" ? new Audio() : null;
+    if (blessedAudio) {
+      blessedAudio.preload = "auto";
+      this.audioActual = blessedAudio;
+    }
+
+    message.cargandoAudio = true;
+    this.routines
+      .sintetizarVozCoach(coachId, message.texto)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          message.cargandoAudio = false;
+          if (blessedAudio && this.audioActual !== blessedAudio) return;
+          if (res?.exito && res.audioBase64) {
+            const url = this.decodeBase64ToBlobUrl(
+              res.audioBase64,
+              res.mimeType || "audio/wav",
+            );
+            if (url) {
+              this.objectUrls.push(url);
+              message.audioSrc = url;
+              message.audioOrigen = res.origen || "gemini-tts";
+              this.reproducirSrcEnMensaje(message, url, coachId, blessedAudio);
+              return;
+            }
+          }
+          if (this.audioActual === blessedAudio) this.audioActual = null;
+          this.reproducirFallbackWebSpeech(message, coachId);
+        },
+        error: () => {
+          message.cargandoAudio = false;
+          if (blessedAudio && this.audioActual !== blessedAudio) return;
+          if (this.audioActual === blessedAudio) this.audioActual = null;
+          this.reproducirFallbackWebSpeech(message, coachId);
+        },
+      });
+  }
+
+  private reproducirSrcEnMensaje(
+    message: MensajeChat,
+    src: string,
+    coachId: string,
+    existingAudio?: HTMLAudioElement | null,
+  ) {
+    try {
+      const audio = existingAudio ?? new Audio();
+      audio.src = src;
+      this.audioActual = audio;
+      message.reproduciendo = true;
+      const finalizar = () =>
+        this.ngZone.run(() => {
+          if (this.audioActual === audio) {
+            this.audioActual = null;
+          }
+          message.reproduciendo = false;
+        });
+      audio.onended = finalizar;
+      audio.onerror = finalizar;
+      audio.play().catch(() =>
+        this.ngZone.run(() => {
+          if (this.audioActual === audio) {
+            this.audioActual = null;
+          }
+          message.reproduciendo = false;
+          this.reproducirFallbackWebSpeech(message, coachId);
+        }),
+      );
+    } catch {
+      message.reproduciendo = false;
+      this.reproducirFallbackWebSpeech(message, coachId);
+    }
+  }
+
+  private reproducirFallbackWebSpeech(message: MensajeChat, coachId: string) {
+    if (
+      typeof window === "undefined" ||
+      typeof SpeechSynthesisUtterance === "undefined" ||
+      !("speechSynthesis" in window)
+    ) {
+      return;
+    }
+    let cleanText = message.texto
+      .replace(/```[\s\S]*?```/g, " ")
+      .replace(/^\|.*\|$/gm, " ")
+      .replace(/^[\s\-:|]+$/gm, " ")
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+      .replace(/https?:\/\/\S+/g, "")
+      .replace(/[*_`~#>|]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!cleanText) return;
+
+    if (cleanText.length > 480) {
+      const sliced = cleanText.slice(0, 480);
+      const lastEnd = Math.max(
+        sliced.lastIndexOf("."),
+        sliced.lastIndexOf("!"),
+        sliced.lastIndexOf("?"),
+      );
+      cleanText =
+        lastEnd > 220 ? sliced.slice(0, lastEnd + 1).trim() : `${sliced.trim()}.`;
+    }
+
+    const tuning = COACH_SPEECH_TUNING[coachId] || { pitch: 1, rate: 1 };
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.lang = "es-MX";
+    utterance.pitch = tuning.pitch;
+    utterance.rate = tuning.rate;
+    const spanishVoice = window.speechSynthesis
+      .getVoices()
+      .find((v) => v.lang.toLowerCase().startsWith("es"));
+    if (spanishVoice) {
+      utterance.voice = spanishVoice;
+    }
+
+    message.audioOrigen = "local";
+    message.reproduciendo = true;
+    const finalizar = () =>
+      this.ngZone.run(() => {
+        message.reproduciendo = false;
+      });
+    utterance.onend = finalizar;
+    utterance.onerror = finalizar;
+    try {
+      window.speechSynthesis.speak(utterance);
+    } catch {
+      message.reproduciendo = false;
+    }
+  }
+
+  private decodeBase64ToBlobUrl(base64: string, mimeType: string): string | null {
+    if (typeof window === "undefined" || typeof URL === "undefined") return null;
+    try {
+      const cleanB64 = base64.replace(/\s+/g, "");
+      const binary = atob(cleanB64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      const blob = new Blob([bytes], { type: mimeType });
+      return URL.createObjectURL(blob);
+    } catch {
+      return null;
+    }
+  }
+
+  private limpiarObjectUrls() {
+    if (typeof URL === "undefined") return;
+    for (const url of this.objectUrls) {
+      URL.revokeObjectURL(url);
+    }
+    this.objectUrls = [];
   }
   enviarMensaje(retry = false) {
     if (!this.usuarioAutenticado || !this.tieneSuscripcion) {
@@ -344,11 +584,15 @@ export class CoachIaComponent implements OnInit {
       });
     this.enviandoMensaje = true;
     this.scrollLog();
+    const coachIdActual = this.coachActivo.id;
+    const historialLimpio: MensajeChat[] = this.mensajes.map(
+      ({ remitente, texto, hora }) => ({ remitente, texto, hora }),
+    );
     this.routines
       .enviarMensajeChat(
-        this.coachActivo.id,
+        coachIdActual,
         text,
-        this.mensajes,
+        historialLimpio,
         this.rutina,
         this.perfil,
         this.buildChatContext(),
@@ -362,13 +606,18 @@ export class CoachIaComponent implements OnInit {
             typeof response.respuesta === "string" &&
             response.respuesta.trim()
           ) {
-            this.mensajes.push({
+            const nuevoMensaje: MensajeChat = {
               remitente: "coach",
               texto: response.respuesta,
               hora: this.obtenerHora(),
-            });
+              coachId: coachIdActual,
+            };
+            this.mensajes.push(nuevoMensaje);
             this.failedText = "";
             this.scrollLog();
+            if (this.autoVoz) {
+              this.alternarVozMensaje(nuevoMensaje);
+            }
           } else this.messageFailed(text);
         },
         error: () => {

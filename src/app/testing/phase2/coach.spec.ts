@@ -440,4 +440,128 @@ describe("Coach subscription gate", () => {
     });
     expect(comp.routineFeedback).toContain("cliente@example.com");
   });
+
+  it("synthesizes coach voice on button click, caches audio URL, and toggles auto-voz", () => {
+    localStorage.setItem(
+      "gym_user",
+      JSON.stringify({
+        uid: "s-voice",
+        nombre: "Socio",
+        email: "socio@example.com",
+        role: "subscriber",
+      }),
+    );
+
+    const coachSpy = {
+      obtenerCoaches: jasmine.createSpy().and.returnValue(
+        of([
+          {
+            id: "temach",
+            nombre: "El Temach",
+            emoji: "🪖",
+            titulo: "Modo Guerra",
+            frase: "Cero excusas.",
+          },
+        ]),
+      ),
+      generarRutina: jasmine.createSpy(),
+      enviarMensajeChat: jasmine.createSpy().and.returnValue(
+        of({
+          exito: true,
+          coach: "El Temach",
+          respuesta: "A darle con todo, compa.",
+        }),
+      ),
+      sintetizarVozCoach: jasmine.createSpy().and.returnValue(
+        of({
+          exito: true,
+          coachId: "temach",
+          origen: "gemini-tts",
+          mimeType: "audio/wav",
+          audioBase64: btoa("RIFF-WAV-TEST"),
+        }),
+      ),
+      leerPreferenciaAutoVoz: jasmine.createSpy().and.returnValue(false),
+      guardarPreferenciaAutoVoz: jasmine.createSpy(),
+    };
+
+    spyOn(HTMLAudioElement.prototype, "play").and.returnValue(Promise.resolve());
+    spyOn(HTMLAudioElement.prototype, "pause").and.stub();
+
+    TestBed.configureTestingModule({
+      imports: [CoachIaComponent],
+      providers: [
+        provideRouter([]),
+        { provide: RutinaService, useValue: coachSpy },
+        {
+          provide: SESSION,
+          useValue: {
+            getCurrentUser: () => Promise.resolve(null),
+            userName$: of("Socio"),
+            userRole$: of("subscriber"),
+          },
+        },
+        {
+          provide: PerfilSocioService,
+          useValue: {
+            perfil$: of({
+              nombre: "Socio",
+              edad: 25,
+              peso: 75,
+              altura: 175,
+              genero: "Masculino",
+              objetivo: "Ganancia muscular",
+              diasDisponibles: 4,
+              nivel: "Intermedio",
+              restriccionesMedicas: "Ninguna",
+            }),
+            actualizarNombre: () => {},
+          },
+        },
+      ],
+    });
+
+    const fixture = TestBed.createComponent(CoachIaComponent);
+    const comp = fixture.componentInstance;
+    comp.pestanaActiva = "chat";
+    fixture.detectChanges();
+
+    comp.mensajeInput = "¿Qué entreno hoy?";
+    comp.enviarMensaje();
+    fixture.detectChanges();
+
+    expect(comp.mensajes.length).toBe(2);
+    expect(coachSpy.sintetizarVozCoach).not.toHaveBeenCalled();
+
+    const listenBtn = fixture.nativeElement.querySelector(
+      ".btn-listen-coach",
+    ) as HTMLButtonElement;
+    expect(listenBtn).not.toBeNull();
+    listenBtn.click();
+    fixture.detectChanges();
+
+    expect(coachSpy.sintetizarVozCoach).toHaveBeenCalledOnceWith(
+      "temach",
+      "A darle con todo, compa.",
+    );
+    const coachMsg = comp.mensajes[1];
+    expect(coachMsg.audioSrc).toBeTruthy();
+    expect(coachMsg.reproduciendo).toBeTrue();
+
+    // Stop playback then replay from message cache without a second TTS request
+    listenBtn.click();
+    expect(coachMsg.reproduciendo).toBeFalse();
+    listenBtn.click();
+    expect(coachMsg.reproduciendo).toBeTrue();
+    expect(coachSpy.sintetizarVozCoach.calls.count()).toBe(1);
+
+    // Enable auto-voz and confirm new coach reply triggers TTS automatically
+    comp.toggleAutoVoz();
+    expect(comp.autoVoz).toBeTrue();
+    expect(coachSpy.guardarPreferenciaAutoVoz).toHaveBeenCalledWith(true);
+
+    comp.mensajeInput = "Otra duda";
+    comp.enviarMensaje();
+    expect(coachSpy.sintetizarVozCoach.calls.count()).toBe(2);
+  });
 });

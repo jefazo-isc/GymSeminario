@@ -7,6 +7,7 @@ import {
   PerfilSocio,
   RespuestaChat,
   RespuestaRutina,
+  RespuestaVozCoach,
   RutinaData,
   SavedRoutineRecord,
   SaveRoutinePayload,
@@ -24,6 +25,12 @@ export interface CoachRepository {
     perfilUsuario?: PerfilSocio,
     extraContext?: CoachChatContext,
   ): Observable<RespuestaChat>;
+  sintetizarVozCoach?(
+    coachId: string,
+    texto: string,
+  ): Observable<RespuestaVozCoach>;
+  leerPreferenciaAutoVoz?(): boolean;
+  guardarPreferenciaAutoVoz?(activa: boolean): void;
   getRoutines?(targetEmail?: string): Observable<SavedRoutineRecord[]>;
   saveRoutine?(payload: SaveRoutinePayload): Observable<SavedRoutineRecord>;
   updateRoutine?(

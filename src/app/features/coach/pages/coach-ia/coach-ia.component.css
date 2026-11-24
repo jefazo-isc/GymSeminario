@@ -474,3 +474,165 @@
   font-weight: 700;
   margin-bottom: 16px;
 }
+
+/* ── Controles de voz y ondas sonoras del Coach IA ─────────── */
+.conversation-header-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.voice-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.voice-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  min-height: 36px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border-strong, #cbd5e1);
+  background: var(--color-surface-secondary);
+  color: var(--color-text);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color var(--motion-fast),
+    border-color var(--motion-fast),
+    color var(--motion-fast);
+}
+
+.voice-chip:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.voice-chip[aria-pressed="true"],
+.voice-chip.is-active {
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.voice-chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.message-voice-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.btn-listen-coach {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  min-height: 34px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color var(--motion-fast),
+    border-color var(--motion-fast),
+    color var(--motion-fast);
+}
+
+.btn-listen-coach:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+.btn-listen-coach.is-playing {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+.btn-listen-coach:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.voice-origin-tag {
+  font-size: 0.6875rem;
+  color: var(--color-text-secondary);
+}
+
+.voice-spinner {
+  width: 13px;
+  height: 13px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: voice-spin 0.75s linear infinite;
+}
+
+.sound-wave {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 14px;
+}
+
+.sound-wave i {
+  display: block;
+  width: 2.5px;
+  height: 100%;
+  border-radius: 2px;
+  background: currentColor;
+  transform-origin: bottom;
+  animation: coach-wave 0.85s ease-in-out infinite;
+}
+
+.sound-wave i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.sound-wave i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.sound-wave i:nth-child(4) {
+  animation-delay: 0.45s;
+}
+
+@keyframes voice-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes coach-wave {
+  0%,
+  100% {
+    transform: scaleY(0.32);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .voice-spinner,
+  .sound-wave i {
+    animation: none;
+  }
+}

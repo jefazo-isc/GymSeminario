@@ -4,7 +4,12 @@ import { map, Observable, timeout } from "rxjs";
 import { readGymUser } from "../../../core/auth/route.guards";
 import { APP_ENDPOINTS } from "../../../core/config/app-endpoints";
 import { isRecord, isString } from "../../../core/storage/storage-guards";
-import { isChatResponse, isCoach, validRoutine } from "../models/rutina.guard";
+import {
+  isChatResponse,
+  isCoach,
+  isCoachTtsResponse,
+  validRoutine,
+} from "../models/rutina.guard";
 import {
   CoachChatContext,
   CoachInfo,
@@ -12,6 +17,7 @@ import {
   PerfilSocio,
   RespuestaChat,
   RespuestaRutina,
+  RespuestaVozCoach,
   RutinaData,
   SavedRoutineRecord,
   SaveRoutinePayload,
@@ -104,6 +110,43 @@ export class RutinaService implements CoachRepository {
           return v;
         }),
       );
+  }
+
+  /**
+   * Solicita al backend la síntesis o clonación de voz del coach para un mensaje
+   */
+  sintetizarVozCoach(
+    coachId: string,
+    texto: string,
+  ): Observable<RespuestaVozCoach> {
+    const headers = this.getEmailHeaders();
+    const options = Object.keys(headers).length ? { headers } : undefined;
+    return this.http
+      .post<unknown>(`${this.apiUrl}/coach/tts`, { coachId, texto }, options)
+      .pipe(
+        timeout(15000),
+        map((v) => {
+          if (!isCoachTtsResponse(v))
+            throw new Error("Respuesta de voz no válida.");
+          return v;
+        }),
+      );
+  }
+
+  leerPreferenciaAutoVoz(): boolean {
+    try {
+      return localStorage.getItem("espaciogym_coach_autovoz") === "true";
+    } catch {
+      return false;
+    }
+  }
+
+  guardarPreferenciaAutoVoz(activa: boolean): void {
+    try {
+      localStorage.setItem("espaciogym_coach_autovoz", String(Boolean(activa)));
+    } catch {
+      // Almacenamiento bloqueado por el navegador
+    }
   }
 
   getRoutines(targetEmail?: string): Observable<SavedRoutineRecord[]> {

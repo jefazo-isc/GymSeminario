@@ -35,18 +35,38 @@ export interface CoachInfo {
   titulo: string;
   emoji: string;
   frase: string;
+  hasVoice?: boolean;
+  voiceStyle?: string;
 }
 
 export interface MensajeChat {
   remitente: "usuario" | "coach";
   texto: string;
   hora: string;
+  coachId?: string;
+  audioSrc?: string;
+  audioOrigen?: "gemini-tts" | "cache" | "local";
+  cargandoAudio?: boolean;
+  reproduciendo?: boolean;
 }
 
 export interface RespuestaChat {
   exito: boolean;
   coach: string;
   respuesta: string;
+  audioBase64?: string;
+  mimeType?: string;
+  audioOrigen?: "gemini-tts" | "cache";
+}
+
+export interface RespuestaVozCoach {
+  exito: boolean;
+  coachId?: string;
+  voiceUsed?: string;
+  origen?: "gemini-tts" | "cache";
+  mimeType?: string;
+  audioBase64?: string;
+  error?: string;
 }
 
 export interface SavedRoutineRecord {

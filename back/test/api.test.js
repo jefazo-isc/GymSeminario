@@ -14,6 +14,9 @@ process.env.SEED_ADMIN_PASSWORD = 'AdminSeedTestPassword!';
 
 const { default: createApp } = await import('../index.js');
 const { default: db } = await import('../services/db.js');
+const { clearCoachVoiceCache, limpiarTextoParaVoz } = await import(
+  '../services/coachVoice.service.js'
+);
 
 delete process.env.BREVO_API_KEY;
 delete process.env.RESEND_API_KEY;
@@ -47,6 +50,9 @@ const mockStripe = {
   },
 };
 
+const voiceFetchCalls = [];
+let mockVoiceFailCustomOnce = false;
+
 const app = createApp({
   enableRateLimit: false,
   getStripe: () => (stripeEnabled ? mockStripe : null),
@@ -55,6 +61,54 @@ const app = createApp({
       return { email: 'google.socio@espaciogym.mx', name: 'Google Socio' };
     }
     throw new Error('Invalid Google token');
+  },
+  fetchImpl: async (url, init) => {
+    const body = init?.body ? JSON.parse(init.body) : null;
+    voiceFetchCalls.push({ url: String(url), method: init?.method || 'GET', body });
+
+    if (String(url).includes('/v1beta/voices')) {
+      return new Response(
+        JSON.stringify({
+          id: 'voice_cloned_temach_01',
+          display_name: body?.voice?.display_name || 'espacioGYM',
+          sample_audio: {
+            mime_type: 'audio/wav',
+            data: Buffer.from('SAMPLE_WAV_PREVIEW').toString('base64'),
+          },
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      );
+    }
+
+    if (String(url).includes('/v1beta/interactions')) {
+      const requestedVoice = body?.generation_config?.speech_config?.[0]?.voice;
+      if (mockVoiceFailCustomOnce && requestedVoice === 'voice_cloned_temach_01') {
+        mockVoiceFailCustomOnce = false;
+        return new Response(
+          JSON.stringify({ error: { message: 'Custom voice expired' } }),
+          { status: 404, headers: { 'content-type': 'application/json' } },
+        );
+      }
+      return new Response(
+        JSON.stringify({
+          steps: [
+            {
+              type: 'model_output',
+              content: [
+                {
+                  type: 'audio',
+                  mime_type: 'audio/wav',
+                  data: Buffer.from(`AUDIO:${requestedVoice}:${body?.model}`).toString('base64'),
+                },
+              ],
+            },
+          ],
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      );
+    }
+
+    throw new Error(`Unexpected mock fetch URL: ${url}`);
   },
 });
 
@@ -695,4 +749,155 @@ test('Strict Admin-only RBAC, pure reception isolation, and rotating Kiosk QR ch
   });
   assert.equal(expCheckin.status, 403);
   assert.equal(expCheckin.data.codigo, 'QR_EXPIRADO');
+});
+
+test('Coach Virtual TTS synthesis, voice cloning/design RBAC, caching & fallback', async () => {
+  clearCoachVoiceCache();
+  voiceFetchCalls.length = 0;
+
+  assert.equal(
+    limpiarTextoParaVoz('### **Modo Guerra**\n| Día | Ejercicio |\n|---|---|\n- Haz [sentadillas](https://example.com) con técnica.'),
+    'Modo Guerra Haz sentadillas con técnica.',
+  );
+
+  // Unauthenticated & pure reception rejected
+  assert.equal(
+    (await api('/api/coach/tts', { method: 'POST', body: { coachId: 'temach', texto: 'Hola' } })).status,
+    401,
+  );
+
+  const adminLogin = await api('/api/auth/login', {
+    method: 'POST',
+    body: { email: 'admin@gymseminario.com', password: 'AdminSeedTestPassword!' },
+  });
+  const adminToken = adminLogin.data.token;
+
+  const recepReg = await api('/api/auth/register', {
+    method: 'POST',
+    body: { email: 'recep.voice@test.mx', password: 'Password123!', nombre: 'Recep Voice' },
+  });
+  await api('/api/auth/set-role', {
+    method: 'POST',
+    token: adminToken,
+    body: { email: 'recep.voice@test.mx', role: 'reception' },
+  });
+  assert.equal(
+    (
+      await api('/api/coach/tts', {
+        method: 'POST',
+        token: recepReg.data.token,
+        body: { coachId: 'temach', texto: 'Hola' },
+      })
+    ).status,
+    403,
+  );
+
+  // Empty text rejected 400
+  assert.equal(
+    (
+      await api('/api/coach/tts', {
+        method: 'POST',
+        token: adminToken,
+        body: { coachId: 'temach', texto: '   ' },
+      })
+    ).status,
+    400,
+  );
+
+  // Regular user cannot clone custom coach voices (403)
+  const socioReg = await api('/api/auth/register', {
+    method: 'POST',
+    body: { email: 'socio.voice@test.mx', password: 'Password123!', nombre: 'Socio Voice' },
+  });
+  await api('/api/admin/memberships/assign', {
+    method: 'POST',
+    token: adminToken,
+    body: { userEmail: 'socio.voice@test.mx', planNombre: 'Plan Pro', periodo: 'Mensual' },
+  });
+  assert.equal(
+    (
+      await api('/api/coach/voices/clone', {
+        method: 'POST',
+        token: socioReg.data.token,
+        body: { coachId: 'temach', mode: 'prompted' },
+      })
+    ).status,
+    403,
+  );
+
+  const prevKey = process.env.GEMINI_API_KEY;
+  process.env.GEMINI_API_KEY = 'test-gemini-voice-key';
+  try {
+    // 1. Subscribed user synthesizes speech with prebuilt coach persona + hits LRU cache on retry
+    const tts1 = await api('/api/coach/tts', {
+      method: 'POST',
+      token: socioReg.data.token,
+      body: { coachId: 'arnold', texto: '**Come with me** if you want to lift!' },
+    });
+    assert.equal(tts1.status, 200);
+    assert.equal(tts1.data.exito, true);
+    assert.equal(tts1.data.origen, 'gemini-tts');
+    assert.equal(tts1.data.voiceUsed, 'Orus');
+    assert.equal(tts1.data.mimeType, 'audio/wav');
+    assert.equal(
+      Buffer.from(tts1.data.audioBase64, 'base64').toString('utf8'),
+      'AUDIO:Orus:gemini-3.8-flash-tts',
+    );
+    const callCountAfterFirst = voiceFetchCalls.length;
+
+    const tts2 = await api('/api/coach/tts', {
+      method: 'POST',
+      token: socioReg.data.token,
+      body: { coachId: 'arnold', texto: '**Come with me** if you want to lift!' },
+    });
+    assert.equal(tts2.status, 200);
+    assert.equal(tts2.data.origen, 'cache');
+    assert.equal(voiceFetchCalls.length, callCountAfterFirst);
+
+    // 2. Admin clones/registers custom voice for Temach via Gemini Voices API -> subsequent TTS uses custom ID
+    const cloneMissingConsent = await api('/api/coach/voices/clone', {
+      method: 'POST',
+      token: adminToken,
+      body: { coachId: 'temach', mode: 'replicated', sourceAudioBase64: 'AAA=' },
+    });
+    assert.equal(cloneMissingConsent.status, 400);
+
+    const cloneOk = await api('/api/coach/voices/clone', {
+      method: 'POST',
+      token: adminToken,
+      body: {
+        coachId: 'temach',
+        mode: 'replicated',
+        sourceAudioBase64: Buffer.from('REF_SPEAKER').toString('base64'),
+        consentAudioBase64: Buffer.from('CONSENT_SPEAKER').toString('base64'),
+      },
+    });
+    assert.equal(cloneOk.status, 200);
+    assert.equal(cloneOk.data.exito, true);
+    assert.equal(cloneOk.data.voiceId, 'voice_cloned_temach_01');
+
+    const ttsCloned = await api('/api/coach/tts', {
+      method: 'POST',
+      token: socioReg.data.token,
+      body: { coachId: 'temach', texto: 'Póngase en Modo Guerra, mi compa.' },
+    });
+    assert.equal(ttsCloned.status, 200);
+    assert.equal(ttsCloned.data.exito, true);
+    assert.equal(ttsCloned.data.voiceUsed, 'voice_cloned_temach_01');
+
+    // 3. If custom voice returns 404, service gracefully falls back to coach's prebuilt Gemini voice
+    mockVoiceFailCustomOnce = true;
+    const ttsFallback = await api('/api/coach/tts', {
+      method: 'POST',
+      token: socioReg.data.token,
+      body: { coachId: 'temach', texto: 'Cero excusas hoy en pierna.' },
+    });
+    assert.equal(ttsFallback.status, 200);
+    assert.equal(ttsFallback.data.exito, true);
+    assert.equal(ttsFallback.data.voiceUsed, 'Algenib');
+  } finally {
+    clearCoachVoiceCache();
+    if (prevKey === undefined) delete process.env.GEMINI_API_KEY;
+    else process.env.GEMINI_API_KEY = prevKey;
+  }
 });

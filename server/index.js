@@ -7,11 +7,17 @@ import { fileURLToPath } from 'url';
 import './services/db.js';
 import { generarRutinaEntrenamiento } from './services/routineCoach.service.js';
 import { COACHES, chatearConCoach } from './services/coachChat.service.js';
+import {
+  VOICE_PROFILES,
+  crearVozPersonalizadaCoach,
+  sintetizarVozCoach,
+} from './services/coachVoice.service.js';
 import { sendBookingNotification, sendAttendanceNotification } from './services/email.service.js';
 import { AI_STATUS } from './services/aiProvider.service.js';
 import {
   verificarMembresiaBackend,
   hasActiveMembership,
+  requireRole,
 } from './middleware/auth.middleware.js';
 import { createAuthRouter } from './routes/auth.routes.js';
 import { createStripeRouter } from './routes/stripe.routes.js';
@@ -26,6 +32,7 @@ const __filename = fileURLToPath(import.meta.url);
 export function createApp({
   getStripe,
   verifyGoogleToken,
+  fetchImpl,
   enableRateLimit = process.env.NODE_ENV !== 'test',
 } = {}) {
   const app = express();
@@ -37,7 +44,7 @@ export function createApp({
       allowedHeaders: ['Content-Type', 'Authorization', 'X-User-Email'],
     }),
   );
-  app.use(express.json());
+  app.use(express.json({ limit: '10mb' }));
 
   if (enableRateLimit) {
     const limiter = rateLimit({
@@ -84,13 +91,16 @@ export function createApp({
       titulo,
       emoji,
       frase,
+      hasVoice: Boolean(VOICE_PROFILES[id]),
+      voiceStyle: VOICE_PROFILES[id]?.style || '',
     }));
     res.json(lista);
   });
 
   app.post('/api/coach/chat', limiterIA, verificarMembresiaBackend, async (req, res) => {
     try {
-      const { coachId, mensaje, historial, contextoRutina, perfilUsuario } = req.body || {};
+      const { coachId, mensaje, historial, contextoRutina, perfilUsuario, incluirVoz } =
+        req.body || {};
       if (!mensaje || !String(mensaje).trim()) {
         return res.status(400).json({ error: 'Mensaje requerido' });
       }
@@ -103,12 +113,76 @@ export function createApp({
         perfilUsuario,
         membresiaResumen,
       });
+      if (incluirVoz === true && respuesta?.exito && respuesta.respuesta) {
+        const voz = await sintetizarVozCoach({
+          coachId: coachId || 'temach',
+          texto: respuesta.respuesta,
+          fetchImpl,
+        });
+        if (voz.exito && voz.audioBase64) {
+          respuesta.audioBase64 = voz.audioBase64;
+          respuesta.mimeType = voz.mimeType;
+          respuesta.audioOrigen = voz.origen;
+        }
+      }
       return res.json(respuesta);
     } catch (err) {
       console.error('Error en /api/coach/chat:', err);
       return res.status(500).json({ error: 'Error procesando el chat.' });
     }
   });
+
+  app.post('/api/coach/tts', limiterIA, verificarMembresiaBackend, async (req, res) => {
+    try {
+      const { coachId, texto } = req.body || {};
+      if (!texto || !String(texto).trim()) {
+        return res.status(400).json({ exito: false, error: 'Texto requerido para sintetizar voz.' });
+      }
+      const resultado = await sintetizarVozCoach({
+        coachId: String(coachId || 'temach'),
+        texto: String(texto),
+        fetchImpl,
+      });
+      return res.json(resultado);
+    } catch (err) {
+      console.error('Error en /api/coach/tts:', err);
+      return res.status(502).json({ exito: false, error: 'Error sintetizando la voz del coach.' });
+    }
+  });
+
+  app.post(
+    '/api/coach/voices/clone',
+    limiterIA,
+    verificarMembresiaBackend,
+    requireRole('trainer'),
+    async (req, res) => {
+      try {
+        const {
+          coachId,
+          mode,
+          sourceAudioBase64,
+          consentAudioBase64,
+          mimeType,
+          customPrompt,
+          store,
+        } = req.body || {};
+        const resultado = await crearVozPersonalizadaCoach({
+          coachId,
+          mode,
+          sourceAudioBase64,
+          consentAudioBase64,
+          mimeType,
+          customPrompt,
+          store,
+          fetchImpl,
+        });
+        return res.status(resultado.exito ? 200 : 400).json(resultado);
+      } catch (err) {
+        console.error('Error en /api/coach/voices/clone:', err);
+        return res.status(500).json({ exito: false, error: 'Error registrando voz personalizada.' });
+      }
+    },
+  );
 
   app.post('/api/rutina', limiterIA, verificarMembresiaBackend, async (req, res) => {
     try {
