@@ -476,7 +476,7 @@ describe("Coach subscription gate", () => {
         of({
           exito: true,
           coachId: "temach",
-          origen: "gemini-tts",
+          origen: "chatterbox",
           mimeType: "audio/wav",
           audioBase64: btoa("RIFF-WAV-TEST"),
         }),
@@ -485,7 +485,9 @@ describe("Coach subscription gate", () => {
       guardarPreferenciaAutoVoz: jasmine.createSpy(),
     };
 
-    spyOn(HTMLAudioElement.prototype, "play").and.returnValue(Promise.resolve());
+    const playSpy = spyOn(HTMLAudioElement.prototype, "play").and.returnValue(
+      Promise.resolve(),
+    );
     spyOn(HTMLAudioElement.prototype, "pause").and.stub();
 
     TestBed.configureTestingModule({
@@ -523,8 +525,12 @@ describe("Coach subscription gate", () => {
 
     const fixture = TestBed.createComponent(CoachIaComponent);
     const comp = fixture.componentInstance;
-    comp.pestanaActiva = "chat";
     fixture.detectChanges();
+
+    comp.abrirPestanaChat();
+    fixture.detectChanges();
+    expect(comp.pestanaActiva).toBe("chat");
+    expect(playSpy).toHaveBeenCalled();
 
     comp.mensajeInput = "¿Qué entreno hoy?";
     comp.enviarMensaje();
@@ -547,6 +553,9 @@ describe("Coach subscription gate", () => {
     const coachMsg = comp.mensajes[1];
     expect(coachMsg.audioSrc).toBeTruthy();
     expect(coachMsg.reproduciendo).toBeTrue();
+    expect(fixture.nativeElement.textContent).toContain(
+      "Voz clonada (Chatterbox)",
+    );
 
     // Stop playback then replay from message cache without a second TTS request
     listenBtn.click();

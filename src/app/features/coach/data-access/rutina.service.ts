@@ -124,7 +124,7 @@ export class RutinaService implements CoachRepository {
     return this.http
       .post<unknown>(`${this.apiUrl}/coach/tts`, { coachId, texto }, options)
       .pipe(
-        timeout(15000),
+        timeout(28000),
         map((v) => {
           if (!isCoachTtsResponse(v))
             throw new Error("Respuesta de voz no válida.");

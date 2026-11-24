@@ -1,7 +1,18 @@
 import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta';
 const GEMINI_TTS_MODELS = ['gemini-3.8-flash-tts', 'gemini-3.8-flash-lite-tts'];
+const CHATTERBOX_SPACES = [
+  { baseUrl: 'https://resembleai-chatterbox-multilingual-tts-v3.hf.space', isV3: true },
+  { baseUrl: 'https://resembleai-chatterbox-multilingual-tts.hf.space', isV3: false },
+];
+const UPLOAD_TTL_MS = 10 * 60 * 1000;
 const MAX_AUDIO_CACHE = 40;
 
 export const VOICE_PROFILES = {
@@ -10,6 +21,7 @@ export const VOICE_PROFILES = {
     prebuiltVoice: 'Algenib',
     gender: 'male',
     languageCode: 'es-US',
+    exaggeration: 0.6,
     designPrompt:
       'Hombre mexicano de 35 años con voz grave, rasposa, firme y proyectada de comandante de entrenamiento físico, timbre resonante y autoritario.',
     style: 'enérgico, firme, directo y motivador como entrenador de gimnasio intenso',
@@ -19,6 +31,7 @@ export const VOICE_PROFILES = {
     prebuiltVoice: 'Orus',
     gender: 'male',
     languageCode: 'es-US',
+    exaggeration: 0.55,
     designPrompt:
       'Culturista legendario de voz masculina muy profunda, robusta y carismática con ligero acento germánico-austríaco al hablar español, tono seguro de campeón.',
     style: 'poderoso, carismático, pausado y triunfal con energía de campeón',
@@ -28,6 +41,7 @@ export const VOICE_PROFILES = {
     prebuiltVoice: 'Laomedeia',
     gender: 'female',
     languageCode: 'es-US',
+    exaggeration: 0.68,
     designPrompt:
       'Instructora mexicana de fitness y cardio de 32 años con voz femenina brillante, cálida, atlética y sumamente entusiasta.',
     style: 'alegre, hiper-positiva, sonriente y llena de energía motivadora',
@@ -37,6 +51,7 @@ export const VOICE_PROFILES = {
     prebuiltVoice: 'Zubenelgenubi',
     gender: 'male',
     languageCode: 'es-US',
+    exaggeration: 0.62,
     designPrompt:
       'Personaje masculino bonachón y despistado con voz grave, redondeada, lenta, simpática e inocente.',
     style: 'relajado, inocente, cómico, despistado y amigable',
@@ -46,6 +61,7 @@ export const VOICE_PROFILES = {
     prebuiltVoice: 'Puck',
     gender: 'male',
     languageCode: 'es-US',
+    exaggeration: 0.65,
     designPrompt:
       'Joven entusiasta de barrio mexicano con voz aguda, vivaz, pícara, expresiva y simpática.',
     style: 'juvenil, pícaro, expresivo y entusiasta',
@@ -54,6 +70,7 @@ export const VOICE_PROFILES = {
 
 const audioCache = new Map();
 const customVoiceIds = new Map();
+const chatterboxUploadCache = new Map();
 
 function normalizeCoachId(coachId) {
   const clean = String(coachId || 'temach').toLowerCase().trim();
@@ -77,7 +94,7 @@ export function resolveVoiceIdentifier(coachId) {
 /**
  * Normaliza respuestas Markdown del chat para lectura natural y baja latencia.
  */
-export function limpiarTextoParaVoz(texto, maxChars = 480) {
+export function limpiarTextoParaVoz(texto, maxChars = 260) {
   if (!texto) return '';
   let clean = String(texto)
     .replace(/```[\s\S]*?```/g, ' ')
@@ -129,6 +146,156 @@ function setCachedAudio(cacheKey, entry) {
 export function clearCoachVoiceCache() {
   audioCache.clear();
   customVoiceIds.clear();
+  chatterboxUploadCache.clear();
+}
+
+function readCoachReferenceAudio(coachId) {
+  const candidates = [
+    path.resolve(__dirname, '../assets/coaches', `${coachId}.mp3`),
+    path.resolve(__dirname, '../../public/audio/coaches', `${coachId}.mp3`),
+  ];
+  for (const filePath of candidates) {
+    try {
+      if (fs.existsSync(filePath)) {
+        return fs.readFileSync(filePath);
+      }
+    } catch {
+      // Continuar con siguiente candidato
+    }
+  }
+  return null;
+}
+
+function parseGradioSseOutput(sseText, baseUrl) {
+  const lines = String(sseText || '').split('\n');
+  let isErrorEvent = false;
+  let resolvedUrl = null;
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (line.startsWith('event:')) {
+      const ev = line.slice(6).trim();
+      if (ev === 'error') {
+        isErrorEvent = true;
+      } else {
+        isErrorEvent = false;
+      }
+      continue;
+    }
+    if (line.startsWith('data:')) {
+      const payload = line.slice(5).trim();
+      if (isErrorEvent) {
+        throw new Error(`Chatterbox SSE error: ${payload}`);
+      }
+      if (!payload || payload === 'null') continue;
+      try {
+        const parsed = JSON.parse(payload);
+        if (Array.isArray(parsed) && parsed[0]) {
+          const item = parsed[0];
+          resolvedUrl =
+            item.url || (item.path ? `${baseUrl}/gradio_api/file=${item.path}` : null);
+        }
+      } catch {
+        // Ignorar líneas parciales no JSON
+      }
+    }
+  }
+
+  return resolvedUrl;
+}
+
+async function callChatterboxZeroShot({ coachId, texto, exaggeration = 0.58, fetchImpl = fetch }) {
+  const refBuffer = readCoachReferenceAudio(coachId);
+  if (!refBuffer) {
+    throw new Error(`Audio de referencia no encontrado para ${coachId}`);
+  }
+
+  let lastError = null;
+  for (const { baseUrl, isV3 } of CHATTERBOX_SPACES) {
+    const uploadKey = `${baseUrl}:${coachId}`;
+    try {
+      let remotePath = null;
+      const cachedUpload = chatterboxUploadCache.get(uploadKey);
+      if (cachedUpload && cachedUpload.expiresAt > Date.now()) {
+        remotePath = cachedUpload.path;
+      } else {
+        const formData = new FormData();
+        formData.append('files', new Blob([refBuffer], { type: 'audio/mpeg' }), `${coachId}.mp3`);
+        const upResp = await fetchImpl(`${baseUrl}/gradio_api/upload`, {
+          method: 'POST',
+          body: formData,
+          signal: AbortSignal.timeout(10000),
+        });
+        if (!upResp.ok) {
+          throw new Error(`Chatterbox upload HTTP ${upResp.status}`);
+        }
+        const upJson = await upResp.json();
+        remotePath = Array.isArray(upJson) ? upJson[0] : null;
+        if (!remotePath) {
+          throw new Error('Chatterbox upload no devolvió ruta remota');
+        }
+        chatterboxUploadCache.set(uploadKey, {
+          path: remotePath,
+          expiresAt: Date.now() + UPLOAD_TTL_MS,
+        });
+      }
+
+      const fileObj = { path: remotePath, meta: { _type: 'gradio.FileData' } };
+      const data = isV3
+        ? [texto, fileObj, 'es', exaggeration, 0.75, 0, 0.5]
+        : [texto, 'es', fileObj, exaggeration, 0.75, 0, 0.5];
+
+      const callResp = await fetchImpl(`${baseUrl}/gradio_api/call/generate_tts_audio`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data }),
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!callResp.ok) {
+        chatterboxUploadCache.delete(uploadKey);
+        throw new Error(`Chatterbox call HTTP ${callResp.status}`);
+      }
+      const { event_id: eventId } = await callResp.json();
+      if (!eventId) {
+        throw new Error('Chatterbox no devolvió event_id');
+      }
+
+      const sseResp = await fetchImpl(`${baseUrl}/gradio_api/call/generate_tts_audio/${eventId}`, {
+        signal: AbortSignal.timeout(22000),
+      });
+      if (!sseResp.ok) {
+        chatterboxUploadCache.delete(uploadKey);
+        throw new Error(`Chatterbox SSE HTTP ${sseResp.status}`);
+      }
+      const sseText = await sseResp.text();
+      const wavUrl = parseGradioSseOutput(sseText, baseUrl);
+      if (!wavUrl) {
+        throw new Error('Chatterbox no generó URL de audio');
+      }
+
+      const wavResp = await fetchImpl(wavUrl, {
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!wavResp.ok) {
+        throw new Error(`Chatterbox WAV download HTTP ${wavResp.status}`);
+      }
+      const wavBuffer = Buffer.from(await wavResp.arrayBuffer());
+      if (!wavBuffer.length) {
+        throw new Error('Chatterbox devolvió WAV vacío');
+      }
+
+      return {
+        data: wavBuffer.toString('base64'),
+        mimeType: 'audio/wav',
+        voiceUsed: `chatterbox-${coachId}`,
+      };
+    } catch (err) {
+      chatterboxUploadCache.delete(uploadKey);
+      lastError = err;
+    }
+  }
+
+  throw lastError || new Error('Todos los nodos Chatterbox fallaron');
 }
 
 function extractAudioFromInteraction(data) {
@@ -310,12 +477,12 @@ export async function crearVozPersonalizadaCoach({
 }
 
 /**
- * Sintetiza audio para una respuesta del coach virtual usando Gemini 3.8 TTS + caché en memoria.
+ * Sintetiza audio clonado zero-shot con Chatterbox (primario, gratis sin API key) + fallback Gemini 3.8 TTS.
  */
 export async function sintetizarVozCoach({ coachId = 'temach', texto, fetchImpl = fetch } = {}) {
   const normalizedId = normalizeCoachId(coachId);
   const profile = VOICE_PROFILES[normalizedId];
-  const textoLimpio = limpiarTextoParaVoz(texto);
+  const textoLimpio = limpiarTextoParaVoz(texto, 260);
 
   if (!textoLimpio) {
     return { exito: false, coachId: normalizedId, error: 'Texto vacío para sintetizar.' };
@@ -339,12 +506,41 @@ export async function sintetizarVozCoach({ coachId = 'temach', texto, fetchImpl 
     };
   }
 
+  let chatterboxError = null;
+  if (process.env.DISABLE_CHATTERBOX !== '1') {
+    try {
+      const cloned = await callChatterboxZeroShot({
+        coachId: normalizedId,
+        texto: textoLimpio,
+        exaggeration: profile.exaggeration ?? 0.58,
+        fetchImpl,
+      });
+      const entry = {
+        voiceUsed: cloned.voiceUsed,
+        mimeType: cloned.mimeType || 'audio/wav',
+        audioBase64: cloned.data,
+      };
+      setCachedAudio(cacheKey, entry);
+      return {
+        exito: true,
+        coachId: normalizedId,
+        voiceUsed: entry.voiceUsed,
+        origen: 'chatterbox',
+        mimeType: entry.mimeType,
+        audioBase64: entry.audioBase64,
+      };
+    } catch (err) {
+      chatterboxError = err;
+      console.warn('[COACH VOICE] Chatterbox falló, intentando respaldo Gemini TTS:', err.message);
+    }
+  }
+
   const apiKey = (process.env.GEMINI_LLAVE || process.env.GEMINI_API_KEY || '').trim();
   if (!apiKey) {
     return {
       exito: false,
       coachId: normalizedId,
-      error: 'Servicio de voz IA no configurado en el servidor.',
+      error: chatterboxError?.message || 'Servicio de voz IA no configurado en el servidor.',
     };
   }
 
@@ -381,7 +577,6 @@ export async function sintetizarVozCoach({ coachId = 'temach', texto, fetchImpl 
         };
       } catch (err) {
         lastError = err;
-        // Si falló una voz personalizada con 400/404, saltar directo al fallback prebuilt
         if (voice !== profile.prebuiltVoice && (err.status === 400 || err.status === 404)) {
           break;
         }
@@ -392,6 +587,6 @@ export async function sintetizarVozCoach({ coachId = 'temach', texto, fetchImpl 
   return {
     exito: false,
     coachId: normalizedId,
-    error: lastError?.message || 'No fue posible sintetizar audio con Gemini TTS.',
+    error: lastError?.message || chatterboxError?.message || 'No fue posible sintetizar audio.',
   };
 }

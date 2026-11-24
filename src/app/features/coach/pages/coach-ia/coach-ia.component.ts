@@ -306,8 +306,11 @@ export class CoachIaComponent implements OnInit {
         next: (list) => {
           this.coaches = Array.isArray(list) ? list : [];
           this.coachesLoading = false;
-          if (this.coaches.length && !this.coachActivo)
-            this.seleccionarCoach(this.coaches[0]);
+          if (this.coaches.length && !this.coachActivo) {
+            const preferred =
+              this.coaches.find((c) => c.id === "temach") ?? this.coaches[0];
+            this.seleccionarCoach(preferred);
+          }
           if (!this.coaches.length)
             this.coachesError = "El servicio no publicó coaches disponibles.";
         },
@@ -317,6 +320,19 @@ export class CoachIaComponent implements OnInit {
             "El servicio de coaches no está disponible. Reintenta cuando esté conectado.";
         },
       });
+  }
+
+  abrirPestanaRutina() {
+    this.detenerTodoAudio();
+    this.pestanaActiva = "rutina";
+  }
+
+  abrirPestanaChat() {
+    this.pestanaActiva = "chat";
+    if (this.coachActivo) {
+      this.detenerTodoAudio();
+      this.reproducirVozCoach(this.coachActivo.id);
+    }
   }
   seleccionarCoach(coach: CoachInfo, fromUserClick = false) {
     if (this.enviandoMensaje) return;
@@ -338,7 +354,7 @@ export class CoachIaComponent implements OnInit {
         return;
       }
       this.detenerTodoAudio();
-      const audioUrl = `audio/coaches/${coachId}.mp3`;
+      const audioUrl = `audio/coaches/${coachId}.mp3?v=2`;
       const audio = new Audio(audioUrl);
       this.audioActual = audio;
       this.reproduciendoSaludo = true;
@@ -428,7 +444,7 @@ export class CoachIaComponent implements OnInit {
             if (url) {
               this.objectUrls.push(url);
               message.audioSrc = url;
-              message.audioOrigen = res.origen || "gemini-tts";
+              message.audioOrigen = res.origen || "chatterbox";
               this.reproducirSrcEnMensaje(message, url, coachId, blessedAudio);
               return;
             }

@@ -45,7 +45,7 @@ export interface MensajeChat {
   hora: string;
   coachId?: string;
   audioSrc?: string;
-  audioOrigen?: "gemini-tts" | "cache" | "local";
+  audioOrigen?: "chatterbox" | "gemini-tts" | "cache" | "local";
   cargandoAudio?: boolean;
   reproduciendo?: boolean;
 }
@@ -56,14 +56,14 @@ export interface RespuestaChat {
   respuesta: string;
   audioBase64?: string;
   mimeType?: string;
-  audioOrigen?: "gemini-tts" | "cache";
+  audioOrigen?: "chatterbox" | "gemini-tts" | "cache";
 }
 
 export interface RespuestaVozCoach {
   exito: boolean;
   coachId?: string;
   voiceUsed?: string;
-  origen?: "gemini-tts" | "cache";
+  origen?: "chatterbox" | "gemini-tts" | "cache";
   mimeType?: string;
   audioBase64?: string;
   error?: string;

@@ -52,6 +52,7 @@ const mockStripe = {
 
 const voiceFetchCalls = [];
 let mockVoiceFailCustomOnce = false;
+let mockChatterboxFail = false;
 
 const app = createApp({
   enableRateLimit: false,
@@ -63,10 +64,47 @@ const app = createApp({
     throw new Error('Invalid Google token');
   },
   fetchImpl: async (url, init) => {
-    const body = init?.body ? JSON.parse(init.body) : null;
-    voiceFetchCalls.push({ url: String(url), method: init?.method || 'GET', body });
+    const urlStr = String(url);
+    const body = typeof init?.body === 'string' ? JSON.parse(init.body) : null;
+    voiceFetchCalls.push({ url: urlStr, method: init?.method || 'GET', body });
 
-    if (String(url).includes('/v1beta/voices')) {
+    if (urlStr.includes('/gradio_api/upload')) {
+      if (mockChatterboxFail) {
+        return new Response('Service Unavailable', { status: 503 });
+      }
+      return new Response(JSON.stringify(['/tmp/gradio/mock_ref.mp3']), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
+    }
+
+    if (urlStr.endsWith('/gradio_api/call/generate_tts_audio')) {
+      if (mockChatterboxFail) {
+        return new Response('Queue Full', { status: 503 });
+      }
+      return new Response(JSON.stringify({ event_id: 'evt_cb_01' }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
+    }
+
+    if (urlStr.endsWith('/gradio_api/call/generate_tts_audio/evt_cb_01')) {
+      const wavUrl =
+        'https://resembleai-chatterbox-multilingual-tts-v3.hf.space/gradio_api/file=/tmp/gradio/out.wav';
+      return new Response(
+        `event: generating\ndata: null\n\nevent: complete\ndata: ${JSON.stringify([{ url: wavUrl }])}\n\n`,
+        { status: 200, headers: { 'content-type': 'text/event-stream' } },
+      );
+    }
+
+    if (urlStr.includes('/gradio_api/file=')) {
+      return new Response(Buffer.from('CHATTERBOX_CLONED_WAV'), {
+        status: 200,
+        headers: { 'content-type': 'audio/wav' },
+      });
+    }
+
+    if (urlStr.includes('/v1beta/voices')) {
       return new Response(
         JSON.stringify({
           id: 'voice_cloned_temach_01',
@@ -826,8 +864,41 @@ test('Coach Virtual TTS synthesis, voice cloning/design RBAC, caching & fallback
   );
 
   const prevKey = process.env.GEMINI_API_KEY;
-  process.env.GEMINI_API_KEY = 'test-gemini-voice-key';
+  const prevLlave = process.env.GEMINI_LLAVE;
+  delete process.env.GEMINI_API_KEY;
+  delete process.env.GEMINI_LLAVE;
+  mockChatterboxFail = false;
+
   try {
+    // 0. Zero-shot Chatterbox cloning works with ZERO API keys + hits LRU cache
+    const cbRes = await api('/api/coach/tts', {
+      method: 'POST',
+      token: socioReg.data.token,
+      body: { coachId: 'temach', texto: '¡A darle con todo, mi compa!' },
+    });
+    assert.equal(cbRes.status, 200);
+    assert.equal(cbRes.data.exito, true);
+    assert.equal(cbRes.data.origen, 'chatterbox');
+    assert.equal(cbRes.data.voiceUsed, 'chatterbox-temach');
+    assert.equal(
+      Buffer.from(cbRes.data.audioBase64, 'base64').toString('utf8'),
+      'CHATTERBOX_CLONED_WAV',
+    );
+    const cbCallCount = voiceFetchCalls.length;
+
+    const cbCached = await api('/api/coach/tts', {
+      method: 'POST',
+      token: socioReg.data.token,
+      body: { coachId: 'temach', texto: '¡A darle con todo, mi compa!' },
+    });
+    assert.equal(cbCached.status, 200);
+    assert.equal(cbCached.data.origen, 'cache');
+    assert.equal(voiceFetchCalls.length, cbCallCount);
+
+    // Enable Chatterbox failure + Gemini key to verify secondary Gemini 3.8 TTS & custom ID fallback
+    mockChatterboxFail = true;
+    process.env.GEMINI_API_KEY = 'test-gemini-voice-key';
+
     // 1. Subscribed user synthesizes speech with prebuilt coach persona + hits LRU cache on retry
     const tts1 = await api('/api/coach/tts', {
       method: 'POST',
@@ -896,8 +967,12 @@ test('Coach Virtual TTS synthesis, voice cloning/design RBAC, caching & fallback
     assert.equal(ttsFallback.data.exito, true);
     assert.equal(ttsFallback.data.voiceUsed, 'Algenib');
   } finally {
+    mockChatterboxFail = false;
+    mockVoiceFailCustomOnce = false;
     clearCoachVoiceCache();
     if (prevKey === undefined) delete process.env.GEMINI_API_KEY;
     else process.env.GEMINI_API_KEY = prevKey;
+    if (prevLlave === undefined) delete process.env.GEMINI_LLAVE;
+    else process.env.GEMINI_LLAVE = prevLlave;
   }
 });

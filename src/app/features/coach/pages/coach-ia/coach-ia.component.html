@@ -76,13 +76,13 @@
       <button
         type="button"
         [attr.aria-pressed]="pestanaActiva === 'rutina'"
-        (click)="pestanaActiva = 'rutina'"
+        (click)="abrirPestanaRutina()"
       >
         2. Crear rutina</button
       ><button
         type="button"
         [attr.aria-pressed]="pestanaActiva === 'chat'"
-        (click)="pestanaActiva = 'chat'"
+        (click)="abrirPestanaChat()"
       >
         3. Conversar
       </button>
@@ -485,9 +485,11 @@
                       <span class="voice-origin-tag">{{
                         message.audioOrigen === "local"
                           ? "Voz del navegador"
-                          : message.audioOrigen === "cache"
-                            ? "Voz IA (caché)"
-                            : "Voz IA Gemini"
+                          : message.audioOrigen === "chatterbox"
+                            ? "Voz clonada (Chatterbox)"
+                            : message.audioOrigen === "cache"
+                              ? "Voz clonada (caché)"
+                              : "Voz IA Gemini"
                       }}</span>
                     }
                   </div>
