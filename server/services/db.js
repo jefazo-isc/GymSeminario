@@ -12,6 +12,8 @@ const db = new Database(dbPath);
 // Modo WAL para concurrencia segura y alto rendimiento en SQLite
 db.pragma('journal_mode = WAL');
 db.pragma('synchronous = NORMAL');
+// Activar integridad referencial estricta para llaves foráneas (FOREIGN KEY)
+db.pragma('foreign_keys = ON');
 
 export const ADMIN_EMAILS = new Set([
   'guevara.cardona.yahir@gmail.com',
@@ -272,6 +274,35 @@ db.exec(`
     respuesta TEXT NOT NULL,
     creado_en TEXT NOT NULL
   );
+
+  -- Tablas normalizadas (1FN / 2FN / 3FN) con llaves foráneas físicas
+  CREATE TABLE IF NOT EXISTS membership_plans (
+    id TEXT PRIMARY KEY,
+    nombre TEXT UNIQUE NOT NULL,
+    precio REAL NOT NULL,
+    periodo TEXT NOT NULL,
+    duracion_dias INTEGER NOT NULL DEFAULT 30,
+    activo INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS membership_plan_benefits (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    plan_id TEXT NOT NULL,
+    beneficio TEXT NOT NULL,
+    orden INTEGER NOT NULL DEFAULT 0,
+    UNIQUE(plan_id, orden),
+    FOREIGN KEY (plan_id) REFERENCES membership_plans(id)
+      ON DELETE CASCADE
+      ON UPDATE CASCADE
+  );
+
+  CREATE TABLE IF NOT EXISTS muscle_groups (
+    id TEXT PRIMARY KEY,
+    nombre TEXT UNIQUE NOT NULL,
+    zona_corporal TEXT NOT NULL CHECK (zona_corporal IN ('torso', 'pierna', 'core', 'general')),
+    coach_id TEXT NOT NULL
+  );
 `);
 
 runSafeAlter("ALTER TABLE users ADD COLUMN provider TEXT NOT NULL DEFAULT 'email'");
@@ -281,6 +312,147 @@ runSafeAlter("ALTER TABLE stripe_transactions ADD COLUMN tipo TEXT NOT NULL DEFA
 runSafeAlter("ALTER TABLE bookings ADD COLUMN estado TEXT NOT NULL DEFAULT 'Confirmada'");
 runSafeAlter('ALTER TABLE attendances ADD COLUMN qr_token TEXT');
 runSafeAlter("ALTER TABLE qr_tokens ADD COLUMN token_type TEXT NOT NULL DEFAULT 'member'");
+runSafeAlter('ALTER TABLE memberships ADD COLUMN plan_id TEXT REFERENCES membership_plans(id)');
+runSafeAlter('ALTER TABLE membership_history ADD COLUMN plan_id TEXT REFERENCES membership_plans(id)');
+runSafeAlter('ALTER TABLE workout_logs ADD COLUMN muscle_group_id TEXT REFERENCES muscle_groups(id)');
+
+db.exec(`
+  CREATE INDEX IF NOT EXISTS idx_memberships_user_email ON memberships(user_email);
+  CREATE INDEX IF NOT EXISTS idx_memberships_plan_id ON memberships(plan_id);
+  CREATE INDEX IF NOT EXISTS idx_workout_logs_user_fecha ON workout_logs(user_email, fecha);
+  CREATE INDEX IF NOT EXISTS idx_attendances_email_fecha ON attendances(email, fecha);
+  CREATE INDEX IF NOT EXISTS idx_plan_benefits_plan_id ON membership_plan_benefits(plan_id);
+
+  CREATE VIEW IF NOT EXISTS v_membership_catalog AS
+  SELECT
+    p.id AS plan_id,
+    p.nombre AS plan_nombre,
+    p.precio,
+    p.periodo,
+    p.duracion_dias,
+    b.orden,
+    b.beneficio
+  FROM membership_plans p
+  LEFT JOIN membership_plan_benefits b ON b.plan_id = p.id
+  WHERE p.activo = 1
+  ORDER BY p.precio ASC, b.orden ASC;
+`);
+
+// Semilla normalizada de planes de membresía, beneficios (1FN/3FN) y grupos musculares
+try {
+  const normalizedPlans = [
+    {
+      id: 'plan-basico',
+      nombre: 'Básico',
+      precio: 499,
+      periodo: 'Mensual',
+      duracionDias: 30,
+      beneficios: [
+        'Acceso general a piso de pesas y cardio',
+        'Vestidores y regaderas incluidos',
+      ],
+    },
+    {
+      id: 'plan-pro-fitness',
+      nombre: 'Pro Fitness',
+      precio: 799,
+      periodo: 'Mensual',
+      duracionDias: 30,
+      beneficios: [
+        'Todo lo incluido en Plan Básico',
+        'Clases grupales de Spinning, Funcional y Boxeo',
+        'Acceso al Coach IA y bitácora de cargas',
+      ],
+    },
+    {
+      id: 'plan-black-elite',
+      nombre: 'Black Elite',
+      precio: 1200,
+      periodo: 'Trimestral',
+      duracionDias: 90,
+      beneficios: [
+        'Todos los beneficios Pro Fitness',
+        'Invitación a 1 acompañante gratis al mes',
+        'Acceso a sillones de masaje y zona recovery',
+        'Asesoría personalizada de nutrición',
+        'Descuento del 15% en suplementos del Gym',
+      ],
+    },
+    {
+      id: 'plan-estudiante',
+      nombre: 'Estudiante',
+      precio: 399,
+      periodo: 'Mensual',
+      duracionDias: 30,
+      beneficios: [
+        'Acceso en horario matutino y vespertino con credencial vigente',
+        'Uso completo de área de fuerza y cardio',
+      ],
+    },
+  ];
+
+  const upsertPlan = db.prepare(`
+    INSERT INTO membership_plans (id, nombre, precio, periodo, duracion_dias, activo)
+    VALUES (?, ?, ?, ?, ?, 1)
+    ON CONFLICT(id) DO UPDATE SET
+      nombre = excluded.nombre,
+      precio = excluded.precio,
+      periodo = excluded.periodo,
+      duracion_dias = excluded.duracion_dias
+  `);
+  const insertBenefit = db.prepare(`
+    INSERT OR IGNORE INTO membership_plan_benefits (plan_id, beneficio, orden)
+    VALUES (?, ?, ?)
+  `);
+
+  const seedNormalizedCatalog = db.transaction(() => {
+    for (const plan of normalizedPlans) {
+      upsertPlan.run(plan.id, plan.nombre, plan.precio, plan.periodo, plan.duracionDias);
+      plan.beneficios.forEach((b, idx) => insertBenefit.run(plan.id, b, idx + 1));
+    }
+
+    const groups = [
+      ['pecho', 'Pecho', 'torso', 'torso'],
+      ['espalda', 'Espalda', 'torso', 'torso'],
+      ['hombro', 'Hombro', 'torso', 'torso'],
+      ['brazos', 'Brazos', 'torso', 'torso'],
+      ['pierna', 'Pierna', 'pierna', 'pierna'],
+      ['gluteo', 'Glúteo', 'pierna', 'pierna'],
+      ['core', 'Core', 'core', 'core'],
+      ['general', 'General', 'general', 'core'],
+    ];
+    const upsertGroup = db.prepare(`
+      INSERT OR IGNORE INTO muscle_groups (id, nombre, zona_corporal, coach_id)
+      VALUES (?, ?, ?, ?)
+    `);
+    for (const g of groups) {
+      upsertGroup.run(...g);
+    }
+
+    // Backfill seguro de claves foráneas en registros previos
+    db.prepare(`
+      UPDATE memberships
+      SET plan_id = (
+        SELECT mp.id FROM membership_plans mp
+        WHERE lower(mp.nombre) = lower(memberships.plan_nombre)
+        LIMIT 1
+      )
+      WHERE plan_id IS NULL
+    `).run();
+
+    db.prepare(`
+      UPDATE workout_logs
+      SET muscle_group_id = COALESCE(
+        (SELECT mg.id FROM muscle_groups mg WHERE lower(mg.nombre) = lower(workout_logs.grupo_muscular) LIMIT 1),
+        'general'
+      )
+      WHERE muscle_group_id IS NULL
+    `).run();
+  });
+  seedNormalizedCatalog();
+} catch (err) {
+  console.warn('Advertencia al inicializar catálogo normalizado:', err.message);
+}
 
 // Semilla inicial de reservas de Boxeo si está vacía
 try {

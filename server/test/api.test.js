@@ -1018,3 +1018,27 @@ test('Personalized body-part coaches, no intro audio metadata, and user attendan
   assert.equal(ctx.recuentoPesoYEntrenamiento.volumenPorGrupoMuscular.Pecho, 3200);
   assert.equal(ctx.recuentoPesoYEntrenamiento.volumenPorGrupoMuscular.Espalda, 2160);
 });
+
+test('SQLite normalized tables enforce FOREIGN KEY constraints and expose normalized catalog view', () => {
+  assert.equal(db.pragma('foreign_keys', { simple: true }), 1);
+
+  const plans = db.prepare('SELECT id, nombre FROM membership_plans').all();
+  assert.ok(plans.length >= 4);
+
+  const catalogRows = db
+    .prepare("SELECT * FROM v_membership_catalog WHERE plan_id = 'plan-black-elite'")
+    .all();
+  assert.ok(catalogRows.length >= 5);
+
+  const groups = db.prepare('SELECT id, coach_id FROM muscle_groups').all();
+  assert.ok(groups.some((g) => g.id === 'pecho' && g.coach_id === 'torso'));
+  assert.ok(groups.some((g) => g.id === 'pierna' && g.coach_id === 'pierna'));
+
+  assert.throws(
+    () =>
+      db
+        .prepare('INSERT INTO membership_plan_benefits (plan_id, beneficio, orden) VALUES (?, ?, ?)')
+        .run('plan-inexistente', 'Beneficio inválido', 1),
+    /FOREIGN KEY constraint failed/i,
+  );
+});
