@@ -97,7 +97,7 @@ export function createApp({
           especialidad: especialidad || '',
           personalizado: Boolean(personalizado),
           hasIntroAudio: hasAudioIntro,
-          hasVoice: hasAudioIntro && Boolean(VOICE_PROFILES[id]),
+          hasVoice: Boolean(VOICE_PROFILES[id]),
           voiceStyle: hasAudioIntro ? VOICE_PROFILES[id]?.style || '' : '',
         };
       },
@@ -132,7 +132,7 @@ export function createApp({
       });
       if (incluirVoz === true && respuesta?.exito && respuesta.respuesta) {
         const voz = await sintetizarVozCoach({
-          coachId: coachId || 'temach',
+          coachId: coachId || 'torso',
           texto: respuesta.respuesta,
           fetchImpl,
         });
@@ -156,7 +156,7 @@ export function createApp({
         return res.status(400).json({ exito: false, error: 'Texto requerido para sintetizar voz.' });
       }
       const resultado = await sintetizarVozCoach({
-        coachId: String(coachId || 'temach'),
+        coachId: String(coachId || 'torso'),
         texto: String(texto),
         fetchImpl,
       });

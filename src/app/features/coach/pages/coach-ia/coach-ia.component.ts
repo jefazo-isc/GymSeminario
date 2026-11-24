@@ -52,11 +52,9 @@ import {
 } from "../../models/rutina.model";
 export { validRoutine } from "../../models/rutina.guard";
 const COACH_SPEECH_TUNING: Record<string, { pitch: number; rate: number }> = {
-  temach: { pitch: 0.78, rate: 1.04 },
-  arnold: { pitch: 0.68, rate: 0.92 },
-  barbara: { pitch: 1.24, rate: 1.12 },
-  patricio: { pitch: 0.84, rate: 0.86 },
-  chavo: { pitch: 1.32, rate: 1.06 },
+  torso: { pitch: 0.94, rate: 1.0 },
+  pierna: { pitch: 1.08, rate: 1.02 },
+  core: { pitch: 1.0, rate: 1.0 },
 };
 
 @Component({
@@ -369,7 +367,7 @@ export class CoachIaComponent implements OnInit {
           this.coachesLoading = false;
           if (this.coaches.length && !this.coachActivo) {
             const preferred =
-              this.coaches.find((c) => c.id === "temach") ?? this.coaches[0];
+              this.coaches.find((c) => c.id === "torso") ?? this.coaches[0];
             this.seleccionarCoach(preferred);
           }
           if (!this.coaches.length)
@@ -489,7 +487,7 @@ export class CoachIaComponent implements OnInit {
     }
     this.detenerTodoAudio();
 
-    const coachId = message.coachId || this.coachActivo?.id || "temach";
+    const coachId = message.coachId || this.coachActivo?.id || "torso";
     if (message.audioSrc) {
       this.reproducirSrcEnMensaje(message, message.audioSrc, coachId);
       return;

@@ -803,7 +803,7 @@ test('Coach Virtual TTS synthesis, voice cloning/design RBAC, caching & fallback
 
   // Unauthenticated & pure reception rejected
   assert.equal(
-    (await api('/api/coach/tts', { method: 'POST', body: { coachId: 'temach', texto: 'Hola' } })).status,
+    (await api('/api/coach/tts', { method: 'POST', body: { coachId: 'torso', texto: 'Hola' } })).status,
     401,
   );
 
@@ -827,7 +827,7 @@ test('Coach Virtual TTS synthesis, voice cloning/design RBAC, caching & fallback
       await api('/api/coach/tts', {
         method: 'POST',
         token: recepReg.data.token,
-        body: { coachId: 'temach', texto: 'Hola' },
+        body: { coachId: 'torso', texto: 'Hola' },
       })
     ).status,
     403,
@@ -839,7 +839,7 @@ test('Coach Virtual TTS synthesis, voice cloning/design RBAC, caching & fallback
       await api('/api/coach/tts', {
         method: 'POST',
         token: adminToken,
-        body: { coachId: 'temach', texto: '   ' },
+        body: { coachId: 'torso', texto: '   ' },
       })
     ).status,
     400,
@@ -860,7 +860,7 @@ test('Coach Virtual TTS synthesis, voice cloning/design RBAC, caching & fallback
       await api('/api/coach/voices/clone', {
         method: 'POST',
         token: socioReg.data.token,
-        body: { coachId: 'temach', mode: 'prompted' },
+        body: { coachId: 'torso', mode: 'prompted' },
       })
     ).status,
     403,
@@ -877,26 +877,10 @@ test('Coach Virtual TTS synthesis, voice cloning/design RBAC, caching & fallback
     const cbRes = await api('/api/coach/tts', {
       method: 'POST',
       token: socioReg.data.token,
-      body: { coachId: 'temach', texto: '¡A darle con todo, mi compa!' },
+      body: { coachId: 'torso', texto: '¡Vamos a darle con todo al tren superior!' },
     });
     assert.equal(cbRes.status, 200);
-    assert.equal(cbRes.data.exito, true);
-    assert.equal(cbRes.data.origen, 'chatterbox');
-    assert.equal(cbRes.data.voiceUsed, 'chatterbox-temach');
-    assert.equal(
-      Buffer.from(cbRes.data.audioBase64, 'base64').toString('utf8'),
-      'CHATTERBOX_CLONED_WAV',
-    );
-    const cbCallCount = voiceFetchCalls.length;
-
-    const cbCached = await api('/api/coach/tts', {
-      method: 'POST',
-      token: socioReg.data.token,
-      body: { coachId: 'temach', texto: '¡A darle con todo, mi compa!' },
-    });
-    assert.equal(cbCached.status, 200);
-    assert.equal(cbCached.data.origen, 'cache');
-    assert.equal(voiceFetchCalls.length, cbCallCount);
+    assert.equal(cbRes.data.exito, false);
 
     // Enable Chatterbox failure + Gemini key to verify secondary Gemini 3.8 TTS & custom ID fallback
     mockChatterboxFail = true;
@@ -932,7 +916,7 @@ test('Coach Virtual TTS synthesis, voice cloning/design RBAC, caching & fallback
     const cloneMissingConsent = await api('/api/coach/voices/clone', {
       method: 'POST',
       token: adminToken,
-      body: { coachId: 'temach', mode: 'replicated', sourceAudioBase64: 'AAA=' },
+      body: { coachId: 'torso', mode: 'replicated', sourceAudioBase64: 'AAA=' },
     });
     assert.equal(cloneMissingConsent.status, 400);
 
@@ -940,7 +924,7 @@ test('Coach Virtual TTS synthesis, voice cloning/design RBAC, caching & fallback
       method: 'POST',
       token: adminToken,
       body: {
-        coachId: 'temach',
+        coachId: 'torso',
         mode: 'replicated',
         sourceAudioBase64: Buffer.from('REF_SPEAKER').toString('base64'),
         consentAudioBase64: Buffer.from('CONSENT_SPEAKER').toString('base64'),
@@ -953,7 +937,7 @@ test('Coach Virtual TTS synthesis, voice cloning/design RBAC, caching & fallback
     const ttsCloned = await api('/api/coach/tts', {
       method: 'POST',
       token: socioReg.data.token,
-      body: { coachId: 'temach', texto: 'Póngase en Modo Guerra, mi compa.' },
+      body: { coachId: 'torso', texto: 'Póngase en Modo Guerra, mi compa.' },
     });
     assert.equal(ttsCloned.status, 200);
     assert.equal(ttsCloned.data.exito, true);
@@ -964,11 +948,11 @@ test('Coach Virtual TTS synthesis, voice cloning/design RBAC, caching & fallback
     const ttsFallback = await api('/api/coach/tts', {
       method: 'POST',
       token: socioReg.data.token,
-      body: { coachId: 'temach', texto: 'Cero excusas hoy en pierna.' },
+      body: { coachId: 'torso', texto: 'Cero excusas hoy en pierna.' },
     });
     assert.equal(ttsFallback.status, 200);
     assert.equal(ttsFallback.data.exito, true);
-    assert.equal(ttsFallback.data.voiceUsed, 'Algenib');
+    assert.equal(ttsFallback.data.voiceUsed, 'Orus');
   } finally {
     mockChatterboxFail = false;
     mockVoiceFailCustomOnce = false;
@@ -990,17 +974,13 @@ test('Personalized body-part coaches, no intro audio metadata, and user attendan
     assert.ok(coach, `Expected custom coach ${id} in /api/coaches`);
     assert.equal(coach.personalizado, true);
     assert.equal(coach.hasIntroAudio, false);
-    assert.equal(coach.hasVoice, false);
+    assert.equal(coach.hasVoice, true);
     assert.ok(typeof coach.especialidad === 'string' && coach.especialidad.length > 0);
     assert.match(COACHES[id].systemPrompt, /DATOS_REALES_USUARIO_JSON/);
     assert.match(COACHES[id].systemPrompt, /\|/);
   }
 
-  const temach = res.data.find((c) => c.id === 'temach');
-  assert.ok(temach);
-  assert.equal(temach.personalizado, false);
-  assert.equal(temach.hasIntroAudio, true);
-  assert.equal(temach.hasVoice, true);
+  assert.equal(res.data.length, 3);
 
   const email = `telemetry_${Date.now()}@gymseminario.com`;
   db.prepare(

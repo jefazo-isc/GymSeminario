@@ -16,55 +16,35 @@ const UPLOAD_TTL_MS = 10 * 60 * 1000;
 const MAX_AUDIO_CACHE = 40;
 
 export const VOICE_PROFILES = {
-  temach: {
-    envVar: 'COACH_VOICE_ID_TEMACH',
-    prebuiltVoice: 'Algenib',
-    gender: 'male',
-    languageCode: 'es-US',
-    exaggeration: 0.6,
-    designPrompt:
-      'Hombre mexicano de 35 años con voz grave, rasposa, firme y proyectada de comandante de entrenamiento físico, timbre resonante y autoritario.',
-    style: 'enérgico, firme, directo y motivador como entrenador de gimnasio intenso',
-  },
-  arnold: {
-    envVar: 'COACH_VOICE_ID_ARNOLD',
+  torso: {
+    envVar: 'COACH_VOICE_ID_TORSO',
     prebuiltVoice: 'Orus',
     gender: 'male',
     languageCode: 'es-US',
-    exaggeration: 0.55,
+    exaggeration: 0.45,
     designPrompt:
-      'Culturista legendario de voz masculina muy profunda, robusta y carismática con ligero acento germánico-austríaco al hablar español, tono seguro de campeón.',
-    style: 'poderoso, carismático, pausado y triunfal con energía de campeón',
+      'Hombre latinoamericano de 34 años con voz masculina natural, clara, firme y equilibrada de entrenador físico profesional.',
+    style: 'claro, técnico, sereno y motivador de forma natural',
   },
-  barbara: {
-    envVar: 'COACH_VOICE_ID_BARBARA',
+  pierna: {
+    envVar: 'COACH_VOICE_ID_PIERNA',
     prebuiltVoice: 'Laomedeia',
     gender: 'female',
     languageCode: 'es-US',
-    exaggeration: 0.68,
+    exaggeration: 0.48,
     designPrompt:
-      'Instructora mexicana de fitness y cardio de 32 años con voz femenina brillante, cálida, atlética y sumamente entusiasta.',
-    style: 'alegre, hiper-positiva, sonriente y llena de energía motivadora',
+      'Mujer latinoamericana de 30 años con voz femenina natural, cálida, cercana y atlética de entrenadora personal.',
+    style: 'cercano, seguro, natural y alentador',
   },
-  patricio: {
-    envVar: 'COACH_VOICE_ID_PATRICIO',
-    prebuiltVoice: 'Zubenelgenubi',
+  core: {
+    envVar: 'COACH_VOICE_ID_CORE',
+    prebuiltVoice: 'Algenib',
     gender: 'male',
     languageCode: 'es-US',
-    exaggeration: 0.62,
+    exaggeration: 0.45,
     designPrompt:
-      'Personaje masculino bonachón y despistado con voz grave, redondeada, lenta, simpática e inocente.',
-    style: 'relajado, inocente, cómico, despistado y amigable',
-  },
-  chavo: {
-    envVar: 'COACH_VOICE_ID_CHAVO',
-    prebuiltVoice: 'Puck',
-    gender: 'male',
-    languageCode: 'es-US',
-    exaggeration: 0.65,
-    designPrompt:
-      'Joven entusiasta de barrio mexicano con voz aguda, vivaz, pícara, expresiva y simpática.',
-    style: 'juvenil, pícaro, expresivo y entusiasta',
+      'Hombre latinoamericano de 29 años con voz masculina natural, amigable, articulada y tranquila de especialista en acondicionamiento.',
+    style: 'estructurado, natural, amigable y enfocado',
   },
 };
 
@@ -73,8 +53,8 @@ const customVoiceIds = new Map();
 const chatterboxUploadCache = new Map();
 
 function normalizeCoachId(coachId) {
-  const clean = String(coachId || 'temach').toLowerCase().trim();
-  return Object.hasOwn(VOICE_PROFILES, clean) ? clean : 'temach';
+  const clean = String(coachId || 'torso').toLowerCase().trim();
+  return Object.hasOwn(VOICE_PROFILES, clean) ? clean : 'torso';
 }
 
 export function getVoiceProfile(coachId) {
