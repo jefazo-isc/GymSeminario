@@ -46,6 +46,8 @@ export default class SignUpComponent implements OnInit, AfterViewInit, OnDestroy
   readonly captcha = new CaptchaController(this.service.auth, "sign-up-recaptcha");
   busy: "email" | "google" | null = null;
   message = "";
+  private isDestroyed = false;
+  private gisTimeout: ReturnType<typeof setTimeout> | null = null;
 
   readonly form = this.fb.nonNullable.group(
     {
@@ -66,18 +68,27 @@ export default class SignUpComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   ngOnDestroy() {
+    this.isDestroyed = true;
+    if (this.gisTimeout) {
+      clearTimeout(this.gisTimeout);
+      this.gisTimeout = null;
+    }
     this.captcha.destroy();
   }
 
   private initGoogleAuth() {
     if (this.isNative || !isPlatformBrowser(this.platformId)) return;
     const win = window as unknown as { google?: { accounts?: { id?: GoogleIdentityServices } } };
+    let attempts = 0;
+    const maxAttempts = 40;
     const checkGIS = () => {
+      if (this.isDestroyed) return;
       const g = win.google?.accounts?.id;
       if (g && this.googleBtnRef?.nativeElement) {
         this.renderGoogleButton(g);
-      } else {
-        setTimeout(checkGIS, 150);
+      } else if (attempts < maxAttempts) {
+        attempts++;
+        this.gisTimeout = setTimeout(checkGIS, 150);
       }
     };
     checkGIS();

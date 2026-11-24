@@ -2,6 +2,70 @@
   display: block;
 }
 
+/* Card relative positioning para barra superior de progreso */
+.auth-card {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Cuando se está procesando Google Auth, atenuar el resto del formulario para evitar clicks accidentales */
+.auth-card.is-processing form,
+.auth-card.is-processing .auth-links {
+  opacity: 0.55;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+/* Barra superior de progreso continuo en el card cuando hay acción activa */
+.auth-card-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--color-accent-soft, #eaf0f2);
+  overflow: hidden;
+  z-index: 5;
+}
+
+.auth-card-progress-runner {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  background: linear-gradient(
+    90deg,
+    #4285F4,
+    #34A853,
+    #FBBC05,
+    #EA4335,
+    #4285F4
+  );
+  animation: auth-progress-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes auth-progress-pulse {
+  0% {
+    left: -30%;
+    width: 30%;
+  }
+  50% {
+    left: 20%;
+    width: 60%;
+  }
+  100% {
+    left: 100%;
+    width: 30%;
+  }
+}
+
+.auth-google-box {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 /* Botón nativo de Google para Capacitor */
 .btn-google-native {
   display: flex;
@@ -48,9 +112,22 @@
   transition: opacity 0.2s;
 }
 
-.google-btn-wrapper.loading {
-  opacity: 0.6;
+.google-btn-wrapper.is-hidden {
+  position: absolute;
+  opacity: 0;
   pointer-events: none;
+  height: 0;
+  width: 0;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+.google-btn-wrapper.is-disabled {
+  pointer-events: none;
+  opacity: 0.55;
+  filter: grayscale(40%);
+  cursor: not-allowed;
 }
 
 /* GIS inyecta un iframe — forzar ancho completo */
@@ -59,9 +136,134 @@
   width: 100% !important;
 }
 
-.social-loading {
-  font-size: 0.875rem;
-  color: var(--color-text-muted, #666);
+/* Estado de carga visible y animado para Google Auth */
+.google-loading-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border-radius: 8px;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-accent, #375d67);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.google-loading-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.google-loading-text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.google-loading-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text, #1f2937);
+  line-height: 1.3;
+}
+
+.google-loading-hint {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary, #5b6470);
+  line-height: 1.3;
+}
+
+/* Spinner circular */
+.auth-spinner {
+  width: 1.375rem;
+  height: 1.375rem;
+  border: 2.5px solid var(--color-border, #e1e4e8);
+  border-top-color: var(--color-action, #375d67);
+  border-right-color: #4285F4;
+  border-radius: 50%;
+  animation: auth-spin 0.75s linear infinite;
+  flex-shrink: 0;
+}
+
+.auth-spinner--google {
+  border-color: var(--color-border, #e1e4e8);
+  border-top-color: #4285F4;
+  border-right-color: #34A853;
+  border-bottom-color: #FBBC05;
+  border-left-color: #EA4335;
+}
+
+.auth-spinner--sm {
+  width: 0.9375rem;
+  height: 0.9375rem;
+  border-width: 2px;
+  border-style: solid;
+  border-color: currentColor;
+  border-top-color: transparent;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 0.5rem;
+}
+
+@keyframes auth-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Barra de progreso indeterminada animada ("scroll / loader") */
+.google-progress-track {
+  width: 100%;
+  height: 4px;
+  background: var(--color-accent-soft, #eaf0f2);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+
+.google-progress-bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  background: linear-gradient(
+    90deg,
+    #4285F4 0%,
+    #34A853 33%,
+    #FBBC05 66%,
+    #EA4335 100%
+  );
+  border-radius: 2px;
+  animation: google-scroll-indeterminate 1.5s ease-in-out infinite;
+}
+
+@keyframes google-scroll-indeterminate {
+  0% {
+    left: -30%;
+    width: 30%;
+  }
+  50% {
+    left: 20%;
+    width: 60%;
+  }
+  100% {
+    left: 100%;
+    width: 30%;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .auth-alternatives {
